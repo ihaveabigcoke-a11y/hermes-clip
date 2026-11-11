@@ -5,8 +5,43 @@ import {workflowGuidance} from '../lib/lab/workflow-guidance.ts';
 import {productNextStep,latestProductProduction} from '../lib/lab/product-next-step.ts';
 import {schemas} from '../lib/lab/domain.ts';
 import {productStage} from '../lib/lab/product-stage.ts';
-import {sampleCheckWarning} from '../lib/lab/sample-check.ts';
+import {sampleCheckState,sampleCheckWarning} from '../lib/lab/sample-check.ts';
 import {nextStepFixture,nextRecord} from './fixtures/product-next-step.mjs';
+
+test('sample check state distinguishes verified, failed, legacy and unchecked without changing saved data',()=>{
+  for(const sampleVerified of [undefined,false,true]){
+    for(const [sampleCheck,expected] of [
+      [undefined,sampleVerified===true?'legacy':'unchecked'],
+      [null,sampleVerified===true?'legacy':'unchecked'],
+      [{},'unchecked'],
+      [{matchesVideo:null},'unchecked'],
+      [{matchesVideo:false},'failed'],
+      [{matchesVideo:true},'verified'],
+    ]){
+      const product={sampleVerified,sampleCheck},before=structuredClone(product);
+      assert.equal(sampleCheckState(product),expected);
+      assert.equal(sampleCheckState(schemas.product.parse({...nextStepFixture().product.data,proofNotes:'Synthetic sample evidence',...product})),expected);
+      assert.equal(sampleCheckWarning(product)===null,expected==='verified');
+      assert.deepEqual(product,before);
+    }
+  }
+  assert.equal(sampleCheckState({}),'unchecked');
+  assert.equal(sampleCheckState({sampleVerified:true}),'legacy');
+});
+
+test('every non-verified sample state keeps the sample next step when supplier costs share a currency',()=>{
+  const {product,records}=nextStepFixture();
+  const states=new Set();
+  for(const sampleVerified of [undefined,false,true]){
+    for(const sampleCheck of [undefined,null,{}, {matchesVideo:null},{matchesVideo:false}]){
+      const data={...product.data,sampleVerified,sampleCheck};
+      const state=sampleCheckState(data);states.add(state);
+      assert.notEqual(state,'verified');
+      assert.equal(productNextStep({...product,data},records).stage,'sample');
+    }
+  }
+  assert.deepEqual([...states].sort(),['failed','legacy','unchecked']);
+});
 
 test('product next step 1: ask supplier first for missing costs or mismatched currencies',()=>{
   const {product,records}=nextStepFixture();

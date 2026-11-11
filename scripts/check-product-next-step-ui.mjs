@@ -1,4 +1,4 @@
-// T15: source-built UI + synthetic records, intercepted requests only.
+// T15/F01: source-built UI + synthetic records, intercepted requests only.
 import assert from 'node:assert/strict';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {resolve,join,extname,sep} from 'node:path';
@@ -6,9 +6,10 @@ import {fileURLToPath,pathToFileURL} from 'node:url';
 import {nextStepFixture,nextRecord} from '../tests/fixtures/product-next-step.mjs';
 
 const root=resolve(fileURLToPath(new URL('..',import.meta.url)));
-const build=resolve(root,process.env.HERMES_LOCAL_BUILD_DIR||'outputs/T15-local-build');
+const checkId=process.env.HERMES_UI_CHECK_ID||'T15';
+const build=resolve(root,process.env.HERMES_LOCAL_BUILD_DIR||`outputs/${checkId}-local-build`);
 assert.ok(build.startsWith(join(root,'outputs')+sep));
-const out=join(root,'ops/night/out'),temp=join(root,'outputs/T15-browser');
+const out=join(root,'ops/night/out'),temp=join(root,`outputs/${checkId}-browser`);
 await mkdir(temp,{recursive:true});await mkdir(out,{recursive:true});
 process.env.TEMP=temp;process.env.TMP=temp;process.env.PLAYWRIGHT_BROWSERS_PATH=join(temp,'browsers');
 const {chromium}=await import('../desktop/node_modules/playwright/index.mjs');
@@ -20,13 +21,17 @@ const sample=product('sample_product','Sample fixture',{sampleCheck:null});
 const fresh=product('fresh_product','Fresh fixture');
 const review=product('review_product','Review fixture');
 const social=product('social_product','Social fixture');
+const legacy=product('legacy_product','Legacy fixture',{sampleVerified:true});
+delete legacy.data.sampleCheck;
+const legacyNull=product('legacy_null_product','Legacy null fixture',{sampleVerified:true,sampleCheck:null});
+const failed=product('failed_product','Failed fixture',{sampleVerified:true,sampleCheck:{matchesVideo:false}});
 const latest=nextRecord('production','latest_project',{...structuredClone(base.production.data),productId:review.id,name:'Latest fixture'},3000);
 latest.data.scenes[0].takes[0].review='pending';
 const older=nextRecord('production','older_project',{...structuredClone(base.production.data),productId:review.id,name:'Older fixture'},1000);
 const socialProject=nextRecord('production','social_project',{...structuredClone(base.production.data),productId:social.id,name:'Social fixture'},2000);
 const socialAccount=nextRecord('social_account','social_account',{...base.account.data,productId:social.id});
 const landing=nextRecord('landing_page','landing_sample',{productId:sample.id,headline:'Sample fixture',description:'Synthetic preview only.',benefits:'',limitations:'',imageAssetId:'',ctaLabel:'Learn more',ctaUrl:''});
-let records=[supplier,sample,fresh,review,social,older,latest,socialProject,socialAccount,landing,nextRecord('asset','sample_photo',{name:'Physical sample fixture.png',type:'image/png',size:1})];
+let records=[supplier,sample,fresh,review,social,legacy,legacyNull,failed,older,latest,socialProject,socialAccount,landing,nextRecord('asset','sample_photo',{name:'Physical sample fixture.png',type:'image/png',size:1})];
 const posts=[],blocked=[],errors=[],measurements=[];
 const browser=await chromium.launch({headless:true,executablePath:process.env.HERMES_TEST_CHROME||'C:/Program Files/Google/Chrome/Application/chrome.exe',env:{...process.env,APPDATA:temp,LOCALAPPDATA:temp},args:['--disable-background-networking','--disable-component-update','--disable-crash-reporter','--no-proxy-server','--host-resolver-rules=MAP * ~NOTFOUND']});
 try {
@@ -60,12 +65,32 @@ try {
   assert.match(await card('Sample fixture').innerText(),/Chờ kiểm mẫu sản phẩm/);
   assert.match(await card('Review fixture').innerText(),/Bước tiếp theo: 1 cảnh cần xem lại phiên bản/);
   assert.match(await card('Social fixture').innerText(),/Bước tiếp theo: Đăng bài đã duyệt/);
+  for(const name of ['Legacy fixture','Legacy null fixture']){
+    const row=card(name),badge=row.locator('.card-eyebrow .badge');
+    assert.doesNotMatch(await row.innerText(),/Đã kiểm mẫu sản phẩm/);
+    assert.equal(await badge.innerText(),'Đã kiểm mẫu (bản cũ) – cần xác nhận khớp video');
+    assert.equal(await badge.getAttribute('class'),'badge warning');
+    assert.match(await row.innerText(),/Bước tiếp theo: Kiểm mẫu thật/);
+  }
+  assert.equal(await card('Fresh fixture').locator('.card-eyebrow .badge').getAttribute('class'),'badge success');
+  for(const name of ['Sample fixture','Failed fixture']){
+    assert.equal(await card(name).locator('.card-eyebrow .badge').innerText(),'Chờ kiểm mẫu sản phẩm');
+    assert.equal(await card(name).locator('.card-eyebrow .badge').getAttribute('class'),'badge warning');
+    assert.match(await card(name).innerText(),/Bước tiếp theo: Kiểm mẫu thật/);
+  }
+  const filter=page.locator('.list-toolbar').getByLabel('Lọc trạng thái');
+  await filter.selectOption('verified');
+  assert.deepEqual((await page.locator('.product-card h3').allTextContents()).sort(),['Fresh fixture','Review fixture','Social fixture']);
+  await filter.selectOption('unverified');
+  assert.deepEqual((await page.locator('.product-card h3').allTextContents()).sort(),['Failed fixture','Legacy fixture','Legacy null fixture','Sample fixture','Supplier fixture']);
+  await filter.selectOption('all');
   for(const [width,height] of [[1366,768],[1920,1080]]){
     await page.setViewportSize({width,height});await page.evaluate(()=>document.fonts.ready);
     const measure=await page.evaluate(()=>({width:innerWidth,pageWidth:document.documentElement.scrollWidth,sidebar:document.querySelector('.sidebar').getBoundingClientRect().width}));
     assert.ok(measure.pageWidth<=width);assert.equal(measure.sidebar,232);measurements.push(measure);
-    await page.screenshot({path:join(out,`T15-products-${width}x${height}.png`),animations:'disabled'});
+    await page.screenshot({path:join(out,`${checkId}-products-${width}x${height}.png`),animations:'disabled'});
   }
+  await card('Legacy fixture').screenshot({path:join(out,`${checkId}-legacy-badge.png`),animations:'disabled'});
   await card('Supplier fixture').getByRole('button',{name:'Hỏi giá nhà cung cấp · Supplier fixture'}).click();
   let dialog=page.getByRole('dialog');assert.equal(await dialog.getByLabel('Tên sản phẩm',{exact:true}).inputValue(),'Supplier fixture');
   await dialog.getByRole('button',{name:'Hủy',exact:true}).click();await dialog.waitFor({state:'hidden'});
@@ -78,7 +103,7 @@ try {
   await dialog.getByLabel('Ghi chú kiểm mẫu',{exact:true}).fill('Physical sample differs; fixture only.');
   await dialog.getByLabel('Ảnh mẫu trong Thư viện (không bắt buộc)',{exact:true}).selectOption('sample_photo');
   await dialog.getByLabel('Hiệu ứng như video',{exact:true}).scrollIntoViewIfNeeded();
-  await page.screenshot({path:join(out,'T15-sample-check.png'),animations:'disabled'});
+  await page.screenshot({path:join(out,`${checkId}-sample-check.png`),animations:'disabled'});
   await dialog.getByRole('button',{name:'Lưu thay đổi',exact:true}).click();await dialog.waitFor({state:'hidden'});
   assert.deepEqual(posts.at(-1).data.sampleCheck,{receivedAt:'2026-11-12',colorSizeMatches:true,matchesVideo:false,notes:'Physical sample differs; fixture only.',photos:['sample_photo']});
   assert.match(await card('Sample fixture').innerText(),/Kiểm mẫu thật/);
@@ -97,7 +122,7 @@ try {
   await page.getByRole('status').filter({hasText:'Chưa kiểm mẫu'}).waitFor();
   assert.match(await page.getByRole('status').filter({hasText:'Chưa kiểm mẫu'}).innerText(),/không khớp/);
   assert.equal(await page.getByRole('button',{name:'Xuất HTML trên máy'}).isEnabled(),true);
-  await page.screenshot({path:join(out,'T15-landing-warning.png'),animations:'disabled'});
+  await page.screenshot({path:join(out,`${checkId}-landing-warning.png`),animations:'disabled'});
   await page.getByRole('button',{name:'Sửa nội dung trang'}).click();
   assert.match(await page.getByRole('dialog').innerText(),/Chưa kiểm mẫu/);
   await page.getByRole('dialog').getByRole('button',{name:'Hủy',exact:true}).click();
@@ -106,6 +131,6 @@ try {
   assert.equal(await page.getByRole('status').filter({hasText:'Chưa kiểm mẫu'}).count(),0);
   assert.equal(await page.getByRole('button',{name:'Xuất HTML trên máy'}).isEnabled(),true);
   assert.deepEqual(errors,[]);assert.deepEqual(blocked,[]);assert.equal(posts.length,1);
-  await writeFile(join(out,'T15-ui.json'),JSON.stringify({fixtureOnly:true,measurements,productSaves:posts.length,errors,blocked,checks:['five next-step cards','supplier editor','sample tri-state/date/notes/photos save','new project product selection','latest production deep link','social product deep link','landing warning false/true and non-blocking controls']},null,2)+'\n');
-  console.log('T15 offline UI checks passed; one synthetic product save, no external request.');
+  await writeFile(join(out,`${checkId}-ui.json`),JSON.stringify({fixtureOnly:true,measurements,productSaves:posts.length,errors,blocked,checks:['five next-step cards','legacy absent/null checklist warning badges','verified/failed/unchecked badge tones','sample state filters','supplier editor','sample tri-state/date/notes/photos save','new project product selection','latest production deep link','social product deep link','landing warning false/true and non-blocking controls']},null,2)+'\n');
+  console.log(`${checkId} offline UI checks passed; one synthetic product save, no external request.`);
 } finally {await browser.close();}

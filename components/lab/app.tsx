@@ -73,6 +73,7 @@ import { demoRecords } from "@/lib/lab/demo";
 import {productCardDetails, showWorkspaceBanner} from "@/lib/lab/ui-state";
 import { productStage } from "@/lib/lab/product-stage";
 import { productNextStep, latestProductProduction } from "@/lib/lab/product-next-step";
+import { sampleCheckState } from "@/lib/lab/sample-check";
 import { SampleCheckFields } from "./sample-check-fields";
 import {
   type LabRecord,
@@ -909,7 +910,7 @@ export default function LabApp() {
     const margin = unitMargin(p.data);
     const details = productCardDetails(p, records);
     const next = productNextStep(p, records);
-    const sampleVerified = p.data.sampleCheck == null ? p.data.sampleVerified : p.data.sampleCheck.matchesVideo === true;
+    const sampleState = sampleCheckState(p.data);
     const openNextStep = () => {
       if (next.actionView === "products") return openEditor("product", p);
       const url = urlState(next.actionView, "", 1);
@@ -935,16 +936,18 @@ export default function LabApp() {
               tone={
                 p.data.archived
                   ? "neutral"
-                  : sampleVerified
+                  : sampleState === "verified"
                     ? "success"
                     : "warning"
               }
             >
               {p.data.archived
                 ? "Đang lưu trữ"
-                : sampleVerified
+                : sampleState === "verified"
                   ? "Đã kiểm mẫu sản phẩm"
-                  : "Chờ kiểm mẫu sản phẩm"}
+                  : sampleState === "legacy"
+                    ? "Đã kiểm mẫu (bản cũ) – cần xác nhận khớp video"
+                    : "Chờ kiểm mẫu sản phẩm"}
             </Badge>
           </div>
           <h3>
@@ -1065,8 +1068,8 @@ export default function LabApp() {
             : !r.data.archived &&
               (filter === "all" ||
                 (filter === "verified"
-                  ? r.data.sampleVerified
-                  : !r.data.sampleVerified))
+                  ? sampleCheckState(r.data) === "verified"
+                  : sampleCheckState(r.data) !== "verified"))
           : filter === "all" || r.data.status === filter,
       );
   }
