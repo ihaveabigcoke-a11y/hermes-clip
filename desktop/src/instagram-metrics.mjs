@@ -56,14 +56,20 @@ export class InstagramMetrics {
       if(p.browsers.busy.has(accountId)||p.browsers.opening.has(accountId)||p.browsers.pageOpening.has(accountId))throw Error('Hồ sơ đang bận. Thử cập nhật khi thao tác trước kết thúc.');
       p.browsers.busy.add(accountId);locked=true;
       const profile=p.browsers.profile(accountId);
-      if(!profile?.userId||!profile?.handle)throw Object.assign(Error('Đăng nhập hồ sơ Instagram của sản phẩm để đọc số liệu.'),{code:'login_required'});
+      if(profile?.apiMode!=='api'&&(!profile?.userId||!profile?.handle))throw Object.assign(Error('Đăng nhập hồ sơ Instagram của sản phẩm để đọc số liệu.'),{code:'login_required'});
       const published=p.jobs().find(job=>job.state==='published'&&job.snapshot.planId===planId);
       if(published&&(published.snapshot.accountId!==accountId||published.postUrl!==target.postUrl))throw Error('Bài đăng không khớp hồ sơ đã dùng để đăng.');
-      wasOpen=p.browsers.contexts.has(accountId);
-      const context=await p.browsers.context(accountId,true);
-      page=await context.newPage();page.setDefaultTimeout(20000);
-      if(!wasOpen)await p.browsers.visibility(accountId,false);
-      const measurement=await this.reader.read(page,{...target,handle:published?.handle||target.expectedHandle||profile.handle,userId:published?.userId||profile.userId});
+      let measurement;
+      if(profile?.apiMode==='api') measurement=await p.apiAdapter.read(profile,target,published);
+      else {
+        wasOpen=p.browsers.contexts.has(accountId);
+        const context=await p.browsers.context(accountId,true);
+        page=await context.newPage();page.setDefaultTimeout(20000);
+        if(!wasOpen)await p.browsers.visibility(accountId,false);
+        // Instagram Login and browser IDs may have different namespaces.
+        const browserUserId=published?.snapshot.apiMode==='api'?profile.userId:published?.userId||profile.userId;
+        measurement=await this.reader.read(page,{...target,handle:published?.handle||target.expectedHandle||profile.handle,userId:browserUserId});
+      }
       if(p.stopped)throw Error('App đang đóng; số liệu sẽ được cập nhật lại sau.');
       const result=await p.workspace.saveMetrics(target,measurement);
       this.update(planId,{state:metricKeys.some(key=>measurement[key]==null)?'partial':'ready',failures:0,

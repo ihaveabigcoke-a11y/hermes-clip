@@ -51,6 +51,15 @@ test('Published synchronization preserves caption and chosen account/video, and 
   await workspace.syncPublished(job);assert.equal(calls,1);
 });
 
+test('API publication sync preserves the legacy status with explicit source and never copies credentials or raw receipt',async t=>{
+  const {workspace,input}=await fixture(t);const snapshot={...await workspace.snapshot(input),apiMode:'api'};
+  let saved;
+  workspace.request=async(_path,options)=>{saved=JSON.parse(options.body);return {};};
+  await workspace.syncPublished({snapshot,postUrl:'https://www.instagram.com/reel/api/',apiReceipt:{containerId:'200',mediaId:'300'}});
+  assert.equal(saved.data.status,'published_browser');assert.equal(saved.data.publishSource,'api');assert.equal(saved.data.caption,snapshot.caption);
+  assert.equal(saved.data.assetId,input.assetId);assert.equal(saved.data.apiReceipt,undefined);
+});
+
 test('Metrics synchronize one cumulative record with nullable values and refuse changed or older sources',async t=>{
  const {workspace,records}=await fixture(t);
  const postUrl='https://www.instagram.com/reel/abc/';

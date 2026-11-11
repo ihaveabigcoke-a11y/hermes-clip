@@ -130,7 +130,7 @@ export async function POST(request: Request) {
       const plan = await getRecord(uid, d.planId);
       if (plan?.kind !== "content_plan" || !["published_manual", "published_browser"].includes(plan.data.status))
         throw new ApiError(422, "Ghi nhận bài đã đăng và URL trước khi cập nhật số liệu.");
-      if (d.source === 'instagram_browser' && (d.accountId !== plan.data.accountId || d.sourceUrl !== plan.data.postUrl || !d.handle))
+      if (['instagram_browser', 'api'].includes(d.source) && (d.accountId !== plan.data.accountId || d.sourceUrl !== plan.data.postUrl || !d.handle))
         throw new ApiError(422, "Nguồn số liệu không khớp bài đăng hoặc tài khoản.");
       id = `social_metric_${d.planId}`;
       const previous = await getRecord(uid, id);

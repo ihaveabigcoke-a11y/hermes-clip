@@ -18,6 +18,23 @@ async function save(kind, id, data, revision = 0, who = 'ops-owner', action = 's
   return {status: response.status, ...await response.json()};
 }
 
+test('API measurements round-trip with null/zero and require the same account and permalink as browser measurements',async()=>{
+  const who='api-adapter-owner';
+  assert.equal((await save('product','api_product',{...emptyProduct,name:'API product'},0,who)).status,200);
+  assert.equal((await save('social_account','api_account',{name:'API account',productId:'api_product',handle:'owner'},0,who)).status,200);
+  const postUrl='https://www.instagram.com/reel/api_test/';
+  const plan=await save('content_plan','api_plan',{name:'API plan',productId:'api_product',accountId:'api_account',status:'published_browser',publishSource:'api',postUrl},0,who);
+  assert.equal(plan.status,200);assert.equal(plan.record.data.publishSource,'api');
+  const measurement={planId:'api_plan',observedAt:'2026-11-12T00:00:00Z',source:'api',sourceUrl:postUrl,accountId:'api_account',handle:'owner',views:0,reach:2,likes:null,comments:null,saves:0,shares:null,profileVisits:null,linkClicks:null};
+  for(const patch of [{accountId:'another'},{sourceUrl:'https://www.instagram.com/reel/another/'},{handle:''}])
+    assert.equal((await save('social_metric','ignored',{...measurement,...patch},0,who)).status,422);
+  const saved=await save('social_metric','ignored',measurement,0,who);
+  assert.equal(saved.status,200);assert.equal(saved.record.data.source,'api');assert.equal(saved.record.data.views,0);
+  assert.equal(saved.record.data.likes,null);assert.equal(saved.record.data.reach,2);assert.equal(saved.record.data.viewers,null);
+  const rows=(await (await call(lab.GET,new Request('https://qa.invalid/api/lab',{headers:{'oai-authenticated-user-id':who,'oai-authenticated-user-email':who+'@example.invalid'}}))).json()).records;
+  assert.equal(rows.find(row=>row.id==='social_metric_api_plan').data.source,'api');
+});
+
 test('UTM links round-trip through plan save/read/CAS without requiring a migration for legacy plans',async()=>{
   const who='utm-owner';
   const {buildUtmLink}=await importApiModule('lib/lab/utm.ts');

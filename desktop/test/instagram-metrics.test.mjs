@@ -65,3 +65,12 @@ test('A changed account/post or shutdown never saves a read or starts a new publ
  while(!f.get().reads)await new Promise(r=>setImmediate(r));f.publisher.stopped=true;f.release();
  await assert.rejects(pending,/đang đóng/);assert.equal(f.get().saves,0);assert.equal(f.publisher.browsers.busy.size,0);
 });
+
+test('Switching an API-published post back to browser metrics uses the verified browser identity ID',async t=>{
+ const f=fixture(t);
+ f.publisher.jobs=()=>[{state:'published',snapshot:{planId:'p',accountId:'a',apiMode:'api'},postUrl:f.target.postUrl,handle:'owner',userId:'api-scoped-id'}];
+ let readTarget;
+ f.reader.read=async(_page,target)=>{readTarget=target;return f.measurement();};
+ await f.metrics.refresh({planId:'p'});
+ assert.equal(readTarget.userId,f.profile.userId);assert.equal(readTarget.handle,'owner');assert.equal(f.get().saves,1);
+});

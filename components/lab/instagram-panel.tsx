@@ -28,6 +28,7 @@ type Props = {
 };
 const pendingStates = ['queued', 'waiting_login', 'preparing', 'uploading', 'submitting', 'needs_attention'];
 const configSchema = z.object({vpnEnabled: z.boolean(), server: z.string().max(300), username: z.string().max(200),
+  apiMode:z.enum(['browser','api']),apiUserId:z.string().regex(/^\d{1,40}$|^$/, 'Nhập mã tài khoản API bằng chữ số.'),apiToken:z.string().max(8192),clearApiToken:z.boolean(),
   password: z.string().max(300), clearPassword: z.boolean()}).superRefine((value, ctx) => {
   const result = profileInput.safeParse({name: 'Instagram', accountLabel: '', enabled: true, vpnEnabled: value.vpnEnabled,
     proxy: {server: value.server, username: value.username, password: value.password, clearPassword: value.clearPassword}});
@@ -119,6 +120,7 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
   }
   function profileStatus(profile?: InstagramProfile) {
     if (!profile) return 'Chưa đăng nhập';
+    if (profile.apiMode === 'api') return !live.status?.api?.enabled ? 'API đang tắt' : profile.session === 'signed_in' ? 'Đã xác minh API' : 'Chưa xác minh API';
     if (!profile.open) return profile.handle ? 'Phiên đã lưu trên máy' : 'Chưa đăng nhập';
     return instagramSessionLabels[profile.session] ?? 'Chưa xác nhận phiên';
   }
@@ -139,11 +141,11 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
         const profile = live.status?.profiles.find(profile => profile.id === account.id);
         return <article className="instagram-account-row" key={account.id}>
           <div className="instagram-account-identity"><strong>{account.data.name}</strong><span>{profile?.handle ? '@' + profile.handle : account.data.handle ? 'Username đã ghi · @' + account.data.handle : 'Đăng nhập để nhận diện tài khoản'}</span></div>
-          <div><Badge tone={profile?.open && profile.session === 'signed_in' ? 'success' : 'neutral'}>{account.data.archived ? 'Đã lưu trữ' : profileStatus(profile)}</Badge>
-            <small>{profile?.proxy.server ? 'Proxy riêng' : profile?.vpnEnabled !== false ? 'Touch VPN' : 'Kết nối trực tiếp'}{profile?.open && profile.vpnEnabled ? ' · ' + (profile.vpn?.state === 'connected' ? 'Đã bật' : 'Cần kiểm tra VPN') : ''}</small>
+          <div><Badge tone={(profile?.open || profile?.apiMode === 'api' && live.status?.api?.enabled) && profile?.session === 'signed_in' ? 'success' : 'neutral'}>{account.data.archived ? 'Đã lưu trữ' : profileStatus(profile)}</Badge>
+            <small>{profile?.apiMode === 'api' ? `Instagram API · ${live.status?.api?.enabled ? 'Đã bật cờ' : 'Đang tắt'}` : profile?.proxy.server ? 'Proxy riêng' : profile?.vpnEnabled !== false ? 'Touch VPN' : 'Kết nối trực tiếp'}{profile?.open && profile.vpnEnabled ? ' · ' + (profile.vpn?.state === 'connected' ? 'Đã bật' : 'Cần kiểm tra VPN') : ''}</small>
             {profile?.checkedAt && <small>Kiểm tra {formatTime(profile.checkedAt)}</small>}</div>
           <div className="button-row">
-            <Button tone="neutral" disabled={disabled || busy || demo || account.data.archived} onClick={() => act('instagramOpen', {id: account.id})}>{profile?.open ? 'Mở trình duyệt' : 'Đăng nhập'}</Button>
+            <Button tone="neutral" disabled={disabled || busy || demo || account.data.archived || profile?.apiMode === 'api' && !live.status?.api?.enabled} onClick={() => act('instagramOpen', {id: account.id})}>{profile?.apiMode === 'api' ? 'Kiểm tra API' : profile?.open ? 'Mở trình duyệt' : 'Đăng nhập'}</Button>
             {profile?.open && <Button tone="neutral" disabled={busy || profile.busy || demo} onClick={() => act('instagramCheck', {id: account.id})}>Kiểm tra phiên</Button>}
             {profile?.open && <Button tone="ghost" disabled={busy || profile.busy || demo} onClick={() => act('instagramClose', {id: account.id})}>Đóng</Button>}
             <Button tone="ghost" aria-label={'Cấu hình kết nối ' + account.data.name} disabled={disabled || busy || !!profile?.busy || demo} onClick={() => {setConfig(account); setDirty(false);}}><Settings2 size={17}/></Button>
@@ -179,7 +181,7 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
             {!published && <small>Nhãn AI: {(fixedSnapshot ? fixedSnapshot.aiLabel : plan.data.aiLabel) === 'required' ? 'Bắt buộc bật trước Share' : 'Không gắn nhãn'}</small>}
             {chosenMedia && <small>{chosenMedia.scene.ratio} · {chosenMedia.take.metadata.duration}s · {reviewLabels[chosenMedia.take.review]}</small>}
             {!published && !pending && <><p>Video và chú thích bên trên sẽ được đăng lên tài khoản đã chọn.</p>
-              <Button disabled={!canPublish} onClick={publish}><Play size={16}/>{profile?.session === 'signed_in' ? 'Đăng video' : 'Đăng sau khi đăng nhập'}</Button></>}
+              <Button disabled={!canPublish || profile?.apiMode === 'api' && (!live.status?.api?.enabled || !live.status?.api?.resumableEnabled)} onClick={publish}><Play size={16}/>{profile?.apiMode === 'api' ? 'Đăng qua API' : profile?.session === 'signed_in' ? 'Đăng video' : 'Đăng sau khi đăng nhập'}</Button></>}
             {published && plan.data.postUrl && <a className="lab-button neutral" href={plan.data.postUrl} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Xem bài đã đăng</a>}
             {production && <a href={`?view=production&production=${encodeURIComponent(production.id)}`}>Mở dự án video</a>}
             {!production && <Button tone="neutral" disabled={disabled || demo || !(plan.data.hook || plan.data.script)} onClick={() => onCreateProduction(plan)}>Tạo dự án từ kịch bản</Button>}
@@ -198,14 +200,19 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
     {tab === 'history' && <div className="instagram-history">{jobs.slice((historyCurrentPage - 1) * 8, historyCurrentPage * 8).map(job => <article className="production-card production-card-body" key={job.id}>
       <header><h3>{job.snapshot.name}</h3><Badge tone={jobTone(job)}>{instagramStateLabels[job.state]}</Badge></header>
       <p>{job.handle ? '@' + job.handle : accounts.find(account => account.id === job.snapshot.accountId)?.data.name} · {formatTime(job.createdAt)}</p>
+      {job.apiReceipt && <p>Receipt API · Container: {job.apiReceipt.containerId ?? 'Chưa nhận được mã'} · Media: {job.apiReceipt.mediaId ?? 'Chưa xác nhận'} · {job.apiReceipt.statusCode ?? 'Cần đối soát'}</p>}
       {(job.error || job.syncError) && <p role="status">{job.error || job.syncError}</p>}{jobActions(job)}
       <details><summary>Tiến trình và nội dung đã gửi</summary><p className="muse-chat-text">{job.snapshot.caption}</p><ol>{job.history.map((step, index) => <li key={index}><time>{formatTime(step.at)}</time> · {step.note}</li>)}</ol></details>
     </article>)}{!jobs.length && <Empty title="Chưa có lượt đăng" text="Chọn một nội dung và video để bắt đầu."/>}<Pagination page={historyCurrentPage} total={jobs.length} size={8} onPage={setHistoryPage}/></div>}
     <Modal open={!!config} title="Kết nối hồ sơ Instagram" description={config?.data.name} dirty={dirty} locked={busy} onClose={() => setConfig(null)}>
-      {config && <RecordForm kind="social_account" validation={configSchema} initial={{vpnEnabled: configProfile?.vpnEnabled ?? true, server: configProfile?.proxy.server ?? '', username: configProfile?.proxy.username ?? '', password: '', clearPassword: false}}
-        fields={[{name: 'vpnEnabled', label: 'Tự bật Touch VPN khi mở hồ sơ', type: 'checkbox'}, {name: 'server', label: 'Proxy riêng', placeholder: 'http://host:port hoặc socks5://host:port', help: 'Tắt Touch VPN khi dùng proxy riêng.', full: true},
+      {config && <RecordForm kind="social_account" validation={configSchema} initial={{apiMode:configProfile?.apiMode ?? 'browser',apiUserId:configProfile?.apiUserId ?? '',apiToken:'',clearApiToken:false,vpnEnabled: configProfile?.vpnEnabled ?? true, server: configProfile?.proxy.server ?? '', username: configProfile?.proxy.username ?? '', password: '', clearPassword: false}}
+        fields={[{name:'apiMode',label:'Cách kết nối',type:'select',options:[{value:'browser',label:'Trình duyệt (mặc định)'},{value:'api',label:'Instagram API (thử nghiệm)'}],help:live.status?.api?.enabled ? 'API đã bật cờ; cần tài khoản chuyên nghiệp và quyền Meta.' : 'API đang tắt ở cấp ứng dụng. Xem docs/INSTAGRAM-API.md trước khi bật.',full:true},
+          {name:'apiUserId',label:'Mã tài khoản Instagram API',help:'Mã user_id từ Instagram Login; không dùng mã phiên trình duyệt.'},
+          {name:'apiToken',label:'Token Instagram API',type:'password',help:configProfile?.hasApiToken ? 'Đã mã hóa token. Để trống để giữ token cũ.' : 'Token chỉ được lưu mã hóa trên máy.'},
+          {name:'clearApiToken',label:'Xóa token API đã lưu',type:'checkbox'},
+          {name: 'vpnEnabled', label: 'Tự bật Touch VPN khi mở hồ sơ', type: 'checkbox'}, {name: 'server', label: 'Proxy riêng', placeholder: 'http://host:port hoặc socks5://host:port', help: 'Tắt Touch VPN khi dùng proxy riêng. VPN/proxy này chỉ áp dụng cho trình duyệt.', full: true},
           {name: 'username', label: 'Tài khoản proxy'}, {name: 'password', label: 'Mật khẩu proxy', type: 'password', help: configProfile?.proxy.hasPassword ? 'Đã lưu mật khẩu. Để trống để giữ mật khẩu cũ.' : ''}, {name: 'clearPassword', label: 'Xóa mật khẩu proxy đã lưu', type: 'checkbox'}]}
-        onDirty={setDirty} onCancel={() => setConfig(null)} onSave={async value => {await action('instagramSaveProfile', {id: config.id, vpnEnabled: value.vpnEnabled, proxy: {server: value.server, username: value.username, password: value.password, clearPassword: value.clearPassword}}, 'Đã lưu kết nối hồ sơ.'); setDirty(false); setConfig(null);}}/>}
+        onDirty={setDirty} onCancel={() => setConfig(null)} onSave={async value => {await action('instagramSaveProfile', {id: config.id, apiMode:value.apiMode,apiUserId:value.apiUserId,apiToken:value.apiToken,clearApiToken:value.clearApiToken,vpnEnabled: value.vpnEnabled, proxy: {server: value.server, username: value.username, password: value.password, clearPassword: value.clearPassword}}, 'Đã lưu kết nối hồ sơ.'); setDirty(false); setConfig(null);}}/>}
       {configProfile?.open && <p className="info-panel">Đóng trình duyệt của hồ sơ trước khi lưu thay đổi kết nối.</p>}
     </Modal>
   </div>;

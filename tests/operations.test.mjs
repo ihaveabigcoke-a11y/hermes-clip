@@ -19,6 +19,18 @@ import {keywordCommentMeasurementSchema} from '../lib/lab/operations.ts';
 import {keywordCommentViewRate} from '../lib/lab/instagram-summary.ts';
 import {buildUtmLink,planUtmContext} from '../lib/lab/utm.ts';
 
+test('API metrics and publish provenance are optional for legacy records and preserve reach separately from viewers',()=>{
+  const legacy={planId:'plan',observedAt:'2026-11-12T00:00:00Z',views:null,likes:0,comments:null,saves:null,shares:null,profileVisits:null,linkClicks:null,sourceUrl:'https://instagram.com/reel/test/'};
+  const parsed=socialMetricSchema.parse(legacy);
+  assert.equal(parsed.source,'manual');assert.equal(parsed.reach,undefined);assert.equal(parsed.views,null);assert.equal(parsed.likes,0);
+  const api=socialMetricSchema.parse({...legacy,source:'api',reach:0});
+  assert.equal(api.reach,0);assert.equal(api.viewers,null);assert.equal(api.source,'api');
+  assert.equal(socialMetricSchema.safeParse({...legacy,source:'api',reach:-1}).success,false);
+  const plan={name:'API plan',productId:'product',accountId:'account',status:'published_browser',postUrl:legacy.sourceUrl};
+  assert.equal(contentPlanSchema.parse(plan).publishSource,undefined);
+  assert.equal(contentPlanSchema.parse({...plan,publishSource:'api'}).publishSource,'api');
+});
+
 test('UTM links contain all attribution parameters and preserve existing query values and fragment',()=>{
   const input={productSlug:'Night light',accountHandle:'@Shop.One',planId:'plan_1',hookId:'hook_A',ctaKeyword:'LED'};
   const original=structuredClone(input);

@@ -49,7 +49,7 @@ export const instagramStateLabels = {
 export const instagramSessionLabels = {unknown: 'Chưa xác nhận phiên', login_required: 'Cần đăng nhập', signed_in: 'Đã đăng nhập'};
 
 /** @type {Record<string, string>} */
-export const instagramMetricLabels = {views:'Lượt xem',likes:'Lượt thích',comments:'Bình luận',saves:'Lượt lưu',shares:'Lượt chia sẻ',
+export const instagramMetricLabels = {views:'Lượt xem',likes:'Lượt thích',comments:'Bình luận',saves:'Lượt lưu',shares:'Lượt chia sẻ',reach:'Tài khoản tiếp cận',
   follows:'Lượt theo dõi mới',viewers:'Người xem',interactions:'Lượt tương tác',reelInteractions:'Tương tác với Reel',
   accountsEngaged:'Tài khoản tương tác',profileActivity:'Hoạt động trên hồ sơ',profileVisits:'Vào profile',linkClicks:'Bấm link'};
 
@@ -58,7 +58,7 @@ export const instagramMetricStates = {idle:'Chờ cập nhật',running:'Đang c
   waiting_browser:'Chờ hồ sơ rảnh',login_required:'Cần đăng nhập',error:'Chưa cập nhật được',unavailable:'Chưa có quyền xem Insights'};
 
 /** @type {Record<string, string>} */
-export const contentPlanLabels = {draft: 'Nháp', planned: 'Đã lên kế hoạch', published_manual: 'Đã đăng · nhập tay', published_browser: 'Đã đăng bằng trình duyệt'};
+export const contentPlanLabels = {draft: 'Nháp', planned: 'Đã lên kế hoạch', published_manual: 'Đã đăng · nhập tay', published_browser: 'Đã đăng qua app'};
 
 /** @type {Record<string, string>} */
 export const sceneRoleLabels = {hook: 'Mở đầu', body: 'Nội dung chính', cta: 'Kêu gọi hành động'};

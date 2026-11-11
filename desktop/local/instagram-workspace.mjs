@@ -104,7 +104,9 @@ export class InstagramWorkspace {
     if (!plan || plan.revision !== job.snapshot.revision) throw Error('Bài đã đăng, nhưng nội dung trong app đã đổi. Xem liên kết trong lịch sử đăng.');
     await this.request('/api/lab', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({
       kind: 'content_plan', id: plan.id, revision: plan.revision,
-      data: {...plan.data, accountId: job.snapshot.accountId, assetId: job.snapshot.assetId, status: 'published_browser', postUrl: job.postUrl},
+      // Keep the legacy "published via app" status for old readers; source is explicit.
+      data: {...plan.data, accountId: job.snapshot.accountId, assetId: job.snapshot.assetId, status: 'published_browser',
+        publishSource: job.snapshot.apiMode === 'api' ? 'api' : 'browser', postUrl: job.postUrl},
     })});
     this.changed();
   }

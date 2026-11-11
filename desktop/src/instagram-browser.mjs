@@ -2,6 +2,11 @@ import {browserCacheArgs,trimProfileCaches} from './storage-policy.mjs';
 import {join} from 'node:path';
 import {profileInput} from './shared.mjs';
 import {TouchVpn, TOUCH_VPN_ID} from './touch-vpn.mjs';
+import {z} from 'zod';
+
+const apiInput = z.object({apiMode:z.enum(['browser','api']).optional(),
+  apiUserId:z.string().regex(/^\d{1,40}$|^$/).optional(),
+  apiToken:z.string().trim().max(8192).optional(),clearApiToken:z.boolean().optional()});
 
 export class InstagramBrowsers {
   constructor({store, root, browser, secret}) {
@@ -25,8 +30,9 @@ export class InstagramBrowsers {
     this.store.set('instagram_profiles', this.rows().map(profile => profile.id === id ? {...profile, ...patch} : profile));
   }
   status() {
-    return this.rows().map(({proxy, ...profile}) => ({...profile,
-      session: this.contexts.has(profile.id) ? profile.session : 'unknown',
+    return this.rows().map(({proxy, encryptedApiToken, ...profile}) => ({...profile,
+      apiMode: profile.apiMode ?? 'browser', hasApiToken: !!encryptedApiToken,
+      session: profile.apiMode === 'api' || this.contexts.has(profile.id) ? profile.session : 'unknown',
       proxy: {server: proxy.server, username: proxy.username, hasPassword: !!proxy.encryptedPassword},
       open: this.contexts.has(profile.id), busy: this.busy.has(profile.id) || this.opening.has(profile.id) || this.pageOpening.has(profile.id),
       background: this.background.has(profile.id),
@@ -42,6 +48,13 @@ export class InstagramBrowsers {
     this.saving.add(id);
     try {
       const old = this.profile(id);
+      const api = apiInput.parse(input);
+      let encryptedApiToken = old?.encryptedApiToken ?? null;
+      if (api.clearApiToken) encryptedApiToken = null;
+      if (api.apiToken) {
+        try { encryptedApiToken = await this.secret.encrypt(api.apiToken); }
+        catch { throw Error('Chưa mã hóa được token Instagram API. Không lưu token dạng rõ.'); }
+      }
       const value = profileInput.parse({id, name: account.data.name.slice(0, 80), accountLabel: '', enabled: true,
         vpnEnabled: old?.vpnEnabled ?? true, proxy: old ? {server: old.proxy.server, username: old.proxy.username} : {server: '', username: ''}, ...input});
       const {password, clearPassword, ...proxy} = value.proxy;
@@ -50,8 +63,11 @@ export class InstagramBrowsers {
       if (password) encryptedPassword = await this.secret.encrypt(password);
       if (this.contexts.has(id) || this.opening.has(id) || this.busy.has(id)) throw Error('Hồ sơ đang được mở. Thử lưu lại sau.');
       const profile = {id, productId: account.data.productId, name: account.data.name,
+        apiMode:api.apiMode ?? old?.apiMode ?? 'browser',apiUserId:api.apiUserId ?? old?.apiUserId ?? null,
+        encryptedApiToken,apiConfigRevision:(old?.apiConfigRevision ?? 0) + 1,
         vpnEnabled: value.vpnEnabled, proxy: {...proxy, encryptedPassword},
-        session: 'unknown', handle: old?.handle ?? '', userId: old?.userId ?? '', checkedAt: null,
+        session: 'unknown', handle: old?.handle ?? '',
+        userId: api.apiMode && api.apiMode !== (old?.apiMode ?? 'browser') ? '' : old?.userId ?? '', checkedAt: null,
         vpn: null, error: '', createdAt: old?.createdAt ?? Date.now()};
       this.store.set('instagram_profiles', [...this.rows().filter(row => row.id !== id), profile]);
       return id;
