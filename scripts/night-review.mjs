@@ -180,7 +180,7 @@ function reviewCommit(git, commit, runs, withRuns) {
       if (line.startsWith('-')) {
         if (countedTestPath(path) && /\b(?:test|it|describe)\s*\(|\bassert\b/.test(line.slice(1))) count++;
       } else if (line.startsWith('+')) {
-        if (!testPath(path) && /(?:\?\?|\|\|)\s*0(?![\w.]|[eE][+-])|\.default\s*\(\s*0\s*\)/.test(line.slice(1))) zeroes.push(path + ':' + lineNumber);
+        if (codeFiles.includes(path) && !testPath(path) && /(?:\?\?|\|\|)\s*0(?![\w.]|[eE][+-])|\.default\s*\(\s*0\s*\)/.test(line.slice(1))) zeroes.push(path + ':' + lineNumber);
         lineNumber++;
       } else if (line.startsWith(' ')) lineNumber++;
     }

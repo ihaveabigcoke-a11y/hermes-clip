@@ -175,6 +175,20 @@ test('flags forbidden paths, semantic dependency edits, Unicode prompt length an
   assert.match(line, /Dòng test bị xóa: 1; desktop\/test\/retained.test.mjs \(1\)/);
 });
 
+test('zero-default flags ignore documentation and night reports but retain code line numbers', t => {
+  const f = fixture(t);
+  f.write('docs/a.md', 'Example: x ?? 0\n');
+  f.write('ops/night/out/T99.md', 'Review note: x ?? 0\n');
+  f.write('lib/a.ts', '// header\nexport const value = x ?? 0;\n');
+  f.report('T99');
+  const sha = f.commit('night T99: zero-default scope fixture');
+  const result = f.run();
+  assert.equal(result.status, 0, result.stderr);
+  const markdown = f.review();
+  assert.match(row(markdown, 'T99', sha), /\| done \| Mặc định 0 ngoài test: lib\/a\.ts:2 \|/);
+  assert.doesNotMatch(markdown, /(?:docs\/a\.md|ops\/night\/out\/T99\.md):\d/);
+});
+
 test('package formatting and scripts do not imply dependency changes; changed test mentions support backslashes', t => {
   const f = fixture(t);
   f.write('package.json', JSON.stringify({scripts: {test: 'node --test tests/one.test.mjs'}, devDependencies: {typescript: '1'}, dependencies: {zod: '1'}}) + '\n');
