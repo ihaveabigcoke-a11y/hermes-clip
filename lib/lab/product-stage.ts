@@ -1,4 +1,5 @@
 import type { LabRecord } from "./domain.ts";
+import { sampleCheckState } from "./sample-check.ts";
 
 export type ProductStage = 0 | 1 | 2 | 3;
 
@@ -45,6 +46,6 @@ export function productStage(
     notes.startsWith("Muse đề xuất · cần kiểm tra nguồn");
   const hasProofNotes =
     notes && !hasResearchNotes;
-  if (product.data.sampleCheck?.matchesVideo === true || product.data.sampleVerified === true || proofUrl || hasProofNotes) return 1;
+  if (sampleCheckState(product.data) === "verified" || proofUrl || hasProofNotes) return 1;
   return 0;
 }

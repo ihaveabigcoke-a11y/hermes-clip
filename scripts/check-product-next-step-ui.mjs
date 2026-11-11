@@ -1,4 +1,4 @@
-// T15/F01: source-built UI + synthetic records, intercepted requests only.
+// T15/F01/F03: source-built UI + synthetic records, intercepted requests only.
 import assert from 'node:assert/strict';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {resolve,join,extname,sep} from 'node:path';
@@ -32,7 +32,7 @@ const socialProject=nextRecord('production','social_project',{...structuredClone
 const socialAccount=nextRecord('social_account','social_account',{...base.account.data,productId:social.id});
 const landing=nextRecord('landing_page','landing_sample',{productId:sample.id,headline:'Sample fixture',description:'Synthetic preview only.',benefits:'',limitations:'',imageAssetId:'',ctaLabel:'Learn more',ctaUrl:''});
 let records=[supplier,sample,fresh,review,social,legacy,legacyNull,failed,older,latest,socialProject,socialAccount,landing,nextRecord('asset','sample_photo',{name:'Physical sample fixture.png',type:'image/png',size:1})];
-const posts=[],blocked=[],errors=[],measurements=[];
+const posts=[],blocked=[],errors=[],measurements=[],overviewChecks=[];
 const browser=await chromium.launch({headless:true,executablePath:process.env.HERMES_TEST_CHROME||'C:/Program Files/Google/Chrome/Application/chrome.exe',env:{...process.env,APPDATA:temp,LOCALAPPDATA:temp},args:['--disable-background-networking','--disable-component-update','--disable-crash-reporter','--no-proxy-server','--host-resolver-rules=MAP * ~NOTFOUND']});
 try {
   const context=await browser.newContext({viewport:{width:1366,height:768},deviceScaleFactor:1,serviceWorkers:'block'});
@@ -130,7 +130,37 @@ try {
   await go('view=landing&ops_id=sample_product');await page.getByRole('button',{name:'Sửa nội dung trang'}).waitFor();
   assert.equal(await page.getByRole('status').filter({hasText:'Chưa kiểm mẫu'}).count(),0);
   assert.equal(await page.getByRole('button',{name:'Xuất HTML trên máy'}).isEnabled(),true);
+  // Exactly four states; the verified product deliberately has the old flag false.
+  // Put legacy and failed first in turn so neither can be skipped by needsProof.
+  const unchecked=product('unchecked_product','Unchecked fixture',{sampleCheck:null});
+  for(const waiting of [[legacy,failed,unchecked],[failed,legacy,unchecked]]){
+    records=[fresh,...waiting];
+    await go('view=overview');
+    const focus=page.getByRole('region',{name:'Việc cần làm tiếp'});
+    await focus.waitFor();
+    const verifiedText=(await page.locator('.overview-stats .stat-cell small').first().innerText()).replace(/\s+/g,' ').trim();
+    const waitingText=(await page.locator('.decision-panel .decision-row strong').first().innerText()).replace(/\s+/g,' ').trim();
+    assert.equal(verifiedText,'1 đã kiểm mẫu sản phẩm');
+    assert.equal(waitingText,'3 sản phẩm chờ bằng chứng');
+    assert.equal(await focus.locator('.focus-kicker').innerText(),'BƯỚC TIẾP THEO · KIỂM CHỨNG');
+    assert.equal(await focus.locator('h2').innerText(),`Hoàn tất hồ sơ: ${waiting[0].data.name}.`);
+    await page.screenshot({path:join(out,`${checkId}-overview-${waiting[0].id}.png`),animations:'disabled'});
+    await focus.getByRole('button',{name:'Mở hồ sơ sản phẩm'}).click();
+    const proofDialog=page.getByRole('dialog');
+    assert.equal(await proofDialog.getByLabel('Tên sản phẩm',{exact:true}).inputValue(),waiting[0].data.name);
+    await proofDialog.getByRole('button',{name:'Hủy',exact:true}).click();await proofDialog.waitFor({state:'hidden'});
+    await go('view=products');await card('Fresh fixture').waitFor();
+    await filter.selectOption('verified');
+    const verifiedNames=await page.locator('.product-card h3').allTextContents();
+    assert.deepEqual(verifiedNames,['Fresh fixture']);
+    assert.equal(verifiedText,`${verifiedNames.length} đã kiểm mẫu sản phẩm`);
+    await filter.selectOption('unverified');
+    const waitingNames=(await page.locator('.product-card h3').allTextContents()).sort();
+    assert.deepEqual(waitingNames,['Failed fixture','Legacy fixture','Unchecked fixture']);
+    assert.equal(waitingText,`${waitingNames.length} sản phẩm chờ bằng chứng`);
+    overviewChecks.push({verifiedText,waitingText,focusProduct:waiting[0].id,verifiedNames,waitingNames});
+  }
   assert.deepEqual(errors,[]);assert.deepEqual(blocked,[]);assert.equal(posts.length,1);
-  await writeFile(join(out,`${checkId}-ui.json`),JSON.stringify({fixtureOnly:true,measurements,productSaves:posts.length,errors,blocked,checks:['five next-step cards','legacy absent/null checklist warning badges','verified/failed/unchecked badge tones','sample state filters','supplier editor','sample tri-state/date/notes/photos save','new project product selection','latest production deep link','social product deep link','landing warning false/true and non-blocking controls']},null,2)+'\n');
+  await writeFile(join(out,`${checkId}-ui.json`),JSON.stringify({fixtureOnly:true,measurements,overviewChecks,productSaves:posts.length,errors,blocked,checks:['five next-step cards','legacy absent/null checklist warning badges','verified/failed/unchecked badge tones','sample state filters','supplier editor','sample tri-state/date/notes/photos save','new project product selection','latest production deep link','social product deep link','landing warning false/true and non-blocking controls','four-state overview counts match both filters','overview proof action opens legacy/failed product']},null,2)+'\n');
   console.log(`${checkId} offline UI checks passed; one synthetic product save, no external request.`);
 } finally {await browser.close();}

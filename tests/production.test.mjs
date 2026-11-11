@@ -19,6 +19,20 @@ import {instagramProductSummary,instagramAccountContentRows} from '../lib/lab/in
 import {formulaProduction,formulaRecords} from './fixtures/formula-production.mjs';
 let seq=0;const run=(p,a,d,key=`cmd_${++seq}`,productRevision=p.productRevision)=>applyProduction(p,a,d,key,1000+seq,productRevision);
 
+test('F03 exported sample verification follows the checklist without rewriting the product',()=>{
+  const p=formulaProduction({approved:true,pinned:true});
+  for(const sampleVerified of [undefined,false,true]){
+    for(const sampleCheck of [undefined,null,{}, {matchesVideo:null},{matchesVideo:false},{matchesVideo:true}]){
+      const product={id:p.productId,revision:p.productRevision,kind:'product',data:{name:'Sample fixture',sampleVerified,sampleCheck}};
+      const before=structuredClone(product);
+      const manifest=buildManifest(p,p.variants[0].id,product);
+      assert.equal(manifest.product.sampleVerified,sampleCheck?.matchesVideo===true);
+      assert.equal(manifest.approval_scope,'internal');
+      assert.deepEqual(product,before);
+    }
+  }
+});
+
 test('nullable formula draft has safe waiting status across package preflight, guidance, queue and Instagram; export does no I/O',async t=>{
   const p=productionSchema.parse(JSON.parse(JSON.stringify(formulaProduction()))),before=structuredClone(p),records=formulaRecords(p);
   const fetched=t.mock.method(globalThis,'fetch',()=>{throw Error('Draft must never fetch media');});

@@ -4,7 +4,7 @@ import { codexRunSchema } from "./codex-exchange.ts";
 import { operationSchemas, candidateCurrencySchema, type Candidate, type ResearchBatch } from "./operations.ts";
 import { viralFormulaSchema } from "./viral-formulas.ts";
 import { referenceVideoDraftSchema } from "./viral-reference.ts";
-import { sampleCheckSchema } from "./sample-check.ts";
+import { sampleCheckSchema, sampleCheckState } from "./sample-check.ts";
 import { countKeywordComments } from './keyword-comments.ts';
 export { countKeywordComments } from './keyword-comments.ts';
 export const kinds = [
@@ -272,7 +272,7 @@ export function productMarginLabel(product: Record<string, any>) {
 }
 export function productGate(p: Record<string, any>) {
   if (p.archived) return "Sản phẩm đang lưu trữ.";
-  if (!p.sampleVerified)
+  if (sampleCheckState(p) !== "verified")
     return "Cần kiểm mẫu sản phẩm và ghi bằng chứng trước khi chạy bài test.";
   if (productHasMixedCurrencies(p)) return "Khác tiền tệ · chưa tính biên. Cần giá và chi phí cùng tiền tệ trước khi chạy bài test thương mại.";
   const margin = unitMargin(p);

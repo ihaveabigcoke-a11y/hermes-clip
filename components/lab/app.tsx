@@ -1172,7 +1172,7 @@ export default function LabApp() {
   }
   function overview() {
     const leads = metrics.reduce((n, m) => n + m.data.leads, 0);
-    const needsProof = products.find((p) => !p.data.sampleVerified);
+    const needsProof = products.find((p) => sampleCheckState(p.data) !== "verified");
     const focus = !products.length
       ? {
           label: "BẮT ĐẦU MỘT VÒNG THỬ",
@@ -1253,7 +1253,7 @@ export default function LabApp() {
               </span>
             </div>
             <small>
-              {products.filter((p) => p.data.sampleVerified).length} đã kiểm
+              {products.filter((p) => sampleCheckState(p.data) === "verified").length} đã kiểm
               mẫu sản phẩm
             </small>
           </div>
@@ -1381,7 +1381,7 @@ export default function LabApp() {
             >
               <span>
                 <strong>
-                  {products.filter((p) => !p.data.sampleVerified).length} sản
+                  {products.filter((p) => sampleCheckState(p.data) !== "verified").length} sản
                   phẩm chờ bằng chứng
                 </strong>
                 <small>Kiểm mẫu sản phẩm trước khi chạy test.</small>

@@ -154,7 +154,7 @@ test('mixed currencies block every unit margin and the commercial gate even with
     {currency:'CNY', costCurrency:'USD', shippingCurrency:'USD'},
     {cost:0, shipping:0, costCurrency:'CNY'},
   ]) {
-    const mixed = schemas.product.parse({...product.data, ...patch, sampleVerified:true});
+    const mixed = schemas.product.parse({...product.data, ...patch, sampleVerified:true, sampleCheck:{matchesVideo:true}});
     assert.equal(unitMargin(mixed), null);
     assert.equal(productMarginLabel(mixed), 'Khác tiền tệ · chưa tính biên');
     assert.match(productGate(mixed), /Khác tiền tệ · chưa tính biên/);
@@ -172,7 +172,7 @@ test('legacy products without currency overrides still parse and calculate all p
   assert.equal(productMarginLabel(parsed), formatMoney(9, 'USD'));
   for (const currency of ['USD', 'VND', 'GBP', 'EUR', 'CNY']) {
     for (const overrides of [{}, {costCurrency:null, shippingCurrency:null}, {costCurrency:currency, shippingCurrency:currency}]) {
-      const row = schemas.product.parse({...legacy, currency, ...overrides, sampleVerified:true});
+      const row = schemas.product.parse({...legacy, currency, ...overrides, sampleVerified:true, sampleCheck:{matchesVideo:true}});
       assert.equal(unitMargin(row), 9);
       assert.equal(productGate(row), '');
       assert.equal(productCurrency(row, 'cost'), currency);
@@ -198,7 +198,7 @@ test('unknown product costs remain unknown including legacy research zero placeh
   assert.equal(schemas.product.safeParse({...product.data, shipping: null}).success, true);
   assert.equal(unitMargin({...product.data, cost: 0, researchOrigin: {batchId:'b',candidateId:'c'}, proofNotes:'cost chưa biết, hồ sơ tạm ghi 0'}), null);
   assert.equal(unitMargin({...product.data, cost: 0, shipping: 0, fees: 0, buffer: 0}), 30);
-  assert.match(productGate({...product.data, sampleVerified: true, cost: null}), /chi phí/);
+  assert.match(productGate({...product.data, sampleVerified: true, sampleCheck:{matchesVideo:true}, cost: null}), /chi phí/);
 });
 
 test('new products default to the US and English while saved and legacy market choices are preserved',()=>{
@@ -216,8 +216,18 @@ test('new products default to the US and English while saved and legacy market c
 });
 test('unit economics retains all per-order costs',()=>assert.equal(unitMargin(product.data),9));
 test('sample gate cannot be passed by positive margin alone',()=>assert.match(productGate(product.data),/mẫu sản phẩm/));
-test('zero margin remains blocked even with proof',()=>assert.match(productGate({...product.data,sampleVerified:true,price:21}),/lớn hơn 0/));
-test('verified evidence and positive economics passes',()=>assert.equal(productGate({...product.data,sampleVerified:true}),''));
+test('F03 commercial sample gate requires a verified checklist regardless of the legacy flag',()=>{
+  for(const sampleVerified of [undefined,false,true]){
+    for(const sampleCheck of [undefined,null,{}, {matchesVideo:null},{matchesVideo:false},{matchesVideo:true}]){
+      const data={...product.data,sampleVerified,sampleCheck},before=structuredClone(data);
+      if(sampleCheck?.matchesVideo===true)assert.equal(productGate(data),'');
+      else assert.equal(productGate(data),'Cần kiểm mẫu sản phẩm và ghi bằng chứng trước khi chạy bài test.');
+      assert.deepEqual(data,before);
+    }
+  }
+});
+test('zero margin remains blocked even with proof',()=>assert.match(productGate({...product.data,sampleVerified:true,sampleCheck:{matchesVideo:true},price:21}),/lớn hơn 0/));
+test('verified evidence and positive economics passes',()=>assert.equal(productGate({...product.data,sampleVerified:true,sampleCheck:{matchesVideo:true}}),''));
 test('unsubstantiated verified sample fails schema',()=>assert.equal(schemas.product.safeParse({...product.data,sampleVerified:true,proofNotes:'',proofUrl:''}).success,false));
 test('schemas strip unknown secret fields rather than saving them',()=>{const r=schemas.product.parse({...product.data,api_key:'never-store-me'});assert.equal('api_key'in r,false);});
 test('unsafe URL schemes rejected',()=>assert.equal(schemas.product.safeParse({...product.data,supplierUrl:'javascript:alert(1)'}).success,false));
@@ -243,6 +253,19 @@ test('Vietnamese money is currency-specific',()=>{assert.ok(formatMoney(49,'USD'
 const stageRecord = (kind, id, data = {}) => ({id, kind, revision: 1, updatedAt: 0, data});
 const stageProduct = (id = 'new', data = {}) => stageRecord('product', id, {
   ...emptyProduct, name: id, supplierUrl: 'https://supplier.example/item', ...data,
+});
+
+test('F03 sample evidence advances the stage only for verified checklists while explicit proof still counts',()=>{
+  for(const sampleVerified of [undefined,false,true]){
+    for(const sampleCheck of [undefined,null,{}, {matchesVideo:null},{matchesVideo:false},{matchesVideo:true}]){
+      const p=stageProduct('sample',{sampleVerified,sampleCheck}),before=structuredClone(p);
+      assert.equal(productStage(p,[]),sampleCheck?.matchesVideo===true?1:0);
+      for(const proof of [{proofUrl:'https://supplier.example/quote'},{proofNotes:'Supplier quote for the exact SKU.'}]){
+        assert.equal(productStage({...p,data:{...p.data,...proof}},[]),1);
+      }
+      assert.deepEqual(p,before);
+    }
+  }
 });
 
 test('product stages follow the current workspace record structure: Treat Trader 3, ChomChom/Ruffwear 2, new 0', () => {
@@ -280,7 +303,7 @@ test('verification stage requires sample or explicit proof, not supplier/referen
   ]) assert.equal(productStage(stageProduct('p', data), []), 0);
   assert.equal(productStage(stageRecord('product', 'legacy', {name: 'Legacy'}), []), 0);
   for (const data of [
-    {sampleVerified: true},
+    {sampleVerified: true, sampleCheck:{matchesVideo:true}},
     {proofNotes: 'Supplier quote received for the exact SKU on 2026-11-11.'},
     {proofUrl: 'https://supplier.example/sample-proof'},
   ]) assert.equal(productStage(stageProduct('p', data), []), 1);
@@ -292,7 +315,7 @@ test('unverified Muse promotion notes do not count as proof; recorded verificati
     proofNotes: '  Muse đề xuất · cần kiểm tra nguồn\nSupplier listing, cost and shipping unknown.',
   });
   assert.equal(productStage(p, []), 0);
-  assert.equal(productStage({...p, data: {...p.data, sampleVerified: true}}, []), 1);
+  assert.equal(productStage({...p, data: {...p.data, sampleVerified: true, sampleCheck:{matchesVideo:true}}}, []), 1);
   assert.equal(productStage({...p, data: {...p.data, proofNotes: 'Sample received and checked.'}}, []), 0);
   assert.equal(productStage({...p, data: {...p.data, proofUrl: 'https://supplier.example/sample-proof'}}, []), 1);
 });

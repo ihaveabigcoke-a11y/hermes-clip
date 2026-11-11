@@ -1,0 +1,60 @@
+{
+  "fixtureOnly": true,
+  "measurements": [
+    {
+      "width": 1366,
+      "pageWidth": 1356,
+      "sidebar": 232
+    },
+    {
+      "width": 1920,
+      "pageWidth": 1910,
+      "sidebar": 232
+    }
+  ],
+  "overviewChecks": [
+    {
+      "verifiedText": "1 đã kiểm mẫu sản phẩm",
+      "waitingText": "3 sản phẩm chờ bằng chứng",
+      "focusProduct": "legacy_product",
+      "verifiedNames": [
+        "Fresh fixture"
+      ],
+      "waitingNames": [
+        "Failed fixture",
+        "Legacy fixture",
+        "Unchecked fixture"
+      ]
+    },
+    {
+      "verifiedText": "1 đã kiểm mẫu sản phẩm",
+      "waitingText": "3 sản phẩm chờ bằng chứng",
+      "focusProduct": "failed_product",
+      "verifiedNames": [
+        "Fresh fixture"
+      ],
+      "waitingNames": [
+        "Failed fixture",
+        "Legacy fixture",
+        "Unchecked fixture"
+      ]
+    }
+  ],
+  "productSaves": 1,
+  "errors": [],
+  "blocked": [],
+  "checks": [
+    "five next-step cards",
+    "legacy absent/null checklist warning badges",
+    "verified/failed/unchecked badge tones",
+    "sample state filters",
+    "supplier editor",
+    "sample tri-state/date/notes/photos save",
+    "new project product selection",
+    "latest production deep link",
+    "social product deep link",
+    "landing warning false/true and non-blocking controls",
+    "four-state overview counts match both filters",
+    "overview proof action opens legacy/failed product"
+  ]
+}
