@@ -1,0 +1,66 @@
+✔ WebP upload reads signature at byte offsets when RIFF size contains UTF-8 byte sequences (118.5438ms)
+✔ local HTTP workspace persists canonical records and media across restart, with cookie/host/origin checks (66.669ms)
+✔ IPC accepts only the bound local origin and its top-level frame (0.384ms)
+✔ local Studio creates six templates atomically and preserves edits on retry (36.2137ms)
+✔ bundled QA workspace seeds once and never replaces later edits (34.3275ms)
+✔ existing legacy reference assets gain metadata once while retaining user fields (30.1449ms)
+✔ Muse login uses the chosen URL; changing domains disables an old flow instead of guessing a service (19.6241ms)
+✔ local distribution includes the font bytes referenced by its compiled stylesheet (3.205ms)
+✔ reference roles reach Muse in attachment order and legacy jobs deduplicate (5.6462ms)
+✔ Muse waits for attachment readiness with an empty prompt before filling text (0.5616ms)
+✔ failed attachment preparation reports its stage without filling the prompt or sending (0.4775ms)
+✔ identical first and last image bytes upload under distinct filenames without changing the reference paths (6.6246ms)
+✔ media tasks lift earlier writing-only scope while keeping the brief and attachment roles (0.3587ms)
+✔ Muse chat waits beyond 30 seconds and captures exactly the new result (0.5459ms)
+✔ Muse chat stops on ambiguous results without a second send (0.1859ms)
+✖ Muse preview download preserves JPEG extension and the exact result selector (1.2581ms)
+✔ Muse keeps the open signed-in page when checking its session (0.7396ms)
+✔ Muse preserves an existing user draft before attaching references (0.2438ms)
+✔ configured form adapters still navigate to their creation route (0.1ms)
+✔ Muse stops when its new message reports unconfirmed delivery (0.1532ms)
+✔ An earlier delivery error does not fail a new Muse submission (0.1298ms)
+✔ new generation uses a separate Muse conversation after preserving drafts (0.1354ms)
+✔ completed text-only Muse reply stops with its response and never sends twice (0.3765ms)
+✔ rechecking a settled text reply confirms the same request without sending (0.4458ms)
+✔ rechecking finds a late media result before allowing another attempt (0.1544ms)
+✔ rechecking tolerates Markdown whitespace and truncated receipts, while rejecting changed complete replies (0.2071ms)
+✔ rechecking preserves uncertain, changed, multiple and still-generating conversations (0.3535ms)
+✔ rechecking validates the stored thread before navigation (0.1496ms)
+✔ immutable media uses one physical file, keeps independent paths and rejects overwrite (12.5414ms)
+✔ download verifies target, removes browser artifact and temp; changed download preserves old result (5.7048ms)
+✔ startup cleanup preserves active/recent/referenced/unknown files and SQLite (8.2733ms)
+✔ low disk pauses queued dispatch without altering submitted receipts (14.2283ms)
+✔ log rotation bounds regenerable logs and preserves latest files (6.9425ms)
+✔ real local upload retries keep one record and independent jobs share bytes across restart (100.5601ms)
+✔ text-only result reconciliation preserves accounting and creates a clean retry (26.6652ms)
+✔ result reconciliation links a late file and keeps failures recoverable (15.8429ms)
+✔ pause cancels pending start before dispatch and allows a later explicit start (166.2944ms)
+✔ pause cancels pending enqueueAndRun before dispatch and allows a later explicit start (86.7871ms)
+✔ closing a launching profile rechecks the active lock before closing its browser (11.9684ms)
+✔ closing a launching profile rechecks the checking lock before closing its browser (9.6945ms)
+✔ dispatch waits for browser close to finish and resumes the approved queue (74.5189ms)
+✔ a pending start cancelled by pause cannot dispatch alongside a newer explicit start (97.6295ms)
+✔ resume and profile edits reject a pending browser close without changing the job (10.2684ms)
+✔ reopening waits for an in-flight close and duplicate close calls share one operation (9.5795ms)
+ℹ tests 44
+ℹ suites 0
+ℹ pass 43
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 612.3235
+
+✖ failing tests:
+
+test at desktop\test\muse.test.mjs:136:1
+✖ Muse preview download preserves JPEG extension and the exact result selector (1.2581ms)
+  Error: Chưa đo được dung lượng ổ đĩa. Kiểm tra quyền truy cập thư mục dữ liệu trước khi chạy tiếp.
+      at assertDiskSpace (file:///C:/Users/ADMIN/Documents/ChatGPT/ECOM%20B%E1%BA%B0NG%20VIDEO%20AI/.product-lab-repair/storage-research-20261111/source/desktop/src/storage-policy.mjs:18:86)
+      at saveDownload (file:///C:/Users/ADMIN/Documents/ChatGPT/ECOM%20B%E1%BA%B0NG%20VIDEO%20AI/.product-lab-repair/storage-research-20261111/source/desktop/src/storage-policy.mjs:58:5)
+      at MuseAdapter.fetch (file:///C:/Users/ADMIN/Documents/ChatGPT/ECOM%20B%E1%BA%B0NG%20VIDEO%20AI/.product-lab-repair/storage-research-20261111/source/desktop/src/muse.mjs:233:11)
+      at async TestContext.<anonymous> (file:///C:/Users/ADMIN/Documents/ChatGPT/ECOM%20B%E1%BA%B0NG%20VIDEO%20AI/.product-lab-repair/storage-research-20261111/source/desktop/test/muse.test.mjs:163:16)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    code: 'STORAGE_LOW'
+  }

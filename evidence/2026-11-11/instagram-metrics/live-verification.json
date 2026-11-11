@@ -1,0 +1,61 @@
+{
+  "at": "2026-11-11T09:04:57.927Z",
+  "scope": "Installed app with real Instagram account and real Insights; zero publish/refresh calls in this verification",
+  "checks": [
+    "On app startup the scheduler opened the saved account with Touch VPN, read the specific real Reel Insights and closed the temporary browser; no refresh click or publication",
+    "One new cumulative metric record with source/account/time; original records, publishing job, Muse jobs/profiles/batch and media unchanged",
+    "App displays measured counts, unavailable values, source and next refresh time without horizontal overflow"
+  ],
+  "metrics": {
+    "intervalMs": 1800000,
+    "active": null,
+    "rows": [
+      {
+        "planId": "8bf90027f0334e8885cba81c206a9700",
+        "state": "partial",
+        "failures": 0,
+        "lastAttemptAt": 1794387782879,
+        "lastSuccessAt": 1794387796064,
+        "nextAttemptAt": 1794389596083,
+        "error": ""
+      }
+    ]
+  },
+  "measurement": {
+    "id": "social_metric_8bf90027f0334e8885cba81c206a9700",
+    "kind": "social_metric",
+    "data": {
+      "planId": "8bf90027f0334e8885cba81c206a9700",
+      "observedAt": "2026-11-11T09:03:16.064Z",
+      "views": null,
+      "likes": 0,
+      "comments": 0,
+      "saves": 0,
+      "shares": 0,
+      "profileVisits": null,
+      "linkClicks": null,
+      "viewers": null,
+      "interactions": null,
+      "reelInteractions": 0,
+      "accountsEngaged": null,
+      "profileActivity": 0,
+      "follows": 0,
+      "source": "instagram_browser",
+      "accountId": "977eafe33820407bb72e1e0ad6bdfc01",
+      "handle": "nao.mirita",
+      "insightsUrl": "https://www.instagram.com/insights/media/4027923430862411569/",
+      "approximate": [],
+      "sourceUrl": "https://www.instagram.com/reel/DfmDwT_Btcx/",
+      "notes": "Số liệu cộng dồn Instagram hiển thị tại thời điểm đo. Chỉ số để trống hoặc không có trên trang được giữ là chưa có dữ liệu."
+    },
+    "revision": 1,
+    "updatedAt": 1794387796080
+  },
+  "uiText": "Số liệu Instagram\n\nĐo từ Instagram · 16:03 11-11\n\nCập nhật ngay\nCó chỉ số chưa được cung cấp\nLượt xem\nChưa có dữ liệu\nLượt thích\n0\nBình luận\n0\nLượt lưu\n0\nLượt chia sẻ\n0\nLượt theo dõi mới\n0\nChỉ số khác và nguồn đo\nNgười xem\nChưa có dữ liệu\nLượt tương tác\nChưa có dữ liệu\nTương tác với Reel\n0\nTài khoản tương tác\nChưa có dữ liệu\nHoạt động trên hồ sơ\n0\nLượt truy cập hồ sơ\nChưa có dữ liệu\nLượt bấm liên kết\nChưa có dữ liệu\n\nĐây là số liệu cộng dồn của bài đăng. “Chưa có dữ liệu” nghĩa là Instagram chưa hiển thị chỉ số đó; không phải số 0. Dấu ≈ chỉ số được Instagram rút gọn.\n\nBài đăng được đo\n\nTự cập nhật mỗi 30 phút khi Hermes đang mở. Lần tiếp theo: 16:33 11-11.",
+  "bounds": {
+    "width": 1390,
+    "scroll": 1380,
+    "right": 1341.543701171875
+  },
+  "passed": true
+}

@@ -1,0 +1,149 @@
+{
+  "at": "2026-11-11T01:00:23.209Z",
+  "checks": [
+    "Restart preserved every job, workspace record, original MP4 checksum, profile ID and batch counter",
+    "Library filters and three primary versions persisted",
+    "Three English content drafts retained their captions and project associations after restart",
+    "All three exact video links opened and played after restart",
+    "All packaged font files are served successfully",
+    "Resolved product failures no longer clutter pending work, with full attempts retained in history"
+  ],
+  "errors": [],
+  "fonts": [
+    {
+      "name": "be-vietnam-pro-latin-400-normal.woff2",
+      "status": 200,
+      "bytes": 21168
+    },
+    {
+      "name": "be-vietnam-pro-latin-500-normal.woff2",
+      "status": 200,
+      "bytes": 21892
+    },
+    {
+      "name": "be-vietnam-pro-latin-600-normal.woff2",
+      "status": 200,
+      "bytes": 22032
+    },
+    {
+      "name": "be-vietnam-pro-latin-700-normal.woff2",
+      "status": 200,
+      "bytes": 22152
+    },
+    {
+      "name": "be-vietnam-pro-latin-ext-400-normal.woff2",
+      "status": 200,
+      "bytes": 13056
+    },
+    {
+      "name": "be-vietnam-pro-latin-ext-500-normal.woff2",
+      "status": 200,
+      "bytes": 13548
+    },
+    {
+      "name": "be-vietnam-pro-latin-ext-600-normal.woff2",
+      "status": 200,
+      "bytes": 13608
+    },
+    {
+      "name": "be-vietnam-pro-latin-ext-700-normal.woff2",
+      "status": 200,
+      "bytes": 13852
+    },
+    {
+      "name": "be-vietnam-pro-vietnamese-400-normal.woff2",
+      "status": 200,
+      "bytes": 11532
+    },
+    {
+      "name": "be-vietnam-pro-vietnamese-500-normal.woff2",
+      "status": 200,
+      "bytes": 12172
+    },
+    {
+      "name": "be-vietnam-pro-vietnamese-600-normal.woff2",
+      "status": 200,
+      "bytes": 12176
+    },
+    {
+      "name": "be-vietnam-pro-vietnamese-700-normal.woff2",
+      "status": 200,
+      "bytes": 12468
+    },
+    {
+      "name": "LICENSE-be-vietnam-pro.txt",
+      "status": 200,
+      "bytes": 6476
+    },
+    {
+      "name": "LICENSE-sora.txt",
+      "status": 200,
+      "bytes": 4382
+    },
+    {
+      "name": "sora-latin-500-normal.woff2",
+      "status": 200,
+      "bytes": 15056
+    },
+    {
+      "name": "sora-latin-600-normal.woff2",
+      "status": 200,
+      "bytes": 15000
+    },
+    {
+      "name": "sora-latin-700-normal.woff2",
+      "status": 200,
+      "bytes": 15128
+    },
+    {
+      "name": "sora-latin-ext-500-normal.woff2",
+      "status": 200,
+      "bytes": 7476
+    },
+    {
+      "name": "sora-latin-ext-600-normal.woff2",
+      "status": 200,
+      "bytes": 7536
+    },
+    {
+      "name": "sora-latin-ext-700-normal.woff2",
+      "status": 200,
+      "bytes": 7448
+    }
+  ],
+  "after": {
+    "at": "2026-11-11T01:00:26.725Z",
+    "jobs": 25,
+    "records": 34,
+    "jobRowsSha256": "cb2eea67379cb9ebcf7f1f21949d2a47eb862baf2c438ee111658a03707f8700",
+    "recordRowsSha256": "2d5da18de5686a0116124e7516029e949de6bb089817612b94abdee39097bc82",
+    "profileIds": [
+      "a7338c4e-16f4-45e6-a741-629962e42a37",
+      "ad07a9af-9ae6-4710-b90f-6cf2dfe34ae3",
+      "c7ab57e9-b988-47bd-b56f-acd86c21a3fa"
+    ],
+    "batch": {
+      "id": "9f7aa9b8-c59a-4f32-8255-25cecfb78c0b",
+      "startedAt": 1794342406010,
+      "perProfileLimit": 3,
+      "submittedByProfile": {
+        "a7338c4e-16f4-45e6-a741-629962e42a37": 2
+      }
+    },
+    "activeJobs": [],
+    "video": {
+      "id": "1a10edfc-3825-4b30-84c1-7ecc820d7b01",
+      "state": "ready",
+      "sha256": "b78b720813879835774432cab04a5b70fa865783dfa78696c1a7492c5eddcd12",
+      "bytes": 4407714,
+      "metadata": {
+        "width": 720,
+        "height": 1280,
+        "duration": 10,
+        "verifiedBy": "container"
+      },
+      "imported": true
+    }
+  },
+  "passed": true
+}

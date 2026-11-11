@@ -1,0 +1,16 @@
+✔ portable text filters credentials and local paths and removes URL query credentials (26.8067ms)
+✔ portable metadata rejects underscore credentials and decoded sensitive URL paths (16.5209ms)
+✔ portable text redacts URL userinfo in queries, titles and excerpts (17.6774ms)
+✔ rejects duplicate IDs before a step can overwrite a receipt (0.3557ms)
+✔ runner resumes completed research without a second request and preserves its source report (34.9466ms)
+✔ failure writes an honest report, releases lock, and never records a successful step (13.2837ms)
+✔ modified or missing research artifacts are rerun; portable exchange excludes paths and raw tool fields (49.7731ms)
+✔ reference resume checks extracted frame contents before reuse (38.9464ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 305.8037

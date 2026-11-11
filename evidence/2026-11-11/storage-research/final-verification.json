@@ -1,0 +1,56 @@
+{
+  "at": 1794395292644,
+  "checks": [
+    "Old projects, all 25 Muse jobs, one published Instagram job, profile IDs and non-metric records preserved",
+    {
+      "protectedMediaFilesHashVerified": 64,
+      "hardlinksVerified": 602
+    },
+    "Ten sourced images visibly loaded; all ten candidates and research state persist after restart"
+  ],
+  "tableScreenshot": {
+    "path": "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM BẰNG VIDEO AI\\.product-lab-repair\\storage-research-20261111\\..\\..\\outputs\\Hermes-Clip-Storage-Research-2026-11-11\\10-research-table-final.png",
+    "width": 1920,
+    "title": "Nghiên cứu · Hermes Clip",
+    "height": 1020
+  },
+  "counts": {
+    "records": 40,
+    "jobs": 25,
+    "profiles": 3,
+    "chats": 15,
+    "researchCandidates": 10
+  },
+  "storage": {
+    "freeBytes": 88208064512,
+    "minFreeBytes": 2147483648,
+    "blocked": false,
+    "message": ""
+  },
+  "research": {
+    "runs": [
+      {
+        "id": "51dba84b-ea64-4156-8f86-1ffa0457d1df",
+        "batchId": "research_51dba84b-ea64-4156-8f86-1ffa0457d1df",
+        "profileId": "ad07a9af-9ae6-4710-b90f-6cf2dfe34ae3",
+        "query": "Sản phẩm nguồn Trung Quốc, không thương hiệu, nhẹ, dễ trình diễn bằng video ngắn cho khách hàng Mỹ.",
+        "state": "done",
+        "createdAt": 1794393904243,
+        "step": 3,
+        "count": 10,
+        "requestIds": [
+          "research_51dba84b-ea64-4156-8f86-1ffa0457d1df_0",
+          "research_51dba84b-ea64-4156-8f86-1ffa0457d1df_1",
+          "research_51dba84b-ea64-4156-8f86-1ffa0457d1df_2"
+        ],
+        "error": "",
+        "target": 10,
+        "updatedAt": 1794394618217,
+        "recoveries": 0,
+        "finishedAt": 1794394618217
+      }
+    ],
+    "active": null
+  },
+  "passed": true
+}

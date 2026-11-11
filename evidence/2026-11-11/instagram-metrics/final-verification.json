@@ -1,0 +1,137 @@
+{
+  "at": "2026-11-11T09:09:53.173Z",
+  "scope": "Installed Hermes with real saved Instagram measurement; no refresh or publication requested",
+  "checks": [
+    "Real measured data, published job, Muse jobs/profiles/batch and original MP4 retained across installed app restart",
+    "Saved next measurement time retained; startup does not read again before due or create a publishing job",
+    "19 changed source files and 42 build files match the verified staging build"
+  ],
+  "retainedPreviousBundles": [
+    "ui\\assets\\index-1qN1W9ro.js",
+    "ui\\assets\\index-4FHcCDVX.css",
+    "ui\\assets\\index-623eUWhS.css",
+    "ui\\assets\\index-BCYLYF1w.js",
+    "ui\\assets\\index-BVyWWwTq.css",
+    "ui\\assets\\index-BXa4zRjU.js",
+    "ui\\assets\\index-Beimes7D.css",
+    "ui\\assets\\index-BjgUAhmD.js",
+    "ui\\assets\\index-C-WwX6by.js",
+    "ui\\assets\\index-C0iT4jYc.css",
+    "ui\\assets\\index-C5_o7_uO.js",
+    "ui\\assets\\index-CH5CEije.js",
+    "ui\\assets\\index-CHkF26kZ.js",
+    "ui\\assets\\index-CS-0AXZR.js",
+    "ui\\assets\\index-CUM3Z3e9.js",
+    "ui\\assets\\index-CV4zXGGN.css",
+    "ui\\assets\\index-Ce8h69u1.js",
+    "ui\\assets\\index-CfhcxPHY.js",
+    "ui\\assets\\index-ChUFSsgg.js",
+    "ui\\assets\\index-ClIgLP07.css",
+    "ui\\assets\\index-Cp0q1HnS.css",
+    "ui\\assets\\index-CpBkD3jU.js",
+    "ui\\assets\\index-D7l6EQnY.js",
+    "ui\\assets\\index-DGrrXiep.js",
+    "ui\\assets\\index-DM0S-Wb_.js",
+    "ui\\assets\\index-Dc1LneLj.css",
+    "ui\\assets\\index-DpJO83TA.css",
+    "ui\\assets\\index-MGD4D1jW.js",
+    "ui\\assets\\index-OX0kwbO5.js",
+    "ui\\assets\\index-TCbpm8yL.css",
+    "ui\\assets\\index-pxvSnQAo.js"
+  ],
+  "loadedAssets": [
+    "/assets/index-Du0wFc2I.js",
+    "/assets/index-yc3zMQL3.css"
+  ],
+  "bounds": {
+    "width": 1390,
+    "scroll": 1380,
+    "right": 1341.543701171875
+  },
+  "screenshot": {
+    "path": "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM B?NG VIDEO AI\\.product-lab-repair\\instagram-metrics-20261111\\..\\..\\outputs\\Hermes-Clip-Instagram-Metrics-2026-11-11\\06-metrics-after-restart.png",
+    "width": 1920,
+    "title": "Instagram � Hermes Clip",
+    "height": 1020
+  },
+  "metrics": {
+    "intervalMs": 1800000,
+    "active": null,
+    "rows": [
+      {
+        "planId": "8bf90027f0334e8885cba81c206a9700",
+        "state": "partial",
+        "failures": 0,
+        "lastAttemptAt": 1794387782879,
+        "lastSuccessAt": 1794387796064,
+        "nextAttemptAt": 1794389596083,
+        "error": ""
+      }
+    ]
+  },
+  "measurement": {
+    "id": "social_metric_8bf90027f0334e8885cba81c206a9700",
+    "kind": "social_metric",
+    "data": {
+      "planId": "8bf90027f0334e8885cba81c206a9700",
+      "observedAt": "2026-11-11T09:03:16.064Z",
+      "views": null,
+      "likes": 0,
+      "comments": 0,
+      "saves": 0,
+      "shares": 0,
+      "profileVisits": null,
+      "linkClicks": null,
+      "viewers": null,
+      "interactions": null,
+      "reelInteractions": 0,
+      "accountsEngaged": null,
+      "profileActivity": 0,
+      "follows": 0,
+      "source": "instagram_browser",
+      "accountId": "977eafe33820407bb72e1e0ad6bdfc01",
+      "handle": "nao.mirita",
+      "insightsUrl": "https://www.instagram.com/insights/media/4027923430862411569/",
+      "approximate": [],
+      "sourceUrl": "https://www.instagram.com/reel/DfmDwT_Btcx/",
+      "notes": "Số liệu cộng dồn Instagram hiển thị tại thời điểm đo. Chỉ số để trống hoặc không có trên trang được giữ là chưa có dữ liệu."
+    },
+    "revision": 1,
+    "updatedAt": 1794387796080
+  },
+  "data": {
+    "at": "2026-11-11T09:09:53.421Z",
+    "jobs": 25,
+    "records": 37,
+    "jobRowsSha256": "cb2eea67379cb9ebcf7f1f21949d2a47eb862baf2c438ee111658a03707f8700",
+    "recordRowsSha256": "bdab28cb791e3993a88dd604fbab2a17920e4f22f3b5b7e4a62f626a150d7037",
+    "profileIds": [
+      "a7338c4e-16f4-45e6-a741-629962e42a37",
+      "ad07a9af-9ae6-4710-b90f-6cf2dfe34ae3",
+      "c7ab57e9-b988-47bd-b56f-acd86c21a3fa"
+    ],
+    "batch": {
+      "id": "9f7aa9b8-c59a-4f32-8255-25cecfb78c0b",
+      "startedAt": 1794342406010,
+      "perProfileLimit": 3,
+      "submittedByProfile": {
+        "a7338c4e-16f4-45e6-a741-629962e42a37": 2
+      }
+    },
+    "activeJobs": [],
+    "video": {
+      "id": "1a10edfc-3825-4b30-84c1-7ecc820d7b01",
+      "state": "ready",
+      "sha256": "b78b720813879835774432cab04a5b70fa865783dfa78696c1a7492c5eddcd12",
+      "bytes": 4407714,
+      "metadata": {
+        "width": 720,
+        "height": 1280,
+        "duration": 10,
+        "verifiedBy": "container"
+      },
+      "imported": true
+    }
+  },
+  "passed": true
+}

@@ -1,0 +1,120 @@
+{
+  "at": 1794395138839,
+  "checks": [
+    {
+      "playback": {
+        "width": 720,
+        "height": 1280,
+        "duration": 10,
+        "currentTime": 0.310076,
+        "src": "http://127.0.0.1:63791/api/assets/upload_desktop_7b3e5d0b-897e-4924-88f2-e659c1926d87"
+      }
+    },
+    {
+      "playback": {
+        "width": 720,
+        "height": 1280,
+        "duration": 10,
+        "currentTime": 0.307008,
+        "src": "http://127.0.0.1:63791/api/assets/upload_desktop_8a995cac-beb6-44db-910c-d3ab67bf177b"
+      }
+    },
+    {
+      "playback": {
+        "width": 720,
+        "height": 1280,
+        "duration": 10,
+        "currentTime": 0.312962,
+        "src": "http://127.0.0.1:63791/api/assets/upload_desktop_0d88ebe5-6862-40f0-9344-6f0f15f4a2db"
+      }
+    },
+    "Queue opens with existing job history",
+    {
+      "viewport": {
+        "width": 986,
+        "scroll": 976,
+        "table": 749
+      }
+    },
+    {
+      "viewport": {
+        "width": 730,
+        "scroll": 721,
+        "table": 494
+      }
+    },
+    {
+      "viewport": {
+        "width": 356,
+        "scroll": 347,
+        "table": 316
+      }
+    },
+    "All preexisting non-metric records, Muse jobs and Instagram publication jobs preserved"
+  ],
+  "errors": [],
+  "screenshots": [
+    {
+      "path": "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM BẰNG VIDEO AI\\.product-lab-repair\\storage-research-20261111\\..\\..\\outputs\\Hermes-Clip-Storage-Research-2026-11-11\\03-library-native.png",
+      "width": 1920,
+      "title": "Thư viện · Hermes Clip",
+      "height": 1020
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM BẰNG VIDEO AI\\.product-lab-repair\\storage-research-20261111\\..\\..\\outputs\\Hermes-Clip-Storage-Research-2026-11-11\\04-queue-native.png",
+      "width": 1920,
+      "title": "Hàng đợi · Hermes Clip",
+      "height": 1020
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM BẰNG VIDEO AI\\.product-lab-repair\\storage-research-20261111\\..\\..\\outputs\\Hermes-Clip-Storage-Research-2026-11-11\\05-muse-native.png",
+      "width": 1920,
+      "title": "Tài khoản Muse · Hermes Clip",
+      "height": 1020
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM BẰNG VIDEO AI\\.product-lab-repair\\storage-research-20261111\\..\\..\\outputs\\Hermes-Clip-Storage-Research-2026-11-11\\06-settings-native.png",
+      "width": 1920,
+      "title": "Cài đặt · Hermes Clip",
+      "height": 1020
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM BẰNG VIDEO AI\\.product-lab-repair\\storage-research-20261111\\..\\..\\outputs\\Hermes-Clip-Storage-Research-2026-11-11\\07-research-native.png",
+      "width": 1920,
+      "title": "Nghiên cứu · Hermes Clip",
+      "height": 1020
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM BẰNG VIDEO AI\\.product-lab-repair\\storage-research-20261111\\..\\..\\outputs\\Hermes-Clip-Storage-Research-2026-11-11\\08-research-detail-native.png",
+      "width": 1920,
+      "title": "Nghiên cứu · Hermes Clip",
+      "height": 1020
+    }
+  ],
+  "research": {
+    "runs": [
+      {
+        "id": "51dba84b-ea64-4156-8f86-1ffa0457d1df",
+        "batchId": "research_51dba84b-ea64-4156-8f86-1ffa0457d1df",
+        "profileId": "ad07a9af-9ae6-4710-b90f-6cf2dfe34ae3",
+        "query": "Sản phẩm nguồn Trung Quốc, không thương hiệu, nhẹ, dễ trình diễn bằng video ngắn cho khách hàng Mỹ.",
+        "state": "done",
+        "createdAt": 1794393904243,
+        "step": 3,
+        "count": 10,
+        "requestIds": [
+          "research_51dba84b-ea64-4156-8f86-1ffa0457d1df_0",
+          "research_51dba84b-ea64-4156-8f86-1ffa0457d1df_1",
+          "research_51dba84b-ea64-4156-8f86-1ffa0457d1df_2"
+        ],
+        "error": "",
+        "target": 10,
+        "updatedAt": 1794394618217,
+        "recoveries": 0,
+        "finishedAt": 1794394618217
+      }
+    ],
+    "active": null
+  },
+  "passed": true
+}

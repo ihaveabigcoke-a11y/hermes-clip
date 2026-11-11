@@ -1,0 +1,89 @@
+{
+  "at": "2026-11-11T10:14:57.143Z",
+  "scope": "Installed Hermes, real saved research and Instagram metrics; no new publication or manual refresh",
+  "checks": [
+    "Installed default Instagram has one row per product; Treat Trader real measurement visible; existing MP4 plays",
+    "Ten Muse candidate records on installed app, no user choices overwritten; old product/production/content/account records, 25 Muse jobs, published Instagram job and original video preserved",
+    "10 changed source files and 42 build files match installed copy",
+    "All records, chats, selections, Muse batch and Instagram schedule persist exactly across restart"
+  ],
+  "errors": [],
+  "screenshots": [
+    {
+      "path": "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM BẰNG VIDEO AI\\.product-lab-repair\\product-overview-20261111\\..\\..\\outputs\\Hermes-Clip-Product-Overview-2026-11-11\\10-installed-instagram-overview.png",
+      "width": 1920,
+      "title": "Instagram · Hermes Clip",
+      "height": 1020
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM BẰNG VIDEO AI\\.product-lab-repair\\product-overview-20261111\\..\\..\\outputs\\Hermes-Clip-Product-Overview-2026-11-11\\11-installed-product-metrics.png",
+      "width": 1920,
+      "title": "Instagram · Hermes Clip",
+      "height": 1020
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM BẰNG VIDEO AI\\.product-lab-repair\\product-overview-20261111\\..\\..\\outputs\\Hermes-Clip-Product-Overview-2026-11-11\\12-installed-ten-candidates.png",
+      "width": 1920,
+      "title": "Nghiên cứu · Hermes Clip",
+      "height": 1020
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM BẰNG VIDEO AI\\.product-lab-repair\\product-overview-20261111\\..\\..\\outputs\\Hermes-Clip-Product-Overview-2026-11-11\\13-installed-candidate-detail.png",
+      "width": 1920,
+      "title": "Nghiên cứu · Hermes Clip",
+      "height": 1020
+    }
+  ],
+  "passed": true,
+  "data": {
+    "at": "2026-11-11T10:15:02.355Z",
+    "jobs": 25,
+    "records": 38,
+    "jobRowsSha256": "cb2eea67379cb9ebcf7f1f21949d2a47eb862baf2c438ee111658a03707f8700",
+    "recordRowsSha256": "e9eedbfaa9e112abc471a3902e5ce375d6bbb6375d93fbf1acd7602b737eacff",
+    "profileIds": [
+      "a7338c4e-16f4-45e6-a741-629962e42a37",
+      "ad07a9af-9ae6-4710-b90f-6cf2dfe34ae3",
+      "c7ab57e9-b988-47bd-b56f-acd86c21a3fa"
+    ],
+    "batch": {
+      "id": "9f7aa9b8-c59a-4f32-8255-25cecfb78c0b",
+      "startedAt": 1794342406010,
+      "perProfileLimit": 3,
+      "submittedByProfile": {
+        "a7338c4e-16f4-45e6-a741-629962e42a37": 2,
+        "c7ab57e9-b988-47bd-b56f-acd86c21a3fa": 3
+      }
+    },
+    "activeJobs": [],
+    "video": {
+      "id": "1a10edfc-3825-4b30-84c1-7ecc820d7b01",
+      "state": "ready",
+      "sha256": "b78b720813879835774432cab04a5b70fa865783dfa78696c1a7492c5eddcd12",
+      "bytes": 4407714,
+      "metadata": {
+        "width": 720,
+        "height": 1280,
+        "duration": 10,
+        "verifiedBy": "container"
+      },
+      "imported": true
+    }
+  },
+  "research": {
+    "count": 10,
+    "selectedIds": [],
+    "names": [
+      "Mini Silicone Spatula 3-Pack",
+      "Silicone Faucet Splash Guard Mat — Bundle of 2",
+      "Silicone Drain Hair Catcher 5-Piece Pack — Bundle of 2 Sets",
+      "580ml Portable Pet Dog Water Bottle",
+      "Collapsible Silicone Pet Bowl — Bundle of 8",
+      "Reusable Silicone Food Storage Bag — Bundle of 6",
+      "Silicone Pet Bathing Gloves 2-Pack — Bundle of 5 Sets",
+      "Stainless Steel Sponge Caddy with Divider",
+      "6-Piece Packing Cubes Travel Organizer Set",
+      "Silicone Stretch Lids 6-Piece Set — Bundle of 4 Sets"
+    ]
+  }
+}

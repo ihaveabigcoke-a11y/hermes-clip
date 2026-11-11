@@ -1,6 +1,6 @@
 # Hermes Clip — bản đồ source để đưa đề xuất về Codex
 
-Snapshot nguồn lấy từ bản cài Windows, không phải bản Product Lab v10 cũ trong lịch sử ChatGPT. Các đường dẫn dưới đây tương đối với root source; trong ZIP root đó là thư mục `source/`.
+Snapshot nguồn lấy từ bản cài Windows, không phải bản Product Lab v10 cũ trong lịch sử ChatGPT. Các đường dẫn dưới đây tương đối với root repository. Bản ZIP bàn giao cũ từng đặt source dưới thư mục `source/`; repository GitHub hiện đặt source ngay ở root.
 
 ## Bản đồ thay đổi
 
@@ -33,7 +33,7 @@ Web/domain API nằm dưới app/api và lib/lab. `scripts/build-local.mjs` dự
 
 ## Source đã đưa vào bộ này
 
-ZIP có source app/components/lib/hooks/drizzle/docs/scripts/tests/vendor/public, desktop/src/local/ui/test, manifests và lockfiles. Không có node_modules, integrations venv, Chrome/Electron binary, FFmpeg binary, local-dist, cache, backup, AppData hoặc media thật. SOURCE-*.txt chứa mã/tài liệu dạng đọc; seed JSON, lockfiles lớn và tài nguyên binary chỉ có trong ZIP. Danh sách chính xác ở MANIFEST.json.
+Repository có source app/components/lib/hooks/drizzle/docs/scripts/tests/vendor/public, desktop/src/local/ui/test, manifests và lockfiles. Người dùng đã yêu cầu bổ sung dữ liệu thật: records/receipt ở `data/`, 21 media được Thư viện tham chiếu ở `evidence/media/library/`, ảnh và báo cáo gốc ở `evidence/`. Không có node_modules, integrations venv, Chrome/Electron/FFmpeg binary, local-dist, cache, backup, SQLite hoặc phiên đăng nhập. Không cần các bản SOURCE-*.txt của gói ZIP cũ vì source đã đọc trực tiếp được trên GitHub. Danh sách/checksum ở [MANIFEST.json](../../MANIFEST.json).
 
 `scripts/run-codex.mjs` và một số tài liệu cũ có mã/hướng dẫn runner từ lịch sử. Sự tồn tại của chúng không cho phép khởi chạy multi-agent. Quyết định mới nhất của người dùng là một main agent.
 
@@ -69,7 +69,9 @@ Một số test tích hợp cần đường dẫn Python/OpenMontage/Agent Reach
 
 ## Bằng chứng và kiểm chứng ở lần sửa sau
 
-`evidence/` trong ZIP chứa kết quả suite, GUI, download/import kiểm thử, idle và bản đối chiếu cuối. Đó là bằng chứng lịch sử ngày 11/11, không phải kết quả test mới của ChatGPT.
+[evidence/](../../evidence/README.md) ngay trong repository chứa log gốc 248 test, GUI, download/import kiểm thử, idle và bản đối chiếu cuối. Đó là bằng chứng lịch sử ngày 11/11, không phải kết quả test mới của ChatGPT. [Source parity](../../evidence/current/2026-11-11/source-parity.json) là phép đối chiếu hash mới khi bổ sung repo; không phải một lượt chạy lại ứng dụng.
+
+[Dữ liệu research](../../data/research/2026-11-11/README.md) có cả hai đợt đủ 10 ứng viên. `candidates-1745.json` là đợt có ảnh/chỉ số lúc 17:45; `candidates-earlier.json` là đợt trước. Cả hai lấy từ SQLite read-only, giữ revision, null, giá/tiền tệ, nguồn và ghi chú. Các đường dẫn Windows trong báo cáo lịch sử chỉ là provenance; không phải file ChatGPT tự mở được. Dùng manifest, media-index và các file đã nằm trong repo để đọc nội dung.
 
 Codex cần xác nhận đúng root đang chạy, đọc hướng dẫn tại chỗ, đo baseline, giữ dữ liệu và tạo checkpoint. Sửa source trước rồi build; kiểm tra các thay đổi thích hợp với phạm vi. Đối với UI cần mở app ở cửa sổ rộng/nhỏ; đối với worker cần kiểm trạng thái trước/sau, receipt và file thật. Không restart app khi còn tác vụ đang chạy nếu chưa có cách giữ/đối soát phù hợp.
 

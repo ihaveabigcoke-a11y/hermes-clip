@@ -1,0 +1,68 @@
+{
+  "scope": "Historical public HTTP response bodies, fetched without user browser cookies. Look up request URL/status in storage-research/source-evidence.json.",
+  "pages": [
+    {
+      "source": "storage-research-20261111/source-pages/0.html",
+      "repositoryPath": "evidence/2026-11-11/research-source-pages/0.html.txt",
+      "bytes": 53980,
+      "sha256": "1672b584eca35b965ee8edb1e7d67247d7619b3bce4a5ee2805c002e2f80e261",
+      "transformation": "none; .txt extension prevents active HTML rendering"
+    },
+    {
+      "source": "storage-research-20261111/source-pages/11.html",
+      "repositoryPath": "evidence/2026-11-11/research-source-pages/11.html.txt",
+      "bytes": 62399,
+      "sha256": "fac68276de629bde01b2de7a24c81aeec456c57c42895122b3544d6d4a225b12",
+      "transformation": "none; .txt extension prevents active HTML rendering"
+    },
+    {
+      "source": "storage-research-20261111/source-pages/15.html",
+      "repositoryPath": "evidence/2026-11-11/research-source-pages/15.html.txt",
+      "bytes": 43642,
+      "sha256": "d54602f5634712dbcd227b93797869d28c971ec56251fd6f75022c8a84f3eb0d",
+      "transformation": "none; .txt extension prevents active HTML rendering"
+    },
+    {
+      "source": "storage-research-20261111/source-pages/17.html",
+      "repositoryPath": "evidence/2026-11-11/research-source-pages/17.html.txt",
+      "bytes": 353511,
+      "sha256": "2ec353080a713ee1902258ff338bf7becbb95a5430ea5b45da4003874ef8fc60",
+      "transformation": "none; .txt extension prevents active HTML rendering"
+    },
+    {
+      "source": "storage-research-20261111/source-pages/19.html",
+      "repositoryPath": "evidence/2026-11-11/research-source-pages/19.html.txt",
+      "bytes": 343031,
+      "sha256": "702aa9ef46b3707e910231e479cc32bac0c8c6015f0158716aaeefe3b3a32f76",
+      "transformation": "none; .txt extension prevents active HTML rendering"
+    },
+    {
+      "source": "storage-research-20261111/source-pages/2.html",
+      "repositoryPath": "evidence/2026-11-11/research-source-pages/2.html.txt",
+      "bytes": 24437,
+      "sha256": "1e4611303659dc62dd53da3a5f2a231592ada449e11b3139277a59ec933ae1d2",
+      "transformation": "none; .txt extension prevents active HTML rendering"
+    },
+    {
+      "source": "storage-research-20261111/source-pages/3.html",
+      "repositoryPath": "evidence/2026-11-11/research-source-pages/3.html.txt",
+      "bytes": 50479,
+      "sha256": "547e88c70efc1cf6976d9f843d6328154d6ff359acf290574bce586875768dfb",
+      "transformation": "none; .txt extension prevents active HTML rendering"
+    },
+    {
+      "source": "storage-research-20261111/source-pages/5.html",
+      "repositoryPath": "evidence/2026-11-11/research-source-pages/5.html.txt",
+      "bytes": 56403,
+      "sha256": "8ee1fa8f42941bff0df16b3055ae902c587dafe1bf0d6297df16f1506d7035cd",
+      "transformation": "none; .txt extension prevents active HTML rendering"
+    },
+    {
+      "source": "storage-research-20261111/source-pages/9.html",
+      "repositoryPath": "evidence/2026-11-11/research-source-pages/9.html.txt",
+      "bytes": 32732,
+      "sha256": "0449e1aa11cd0386d0f5176c9afa1637583d09d2f683f2a5beee87d5820f0750",
+      "transformation": "none; .txt extension prevents active HTML rendering"
+    }
+  ]
+}

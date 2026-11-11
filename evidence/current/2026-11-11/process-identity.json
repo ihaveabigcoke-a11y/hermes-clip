@@ -1,0 +1,36 @@
+{
+  "note": "Command-line secrets, endpoint and browser profiles not exported; only app identity and process role recorded.",
+  "processes": [
+    {
+      "pid": 30760,
+      "isBrowserChild": false,
+      "runsInstalledDesktop": true,
+      "executablePath": "C:\\Users\\ADMIN\\Downloads\\Product-Lab-Local\\Product-Lab-Local\\desktop\\node_modules\\electron\\dist\\electron.exe"
+    },
+    {
+      "pid": 21840,
+      "isBrowserChild": true,
+      "runsInstalledDesktop": true,
+      "executablePath": "C:\\Users\\ADMIN\\Downloads\\Product-Lab-Local\\Product-Lab-Local\\desktop\\node_modules\\electron\\dist\\electron.exe"
+    },
+    {
+      "pid": 32732,
+      "isBrowserChild": true,
+      "runsInstalledDesktop": true,
+      "executablePath": "C:\\Users\\ADMIN\\Downloads\\Product-Lab-Local\\Product-Lab-Local\\desktop\\node_modules\\electron\\dist\\electron.exe"
+    },
+    {
+      "pid": 34948,
+      "isBrowserChild": true,
+      "runsInstalledDesktop": true,
+      "executablePath": "C:\\Users\\ADMIN\\Downloads\\Product-Lab-Local\\Product-Lab-Local\\desktop\\node_modules\\electron\\dist\\electron.exe"
+    },
+    {
+      "pid": 29508,
+      "isBrowserChild": true,
+      "runsInstalledDesktop": true,
+      "executablePath": "C:\\Users\\ADMIN\\Downloads\\Product-Lab-Local\\Product-Lab-Local\\desktop\\node_modules\\electron\\dist\\electron.exe"
+    }
+  ],
+  "capturedAt": "2026-11-11T13:51:46.8471852Z"
+}

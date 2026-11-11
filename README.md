@@ -2,7 +2,24 @@
 
 Hermes Clip là ứng dụng desktop Windows để nghiên cứu sản phẩm, soạn và duyệt nội dung, tạo media qua Muse, quản lý video và đăng/đo số liệu Instagram theo sản phẩm.
 
-Repository chứa source của bản cài được đối chiếu ngày **11/11/2026**. Dữ liệu người dùng, tài khoản và phiên trình duyệt được giữ trên máy Windows, không đi cùng repo. Đây là bản source phát triển; không phải bộ cài đã đóng gói cho máy mới.
+Repository chứa source của bản cài được đối chiếu ngày **11/11/2026**, cùng dữ liệu dự án đã xuất và bằng chứng kiểm tra theo yêu cầu của người dùng. SQLite đang chạy, khóa và phiên đăng nhập vẫn ở máy Windows. Đây là bản source phát triển và snapshot để phân tích; không phải bộ cài đã đóng gói cho máy mới.
+
+Người dùng đã duyệt **giữ repository public** và công khai snapshot dữ liệu/bằng chứng đã kiểm trong lượt bổ sung ngày 11/11. Không bao gồm khóa, cookie, phiên đăng nhập hoặc database đang chạy. Có thể kiểm checksum toàn bộ snapshot bằng `node scripts/verify-evidence.mjs`; lệnh này không chạy lại các test ứng dụng lịch sử.
+
+## Đọc dữ liệu thật và bằng chứng trước khi chọn pilot
+
+| Cần đọc | Đường dẫn |
+| --- | --- |
+| 10 ứng viên đợt 17:45, nguyên giá trị từ SQLite | [candidates-1745.json](data/research/2026-11-11/candidates-1745.json) |
+| Đợt 10 ứng viên trước đó và bảng so sánh | [Research README](data/research/2026-11-11/README.md) |
+| Null, đơn vị tiền và giới hạn nguồn | [data-quality.json](data/research/2026-11-11/data-quality.json) |
+| Log 248 test, kiểm GUI, tải/nhập, đo rảnh, Instagram | [evidence/README.md](evidence/README.md) |
+| Đối chiếu source Windows với repo | [source-parity.json](evidence/current/2026-11-11/source-parity.json) |
+| 40 records, 25 Muse jobs, 15 hội thoại và lịch sử | [data/README.md](data/README.md) |
+| 21 ảnh/video thật và ba video giao cuối | [media/README.md](evidence/media/README.md) |
+| Danh sách file và SHA-256 | [MANIFEST.json](MANIFEST.json) |
+
+**Đợt 17:45 chưa có giá vốn/ship cho cả 10 ứng viên.** Số liệu chủ yếu thuộc sản phẩm tương tự; ảnh showroom minh họa. Đợt trước có bốn giá vốn USD tham khảo, chưa phải báo giá supplier. Không suy lợi nhuận từ các số này; schema hiện chưa hỗ trợ CNY. Việc xuất/upload không chọn pilot, thay dữ liệu hoặc chốt KPI/chi phí/tài khoản Instagram.
 
 ## Luồng chính
 

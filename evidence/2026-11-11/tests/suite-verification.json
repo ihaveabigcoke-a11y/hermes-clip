@@ -1,0 +1,49 @@
+{
+  "at": "2026-11-11T11:07:21.892Z",
+  "results": [
+    {
+      "name": "domain",
+      "passed": true,
+      "summary": [
+        "ℹ tests 78",
+        "ℹ pass 78",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 1896.537"
+      ]
+    },
+    {
+      "name": "api",
+      "passed": true,
+      "summary": [
+        "ℹ tests 9",
+        "ℹ pass 9",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 608.1578"
+      ]
+    },
+    {
+      "name": "desktop",
+      "passed": true,
+      "summary": [
+        "ℹ tests 153",
+        "ℹ pass 153",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 5700.6354"
+      ]
+    },
+    {
+      "name": "runner",
+      "passed": true,
+      "summary": [
+        "ℹ tests 8",
+        "ℹ pass 8",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 305.8037"
+      ]
+    }
+  ]
+}

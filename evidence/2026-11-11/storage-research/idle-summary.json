@@ -1,0 +1,575 @@
+{
+  "durationSeconds": 299.90231680870056,
+  "freeBefore": 88504340480,
+  "freeAfter": 88216670208,
+  "groups": [
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\Cache",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 2881166,
+        "files": 17,
+        "uniqueFileBytes": 2881166
+      },
+      "after": {
+        "logicalBytes": 2881166,
+        "files": 17,
+        "uniqueFileBytes": 2881166
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\Code Cache",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 3890,
+        "files": 8,
+        "uniqueFileBytes": 3890
+      },
+      "after": {
+        "logicalBytes": 3890,
+        "files": 8,
+        "uniqueFileBytes": 3890
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\DIPS",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 36864,
+        "files": 1,
+        "uniqueFileBytes": 36864
+      },
+      "after": {
+        "logicalBytes": 36864,
+        "files": 1,
+        "uniqueFileBytes": 36864
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\DIPS-wal",
+      "deltaBytes": 8240,
+      "before": {
+        "logicalBytes": 57712,
+        "files": 1,
+        "uniqueFileBytes": 57712
+      },
+      "after": {
+        "logicalBytes": 65952,
+        "files": 1,
+        "uniqueFileBytes": 65952
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\DawnGraphiteCache",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 557424,
+        "files": 5,
+        "uniqueFileBytes": 557424
+      },
+      "after": {
+        "logicalBytes": 557424,
+        "files": 5,
+        "uniqueFileBytes": 557424
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\DawnWebGPUCache",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 557424,
+        "files": 5,
+        "uniqueFileBytes": 557424
+      },
+      "after": {
+        "logicalBytes": 557424,
+        "files": 5,
+        "uniqueFileBytes": 557424
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\DevToolsActivePort",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 60,
+        "files": 1,
+        "uniqueFileBytes": 60
+      },
+      "after": {
+        "logicalBytes": 60,
+        "files": 1,
+        "uniqueFileBytes": 60
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\Extension State",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 657,
+        "files": 6,
+        "uniqueFileBytes": 657
+      },
+      "after": {
+        "logicalBytes": 657,
+        "files": 6,
+        "uniqueFileBytes": 657
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\GPUCache",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 1642864,
+        "files": 5,
+        "uniqueFileBytes": 1642864
+      },
+      "after": {
+        "logicalBytes": 1642864,
+        "files": 5,
+        "uniqueFileBytes": 1642864
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\GPUPersistentCache",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 0,
+        "files": 3,
+        "uniqueFileBytes": 0
+      },
+      "after": {
+        "logicalBytes": 0,
+        "files": 3,
+        "uniqueFileBytes": 0
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\GrShaderCache",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 5303340,
+        "files": 30,
+        "uniqueFileBytes": 5303340
+      },
+      "after": {
+        "logicalBytes": 5303340,
+        "files": 30,
+        "uniqueFileBytes": 5303340
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\Local State",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 490,
+        "files": 1,
+        "uniqueFileBytes": 490
+      },
+      "after": {
+        "logicalBytes": 490,
+        "files": 1,
+        "uniqueFileBytes": 490
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\Local Storage",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 17275,
+        "files": 6,
+        "uniqueFileBytes": 17275
+      },
+      "after": {
+        "logicalBytes": 17275,
+        "files": 6,
+        "uniqueFileBytes": 17275
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\Network",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 57986,
+        "files": 7,
+        "uniqueFileBytes": 57986
+      },
+      "after": {
+        "logicalBytes": 57986,
+        "files": 7,
+        "uniqueFileBytes": 57986
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\Preferences",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 137,
+        "files": 1,
+        "uniqueFileBytes": 137
+      },
+      "after": {
+        "logicalBytes": 137,
+        "files": 1,
+        "uniqueFileBytes": 137
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\Session Storage",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 2454,
+        "files": 6,
+        "uniqueFileBytes": 2454
+      },
+      "after": {
+        "logicalBytes": 2454,
+        "files": 6,
+        "uniqueFileBytes": 2454
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\ShaderCache",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 557424,
+        "files": 5,
+        "uniqueFileBytes": 557424
+      },
+      "after": {
+        "logicalBytes": 557424,
+        "files": 5,
+        "uniqueFileBytes": 557424
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\Shared Dictionary",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 45128,
+        "files": 4,
+        "uniqueFileBytes": 45128
+      },
+      "after": {
+        "logicalBytes": 45128,
+        "files": 4,
+        "uniqueFileBytes": 45128
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\VideoDecodeStats",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 0,
+        "files": 3,
+        "uniqueFileBytes": 0
+      },
+      "after": {
+        "logicalBytes": 0,
+        "files": 3,
+        "uniqueFileBytes": 0
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\declarative_performance_observer.db",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 32768,
+        "files": 1,
+        "uniqueFileBytes": 32768
+      },
+      "after": {
+        "logicalBytes": 32768,
+        "files": 1,
+        "uniqueFileBytes": 32768
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\declarative_performance_observer.db-journal",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 0,
+        "files": 1,
+        "uniqueFileBytes": 0
+      },
+      "after": {
+        "logicalBytes": 0,
+        "files": 1,
+        "uniqueFileBytes": 0
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\lockfile",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 0,
+        "files": 1,
+        "uniqueFileBytes": 0
+      },
+      "after": {
+        "logicalBytes": 0,
+        "files": 1,
+        "uniqueFileBytes": 0
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\shared_proto_db",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 2068,
+        "files": 12,
+        "uniqueFileBytes": 2068
+      },
+      "after": {
+        "logicalBytes": 2068,
+        "files": 12,
+        "uniqueFileBytes": 2068
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\worker\\diagnostics",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 1081624,
+        "files": 8,
+        "uniqueFileBytes": 1081624
+      },
+      "after": {
+        "logicalBytes": 1081624,
+        "files": 8,
+        "uniqueFileBytes": 1081624
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\worker\\extensions",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 6497926,
+        "files": 326,
+        "uniqueFileBytes": 6497926
+      },
+      "after": {
+        "logicalBytes": 6497926,
+        "files": 326,
+        "uniqueFileBytes": 6497926
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\worker\\instagram",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 39083730,
+        "files": 352,
+        "uniqueFileBytes": 39083730
+      },
+      "after": {
+        "logicalBytes": 39083730,
+        "files": 352,
+        "uniqueFileBytes": 39083730
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\worker\\integrations",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 13602358,
+        "files": 17,
+        "uniqueFileBytes": 13602358
+      },
+      "after": {
+        "logicalBytes": 13602358,
+        "files": 17,
+        "uniqueFileBytes": 13602358
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\worker\\outputs",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 80211432,
+        "files": 17,
+        "uniqueFileBytes": 80211432
+      },
+      "after": {
+        "logicalBytes": 80211432,
+        "files": 17,
+        "uniqueFileBytes": 80211432
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\worker\\profiles",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 80733397,
+        "files": 1174,
+        "uniqueFileBytes": 80733397
+      },
+      "after": {
+        "logicalBytes": 80733397,
+        "files": 1174,
+        "uniqueFileBytes": 80733397
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\worker\\references",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 865498,
+        "files": 3,
+        "uniqueFileBytes": 865498
+      },
+      "after": {
+        "logicalBytes": 865498,
+        "files": 3,
+        "uniqueFileBytes": 865498
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\worker\\worker.sqlite",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 389120,
+        "files": 1,
+        "uniqueFileBytes": 389120
+      },
+      "after": {
+        "logicalBytes": 389120,
+        "files": 1,
+        "uniqueFileBytes": 389120
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\worker\\worker.sqlite-shm",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 32768,
+        "files": 1,
+        "uniqueFileBytes": 32768
+      },
+      "after": {
+        "logicalBytes": 32768,
+        "files": 1,
+        "uniqueFileBytes": 32768
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\worker\\worker.sqlite-wal",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 16512,
+        "files": 1,
+        "uniqueFileBytes": 16512
+      },
+      "after": {
+        "logicalBytes": 16512,
+        "files": 1,
+        "uniqueFileBytes": 16512
+      }
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\worker\\workspace",
+      "deltaBytes": 0,
+      "before": {
+        "logicalBytes": 88541347,
+        "files": 36,
+        "uniqueFileBytes": 88541347
+      },
+      "after": {
+        "logicalBytes": 88541347,
+        "files": 36,
+        "uniqueFileBytes": 88541347
+      }
+    }
+  ],
+  "changedFiles": [
+    {
+      "path": "DawnWebGPUCache\\data_1",
+      "before": {
+        "bytes": 270336,
+        "mtime": 1794394539667740600
+      },
+      "after": {
+        "bytes": 270336,
+        "mtime": 1794394896194932500
+      }
+    },
+    {
+      "path": "ShaderCache\\data_1",
+      "before": {
+        "bytes": 270336,
+        "mtime": 1794394539716793800
+      },
+      "after": {
+        "bytes": 270336,
+        "mtime": 1794394746068402800
+      }
+    },
+    {
+      "path": "DIPS-wal",
+      "before": {
+        "bytes": 57712,
+        "mtime": 1794394635232377400
+      },
+      "after": {
+        "bytes": 65952,
+        "mtime": 1794394836824604400
+      }
+    },
+    {
+      "path": "DawnGraphiteCache\\data_1",
+      "before": {
+        "bytes": 270336,
+        "mtime": 1794394539668740300
+      },
+      "after": {
+        "bytes": 270336,
+        "mtime": 1794394896194932500
+      }
+    },
+    {
+      "path": "GrShaderCache\\data_1",
+      "before": {
+        "bytes": 270336,
+        "mtime": 1794394638013407600
+      },
+      "after": {
+        "bytes": 270336,
+        "mtime": 1794394746209054400
+      }
+    },
+    {
+      "path": "GPUCache\\data_1",
+      "before": {
+        "bytes": 270336,
+        "mtime": 1794394539667740600
+      },
+      "after": {
+        "bytes": 270336,
+        "mtime": 1794394896194932500
+      }
+    },
+    {
+      "path": "Cache\\Cache_Data\\data_0",
+      "before": {
+        "bytes": 45056,
+        "mtime": 1794394638006402000
+      },
+      "after": {
+        "bytes": 45056,
+        "mtime": 1794394837038960600
+      }
+    },
+    {
+      "path": "Cache\\Cache_Data\\data_1",
+      "before": {
+        "bytes": 270336,
+        "mtime": 1794394638006402000
+      },
+      "after": {
+        "bytes": 270336,
+        "mtime": 1794394896237300100
+      }
+    }
+  ],
+  "allSamplesIdle": true,
+  "errors": []
+}

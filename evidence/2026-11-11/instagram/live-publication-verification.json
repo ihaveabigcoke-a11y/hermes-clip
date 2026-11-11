@@ -1,0 +1,143 @@
+{
+  "at": "2026-11-11T08:44:37.907Z",
+  "scope": "Installed Hermes app, real authenticated Instagram, read-only reconciliation of the already approved Treat Trader publication",
+  "checks": [
+    "Browser restart retained the authenticated account @nao.mirita and Touch VPN reconnected",
+    "Existing publication reconciled through real post author, caption, timestamp and decoded video metadata; same job, exactly one Share phase",
+    "Workspace content plan synchronized to published; all other records, Muse jobs/profiles/batch and original media preserved",
+    "Hermes history shows Đã đăng and the verified permalink after renderer reload"
+  ],
+  "job": {
+    "id": "95957558-2bcd-404d-8ef4-d8070143dadf",
+    "requestId": "ig_treat_approved_20261111",
+    "fingerprint": "e36b88276e587a33e2763e36d588fd703b6387bfd105059fb870f4ab9c9d27f9",
+    "snapshot": {
+      "planId": "8bf90027f0334e8885cba81c206a9700",
+      "revision": 1,
+      "name": "11-11 · Treat Trader · Reel nháp",
+      "productId": "local_qa_product",
+      "accountId": "977eafe33820407bb72e1e0ad6bdfc01",
+      "accountRevision": 1,
+      "expectedHandle": "",
+      "productionId": "p_fbd64f7733c3191d26101242df014b21",
+      "sceneId": "scene_800270e7460d2898b4faa7b0",
+      "takeId": "desktop_0d88ebe5-6862-40f0-9344-6f0f15f4a2db",
+      "assetId": "upload_desktop_0d88ebe5-6862-40f0-9344-6f0f15f4a2db",
+      "sha256": "01e3630c428955dead9dc57ccdca74c93ef1dd2ddcb3019fc8e989707d3869c3",
+      "caption": "A close look at the brown Treat Trader pouch. AI-generated concept. #DogTreatPouch #PetAccessories #TreatTrader",
+      "duration": 10,
+      "width": 720,
+      "height": 1280,
+      "ratio": "9:16",
+      "review": "approved"
+    },
+    "state": "published",
+    "createdAt": 1794385539492,
+    "updatedAt": 1794386683124,
+    "userId": "75736410268",
+    "handle": "nao.mirita",
+    "beforeLinks": [],
+    "submittingAt": 1794385904668,
+    "postUrl": "https://www.instagram.com/reel/DfmDwT_Btcx/",
+    "error": "",
+    "syncError": "",
+    "proof": {
+      "postUrl": "https://www.instagram.com/reel/DfmDwT_Btcx/",
+      "source": "instagram_post_page",
+      "handle": "nao.mirita",
+      "checkedAt": 1794386588580
+    },
+    "history": [
+      {
+        "at": 1794385539492,
+        "state": "queued",
+        "note": "Đã nhận yêu cầu đăng video và chú thích đã chọn."
+      },
+      {
+        "at": 1794385539493,
+        "state": "preparing",
+        "note": "Đang kiểm tra tài khoản và file video."
+      },
+      {
+        "at": 1794385540031,
+        "state": "uploading",
+        "note": "Đang tải video và điền chú thích lên Instagram."
+      },
+      {
+        "at": 1794385565132,
+        "state": "failed",
+        "note": "Instagram chưa hoàn tất bước hiện tại. Mở trình duyệt để kiểm tra rồi dùng thao tác phù hợp trong app."
+      },
+      {
+        "at": 1794385874022,
+        "state": "queued",
+        "note": "Đã đưa lượt đăng trở lại hàng chờ."
+      },
+      {
+        "at": 1794385874023,
+        "state": "preparing",
+        "note": "Đang kiểm tra tài khoản và file video."
+      },
+      {
+        "at": 1794385874457,
+        "state": "uploading",
+        "note": "Đang tải video và điền chú thích lên Instagram."
+      },
+      {
+        "at": 1794385904718,
+        "state": "submitting",
+        "note": "Đang chia sẻ video. App đang chờ Instagram xác nhận."
+      },
+      {
+        "at": 1794385935034,
+        "state": "needs_attention",
+        "note": "Instagram chưa trả đủ bằng chứng bài đã đăng. Chọn Kiểm tra kết quả."
+      },
+      {
+        "at": 1794386192447,
+        "state": "needs_attention",
+        "note": "Chưa tìm thấy đúng bài đăng để xác nhận. Mở Instagram và kiểm tra lịch sử của tài khoản."
+      },
+      {
+        "at": 1794386588581,
+        "state": "published",
+        "note": "Instagram đã xác nhận bài đăng."
+      }
+    ],
+    "note": "Instagram đã xác nhận bài đăng.",
+    "diagnosticPath": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\worker\\instagram\\diagnostics\\95957558-2bcd-404d-8ef4-d8070143dadf.png",
+    "preparedAt": 1794385904666,
+    "publishedAt": 1794386588580
+  },
+  "profile": {
+    "id": "977eafe33820407bb72e1e0ad6bdfc01",
+    "handle": "nao.mirita",
+    "session": "signed_in",
+    "vpn": "connected"
+  },
+  "plan": {
+    "id": "8bf90027f0334e8885cba81c206a9700",
+    "revision": 2,
+    "data": {
+      "name": "11-11 · Treat Trader · Reel nháp",
+      "productId": "local_qa_product",
+      "accountId": "977eafe33820407bb72e1e0ad6bdfc01",
+      "productionId": "p_fbd64f7733c3191d26101242df014b21",
+      "assetId": "upload_desktop_0d88ebe5-6862-40f0-9344-6f0f15f4a2db",
+      "hook": "A close look at Treat Trader.",
+      "script": "Create one downloadable 10-second vertical 9:16 MP4 video, static camera, matching the supplied product reference. Show a brown treat pouch with a black belt resting on a light gray tabletop, the full pouch and belt visible with margins on all sides. Keep the camera fixed and the product still; only a subtle natural shadow change moves gently across the tabletop. Use realistic soft daylight, natural colors, and clear detail on the pouch and belt. No on-screen text, no speech, no music, no hands, no other products.",
+      "caption": "A close look at the brown Treat Trader pouch. AI-generated concept. #DogTreatPouch #PetAccessories #TreatTrader",
+      "plannedDate": "",
+      "status": "published_browser",
+      "postUrl": "https://www.instagram.com/reel/DfmDwT_Btcx/",
+      "notes": "Muse soạn nội dung trong hội thoại de65c7d1-bf87-4280-8770-c75ba86df3be. Caption đã rút gọn theo hình ảnh thực tế để tránh mô tả dây đai hoặc bối cảnh không còn trong bản sửa. Video còn chờ duyệt hình ảnh. Chưa có tài khoản Instagram."
+    }
+  },
+  "files": [
+    {
+      "path": "desktop/src/instagram-adapter.mjs",
+      "sha256": "20db9ece1a6454a98fdbedd595bec030189602f3efd86c83fe1d447af054d905"
+    }
+  ],
+  "passed": true
+}

@@ -1,0 +1,542 @@
+{
+  "at": "2026-11-11T11:03:59.941Z",
+  "updatedRecord": {
+    "id": "research_51dba84b-ea64-4156-8f86-1ffa0457d1df",
+    "kind": "research_batch",
+    "data": {
+      "name": "10 sản phẩm · 17:45:04 11/11/2026",
+      "market": "United States",
+      "locale": "en-US",
+      "candidates": [
+        {
+          "id": "muse_research_51dba84b-ea64-4156-8f86-1ffa0457d1df_0_0",
+          "name": "Self-Cleaning Slicker Brush for Dogs & Cats",
+          "supplierUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "supplierCountry": "China",
+          "evidenceUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "evidenceNotes": "Đối chiếu 2026-11-11T11:03:59.941Z: ảnh thuộc showroom SEALAND; trang tự ghi là ảnh minh họa, không phải ảnh mẫu đã kiểm. Các chỉ số bên dưới thuộc sản phẩm tương tự ở nguồn khác, không chứng minh doanh số của đúng mẫu này hay riêng thị trường Mỹ. Chưa có báo giá đúng mẫu/số lượng nên giá vốn để trống.\n\nMuse đề xuất · cần kiểm tra nguồn\nSEALAND page opened 2026-11-11 shows the product image and US BEST badge but no price, MOQ, rating or sold count. Numeric evidence is from a comparable AliExpress slicker listing: Atlas checked AliExpress US search 2026-10-29, 4.9/5 and 20,000+ sold, about $4.15; AliExpress Business opened 2026-11-11 shows 4.7 (69 reviews) and $2.92 USD. Cost uses $2.92 as a single-unit comparable price, not a bulk MOQ price. Price is a US selling-price hypothesis only.",
+          "contentAngle": "One-press hair release: brush, press, peel the fur off in one sheet.",
+          "risks": "Ảnh minh họa; cần báo giá và mẫu đúng sản phẩm. Pins can bend or scratch if pressed hard; not for matted coats or skin conditions; comparable-listing evidence is not the identical listing; bulk MOQ price, shipping and US duty unverified.",
+          "cost": null,
+          "shipping": null,
+          "price": 14.99,
+          "currency": "USD",
+          "imageUrl": "https://yiwusealand.com/images/trending/pet-self-cleaning-slicker-brush-1000w.webp",
+          "imageSourceUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "marketEvidence": [
+            {
+              "label": "SP tương tự · Lượng bán ghi tại nguồn",
+              "value": 20000,
+              "unit": "sản phẩm trở lên",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-10-29",
+              "sourceUrl": "https://www.atlas770.com/reviews/best-pet-deshedding-brush-rake/",
+              "observedAt": "2026-11-11T10:46:00Z"
+            },
+            {
+              "label": "SP tương tự · Điểm đánh giá",
+              "value": 4.9,
+              "unit": "/ 5",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-10-29",
+              "sourceUrl": "https://www.atlas770.com/reviews/best-pet-deshedding-brush-rake/",
+              "observedAt": "2026-11-11T10:46:00Z"
+            },
+            {
+              "label": "SP tương tự · Số đánh giá",
+              "value": 69,
+              "unit": "đánh giá",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-11-11",
+              "sourceUrl": "https://inbusiness.aliexpress.com/wholesale/Pet-Hair-Removal-Brush-Self-Cleaning-Cat-Dog-Grooming-Tool.html",
+              "observedAt": "2026-11-11T10:46:00Z"
+            },
+            {
+              "label": "SP tương tự · Giá niêm yết",
+              "value": 2.92,
+              "unit": "USD",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-11-11",
+              "sourceUrl": "https://inbusiness.aliexpress.com/wholesale/Pet-Hair-Removal-Brush-Self-Cleaning-Cat-Dog-Grooming-Tool.html",
+              "observedAt": "2026-11-11T10:46:00Z"
+            }
+          ],
+          "minimumOrder": null,
+          "targetCustomer": "Chủ nuôi chó/mèo tại Mỹ, cần chải lông hằng ngày",
+          "marketAssessment": "Tiềm năng tốt vì demo một chạm rất rõ và nhu cầu chải lông lặp lại, nhưng cạnh tranh cao và cần kiểm chứng chất lượng kim chải trên mẫu thật."
+        },
+        {
+          "id": "muse_research_51dba84b-ea64-4156-8f86-1ffa0457d1df_0_1",
+          "name": "Pet Grooming & Bathing Kit — Silicone Gloves, Bath Brushes & Finger Toothbrushes (6-Piece)",
+          "supplierUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "supplierCountry": "China",
+          "evidenceUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "evidenceNotes": "Đối chiếu 2026-11-11T11:03:59.941Z: ảnh thuộc showroom SEALAND; trang tự ghi là ảnh minh họa, không phải ảnh mẫu đã kiểm. Các chỉ số bên dưới thuộc sản phẩm tương tự ở nguồn khác, không chứng minh doanh số của đúng mẫu này hay riêng thị trường Mỹ. Chưa có báo giá đúng mẫu/số lượng nên giá vốn để trống.\n\nMuse đề xuất · cần kiểm tra nguồn\nSEALAND page opened 2026-11-11 shows the 6-piece kit image and US BEST badge but no price, MOQ, rating or sold count. Numeric evidence is from comparable AliExpress grooming gloves: Atlas US search 2026-10-30, 4.9/5 and 20,000+ sold, about $2.62; AliExpress Business opened 2026-11-11 shows a pet glove at 4.7 (83 reviews) and $1.50 USD. Cost uses $1.50 as a comparable single-glove price, not the 6-piece kit price. Price is a US selling-price hypothesis only.",
+          "contentAngle": "Bath-time kit demo: lather with silicone gloves, brush, then finger toothbrush in one routine.",
+          "risks": "Ảnh minh họa; cần báo giá và mẫu đúng sản phẩm. Kit completeness and silicone bristle quality vary; glove sizing is a common complaint; comparable-glove evidence is not the 6-piece kit; bulk MOQ price and shipping unverified.",
+          "cost": null,
+          "shipping": null,
+          "price": 19.99,
+          "currency": "USD",
+          "imageUrl": "https://yiwusealand.com/images/trending/pet-grooming-bath-kit-1000w.webp",
+          "imageSourceUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "marketEvidence": [
+            {
+              "label": "SP tương tự · Lượng bán ghi tại nguồn",
+              "value": 20000,
+              "unit": "sản phẩm trở lên",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-10-30",
+              "sourceUrl": "https://www.atlas770.com/reviews/best-pet-deshedding-brush-rake/",
+              "observedAt": "2026-11-11T10:46:00Z"
+            },
+            {
+              "label": "SP tương tự · Điểm đánh giá",
+              "value": 4.9,
+              "unit": "/ 5",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-10-30",
+              "sourceUrl": "https://www.atlas770.com/reviews/best-pet-deshedding-brush-rake/",
+              "observedAt": "2026-11-11T10:46:00Z"
+            },
+            {
+              "label": "SP tương tự · Số đánh giá",
+              "value": 83,
+              "unit": "đánh giá",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-11-11",
+              "sourceUrl": "https://inbusiness.aliexpress.com/wholesale/pet-wipe-gloves.html",
+              "observedAt": "2026-11-11T10:46:00Z"
+            },
+            {
+              "label": "SP tương tự · Giá niêm yết",
+              "value": 1.5,
+              "unit": "USD",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-11-11",
+              "sourceUrl": "https://inbusiness.aliexpress.com/wholesale/pet-wipe-gloves.html",
+              "observedAt": "2026-11-11T10:46:00Z"
+            }
+          ],
+          "minimumOrder": null,
+          "targetCustomer": "Chủ nuôi chó/mèo tại Mỹ, mua bộ tắm/chải lông cho thú cưng",
+          "marketAssessment": "Bộ nhiều món dễ quay video và dễ bán kèm, nhưng giá vốn bộ 6 món chưa được xác minh nên chưa thể kết luận biên lợi nhuận."
+        },
+        {
+          "id": "muse_research_51dba84b-ea64-4156-8f86-1ffa0457d1df_0_2",
+          "name": "Double-Sided Dematting & Deshedding Undercoat Rake",
+          "supplierUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "supplierCountry": "China",
+          "evidenceUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "evidenceNotes": "Đối chiếu 2026-11-11T11:03:59.941Z: ảnh thuộc showroom SEALAND; trang tự ghi là ảnh minh họa, không phải ảnh mẫu đã kiểm. Các chỉ số bên dưới thuộc sản phẩm tương tự ở nguồn khác, không chứng minh doanh số của đúng mẫu này hay riêng thị trường Mỹ. Chưa có báo giá đúng mẫu/số lượng nên giá vốn để trống.\n\nMuse đề xuất · cần kiểm tra nguồn\nSEALAND page opened 2026-11-11 shows the rake image and US BEST badge but no price, MOQ, rating or sold count. Numeric evidence is from a comparable AliExpress deshedding blade: Atlas checked AliExpress US search 2026-10-29, 4.6/5 and 1,000+ sold, about $2.33. Cost uses $2.33 as a comparable deshedding-tool price, not the rake price. Price is a US selling-price hypothesis only.",
+          "contentAngle": "Two sides, two jobs: break mats on one side, thin undercoat on the other, in a few strokes.",
+          "risks": "Ảnh minh họa; cần báo giá và mẫu đúng sản phẩm. Blade-style tools can irritate skin if overused; lower comparable rating (4.6) than slicker options; comparable-tool evidence is not the identical rake; bulk MOQ price and shipping unverified.",
+          "cost": null,
+          "shipping": null,
+          "price": 16.99,
+          "currency": "USD",
+          "imageUrl": "https://yiwusealand.com/images/trending/pet-dematting-undercoat-rake-1000w.webp",
+          "imageSourceUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "marketEvidence": [
+            {
+              "label": "SP tương tự · Lượng bán ghi tại nguồn",
+              "value": 1000,
+              "unit": "sản phẩm trở lên",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-10-29",
+              "sourceUrl": "https://www.atlas770.com/reviews/best-pet-deshedding-brush-rake/",
+              "observedAt": "2026-11-11T10:46:00Z"
+            },
+            {
+              "label": "SP tương tự · Điểm đánh giá",
+              "value": 4.6,
+              "unit": "/ 5",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-10-29",
+              "sourceUrl": "https://www.atlas770.com/reviews/best-pet-deshedding-brush-rake/",
+              "observedAt": "2026-11-11T10:46:00Z"
+            },
+            {
+              "label": "SP tương tự · Giá niêm yết",
+              "value": 2.33,
+              "unit": "USD",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-10-29",
+              "sourceUrl": "https://www.atlas770.com/reviews/best-pet-deshedding-brush-rake/",
+              "observedAt": "2026-11-11T10:46:00Z"
+            }
+          ],
+          "minimumOrder": null,
+          "targetCustomer": "Chủ nuôi chó/mèo lông dày tại Mỹ, cần gỡ rối và giảm rụng lông",
+          "marketAssessment": "Phù hợp nhóm thú lông dày và video before/after rõ, nhưng cần cảnh báo dùng nhẹ tay và kiểm chứng đầu răng bo tròn trên mẫu thật."
+        },
+        {
+          "id": "muse_research_51dba84b-ea64-4156-8f86-1ffa0457d1df_0_3",
+          "name": "Electrostatic Pet Hair Remover Gloves — Reusable Five-Finger",
+          "supplierUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "supplierCountry": "China",
+          "evidenceUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "evidenceNotes": "Đối chiếu 2026-11-11T11:03:59.941Z: ảnh thuộc showroom SEALAND; trang tự ghi là ảnh minh họa, không phải ảnh mẫu đã kiểm. Các chỉ số bên dưới thuộc sản phẩm tương tự ở nguồn khác, không chứng minh doanh số của đúng mẫu này hay riêng thị trường Mỹ. Chưa có báo giá đúng mẫu/số lượng nên giá vốn để trống.\n\nMuse đề xuất · cần kiểm tra nguồn\nSEALAND page opened 2026-11-11 shows the glove image and US STRONG badge but no price, MOQ, rating or sold count. Numeric evidence is from comparable AliExpress grooming gloves: Atlas US search 2026-10-30, 4.9/5 and 20,000+ sold, about $2.62; AliExpress Business opened 2026-11-11 shows a pet glove at 4.7 (83 reviews) and $1.50 USD. Cost uses $2.62 as a comparable glove price. Price is a US selling-price hypothesis only.",
+          "contentAngle": "Swipe the sofa, then peel the collected fur off the glove — no refills, no sticky sheets.",
+          "risks": "Ảnh minh họa; cần báo giá và mẫu đúng sản phẩm. Static effect varies by fabric and humidity; sizing and wash durability vary; comparable-glove evidence is not the identical electrostatic glove; bulk MOQ price and shipping unverified.",
+          "cost": null,
+          "shipping": null,
+          "price": 12.99,
+          "currency": "USD",
+          "imageUrl": "https://yiwusealand.com/images/trending/pet-hair-remover-gloves-1000w.webp",
+          "imageSourceUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "marketEvidence": [
+            {
+              "label": "SP tương tự · Lượng bán ghi tại nguồn",
+              "value": 20000,
+              "unit": "sản phẩm trở lên",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-10-30",
+              "sourceUrl": "https://www.atlas770.com/reviews/best-pet-deshedding-brush-rake/",
+              "observedAt": "2026-11-11T10:46:00Z"
+            },
+            {
+              "label": "SP tương tự · Điểm đánh giá",
+              "value": 4.9,
+              "unit": "/ 5",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-10-30",
+              "sourceUrl": "https://www.atlas770.com/reviews/best-pet-deshedding-brush-rake/",
+              "observedAt": "2026-11-11T10:46:00Z"
+            },
+            {
+              "label": "SP tương tự · Số đánh giá",
+              "value": 83,
+              "unit": "đánh giá",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-11-11",
+              "sourceUrl": "https://inbusiness.aliexpress.com/wholesale/pet-wipe-gloves.html",
+              "observedAt": "2026-11-11T10:46:00Z"
+            },
+            {
+              "label": "SP tương tự · Giá niêm yết",
+              "value": 1.5,
+              "unit": "USD",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-11-11",
+              "sourceUrl": "https://inbusiness.aliexpress.com/wholesale/pet-wipe-gloves.html",
+              "observedAt": "2026-11-11T10:46:00Z"
+            }
+          ],
+          "minimumOrder": null,
+          "targetCustomer": "Chủ nuôi thú cưng tại Mỹ, cần làm sạch lông trên sofa và quần áo",
+          "marketAssessment": "Demo vuốt lông rất hợp video ngắn và không cần phụ kiện thay thế, nhưng hiệu quả phụ thuộc loại vải nên cần quay trên nhiều bề mặt thật."
+        },
+        {
+          "id": "muse_research_51dba84b-ea64-4156-8f86-1ffa0457d1df_0_4",
+          "name": "Washable Reusable Pet Training Pads — Waterproof (Pack of 4)",
+          "supplierUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "supplierCountry": "China",
+          "evidenceUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "evidenceNotes": "Đối chiếu 2026-11-11T11:03:59.941Z: ảnh thuộc showroom SEALAND; trang tự ghi là ảnh minh họa, không phải ảnh mẫu đã kiểm. Các chỉ số bên dưới thuộc sản phẩm tương tự ở nguồn khác, không chứng minh doanh số của đúng mẫu này hay riêng thị trường Mỹ. Chưa có báo giá đúng mẫu/số lượng nên giá vốn để trống.\n\nMuse đề xuất · cần kiểm tra nguồn\nSEALAND page opened 2026-11-11 shows the washable pads image and US STRONG badge but no price, MOQ, rating or sold count. Numeric evidence is from a comparable AliExpress training pad opened 2026-11-11: 5/5 (11 reviews) and $5.69 USD; that listing is disposable, not the washable 4-pack, so its price is not the pack price. Cost uses $5.69 only as a comparable single-listing price. Price is a US selling-price hypothesis only.",
+          "contentAngle": "Pour, show no leak, wash and reuse — the eco swap for disposable puppy pads.",
+          "risks": "Ảnh minh họa; cần báo giá và mẫu đúng sản phẩm. Only 11 reviews on the comparable listing, so evidence is thin; absorbency and leak performance after repeated washing must be tested; washable-pack price, MOQ and shipping unverified.",
+          "cost": null,
+          "shipping": null,
+          "price": 24.99,
+          "currency": "USD",
+          "imageUrl": "https://yiwusealand.com/images/trending/pet-washable-training-pads-1000w.webp",
+          "imageSourceUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "marketEvidence": [
+            {
+              "label": "SP tương tự · Số đánh giá",
+              "value": 11,
+              "unit": "đánh giá",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-11-11",
+              "sourceUrl": "https://inbusiness.aliexpress.com/wholesale/pet-training-pads.html",
+              "observedAt": "2026-11-11T10:46:00Z"
+            },
+            {
+              "label": "SP tương tự · Điểm đánh giá",
+              "value": 5,
+              "unit": "/ 5",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-11-11",
+              "sourceUrl": "https://inbusiness.aliexpress.com/wholesale/pet-training-pads.html",
+              "observedAt": "2026-11-11T10:46:00Z"
+            },
+            {
+              "label": "SP tương tự · Giá niêm yết",
+              "value": 5.69,
+              "unit": "USD",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-11-11",
+              "sourceUrl": "https://inbusiness.aliexpress.com/wholesale/pet-training-pads.html",
+              "observedAt": "2026-11-11T10:46:00Z"
+            }
+          ],
+          "minimumOrder": null,
+          "targetCustomer": "Chủ nuôi chó con hoặc chó già tại Mỹ, cần tấm lót thấm hút tái sử dụng",
+          "marketAssessment": "Góc tiết kiệm và thân thiện môi trường dễ hiểu, nhưng bằng chứng đánh giá còn rất ít và cần kiểm tra độ thấm sau nhiều lần giặt."
+        },
+        {
+          "id": "muse_research_51dba84b-ea64-4156-8f86-1ffa0457d1df_0_5",
+          "name": "Stainless Steel Cat Water Fountain — 2.6L with Filter Set",
+          "supplierUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "supplierCountry": "China",
+          "evidenceUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "evidenceNotes": "Đối chiếu 2026-11-11T11:03:59.941Z: ảnh thuộc showroom SEALAND; trang tự ghi là ảnh minh họa, không phải ảnh mẫu đã kiểm. Các chỉ số bên dưới thuộc sản phẩm tương tự ở nguồn khác, không chứng minh doanh số của đúng mẫu này hay riêng thị trường Mỹ. Chưa có báo giá đúng mẫu/số lượng nên giá vốn để trống.\n\nMuse đề xuất · cần kiểm tra nguồn\nSEALAND page opened 2026-11-11 shows the fountain image and US BEST badge but no price, MOQ, rating or sold count. Numeric evidence is from a comparable AliExpress stainless steel pet water fountain opened 2026-11-11: 4.8 (38 reviews) and $22.20 USD. Cost uses $22.20 as a comparable single-unit price, not a bulk MOQ price and not necessarily the 2.6L filter-set price. Price is a US selling-price hypothesis only.",
+          "contentAngle": "Running water demo: cat drinks more, pump stays quiet, window shows the water level.",
+          "risks": "Ảnh minh họa; cần báo giá và mẫu đúng sản phẩm. Pump noise and durability vary; replacement filters are proprietary and may be hard to source; USB/FCC and food-contact checks needed for the US; bulk MOQ price and shipping unverified.",
+          "cost": null,
+          "shipping": null,
+          "price": 39.99,
+          "currency": "USD",
+          "imageUrl": "https://yiwusealand.com/images/trending/pet-water-fountain-1000w.webp",
+          "imageSourceUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "marketEvidence": [
+            {
+              "label": "SP tương tự · Số đánh giá",
+              "value": 38,
+              "unit": "đánh giá",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-11-11",
+              "sourceUrl": "https://inbusiness.aliexpress.com/wholesale/stainless-steel-pet-water-fountain.html",
+              "observedAt": "2026-11-11T10:46:00Z"
+            },
+            {
+              "label": "SP tương tự · Điểm đánh giá",
+              "value": 4.8,
+              "unit": "/ 5",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-11-11",
+              "sourceUrl": "https://inbusiness.aliexpress.com/wholesale/stainless-steel-pet-water-fountain.html",
+              "observedAt": "2026-11-11T10:46:00Z"
+            },
+            {
+              "label": "SP tương tự · Giá niêm yết",
+              "value": 22.2,
+              "unit": "USD",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-11-11",
+              "sourceUrl": "https://inbusiness.aliexpress.com/wholesale/stainless-steel-pet-water-fountain.html",
+              "observedAt": "2026-11-11T10:46:00Z"
+            }
+          ],
+          "minimumOrder": null,
+          "targetCustomer": "Chủ nuôi mèo tại Mỹ, muốn khuyến khích mèo uống nước",
+          "marketAssessment": "Nhu cầu quanh năm và phụ kiện lọc tạo đơn mua lại, nhưng đây là sản phẩm điện nên rủi ro bơm, lọc và chứng nhận cao hơn đồ không điện."
+        },
+        {
+          "id": "muse_research_51dba84b-ea64-4156-8f86-1ffa0457d1df_0_6",
+          "name": "Garlic Press & Peeler Set — Heavy-Duty",
+          "supplierUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "supplierCountry": "China",
+          "evidenceUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "evidenceNotes": "Đối chiếu 2026-11-11T11:03:59.941Z: ảnh thuộc showroom SEALAND; trang tự ghi là ảnh minh họa, không phải ảnh mẫu đã kiểm. Các chỉ số bên dưới thuộc sản phẩm tương tự ở nguồn khác, không chứng minh doanh số của đúng mẫu này hay riêng thị trường Mỹ. Chưa có báo giá đúng mẫu/số lượng nên giá vốn để trống.\n\nMuse đề xuất · cần kiểm tra nguồn\nSEALAND page opened 2026-11-11 shows the garlic press set image and US BEST badge but no price, MOQ, rating or sold count. Numeric evidence is from the AliExpress Business kitchen list opened 2026-11-11: a stainless steel garlic press with 159 sold, 4.7 rating and $0.29 USD; that $0.29 looks like a promo or single-variant price, so verify before using it. Cost uses $0.29 only as that observed listing price. Price is a US selling-price hypothesis only.",
+          "contentAngle": "Five-second demo: press garlic, roll the silicone peeler, brush clean.",
+          "risks": "Ảnh minh họa; cần báo giá và mẫu đúng sản phẩm. Nguồn số liệu trả HTTP 429 khi đối chiếu; các số này mới do Muse trích dẫn. The $0.29 comparable price is unusually low and may be a deal variant; hinge and mince-plate quality vary; food-contact FDA rules apply in the US; bulk MOQ price and shipping unverified.",
+          "cost": null,
+          "shipping": null,
+          "price": 19.99,
+          "currency": "USD",
+          "imageUrl": "https://yiwusealand.com/images/trending/kitchen-garlic-press-set-1000w.webp",
+          "imageSourceUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "marketEvidence": [
+            {
+              "label": "Chưa đối chiếu · Lượng bán ghi tại nguồn",
+              "value": 159,
+              "unit": "sản phẩm trở lên",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-05-13",
+              "sourceUrl": "https://inbusiness.aliexpress.com/p/en/kitchen-items",
+              "observedAt": "2026-11-11T10:45:00Z"
+            },
+            {
+              "label": "Chưa đối chiếu · Điểm đánh giá",
+              "value": 4.7,
+              "unit": "/ 5",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-05-13",
+              "sourceUrl": "https://inbusiness.aliexpress.com/p/en/kitchen-items",
+              "observedAt": "2026-11-11T10:45:00Z"
+            },
+            {
+              "label": "Chưa đối chiếu · Giá niêm yết",
+              "value": 0.29,
+              "unit": "USD",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-05-13",
+              "sourceUrl": "https://inbusiness.aliexpress.com/p/en/kitchen-items",
+              "observedAt": "2026-11-11T10:45:00Z"
+            }
+          ],
+          "minimumOrder": null,
+          "targetCustomer": "Người nấu ăn tại nhà ở Mỹ, cần dụng cụ bếp nhỏ tiện dụng",
+          "marketAssessment": "Dụng cụ bếp kinh điển, demo nhanh và dễ hiểu, nhưng cạnh tranh rất cao và giá vốn $0.29 cần kiểm tra lại vì có thể là giá khuyến mãi."
+        },
+        {
+          "id": "muse_research_51dba84b-ea64-4156-8f86-1ffa0457d1df_0_7",
+          "name": "Silicone Ice Cube Trays with Lids — Stackable (3-Pack)",
+          "supplierUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "supplierCountry": "China",
+          "evidenceUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "evidenceNotes": "Đối chiếu 2026-11-11T11:03:59.941Z: ảnh thuộc showroom SEALAND; trang tự ghi là ảnh minh họa, không phải ảnh mẫu đã kiểm. Các chỉ số bên dưới thuộc sản phẩm tương tự ở nguồn khác, không chứng minh doanh số của đúng mẫu này hay riêng thị trường Mỹ. Chưa có báo giá đúng mẫu/số lượng nên giá vốn để trống.\n\nMuse đề xuất · cần kiểm tra nguồn\nSEALAND page opened 2026-11-11 shows the ice tray image and US STRONG badge but no price, MOQ, rating or sold count. Numeric evidence is from a comparable AliExpress 37-cavity silicone ice cube mold opened 2026-11-11: 4.6 (49 reviews) and $0.99 USD. Cost uses $0.99 as a comparable single-unit price, not the 3-pack price. Price is a US selling-price hypothesis only.",
+          "contentAngle": "Pop the cubes out with one push, stack the lidded trays, no spill in the freezer.",
+          "risks": "Ảnh minh họa; cần báo giá và mẫu đúng sản phẩm. Silicone odour and lid seal vary; 49 reviews is a modest base; comparable-mold evidence is not the 3-pack; bulk MOQ price and shipping unverified; food-contact rules apply in the US.",
+          "cost": null,
+          "shipping": null,
+          "price": 14.99,
+          "currency": "USD",
+          "imageUrl": "https://yiwusealand.com/images/trending/kitchen-silicone-ice-trays-1000w.webp",
+          "imageSourceUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "marketEvidence": [
+            {
+              "label": "SP tương tự · Số đánh giá",
+              "value": 49,
+              "unit": "đánh giá",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-11-11",
+              "sourceUrl": "https://inbusiness.aliexpress.com/wholesale/37-Cavity-Ice-Cube-Mold-Reusable-Silicone-Ice-Cube-Mold-BPA-Free-Ice-Cream-Maker-with-Lids-DIY-Popsicle-Mold-Ice-Cube-Trays.html",
+              "observedAt": "2026-11-11T10:46:00Z"
+            },
+            {
+              "label": "SP tương tự · Điểm đánh giá",
+              "value": 4.6,
+              "unit": "/ 5",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-11-11",
+              "sourceUrl": "https://inbusiness.aliexpress.com/wholesale/37-Cavity-Ice-Cube-Mold-Reusable-Silicone-Ice-Cube-Mold-BPA-Free-Ice-Cream-Maker-with-Lids-DIY-Popsicle-Mold-Ice-Cube-Trays.html",
+              "observedAt": "2026-11-11T10:46:00Z"
+            },
+            {
+              "label": "SP tương tự · Giá niêm yết",
+              "value": 0.99,
+              "unit": "USD",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-11-11",
+              "sourceUrl": "https://inbusiness.aliexpress.com/wholesale/37-Cavity-Ice-Cube-Mold-Reusable-Silicone-Ice-Cube-Mold-BPA-Free-Ice-Cream-Maker-with-Lids-DIY-Popsicle-Mold-Ice-Cube-Trays.html",
+              "observedAt": "2026-11-11T10:46:00Z"
+            }
+          ],
+          "minimumOrder": null,
+          "targetCustomer": "Người dùng tại Mỹ thích làm đá, pha chế và tiệc tại nhà",
+          "marketAssessment": "Sản phẩm theo mùa và tiệc tùng, demo bật đá rất trực quan, nhưng cần kiểm tra mùi silicone và độ kín nắp trên mẫu thật."
+        },
+        {
+          "id": "muse_research_51dba84b-ea64-4156-8f86-1ffa0457d1df_0_8",
+          "name": "Roll-Up Electric Food Warming Mat — Extra Large",
+          "supplierUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "supplierCountry": "China",
+          "evidenceUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "evidenceNotes": "Đối chiếu 2026-11-11T11:03:59.941Z: ảnh thuộc showroom SEALAND; trang tự ghi là ảnh minh họa, không phải ảnh mẫu đã kiểm. Các chỉ số bên dưới thuộc sản phẩm tương tự ở nguồn khác, không chứng minh doanh số của đúng mẫu này hay riêng thị trường Mỹ. Chưa có báo giá đúng mẫu/số lượng nên giá vốn để trống.\n\nMuse đề xuất · cần kiểm tra nguồn\nSEALAND page opened 2026-11-11 shows the warming mat image and US BEST badge but no price, MOQ, rating or sold count. Numeric evidence is from a comparable AliExpress electric warming tray opened 2026-11-11: 4.8 (98 reviews) and $39.00 USD. Cost uses $39.00 as a comparable single-unit price, not a bulk MOQ price. Price is a US selling-price hypothesis only.",
+          "contentAngle": "Unroll, set dishes on it, keep a family meal warm — then roll it back into a drawer.",
+          "risks": "Ảnh minh họa; cần báo giá và mẫu đúng sản phẩm. Electrical product: US plug/voltage and ETL/UL route must be confirmed; temperature accuracy and durability complaints occur in this category; bulk MOQ price and shipping unverified.",
+          "cost": null,
+          "shipping": null,
+          "price": 49.99,
+          "currency": "USD",
+          "imageUrl": "https://yiwusealand.com/images/trending/kitchen-food-warming-mat-1000w.webp",
+          "imageSourceUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "marketEvidence": [
+            {
+              "label": "SP tương tự · Số đánh giá",
+              "value": 98,
+              "unit": "đánh giá",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-11-11",
+              "sourceUrl": "https://inbusiness.aliexpress.com/wholesale/mat-food-warm.html",
+              "observedAt": "2026-11-11T10:46:00Z"
+            },
+            {
+              "label": "SP tương tự · Điểm đánh giá",
+              "value": 4.8,
+              "unit": "/ 5",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-11-11",
+              "sourceUrl": "https://inbusiness.aliexpress.com/wholesale/mat-food-warm.html",
+              "observedAt": "2026-11-11T10:46:00Z"
+            },
+            {
+              "label": "SP tương tự · Giá niêm yết",
+              "value": 39,
+              "unit": "USD",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-11-11",
+              "sourceUrl": "https://inbusiness.aliexpress.com/wholesale/mat-food-warm.html",
+              "observedAt": "2026-11-11T10:46:00Z"
+            }
+          ],
+          "minimumOrder": null,
+          "targetCustomer": "Gia đình tại Mỹ hay tổ chức tiệc, cần giữ món ăn ấm",
+          "marketAssessment": "Phù hợp tiệc và lễ, demo cuộn/giữ ấm rõ ràng, nhưng là đồ điện nên chi phí chứng nhận và rủi ro hoàn trả cao hơn."
+        },
+        {
+          "id": "muse_research_51dba84b-ea64-4156-8f86-1ffa0457d1df_0_9",
+          "name": "Rechargeable Handheld Milk Frother — Whisk Set",
+          "supplierUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "supplierCountry": "China",
+          "evidenceUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "evidenceNotes": "Đối chiếu 2026-11-11T11:03:59.941Z: ảnh thuộc showroom SEALAND; trang tự ghi là ảnh minh họa, không phải ảnh mẫu đã kiểm. Các chỉ số bên dưới thuộc sản phẩm tương tự ở nguồn khác, không chứng minh doanh số của đúng mẫu này hay riêng thị trường Mỹ. Chưa có báo giá đúng mẫu/số lượng nên giá vốn để trống.\n\nMuse đề xuất · cần kiểm tra nguồn\nSEALAND page opened 2026-11-11 shows the frother image and US BEST badge but no price, MOQ, rating or sold count. Numeric evidence is from a comparable AliExpress milk frother on ChartBuy opened 2026-11-11, data updated 2026-11-09: 4.86 (1,911 reviews), 8,559+ sold, $1.39 USD, 90-day average $1.79. Cost uses $1.39 as a comparable single-unit price, not a bulk MOQ price. Price is a US selling-price hypothesis only.",
+          "contentAngle": "Froth a latte in seconds, swap the whisk, beat an egg — one small USB-C tool.",
+          "risks": "Ảnh minh họa; cần báo giá và mẫu đúng sản phẩm. Contains a lithium battery, so air-freight rules apply; motor and whisk durability vary; comparable-frother evidence is not the identical whisk set; bulk MOQ price and shipping unverified.",
+          "cost": null,
+          "shipping": null,
+          "price": 19.99,
+          "currency": "USD",
+          "imageUrl": "https://yiwusealand.com/images/trending/kitchen-milk-frother-1000w.webp",
+          "imageSourceUrl": "https://yiwusealand.com/trending-products-amazon-fba-ecommerce.html",
+          "marketEvidence": [
+            {
+              "label": "SP tương tự · Lượng bán ghi tại nguồn",
+              "value": 8559,
+              "unit": "sản phẩm trở lên",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-11-09",
+              "sourceUrl": "https://www.chartbuy.com/products/hot-electric-milk-frother-egg-beater-wireless-type-c-chargin-1005007037889730-12000039179101456",
+              "observedAt": "2026-11-11T10:46:00Z"
+            },
+            {
+              "label": "SP tương tự · Số đánh giá",
+              "value": 1911,
+              "unit": "đánh giá",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-11-09",
+              "sourceUrl": "https://www.chartbuy.com/products/hot-electric-milk-frother-egg-beater-wireless-type-c-chargin-1005007037889730-12000039179101456",
+              "observedAt": "2026-11-11T10:46:00Z"
+            },
+            {
+              "label": "SP tương tự · Điểm đánh giá",
+              "value": 4.86,
+              "unit": "/ 5",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-11-09",
+              "sourceUrl": "https://www.chartbuy.com/products/hot-electric-milk-frother-egg-beater-wireless-type-c-chargin-1005007037889730-12000039179101456",
+              "observedAt": "2026-11-11T10:46:00Z"
+            },
+            {
+              "label": "SP tương tự · Giá niêm yết",
+              "value": 1.39,
+              "unit": "USD",
+              "market": "Listing toàn cầu · chưa tách riêng Mỹ",
+              "period": "2026-11-09",
+              "sourceUrl": "https://www.chartbuy.com/products/hot-electric-milk-frother-egg-beater-wireless-type-c-chargin-1005007037889730-12000039179101456",
+              "observedAt": "2026-11-11T10:46:00Z"
+            }
+          ],
+          "minimumOrder": null,
+          "targetCustomer": "Người thích cà phê tại nhà ở Mỹ, làm latte và matcha",
+          "marketAssessment": "Demo tạo bọt trong vài giây rất hợp video ngắn và xu hướng cà phê tại nhà, nhưng cần lưu ý pin lithium và độ bền mô-tơ."
+        }
+      ],
+      "selectedIds": [],
+      "notes": "[Muse research_51dba84b-ea64-4156-8f86-1ffa0457d1df_2]\nhttps://muse.ai/thread/6f7d2f23-5ac9-484f-95ba-1ff86579c421\n9 candidates different from the existing Self-Cleaning Slicker Brush, from the SEALAND China showroom page re-opened 2026-11-11, each with a direct showroom image. SEALAND showed no per-product price, MOQ, rating or sold count, so numeric evidence comes from comparable AliExpress listings opened earlier in this session. Cost is a comparable single-unit AliExpress price, not a verified bulk MOQ price; MOQ and shipping are null. Selling prices are hypotheses only, not observed US retail prices. Review counts are not sales. Missing before ordering: exact MOQ and bulk price, US shipping/duty, sample QC, and US compliance for food-contact, electrical and lithium-battery items.\n\n[Muse research_51dba84b-ea64-4156-8f86-1ffa0457d1df_1]\nhttps://muse.ai/thread/6f7d2f23-5ac9-484f-95ba-1ff86579c421\n9 candidates different from the existing Self-Cleaning Slicker Brush, from the SEALAND China showroom page re-opened 2026-11-11, each with a direct showroom image. SEALAND showed no per-product price, MOQ, rating or sold count, so numeric evidence comes from comparable AliExpress listings opened earlier in this session. Cost is a comparable single-unit AliExpress price, not a verified bulk MOQ price; MOQ and shipping are null. Selling prices are hypotheses only, not observed US retail prices. Review counts are not sales. Missing before ordering: exact MOQ and bulk price, US shipping/duty, sample QC, and US compliance for food-contact, electrical and lithium-battery items.\n\n[Muse research_51dba84b-ea64-4156-8f86-1ffa0457d1df_0]\nhttps://muse.ai/thread/6f7d2f23-5ac9-484f-95ba-1ff86579c421\n10 hypotheses from the SEALAND China showroom page opened 2026-11-11, each with a direct showroom image. Numeric evidence comes from comparable AliExpress listings opened the same day, not from identical SEALAND listings: SEALAND showed no per-product price, MOQ, review count or sold count. Cost is therefore a comparable single-unit AliExpress price, not a verified bulk MOQ price; shipping and MOQ are null. Selling prices are hypotheses only, not observed US retail prices. Review counts are not sales. Missing before ordering: exact MOQ and bulk price, US shipping/duty, sample QC, and US compliance for food-contact, electrical and lithium-battery items."
+    },
+    "revision": 6,
+    "updatedAt": 1794395039959
+  },
+  "changes": [
+    "Keep raw Muse receipts unchanged",
+    "Recover all ten distinct products",
+    "Unknown exact supplier cost/shipping remain null",
+    "Label comparable and unverified metrics; no US-only sales claims",
+    "Disclose illustrative showroom images"
+  ],
+  "noMuseSubmit": true
+}

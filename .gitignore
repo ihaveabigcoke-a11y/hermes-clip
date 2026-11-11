@@ -59,3 +59,8 @@ Hermes-Orchestrator/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# User-approved, reviewed evidence snapshots (never blanket-unignore runtime data).
+!evidence/2026-11-11/tests/*.log
+!evidence/media/library/*.mp4
+!evidence/media/library/*.webm

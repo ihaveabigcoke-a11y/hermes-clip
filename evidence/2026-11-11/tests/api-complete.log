@@ -1,0 +1,17 @@
+✔ assistant is disabled without config; owner isolation, durable cap, replay and JSON output are enforced (28.847ms)
+✔ Codex imports are owner-scoped, immutable, replay-safe and never approve media or product claims (30.3821ms)
+✔ content draft without Instagram saves and replays while scheduling and foreign accounts are rejected (23.4555ms)
+✔ research selection and product promotion preserve provenance, ownership, CAS and retries (3.7688ms)
+✔ social records enforce product/account links and keep one cumulative measurement per post (8.8157ms)
+✔ content plan creates traceable unapproved scenes and rejects stale or foreign source (4.8726ms)
+✔ real routes against isolated SQLite/R2: scope, CAS, replay, atomic import, take checks and trace (81.0492ms)
+✔ internal review and export work before sample while ownership, media and commercial gates remain enforced (55.4549ms)
+✔ worker receipt route derives metadata from owned asset and replay adds no second take (42.713ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 608.1578

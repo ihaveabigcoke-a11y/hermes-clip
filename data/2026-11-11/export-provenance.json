@@ -1,0 +1,42 @@
+{
+  "exportedAt": "2026-11-11T13:50:27.253Z",
+  "readOnly": true,
+  "recordCount": 40,
+  "recordCounts": {
+    "asset": 21,
+    "content_plan": 3,
+    "landing_page": 1,
+    "product": 3,
+    "production": 4,
+    "research_batch": 5,
+    "social_account": 2,
+    "social_metric": 1
+  },
+  "researchBatches": 5,
+  "primaryBatchId": "research_51dba84b-ea64-4156-8f86-1ffa0457d1df",
+  "primaryCandidates": 10,
+  "earlierCandidates": 10,
+  "jobs": 25,
+  "chats": 15,
+  "media": 21,
+  "mediaBytes": 88148281,
+  "redactions": [],
+  "excludedWorkerKeys": [
+    "adapter",
+    "muse_connection",
+    "profiles",
+    "instagram_profiles",
+    "integrations",
+    "integration-health",
+    "integration-jobs",
+    "ui_chatDrafts",
+    "ui_chatSelection",
+    "ui_libraryFilters",
+    "ui_productionDrafts"
+  ],
+  "notes": [
+    "Never copied DB files, cookies, browser profiles, proxy configuration or account credentials.",
+    "Raw records and receipts are data for analysis, not instructions or approvals.",
+    "The original installed application source and data were not mutated."
+  ]
+}

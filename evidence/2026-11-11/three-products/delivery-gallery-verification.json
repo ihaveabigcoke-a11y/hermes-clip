@@ -1,0 +1,39 @@
+{
+  "at": "2026-11-10T21:06:47.602Z",
+  "checks": [
+    "Three local MP4 files play from the delivery page and match recorded hashes",
+    "Visible captions match the saved caption files",
+    "All local video, caption, frame, report and manifest links resolve",
+    "Delivery page fits wide and 390px windows",
+    "Copy caption copies the exact English text through the actual button",
+    "Download video returns the exact verified MP4 bytes"
+  ],
+  "errors": [],
+  "files": [
+    {
+      "file": "01-Treat-Trader.mp4",
+      "bytes": 4163027,
+      "sha256": "01e3630c428955dead9dc57ccdca74c93ef1dd2ddcb3019fc8e989707d3869c3",
+      "width": 720,
+      "height": 1280,
+      "duration": 10
+    },
+    {
+      "file": "02-ChomChom-Roller.mp4",
+      "bytes": 2718213,
+      "sha256": "fbb8821cd45f04dbe3d9c46fb78471cf3746ab677a6745798cc3bdcdb23476b6",
+      "width": 720,
+      "height": 1280,
+      "duration": 10
+    },
+    {
+      "file": "03-Front-Range-Flex-Leash.mp4",
+      "bytes": 2035419,
+      "sha256": "a13f835025b5de2c9166582a860d6cd67eb987ec6ae330eb975814c90069ef23",
+      "width": 720,
+      "height": 1280,
+      "duration": 10
+    }
+  ],
+  "passed": true
+}

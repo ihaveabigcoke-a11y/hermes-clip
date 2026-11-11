@@ -1,0 +1,270 @@
+{
+  "groups": {
+    "Old reproducible UI builds": {
+      "files": 501,
+      "bytes": 21874062
+    },
+    "Hermes browser cache": {
+      "files": 8269,
+      "bytes": 426777418
+    },
+    "QA media copies": {
+      "files": 585,
+      "bytes": 2447296343
+    },
+    "Completed Muse output copies": {
+      "files": 17,
+      "bytes": 80211432
+    }
+  },
+  "fileBytesFreed": 2976159255,
+  "cleanupFreeBefore": 85609570304,
+  "cleanupFreeAfter": 88594579456,
+  "cleanupVolumeDelta": 2985009152,
+  "afterScanFree": 88223670272,
+  "paths": [
+    {
+      "path": "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM BẰNG VIDEO AI\\.product-lab-repair",
+      "beforeLogicalBytes": 4476318709,
+      "afterLogicalBytes": 4496994687,
+      "afterUniqueFileBytes": 2137846625
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\Downloads\\Product-Lab-Local\\Product-Lab-Local",
+      "beforeLogicalBytes": 1023462332,
+      "afterLogicalBytes": 1004911735,
+      "afterUniqueFileBytes": 1004911735
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop",
+      "beforeLogicalBytes": 709243452,
+      "afterLogicalBytes": 322821083,
+      "afterUniqueFileBytes": 242609651
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\worker\\workspace\\media",
+      "beforeLogicalBytes": 88148281,
+      "afterLogicalBytes": 88148281,
+      "afterUniqueFileBytes": 88148281
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\worker\\outputs",
+      "beforeLogicalBytes": 80211432,
+      "afterLogicalBytes": 80211432,
+      "afterUniqueFileBytes": 80211432
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\worker\\profiles",
+      "beforeLogicalBytes": 387118889,
+      "afterLogicalBytes": 80733397,
+      "afterUniqueFileBytes": 80733397
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\ms-playwright",
+      "beforeLogicalBytes": 752827666,
+      "afterLogicalBytes": 752827666,
+      "afterUniqueFileBytes": 752827666
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\npm-cache",
+      "beforeLogicalBytes": 737337709,
+      "afterLogicalBytes": 737337709,
+      "afterUniqueFileBytes": 737337709
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\Temp",
+      "beforeLogicalBytes": 724032765,
+      "afterLogicalBytes": 906254101,
+      "afterUniqueFileBytes": 906254101
+    }
+  ],
+  "appAndCheckpointUniqueFileBytes": 3297219730,
+  "largeTempNotDeleted": [
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\13d6e995-fc44-4035-bda7-3a06862a4ed1.tmp",
+      "bytes": 73621454,
+      "allocated": 73621454,
+      "mtime": 1793895259.9483454,
+      "nlink": 1,
+      "identity": "3641968837242329957:1970324837213938",
+      "root": "temp"
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\c5b81c97-b539-4451-88e9-b6789f7806d3.tmp",
+      "bytes": 50482424,
+      "allocated": 50482424,
+      "mtime": 1793894696.9694498,
+      "nlink": 1,
+      "identity": "3641968837242329957:1970324837023730",
+      "root": "temp"
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\tmprvbq5iky\\EBWebView\\WidevineCdm\\4.10.3112.0\\_platform_specific\\win_x64\\widevinecdm.dll",
+      "bytes": 22980088,
+      "allocated": 22980088,
+      "mtime": 1787768132.0,
+      "nlink": 1,
+      "identity": "3641968837242329957:1688849861149362",
+      "root": "temp"
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\Diagnostics\\WINWORD\\Primary1793984131640719200_DB16F0A2-7AEC-4A7A-8F5C-4DC444AB64E9.log",
+      "bytes": 20971520,
+      "allocated": 20971520,
+      "mtime": 1793984131.6400187,
+      "nlink": 1,
+      "identity": "3641968837242329957:1688849860565327",
+      "root": "temp"
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\Diagnostics\\WINWORD\\Additional\\Additional1793984131641399000_DB16F0A2-7AEC-4A7A-8F5C-4DC444AB64E9.log",
+      "bytes": 20971520,
+      "allocated": 20971520,
+      "mtime": 1793984131.6415231,
+      "nlink": 1,
+      "identity": "3641968837242329957:1688849860565331",
+      "root": "temp"
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\1caeda55-12ec-4bc2-b6f6-9288bed21456.tmp",
+      "bytes": 18309895,
+      "allocated": 18309895,
+      "mtime": 1794343521.2638514,
+      "nlink": 1,
+      "identity": "3641968837242329957:4785074604396758",
+      "root": "temp"
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\63ca86c2-9517-489a-a798-8c62226cc48a.tmp",
+      "bytes": 18309895,
+      "allocated": 18309895,
+      "mtime": 1794343519.80214,
+      "nlink": 1,
+      "identity": "3641968837242329957:22799473114451335",
+      "root": "temp"
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\20202f5b-7a6c-47e3-94f3-bb97de99b34e.tmp",
+      "bytes": 18281959,
+      "allocated": 18281959,
+      "mtime": 1793983771.98755,
+      "nlink": 1,
+      "identity": "3641968837242329957:11821949021982312",
+      "root": "temp"
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\42885311-03eb-454a-93ff-42327f7a639d.tmp",
+      "bytes": 18281959,
+      "allocated": 18281959,
+      "mtime": 1794253517.6937892,
+      "nlink": 1,
+      "identity": "3641968837242329957:9007199255619304",
+      "root": "temp"
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\441ebbef-83e7-46e0-b856-b06b3bc94ebd.tmp",
+      "bytes": 18281959,
+      "allocated": 18281959,
+      "mtime": 1793987374.4821565,
+      "nlink": 1,
+      "identity": "3641968837242329957:3096224743995330",
+      "root": "temp"
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\6b8a5a8c-099d-488e-8d4d-3524b5a0f9ee.tmp",
+      "bytes": 18281959,
+      "allocated": 18281959,
+      "mtime": 1793987374.047458,
+      "nlink": 1,
+      "identity": "3641968837242329957:6755399441180003",
+      "root": "temp"
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\736d5276-ba22-4e47-9ba6-c35bebb9aef4.tmp",
+      "bytes": 18281959,
+      "allocated": 18281959,
+      "mtime": 1794163519.7172933,
+      "nlink": 1,
+      "identity": "3641968837242329957:4785074604396361",
+      "root": "temp"
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\945c9fe7-9328-4317-baff-a8232878ef26.tmp",
+      "bytes": 18281959,
+      "allocated": 18281959,
+      "mtime": 1794074685.1520114,
+      "nlink": 1,
+      "identity": "3641968837242329957:1688849860928816",
+      "root": "temp"
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\a0d2ebc0-c271-4b6e-814b-90b1bb056abd.tmp",
+      "bytes": 18281959,
+      "allocated": 18281959,
+      "mtime": 1794074685.1181097,
+      "nlink": 1,
+      "identity": "3641968837242329957:5629499534349623",
+      "root": "temp"
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\a2d3dba9-bde6-4aa5-ac2a-93caafd82c66.tmp",
+      "bytes": 18281959,
+      "allocated": 18281959,
+      "mtime": 1794163521.2708595,
+      "nlink": 1,
+      "identity": "3641968837242329957:3940649674264786",
+      "root": "temp"
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\b778c666-c939-4a27-a33d-83f35c6a33ee.tmp",
+      "bytes": 18281959,
+      "allocated": 18281959,
+      "mtime": 1794122535.1551285,
+      "nlink": 1,
+      "identity": "3641968837242329957:4785074604216174",
+      "root": "temp"
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\d8686b1c-1959-4519-89df-684de4ef9f9f.tmp",
+      "bytes": 18281959,
+      "allocated": 18281959,
+      "mtime": 1794253519.094736,
+      "nlink": 1,
+      "identity": "3641968837242329957:4503599627685730",
+      "root": "temp"
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\9102f439-6b8d-48ce-b0eb-4363192d9b7e.tmp",
+      "bytes": 18278225,
+      "allocated": 18278225,
+      "mtime": 1793895166.9202979,
+      "nlink": 1,
+      "identity": "3641968837242329957:3659174697477290",
+      "root": "temp"
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\9481cab1-e3ac-4494-b8a0-d6b334fc843b.tmp",
+      "bytes": 18278225,
+      "allocated": 18278225,
+      "mtime": 1793897453.274297,
+      "nlink": 1,
+      "identity": "3641968837242329957:39687971716232923",
+      "root": "temp"
+    },
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\d0e8e714-84eb-4e48-8e96-40939bacde2d.tmp",
+      "bytes": 18278225,
+      "allocated": 18278225,
+      "mtime": 1793897453.4049952,
+      "nlink": 1,
+      "identity": "3641968837242329957:844424930274980",
+      "root": "temp"
+    }
+  ],
+  "skipped": [
+    {
+      "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\Cache\\No_Vary_Search\\journal.baj",
+      "reason": "Size changed since measurement."
+    }
+  ]
+}

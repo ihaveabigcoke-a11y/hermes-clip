@@ -1,0 +1,21 @@
+{
+  "at": "2026-11-11T09:56:58.483Z",
+  "scope": "Real UI, API, SQLite and media copied into isolated snapshot; external Instagram disabled, no live login/publication",
+  "checks": [
+    "Product-first default table, search/clear/no-results/reload, product tabs, real MP4 playback, return preserves filters; desktop/narrow document bounds",
+    "10 real Muse candidate records render; max three selection, details/modal/keyboard, product promotion on snapshot, selections/data/published job survive restart"
+  ],
+  "screenshots": [
+    "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM BẰNG VIDEO AI\\outputs\\Hermes-Clip-Product-Overview-2026-11-11\\qa-01-overview.png",
+    "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM BẰNG VIDEO AI\\outputs\\Hermes-Clip-Product-Overview-2026-11-11\\qa-02-product.png",
+    "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM BẰNG VIDEO AI\\outputs\\Hermes-Clip-Product-Overview-2026-11-11\\qa-03-overview-1080.png",
+    "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM BẰNG VIDEO AI\\outputs\\Hermes-Clip-Product-Overview-2026-11-11\\qa-03-overview-800.png",
+    "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM BẰNG VIDEO AI\\outputs\\Hermes-Clip-Product-Overview-2026-11-11\\qa-03-overview-390.png",
+    "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM BẰNG VIDEO AI\\outputs\\Hermes-Clip-Product-Overview-2026-11-11\\qa-04-research-detail.png",
+    "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM BẰNG VIDEO AI\\outputs\\Hermes-Clip-Product-Overview-2026-11-11\\qa-05-research-1440.png",
+    "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM BẰNG VIDEO AI\\outputs\\Hermes-Clip-Product-Overview-2026-11-11\\qa-05-research-1080.png",
+    "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM BẰNG VIDEO AI\\outputs\\Hermes-Clip-Product-Overview-2026-11-11\\qa-05-research-390.png"
+  ],
+  "errors": [],
+  "passed": true
+}

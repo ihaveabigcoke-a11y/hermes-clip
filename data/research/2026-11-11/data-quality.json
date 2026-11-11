@@ -1,0 +1,36 @@
+{
+  "exportedAt": "2026-11-11T13:50:27.253Z",
+  "derivedFrom": "candidates-1745.json and candidates-earlier.json; no candidate values changed",
+  "batches": [
+    {
+      "batchId": "research_51dba84b-ea64-4156-8f86-1ffa0457d1df",
+      "name": "10 sản phẩm · 17:45:04 11/11/2026",
+      "candidates": 10,
+      "missingCost": 10,
+      "missingShipping": 10,
+      "currencyCounts": {
+        "USD": 10
+      },
+      "selectedIds": [],
+      "notes": "All supplier costs unknown; metrics are comparable/secondary-source signals and photos illustrative."
+    },
+    {
+      "batchId": "research_ten_20261111",
+      "name": "10 sản phẩm nguồn Trung Quốc · Chọn 3 để thử · 11-11-2026",
+      "candidates": 10,
+      "missingCost": 6,
+      "missingShipping": 10,
+      "currencyCounts": {
+        "USD": 10
+      },
+      "selectedIds": [],
+      "notes": "Four non-null USD costs remain provisional in stored notes; do not treat them as supplier quotes. VND appears in source-review notes."
+    }
+  ],
+  "limitations": [
+    "The current schema only accepts USD/VND/GBP/EUR; CNY is not supported. Currency correctness cannot be established from the enum alone.",
+    "No automatic exchange-rate conversion was applied during export.",
+    "No candidate was selected or promoted by this export.",
+    "No Instagram pilot assignment, cost/shipping threshold or A/B KPI was decided in this publication."
+  ]
+}

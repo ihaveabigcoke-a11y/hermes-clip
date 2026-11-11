@@ -1,0 +1,202 @@
+{
+  "exportedAt": "2026-11-11T13:50:27.253Z",
+  "researchRuns": [
+    {
+      "id": "51dba84b-ea64-4156-8f86-1ffa0457d1df",
+      "batchId": "research_51dba84b-ea64-4156-8f86-1ffa0457d1df",
+      "profileId": "ad07a9af-9ae6-4710-b90f-6cf2dfe34ae3",
+      "query": "Sản phẩm nguồn Trung Quốc, không thương hiệu, nhẹ, dễ trình diễn bằng video ngắn cho khách hàng Mỹ.",
+      "state": "done",
+      "createdAt": 1794393904243,
+      "step": 3,
+      "count": 10,
+      "requestIds": [
+        "research_51dba84b-ea64-4156-8f86-1ffa0457d1df_0",
+        "research_51dba84b-ea64-4156-8f86-1ffa0457d1df_1",
+        "research_51dba84b-ea64-4156-8f86-1ffa0457d1df_2"
+      ],
+      "error": "",
+      "target": 10,
+      "updatedAt": 1794394618217,
+      "recoveries": 0,
+      "finishedAt": 1794394618217
+    }
+  ],
+  "generationBatch": {
+    "id": "9f7aa9b8-c59a-4f32-8255-25cecfb78c0b",
+    "startedAt": 1794342406010,
+    "perProfileLimit": 3,
+    "submittedByProfile": {
+      "a7338c4e-16f4-45e6-a741-629962e42a37": 2,
+      "c7ab57e9-b988-47bd-b56f-acd86c21a3fa": 3,
+      "ad07a9af-9ae6-4710-b90f-6cf2dfe34ae3": 3
+    }
+  },
+  "instagramJobs": [
+    {
+      "id": "95957558-2bcd-404d-8ef4-d8070143dadf",
+      "requestId": "ig_treat_approved_20261111",
+      "fingerprint": "e36b88276e587a33e2763e36d588fd703b6387bfd105059fb870f4ab9c9d27f9",
+      "snapshot": {
+        "planId": "8bf90027f0334e8885cba81c206a9700",
+        "revision": 1,
+        "name": "11-11 · Treat Trader · Reel nháp",
+        "productId": "local_qa_product",
+        "accountId": "977eafe33820407bb72e1e0ad6bdfc01",
+        "accountRevision": 1,
+        "expectedHandle": "",
+        "productionId": "p_fbd64f7733c3191d26101242df014b21",
+        "sceneId": "scene_800270e7460d2898b4faa7b0",
+        "takeId": "desktop_0d88ebe5-6862-40f0-9344-6f0f15f4a2db",
+        "assetId": "upload_desktop_0d88ebe5-6862-40f0-9344-6f0f15f4a2db",
+        "assetKey": "local-owner/9229dff8-47b5-470a-9a8f-ba666eb90d64.mp4",
+        "sha256": "01e3630c428955dead9dc57ccdca74c93ef1dd2ddcb3019fc8e989707d3869c3",
+        "path": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\worker\\workspace\\media\\local-owner\\9229dff8-47b5-470a-9a8f-ba666eb90d64.mp4",
+        "caption": "A close look at the brown Treat Trader pouch. AI-generated concept. #DogTreatPouch #PetAccessories #TreatTrader",
+        "duration": 10,
+        "width": 720,
+        "height": 1280,
+        "ratio": "9:16",
+        "review": "approved"
+      },
+      "state": "published",
+      "createdAt": 1794385539492,
+      "updatedAt": 1794386683124,
+      "userId": "75736410268",
+      "handle": "nao.mirita",
+      "beforeLinks": [],
+      "submittingAt": 1794385904668,
+      "postUrl": "https://www.instagram.com/reel/DfmDwT_Btcx/",
+      "error": "",
+      "syncError": "",
+      "proof": {
+        "postUrl": "https://www.instagram.com/reel/DfmDwT_Btcx/",
+        "source": "instagram_post_page",
+        "handle": "nao.mirita",
+        "checkedAt": 1794386588580
+      },
+      "history": [
+        {
+          "at": 1794385539492,
+          "state": "queued",
+          "note": "Đã nhận yêu cầu đăng video và chú thích đã chọn."
+        },
+        {
+          "at": 1794385539493,
+          "state": "preparing",
+          "note": "Đang kiểm tra tài khoản và file video."
+        },
+        {
+          "at": 1794385540031,
+          "state": "uploading",
+          "note": "Đang tải video và điền chú thích lên Instagram."
+        },
+        {
+          "at": 1794385565132,
+          "state": "failed",
+          "note": "Instagram chưa hoàn tất bước hiện tại. Mở trình duyệt để kiểm tra rồi dùng thao tác phù hợp trong app."
+        },
+        {
+          "at": 1794385874022,
+          "state": "queued",
+          "note": "Đã đưa lượt đăng trở lại hàng chờ."
+        },
+        {
+          "at": 1794385874023,
+          "state": "preparing",
+          "note": "Đang kiểm tra tài khoản và file video."
+        },
+        {
+          "at": 1794385874457,
+          "state": "uploading",
+          "note": "Đang tải video và điền chú thích lên Instagram."
+        },
+        {
+          "at": 1794385904718,
+          "state": "submitting",
+          "note": "Đang chia sẻ video. App đang chờ Instagram xác nhận."
+        },
+        {
+          "at": 1794385935034,
+          "state": "needs_attention",
+          "note": "Instagram chưa trả đủ bằng chứng bài đã đăng. Chọn Kiểm tra kết quả."
+        },
+        {
+          "at": 1794386192447,
+          "state": "needs_attention",
+          "note": "Chưa tìm thấy đúng bài đăng để xác nhận. Mở Instagram và kiểm tra lịch sử của tài khoản."
+        },
+        {
+          "at": 1794386588581,
+          "state": "published",
+          "note": "Instagram đã xác nhận bài đăng."
+        }
+      ],
+      "note": "Instagram đã xác nhận bài đăng.",
+      "diagnosticPath": "C:\\Users\\ADMIN\\AppData\\Roaming\\product-lab-desktop\\worker\\instagram\\diagnostics\\95957558-2bcd-404d-8ef4-d8070143dadf.png",
+      "preparedAt": 1794385904666,
+      "publishedAt": 1794386588580
+    }
+  ],
+  "instagramMetrics": [
+    {
+      "planId": "8bf90027f0334e8885cba81c206a9700",
+      "state": "partial",
+      "failures": 0,
+      "lastAttemptAt": 1794403168402,
+      "lastSuccessAt": 1794403201918,
+      "nextAttemptAt": 1794405001945,
+      "error": ""
+    }
+  ],
+  "libraryOrganization": {
+    "local_qa_production:scene_f09325a51ecd19ba84af2c77": {
+      "category": "test",
+      "preferredTakeId": null
+    },
+    "local_qa_production:scene_8c7faaa0ebec892ddaa15ec3": {
+      "category": "test",
+      "preferredTakeId": null
+    },
+    "local_qa_production:scene_2441b4dc9b9c26f3b799ca68": {
+      "category": "test",
+      "preferredTakeId": null
+    },
+    "local_qa_production:scene_4db7a41a5b7fc1bd794921a8": {
+      "category": "test",
+      "preferredTakeId": null
+    },
+    "local_qa_production:scene_2fc2e163edb4fd8942fd714c": {
+      "category": "test",
+      "preferredTakeId": null
+    },
+    "local_qa_production:scene_f31f756d91b6ddedda54d55e": {
+      "category": "test",
+      "preferredTakeId": null
+    },
+    "local_qa_production:local_qa_scene_1": {
+      "category": "test",
+      "preferredTakeId": null
+    },
+    "local_qa_production:scene_3372e5dfa70e5692962fe209": {
+      "category": "test",
+      "preferredTakeId": null
+    },
+    "local_qa_production:scene_6eea2a63d459a78a5d6ba73c": {
+      "category": "test",
+      "preferredTakeId": null
+    },
+    "p_fbd64f7733c3191d26101242df014b21:scene_800270e7460d2898b4faa7b0": {
+      "category": "content",
+      "preferredTakeId": "desktop_0d88ebe5-6862-40f0-9344-6f0f15f4a2db"
+    },
+    "p_3d76ed406682189d8168e22869b69953:scene_8ab1b90ae0c47763dd3ee192": {
+      "category": "content",
+      "preferredTakeId": "desktop_8a995cac-beb6-44db-910c-d3ab67bf177b"
+    },
+    "p_f7a879826900033f6bafe3cbbdd66fa8:scene_9e015de5841d6e0067e1b64e": {
+      "category": "content",
+      "preferredTakeId": "desktop_7b3e5d0b-897e-4924-88f2-e659c1926d87"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "at": 1794394891848,
+  "scope": "Real Chromium download + FFmpeg + local API/SQLite; synthetic test video, no live Muse submit",
+  "checks": [
+    "Actual browser redownload reuses verified target, removes download artifact and partial files",
+    "Repeated receipt creates one take; two generation receipts keep independent history and one physical MP4",
+    "Restart and re-import retain all receipts without extra files"
+  ],
+  "thumbnailBytes": 1303,
+  "passed": true
+}

@@ -1,0 +1,545 @@
+{
+  "exportedAt": "2026-11-11T13:51:08.464Z",
+  "files": [
+    {
+      "source": ".product-lab-repair/storage-research-20261111/suite-verification.json",
+      "target": "evidence/2026-11-11/tests/suite-verification.json",
+      "bytes": 914,
+      "sourceSha256": "d1011e93af1f824b220b527bf43f7704a2f1bc6d55fd7395425080af3ab99a51",
+      "exportSha256": "d1011e93af1f824b220b527bf43f7704a2f1bc6d55fd7395425080af3ab99a51",
+      "sourceModifiedAt": "2026-11-11T11:07:30.569Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/storage-research-20261111/domain-complete.log",
+      "target": "evidence/2026-11-11/tests/domain-complete.log",
+      "bytes": 6859,
+      "sourceSha256": "fc53e7aadc27abc5117ae91cf11c6b2d5d01333c430a9f2a44ee3f240ffc1809",
+      "exportSha256": "fc53e7aadc27abc5117ae91cf11c6b2d5d01333c430a9f2a44ee3f240ffc1809",
+      "sourceModifiedAt": "2026-11-11T11:07:23.829Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/storage-research-20261111/api-complete.log",
+      "target": "evidence/2026-11-11/tests/api-complete.log",
+      "bytes": 1107,
+      "sourceSha256": "df3b4e5511193164ab91fb382350f206900b7a825ee4f8a0471eb3f5bf448b26",
+      "exportSha256": "df3b4e5511193164ab91fb382350f206900b7a825ee4f8a0471eb3f5bf448b26",
+      "sourceModifiedAt": "2026-11-11T11:07:24.483Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/storage-research-20261111/desktop-complete.log",
+      "target": "evidence/2026-11-11/tests/desktop-complete.log",
+      "bytes": 14514,
+      "sourceSha256": "32020ef9e3d5cf5908b36a00e7dc706265b1fcc98cc3c75b42bedce44836eff8",
+      "exportSha256": "32020ef9e3d5cf5908b36a00e7dc706265b1fcc98cc3c75b42bedce44836eff8",
+      "sourceModifiedAt": "2026-11-11T11:07:30.223Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/storage-research-20261111/runner-complete.log",
+      "target": "evidence/2026-11-11/tests/runner-complete.log",
+      "bytes": 872,
+      "sourceSha256": "0f5594a805be5314e3a785cd76f13f128372fe075d9a2498069dc4be340c2634",
+      "exportSha256": "0f5594a805be5314e3a785cd76f13f128372fe075d9a2498069dc4be340c2634",
+      "sourceModifiedAt": "2026-11-11T11:07:30.569Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/storage-research-20261111/build-final.log",
+      "target": "evidence/2026-11-11/tests/build-final.log",
+      "bytes": 4431,
+      "sourceSha256": "2860de7849853bdce61a5997b2a2af48cc5352fd176fd07dfa112258b164356d",
+      "exportSha256": "2860de7849853bdce61a5997b2a2af48cc5352fd176fd07dfa112258b164356d",
+      "sourceModifiedAt": "2026-11-11T11:07:08.749Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/storage-research-20261111/typecheck.log",
+      "target": "evidence/2026-11-11/tests/typecheck.log",
+      "bytes": 0,
+      "sourceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sourceModifiedAt": "2026-11-11T10:42:42.530Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/storage-research-20261111/storage-tests.log",
+      "target": "evidence/2026-11-11/tests/storage-tests.log",
+      "bytes": 5517,
+      "sourceSha256": "f1e2ce3e8f093d3f17d2f44424650a956a234409047eae7d0b053da20769ef62",
+      "exportSha256": "f1e2ce3e8f093d3f17d2f44424650a956a234409047eae7d0b053da20769ef62",
+      "sourceModifiedAt": "2026-11-11T10:36:54.064Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/storage-research-20261111/research-regression.log",
+      "target": "evidence/2026-11-11/tests/research-regression.log",
+      "bytes": 2166,
+      "sourceSha256": "72529498f023b102bfd7064effc2173173499801d32c569174c2cbf4a19ff35a",
+      "exportSha256": "72529498f023b102bfd7064effc2173173499801d32c569174c2cbf4a19ff35a",
+      "sourceModifiedAt": "2026-11-11T10:50:12.914Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/storage-research-20261111/final-verification.json",
+      "target": "evidence/2026-11-11/storage-research/final-verification.json",
+      "bytes": 1792,
+      "sourceSha256": "20f4be97da21c70306dbd5d964091ba1ae7e9955dca0efde71b071e4c9631363",
+      "exportSha256": "20f4be97da21c70306dbd5d964091ba1ae7e9955dca0efde71b071e4c9631363",
+      "sourceModifiedAt": "2026-11-11T11:08:13.508Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/storage-research-20261111/gui-verification.json",
+      "target": "evidence/2026-11-11/storage-research/gui-verification.json",
+      "bytes": 4013,
+      "sourceSha256": "43a65fecc24d86e044a31c62eb27328998b5207e99e5b6b96d367cebb688a4a9",
+      "exportSha256": "43a65fecc24d86e044a31c62eb27328998b5207e99e5b6b96d367cebb688a4a9",
+      "sourceModifiedAt": "2026-11-11T11:05:47.229Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/storage-research-20261111/download-import-e2e.json",
+      "target": "evidence/2026-11-11/storage-research/download-import-e2e.json",
+      "bytes": 477,
+      "sourceSha256": "e977028a47e63d76fb3d47dbcf78ea78ad223830d3a7de560cab1b7a77c36d84",
+      "exportSha256": "e977028a47e63d76fb3d47dbcf78ea78ad223830d3a7de560cab1b7a77c36d84",
+      "sourceModifiedAt": "2026-11-11T11:01:33.076Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/storage-research-20261111/idle-summary.json",
+      "target": "evidence/2026-11-11/storage-research/idle-summary.json",
+      "bytes": 14407,
+      "sourceSha256": "f5ce340090c2a82e4d7e5d9a26036f1d3b430612e5c7a164d02c330998f6325c",
+      "exportSha256": "f5ce340090c2a82e4d7e5d9a26036f1d3b430612e5c7a164d02c330998f6325c",
+      "sourceModifiedAt": "2026-11-11T11:03:42.532Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/storage-research-20261111/idle-measurement.json",
+      "target": "evidence/2026-11-11/storage-research/idle-measurement.json",
+      "bytes": 4199102,
+      "sourceSha256": "bebf2cc8e48fb04c5bd49459d6ed7d541de7f3e1bde28c90608b160ea37c608c",
+      "exportSha256": "bebf2cc8e48fb04c5bd49459d6ed7d541de7f3e1bde28c90608b160ea37c608c",
+      "sourceModifiedAt": "2026-11-11T11:03:42.530Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/storage-research-20261111/storage-summary.json",
+      "target": "evidence/2026-11-11/storage-research/storage-summary.json",
+      "bytes": 9063,
+      "sourceSha256": "0e52c0f9274dddc62c45e0cb31c1e32ddd672d828368497095d8e1ef967e5275",
+      "exportSha256": "0e52c0f9274dddc62c45e0cb31c1e32ddd672d828368497095d8e1ef967e5275",
+      "sourceModifiedAt": "2026-11-11T11:02:42.168Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/storage-research-20261111/final-disk.json",
+      "target": "evidence/2026-11-11/storage-research/final-disk.json",
+      "bytes": 169,
+      "sourceSha256": "2dc3a563422f4f29ab23e5f84419aa1fbe8e1e0cf04fa249c27e21dec7549805",
+      "exportSha256": "2dc3a563422f4f29ab23e5f84419aa1fbe8e1e0cf04fa249c27e21dec7549805",
+      "sourceModifiedAt": "2026-11-11T11:09:45.608Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/storage-research-20261111/research-source-review.json",
+      "target": "evidence/2026-11-11/storage-research/research-source-review.json",
+      "bytes": 41731,
+      "sourceSha256": "7181bb68cb08ae08469170714ff8454122d186fea174b342616d7b33bda39140",
+      "exportSha256": "7181bb68cb08ae08469170714ff8454122d186fea174b342616d7b33bda39140",
+      "sourceModifiedAt": "2026-11-11T11:03:59.970Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/storage-research-20261111/source-evidence.json",
+      "target": "evidence/2026-11-11/storage-research/source-evidence.json",
+      "bytes": 20053,
+      "sourceSha256": "1e295fa2752cbde37e1b5373ec160bb85519d56d41359767eb7db19fd127b605",
+      "exportSha256": "1e295fa2752cbde37e1b5373ec160bb85519d56d41359767eb7db19fd127b605",
+      "sourceModifiedAt": "2026-11-11T10:58:09.483Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/product-overview-20261111/final-verification.json",
+      "target": "evidence/2026-11-11/earlier-research/final-verification.json",
+      "bytes": 3714,
+      "sourceSha256": "598013857e67c8fdf2da2deee8ef30aa1b80cbf7d1458aa5b86a8b3bbe062e6e",
+      "exportSha256": "598013857e67c8fdf2da2deee8ef30aa1b80cbf7d1458aa5b86a8b3bbe062e6e",
+      "sourceModifiedAt": "2026-11-11T10:15:02.423Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/product-overview-20261111/gui-verification.json",
+      "target": "evidence/2026-11-11/earlier-research/gui-verification.json",
+      "bytes": 1827,
+      "sourceSha256": "49181e701fc2df23d7309c9a4b41bf12e73705d59bf41869b0b4d8f89a7a5ea1",
+      "exportSha256": "49181e701fc2df23d7309c9a4b41bf12e73705d59bf41869b0b4d8f89a7a5ea1",
+      "sourceModifiedAt": "2026-11-11T09:57:05.910Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/product-overview-20261111/source-reviewed-batch.json",
+      "target": "evidence/2026-11-11/earlier-research/source-reviewed-batch.json",
+      "bytes": 16838,
+      "sourceSha256": "185c1b1799836876d7e8899333edba1a954b180ec01965724135207d4296fef9",
+      "exportSha256": "185c1b1799836876d7e8899333edba1a954b180ec01965724135207d4296fef9",
+      "sourceModifiedAt": "2026-11-11T10:14:13.600Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/instagram-20261111/live-publication-verification.json",
+      "target": "evidence/2026-11-11/instagram/live-publication-verification.json",
+      "bytes": 6190,
+      "sourceSha256": "8f27d8c881d45f6ff534960438e6a391ab5b69cfe33822d52d6de6508e5338f7",
+      "exportSha256": "8f27d8c881d45f6ff534960438e6a391ab5b69cfe33822d52d6de6508e5338f7",
+      "sourceModifiedAt": "2026-11-11T08:44:43.852Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/instagram-metrics-20261111/live-verification.json",
+      "target": "evidence/2026-11-11/instagram-metrics/live-verification.json",
+      "bytes": 3096,
+      "sourceSha256": "96ee353a448eeb90c924c0aaeb59b4221a62e16cd27d279e8f20f8d3f2ea527c",
+      "exportSha256": "96ee353a448eeb90c924c0aaeb59b4221a62e16cd27d279e8f20f8d3f2ea527c",
+      "sourceModifiedAt": "2026-11-11T09:04:58.358Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/instagram-metrics-20261111/final-verification.json",
+      "target": "evidence/2026-11-11/instagram-metrics/final-verification.json",
+      "bytes": 4654,
+      "sourceSha256": "c46bba1d6e7f0e6b24ce62ea4664a1f73d765ed1f0c1e9078ffde8514407c034",
+      "exportSha256": "c46bba1d6e7f0e6b24ce62ea4664a1f73d765ed1f0c1e9078ffde8514407c034",
+      "sourceModifiedAt": "2026-11-11T09:09:54.533Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/overnight-20261111/final-runtime-verification.json",
+      "target": "evidence/2026-11-11/three-products/final-runtime-verification.json",
+      "bytes": 3792,
+      "sourceSha256": "dce45e91abf491e4bf14a5565dc3cea62544459e5d567121cc30376abe9dab89",
+      "exportSha256": "dce45e91abf491e4bf14a5565dc3cea62544459e5d567121cc30376abe9dab89",
+      "sourceModifiedAt": "2026-11-11T01:00:26.736Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/overnight-20261111/delivery-verification.json",
+      "target": "evidence/2026-11-11/three-products/delivery-verification.json",
+      "bytes": 20568,
+      "sourceSha256": "7652c2681c1224ae79ac674a861e412bcdb182f6698f42efc8c37fe2f27388ec",
+      "exportSha256": "7652c2681c1224ae79ac674a861e412bcdb182f6698f42efc8c37fe2f27388ec",
+      "sourceModifiedAt": "2026-11-10T20:41:14.248Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": ".product-lab-repair/overnight-20261111/delivery-gallery-verification.json",
+      "target": "evidence/2026-11-11/three-products/delivery-gallery-verification.json",
+      "bytes": 1178,
+      "sourceSha256": "a6876ea702f1908a50a0c90142dcd91e24159d114fb52ebee9a5281191c2578c",
+      "exportSha256": "a6876ea702f1908a50a0c90142dcd91e24159d114fb52ebee9a5281191c2578c",
+      "sourceModifiedAt": "2026-11-10T21:06:49.804Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-Storage-Research-2026-11-11/BAO-CAO.md",
+      "target": "evidence/2026-11-11/storage-research/BAO-CAO.md",
+      "bytes": 13977,
+      "sourceSha256": "3c08f7db1a01d8fe654ae04d8599704b3ec86b0529a492387bf724e420019b14",
+      "exportSha256": "3c08f7db1a01d8fe654ae04d8599704b3ec86b0529a492387bf724e420019b14",
+      "sourceModifiedAt": "2026-11-11T11:09:45.621Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-Storage-Research-2026-11-11/DANH-SACH-DA-DON.csv",
+      "target": "evidence/2026-11-11/storage-research/DANH-SACH-DA-DON.csv",
+      "bytes": 1841119,
+      "sourceSha256": "bbfa04397fae85234c38ce976b1e26c16bb6d038e8ed9cb1fb2f50113daf636a",
+      "exportSha256": "bbfa04397fae85234c38ce976b1e26c16bb6d038e8ed9cb1fb2f50113daf636a",
+      "sourceModifiedAt": "2026-11-11T11:02:41.373Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-Storage-Research-2026-11-11/01-research-start.png",
+      "target": "evidence/2026-11-11/gui/01-research-start.png",
+      "bytes": 168829,
+      "sourceSha256": "a831d3f371cbce9fda5d693a314a87a3a3e4392c6973d42d103c3b7dad6f6b4b",
+      "exportSha256": "a831d3f371cbce9fda5d693a314a87a3a3e4392c6973d42d103c3b7dad6f6b4b",
+      "sourceModifiedAt": "2026-11-11T10:45:04.563Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-Storage-Research-2026-11-11/02-library-thumbnails.png",
+      "target": "evidence/2026-11-11/gui/02-library-thumbnails.png",
+      "bytes": 248720,
+      "sourceSha256": "db5ef4fc9b73f97925169be461d2e8ff98daf98815cb7ff8c1b990f170e420b1",
+      "exportSha256": "db5ef4fc9b73f97925169be461d2e8ff98daf98815cb7ff8c1b990f170e420b1",
+      "sourceModifiedAt": "2026-11-11T10:45:43.575Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-Storage-Research-2026-11-11/03-library-native.png",
+      "target": "evidence/2026-11-11/gui/03-library-native.png",
+      "bytes": 332979,
+      "sourceSha256": "755ec0384ac0b000ce8a1b4865f467a51cea5e6a533f07b0260f4132adcfa4e8",
+      "exportSha256": "755ec0384ac0b000ce8a1b4865f467a51cea5e6a533f07b0260f4132adcfa4e8",
+      "sourceModifiedAt": "2026-11-11T11:05:39.732Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-Storage-Research-2026-11-11/04-queue-native.png",
+      "target": "evidence/2026-11-11/gui/04-queue-native.png",
+      "bytes": 140941,
+      "sourceSha256": "183a4ab26c3742e0846ca0b675b85b0af609f75c66dbf3e96186110895393675",
+      "exportSha256": "183a4ab26c3742e0846ca0b675b85b0af609f75c66dbf3e96186110895393675",
+      "sourceModifiedAt": "2026-11-11T11:05:42.463Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-Storage-Research-2026-11-11/05-muse-native.png",
+      "target": "evidence/2026-11-11/gui/05-muse-native.png",
+      "bytes": 153723,
+      "sourceSha256": "7d5d7417479a5dbb0e60ce9a69dbf411a1e8c181f66fee5c23ebc93e993bc252",
+      "exportSha256": "7d5d7417479a5dbb0e60ce9a69dbf411a1e8c181f66fee5c23ebc93e993bc252",
+      "sourceModifiedAt": "2026-11-11T11:05:43.235Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-Storage-Research-2026-11-11/06-settings-native.png",
+      "target": "evidence/2026-11-11/gui/06-settings-native.png",
+      "bytes": 126906,
+      "sourceSha256": "8c81e6bc8395b3293cb9ea3fffa07dbfe6874ac368460c5a410f69398d9e46aa",
+      "exportSha256": "8c81e6bc8395b3293cb9ea3fffa07dbfe6874ac368460c5a410f69398d9e46aa",
+      "sourceModifiedAt": "2026-11-11T11:05:44.266Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-Storage-Research-2026-11-11/07-research-native.png",
+      "target": "evidence/2026-11-11/gui/07-research-native.png",
+      "bytes": 137680,
+      "sourceSha256": "af21b9a62d3c7ec09edcc6ffa0ec125b19b7afae0995f607be74ea10300de8f5",
+      "exportSha256": "af21b9a62d3c7ec09edcc6ffa0ec125b19b7afae0995f607be74ea10300de8f5",
+      "sourceModifiedAt": "2026-11-11T11:05:45.100Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-Storage-Research-2026-11-11/08-research-detail-native.png",
+      "target": "evidence/2026-11-11/gui/08-research-detail-native.png",
+      "bytes": 284994,
+      "sourceSha256": "4617bb92584d1e8dfd3d06eae2ae34a4b2384229426b100207e4e20e0d1cd7cb",
+      "exportSha256": "4617bb92584d1e8dfd3d06eae2ae34a4b2384229426b100207e4e20e0d1cd7cb",
+      "sourceModifiedAt": "2026-11-11T11:05:45.827Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-Storage-Research-2026-11-11/09-research-1080.png",
+      "target": "evidence/2026-11-11/gui/09-research-1080.png",
+      "bytes": 520622,
+      "sourceSha256": "e09217c23cf5b4e209ed74777093a334f35694b32ecf1c61ea9ff3d87afd2599",
+      "exportSha256": "e09217c23cf5b4e209ed74777093a334f35694b32ecf1c61ea9ff3d87afd2599",
+      "sourceModifiedAt": "2026-11-11T11:05:46.327Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-Storage-Research-2026-11-11/09-research-390.png",
+      "target": "evidence/2026-11-11/gui/09-research-390.png",
+      "bytes": 250737,
+      "sourceSha256": "a7f20539b57cf4295bf66239068f2fdbfee33ba64ed21cf2970197052fb662e1",
+      "exportSha256": "a7f20539b57cf4295bf66239068f2fdbfee33ba64ed21cf2970197052fb662e1",
+      "sourceModifiedAt": "2026-11-11T11:05:47.142Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-Storage-Research-2026-11-11/09-research-800.png",
+      "target": "evidence/2026-11-11/gui/09-research-800.png",
+      "bytes": 422097,
+      "sourceSha256": "5cb5ea8844ee6afd6bd89e6df6c2f5460cdc0c7b7bca1931b9e5816b2904872d",
+      "exportSha256": "5cb5ea8844ee6afd6bd89e6df6c2f5460cdc0c7b7bca1931b9e5816b2904872d",
+      "sourceModifiedAt": "2026-11-11T11:05:46.776Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-Storage-Research-2026-11-11/10-research-table-final.png",
+      "target": "evidence/2026-11-11/gui/10-research-table-final.png",
+      "bytes": 247491,
+      "sourceSha256": "44949bcb4a13ae28e42c918ff3d6b740ea97ce11b2d60295f88da14d68d7a0b1",
+      "exportSha256": "44949bcb4a13ae28e42c918ff3d6b740ea97ce11b2d60295f88da14d68d7a0b1",
+      "sourceModifiedAt": "2026-11-11T11:08:13.476Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-Instagram-2026-11-11/BAO-CAO-DANG-THAT.md",
+      "target": "evidence/2026-11-11/instagram/BAO-CAO-DANG-THAT.md",
+      "bytes": 4234,
+      "sourceSha256": "0ae7202cd83f124f6242f7759e52bbeb1f2eb442a85f60a286265c1e63f69484",
+      "exportSha256": "0ae7202cd83f124f6242f7759e52bbeb1f2eb442a85f60a286265c1e63f69484",
+      "sourceModifiedAt": "2026-11-11T08:46:41.186Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-Instagram-2026-11-11/11-bai-dang-that-trong-hermes.png",
+      "target": "evidence/2026-11-11/instagram/11-bai-dang-that-trong-hermes.png",
+      "bytes": 119946,
+      "sourceSha256": "812f3750d44b74a1df86281a5e6181d473718c1c26210de3ee133710b92ae728",
+      "exportSha256": "812f3750d44b74a1df86281a5e6181d473718c1c26210de3ee133710b92ae728",
+      "sourceModifiedAt": "2026-11-11T08:45:42.438Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-Instagram-2026-11-11/12-video-da-dang.png",
+      "target": "evidence/2026-11-11/instagram/12-video-da-dang.png",
+      "bytes": 398688,
+      "sourceSha256": "5a0885920ad8aec8595247f031a31ea76303936886a70d6ff4d837647d09f70a",
+      "exportSha256": "5a0885920ad8aec8595247f031a31ea76303936886a70d6ff4d837647d09f70a",
+      "sourceModifiedAt": "2026-11-11T08:45:43.740Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-Instagram-Metrics-2026-11-11/BAO-CAO.md",
+      "target": "evidence/2026-11-11/instagram-metrics/BAO-CAO.md",
+      "bytes": 3730,
+      "sourceSha256": "08ca877c1e21781a8136157e52d72b4abb1209d81dbf664aac8ad85cc8cdbb25",
+      "exportSha256": "08ca877c1e21781a8136157e52d72b4abb1209d81dbf664aac8ad85cc8cdbb25",
+      "sourceModifiedAt": "2026-11-11T09:11:09.817Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-Instagram-Metrics-2026-11-11/06-metrics-after-restart.png",
+      "target": "evidence/2026-11-11/instagram-metrics/06-metrics-after-restart.png",
+      "bytes": 113652,
+      "sourceSha256": "3f463b83987c19e18aa6a8f16fe99c01cc2526cfe79c2f0ca15ba8215cfb35ff",
+      "exportSha256": "3f463b83987c19e18aa6a8f16fe99c01cc2526cfe79c2f0ca15ba8215cfb35ff",
+      "sourceModifiedAt": "2026-11-11T09:09:54.470Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-3-Products-2026-11-11/manifest.json",
+      "target": "evidence/2026-11-11/three-products/manifest.json",
+      "bytes": 7775,
+      "sourceSha256": "a30f30992a750966c48e81a944d5cb7997adfac20c51795dc484cceb892e00fd",
+      "exportSha256": "a30f30992a750966c48e81a944d5cb7997adfac20c51795dc484cceb892e00fd",
+      "sourceModifiedAt": "2026-11-10T20:45:16.663Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-3-Products-2026-11-11/KET-QUA.md",
+      "target": "evidence/2026-11-11/three-products/KET-QUA.md",
+      "bytes": 2706,
+      "sourceSha256": "2cd036adc3ec1625696392a7b294c7f125cba8d59a9b71217556226cabd540b7",
+      "exportSha256": "2cd036adc3ec1625696392a7b294c7f125cba8d59a9b71217556226cabd540b7",
+      "sourceModifiedAt": "2026-11-10T20:45:16.664Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-3-Products-2026-11-11/01-Treat-Trader-caption.txt",
+      "target": "evidence/2026-11-11/three-products/01-Treat-Trader-caption.txt",
+      "bytes": 112,
+      "sourceSha256": "5d4acfd965deb430f00b80046d7cf2c0532c8efae39d1a953df71e85aa8a7c58",
+      "exportSha256": "5d4acfd965deb430f00b80046d7cf2c0532c8efae39d1a953df71e85aa8a7c58",
+      "sourceModifiedAt": "2026-11-10T20:39:56.713Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-3-Products-2026-11-11/02-ChomChom-Roller-caption.txt",
+      "target": "evidence/2026-11-11/three-products/02-ChomChom-Roller-caption.txt",
+      "bytes": 126,
+      "sourceSha256": "b8da117c8b0275458c29523d99c0f943ba5346d7a896472848c684f9ab4412a2",
+      "exportSha256": "b8da117c8b0275458c29523d99c0f943ba5346d7a896472848c684f9ab4412a2",
+      "sourceModifiedAt": "2026-11-10T20:39:57.333Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-3-Products-2026-11-11/03-Front-Range-Flex-Leash-caption.txt",
+      "target": "evidence/2026-11-11/three-products/03-Front-Range-Flex-Leash-caption.txt",
+      "bytes": 105,
+      "sourceSha256": "94f68f1ce12153a8d34c3b8e8586bc595102d59c1dcd7fff5faa4d0d3aea4306",
+      "exportSha256": "94f68f1ce12153a8d34c3b8e8586bc595102d59c1dcd7fff5faa4d0d3aea4306",
+      "sourceModifiedAt": "2026-11-10T20:39:58.004Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-3-Products-2026-11-11/01-Treat-Trader-khung-hinh.png",
+      "target": "evidence/2026-11-11/three-products/01-Treat-Trader-khung-hinh.png",
+      "bytes": 772802,
+      "sourceSha256": "849721d9d46dcb2286547903c280964204a81f0581a1879d8bc72c3ce43f5c9f",
+      "exportSha256": "849721d9d46dcb2286547903c280964204a81f0581a1879d8bc72c3ce43f5c9f",
+      "sourceModifiedAt": "2026-11-10T20:41:11.545Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-3-Products-2026-11-11/02-ChomChom-Roller-khung-hinh.png",
+      "target": "evidence/2026-11-11/three-products/02-ChomChom-Roller-khung-hinh.png",
+      "bytes": 829509,
+      "sourceSha256": "280aa2354f885ef9bb7ca04eb73f6ceb26d9e5afa076f28a389ca2d2894bb286",
+      "exportSha256": "280aa2354f885ef9bb7ca04eb73f6ceb26d9e5afa076f28a389ca2d2894bb286",
+      "sourceModifiedAt": "2026-11-10T20:41:12.879Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    },
+    {
+      "source": "outputs/Hermes-Clip-3-Products-2026-11-11/03-Front-Range-Flex-Leash-khung-hinh.png",
+      "target": "evidence/2026-11-11/three-products/03-Front-Range-Flex-Leash-khung-hinh.png",
+      "bytes": 276148,
+      "sourceSha256": "8fbe5782971b4b54ee4a2db5eeb7d5f06ee2bce2c4f7c2facfbf0faa6afeb584",
+      "exportSha256": "8fbe5782971b4b54ee4a2db5eeb7d5f06ee2bce2c4f7c2facfbf0faa6afeb584",
+      "sourceModifiedAt": "2026-11-10T20:41:14.146Z",
+      "transformation": "none; exact historical bytes",
+      "evidenceTime": "Historical run 2026-11-11; file copy time is not a new test run"
+    }
+  ]
+}

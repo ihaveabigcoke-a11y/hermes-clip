@@ -1,0 +1,29 @@
+✔ Muse chat sends once, persists response and shares batch accounting (10.3083ms)
+✔ writing mode is scoped to one request and leaves later media requests available (0.6837ms)
+✔ existing Muse thread waits for the acknowledged parent and snapshots only history before it (1.5191ms)
+✔ recovery repairs pre-hydration history only for one exact follow-up, without another Send or batch increment (2.9918ms)
+✔ local chat catalog covers every scope and pins persist without submitting (1.8041ms)
+✔ opening a saved thread uses its owning profile and rejects invalid URLs or busy profiles (1.3282ms)
+✔ Muse task scopes retain full project IDs without merging similar long IDs (1.0955ms)
+✔ Muse chat excludes video, profile checks and profile close while opening (1.5848ms)
+✔ Muse chat fourth attempt cannot click Send or increment the batch (1.5139ms)
+✔ Muse chat checkpoints before click and keeps an uncertain send for recovery (1.4089ms)
+✔ Muse chat restart preserves uncertainty and never schedules a new send (0.5544ms)
+✔ Muse chat validates account/thread scope and external recovery URLs (0.7965ms)
+✔ Muse chat blocks unknown quota and reserves no attempt (0.6578ms)
+✔ Muse chat reader waits for completed stable text and excludes old responses (1.1204ms)
+✔ Muse research waits through browser tool presentations and reads only the final written answer (2.1269ms)
+✔ Muse research does not accept a tool card as the answer and still blocks actual generated media (2.7344ms)
+✔ background research can finish after two minutes without resubmission (4.3412ms)
+✔ background research persists ten numeric/photo candidates without renderer and duplicate start does not resend (169.0996ms)
+✔ restart after completed response imports the existing receipt without submitting again (30.5025ms)
+✔ uncertain research is reconciled once, kept blocked, and never automatically resent (26.8827ms)
+✔ profile quota is not reset by research and malformed output is retained for inspection (26.0607ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 373.3099

@@ -1,0 +1,2117 @@
+{
+  "checkedAt": "2026-11-11T14:04:00.864Z",
+  "installedSourceRoot": "C:/Users/ADMIN/Downloads/Product-Lab-Local/Product-Lab-Local",
+  "repositoryRoot": "C:\\Users\\ADMIN\\Documents\\ChatGPT\\ECOM BẰNG VIDEO AI\\Hermes-Clip",
+  "repositoryBaseCommit": "a1ed73c1210713aaaa09a7d2ede961aff9380c66",
+  "allMatch": true,
+  "sourceFiles": [
+    {
+      "path": "app/api/assets/[id]/route.ts",
+      "installedSha256": "1842614409c50ce8e351ec5c098fd62f1b3c981341a085363baa8495acbb6c28",
+      "repositorySha256": "1842614409c50ce8e351ec5c098fd62f1b3c981341a085363baa8495acbb6c28",
+      "initialPublishSha256": "1842614409c50ce8e351ec5c098fd62f1b3c981341a085363baa8495acbb6c28",
+      "bytes": 1811,
+      "match": true
+    },
+    {
+      "path": "app/api/assets/route.ts",
+      "installedSha256": "62d706e3d318ad9e4071ada105fc21a95b89b99bf1f3d9a5c18f193db069c1ed",
+      "repositorySha256": "62d706e3d318ad9e4071ada105fc21a95b89b99bf1f3d9a5c18f193db069c1ed",
+      "initialPublishSha256": "62d706e3d318ad9e4071ada105fc21a95b89b99bf1f3d9a5c18f193db069c1ed",
+      "bytes": 3854,
+      "match": true
+    },
+    {
+      "path": "app/api/assistant/route.ts",
+      "installedSha256": "860982ef487557097d6600c8ab74306d112037ebbd2eed6925a50c601c4f836d",
+      "repositorySha256": "860982ef487557097d6600c8ab74306d112037ebbd2eed6925a50c601c4f836d",
+      "initialPublishSha256": "860982ef487557097d6600c8ab74306d112037ebbd2eed6925a50c601c4f836d",
+      "bytes": 5818,
+      "match": true
+    },
+    {
+      "path": "app/api/briefs/route.ts",
+      "installedSha256": "26c628a60976ef4978e0d85212d6a0f53440d41d1f7fde4f010e4e07e4c98992",
+      "repositorySha256": "26c628a60976ef4978e0d85212d6a0f53440d41d1f7fde4f010e4e07e4c98992",
+      "initialPublishSha256": "26c628a60976ef4978e0d85212d6a0f53440d41d1f7fde4f010e4e07e4c98992",
+      "bytes": 1735,
+      "match": true
+    },
+    {
+      "path": "app/api/codex/route.ts",
+      "installedSha256": "620f48a87af268830d02982b43d2382efd526c2c7de1f4fb3f02c8f26b11bdc4",
+      "repositorySha256": "620f48a87af268830d02982b43d2382efd526c2c7de1f4fb3f02c8f26b11bdc4",
+      "initialPublishSha256": "620f48a87af268830d02982b43d2382efd526c2c7de1f4fb3f02c8f26b11bdc4",
+      "bytes": 2210,
+      "match": true
+    },
+    {
+      "path": "app/api/jobs/route.ts",
+      "installedSha256": "a3f18e09a76ff74088b238f15ec76ae87f98a2e56553a9e1758f87520573962c",
+      "repositorySha256": "a3f18e09a76ff74088b238f15ec76ae87f98a2e56553a9e1758f87520573962c",
+      "initialPublishSha256": "a3f18e09a76ff74088b238f15ec76ae87f98a2e56553a9e1758f87520573962c",
+      "bytes": 1680,
+      "match": true
+    },
+    {
+      "path": "app/api/lab/route.ts",
+      "installedSha256": "0ee8b5994eb220b5ff709d64d0272719b4aad837cf7a53355f38a9da47fc0acb",
+      "repositorySha256": "0ee8b5994eb220b5ff709d64d0272719b4aad837cf7a53355f38a9da47fc0acb",
+      "initialPublishSha256": "0ee8b5994eb220b5ff709d64d0272719b4aad837cf7a53355f38a9da47fc0acb",
+      "bytes": 8439,
+      "match": true
+    },
+    {
+      "path": "app/api/production/route.ts",
+      "installedSha256": "82f90c341fabcde2001f25e4afb6345a067aa8d52905eae07ec6b6c9b9da7cdf",
+      "repositorySha256": "82f90c341fabcde2001f25e4afb6345a067aa8d52905eae07ec6b6c9b9da7cdf",
+      "initialPublishSha256": "82f90c341fabcde2001f25e4afb6345a067aa8d52905eae07ec6b6c9b9da7cdf",
+      "bytes": 6392,
+      "match": true
+    },
+    {
+      "path": "app/chatgpt-auth.ts",
+      "installedSha256": "4265a2e7c2dcb3a6f4b7026f762bf5b6e4caec76cc13c0a45987ee9a9f2e42cc",
+      "repositorySha256": "4265a2e7c2dcb3a6f4b7026f762bf5b6e4caec76cc13c0a45987ee9a9f2e42cc",
+      "initialPublishSha256": "4265a2e7c2dcb3a6f4b7026f762bf5b6e4caec76cc13c0a45987ee9a9f2e42cc",
+      "bytes": 2550,
+      "match": true
+    },
+    {
+      "path": "app/fonts.css",
+      "installedSha256": "805615c28f872e42f5544be466aac81f9001dabaa4e4d908a9e02e9e8ffc73a9",
+      "repositorySha256": "805615c28f872e42f5544be466aac81f9001dabaa4e4d908a9e02e9e8ffc73a9",
+      "initialPublishSha256": "805615c28f872e42f5544be466aac81f9001dabaa4e4d908a9e02e9e8ffc73a9",
+      "bytes": 6603,
+      "match": true
+    },
+    {
+      "path": "app/globals.css",
+      "installedSha256": "162789ccb01c30b20e9155de0fd37e56d6848274846d8785b323908a3cdfc031",
+      "repositorySha256": "162789ccb01c30b20e9155de0fd37e56d6848274846d8785b323908a3cdfc031",
+      "initialPublishSha256": "162789ccb01c30b20e9155de0fd37e56d6848274846d8785b323908a3cdfc031",
+      "bytes": 83769,
+      "match": true
+    },
+    {
+      "path": "app/lab-tokens.css",
+      "installedSha256": "c5e3cb33075a96f850a34f1b1c1fd2a00bd1467d2ca22b9801c4f5f7688293c0",
+      "repositorySha256": "c5e3cb33075a96f850a34f1b1c1fd2a00bd1467d2ca22b9801c4f5f7688293c0",
+      "initialPublishSha256": "c5e3cb33075a96f850a34f1b1c1fd2a00bd1467d2ca22b9801c4f5f7688293c0",
+      "bytes": 1026,
+      "match": true
+    },
+    {
+      "path": "app/layout.tsx",
+      "installedSha256": "662f137d8ca13514a317996d11c06a7e0b103a9867b0015b03b0d0cdf2716812",
+      "repositorySha256": "662f137d8ca13514a317996d11c06a7e0b103a9867b0015b03b0d0cdf2716812",
+      "initialPublishSha256": "662f137d8ca13514a317996d11c06a7e0b103a9867b0015b03b0d0cdf2716812",
+      "bytes": 536,
+      "match": true
+    },
+    {
+      "path": "app/page.tsx",
+      "installedSha256": "8bf4dfa88f4e8e18fdcd2ae8afd4617d914a4ed9fed2a01dea0f391232c4a2eb",
+      "repositorySha256": "8bf4dfa88f4e8e18fdcd2ae8afd4617d914a4ed9fed2a01dea0f391232c4a2eb",
+      "initialPublishSha256": "8bf4dfa88f4e8e18fdcd2ae8afd4617d914a4ed9fed2a01dea0f391232c4a2eb",
+      "bytes": 139,
+      "match": true
+    },
+    {
+      "path": "app/studio.css",
+      "installedSha256": "d3e1481f738acfa5b22f66d0801f5a676fe7e067134d12b2994a8d8708893dcc",
+      "repositorySha256": "d3e1481f738acfa5b22f66d0801f5a676fe7e067134d12b2994a8d8708893dcc",
+      "initialPublishSha256": "d3e1481f738acfa5b22f66d0801f5a676fe7e067134d12b2994a8d8708893dcc",
+      "bytes": 22908,
+      "match": true
+    },
+    {
+      "path": "app/typography.css",
+      "installedSha256": "b7c04f107ad91ba21458a3e003473193eccc15f017aa891fd4cbaffde9f66970",
+      "repositorySha256": "b7c04f107ad91ba21458a3e003473193eccc15f017aa891fd4cbaffde9f66970",
+      "initialPublishSha256": "b7c04f107ad91ba21458a3e003473193eccc15f017aa891fd4cbaffde9f66970",
+      "bytes": 8175,
+      "match": true
+    },
+    {
+      "path": "app/workbench.css",
+      "installedSha256": "648cacb7ba188087a413dfbc552438119d6877cceac826b10bcbd61d5c1baa44",
+      "repositorySha256": "648cacb7ba188087a413dfbc552438119d6877cceac826b10bcbd61d5c1baa44",
+      "initialPublishSha256": "648cacb7ba188087a413dfbc552438119d6877cceac826b10bcbd61d5c1baa44",
+      "bytes": 72939,
+      "match": true
+    },
+    {
+      "path": "components/connector-error.tsx",
+      "installedSha256": "2d0d04559952ce9c9a327cca499f4b99f35d885cccfce375230e116695d3f155",
+      "repositorySha256": "2d0d04559952ce9c9a327cca499f4b99f35d885cccfce375230e116695d3f155",
+      "initialPublishSha256": "2d0d04559952ce9c9a327cca499f4b99f35d885cccfce375230e116695d3f155",
+      "bytes": 1082,
+      "match": true
+    },
+    {
+      "path": "components/lab/app.tsx",
+      "installedSha256": "2cb766bf31391fd807f756bf039f7694d7b8c02b93e404e197a2fbec3f5e1a99",
+      "repositorySha256": "2cb766bf31391fd807f756bf039f7694d7b8c02b93e404e197a2fbec3f5e1a99",
+      "initialPublishSha256": "2cb766bf31391fd807f756bf039f7694d7b8c02b93e404e197a2fbec3f5e1a99",
+      "bytes": 88946,
+      "match": true
+    },
+    {
+      "path": "components/lab/art.tsx",
+      "installedSha256": "502a8fc4e77ee5511a1c356ea81952e83a9df62d2e819393b35ed761827fa96a",
+      "repositorySha256": "502a8fc4e77ee5511a1c356ea81952e83a9df62d2e819393b35ed761827fa96a",
+      "initialPublishSha256": "502a8fc4e77ee5511a1c356ea81952e83a9df62d2e819393b35ed761827fa96a",
+      "bytes": 5706,
+      "match": true
+    },
+    {
+      "path": "components/lab/assistant-settings.tsx",
+      "installedSha256": "e1a97211a7b2fee411434997f33e12d4df9d3eb9726d49c743791615c4caff5e",
+      "repositorySha256": "e1a97211a7b2fee411434997f33e12d4df9d3eb9726d49c743791615c4caff5e",
+      "initialPublishSha256": "e1a97211a7b2fee411434997f33e12d4df9d3eb9726d49c743791615c4caff5e",
+      "bytes": 3503,
+      "match": true
+    },
+    {
+      "path": "components/lab/codex-runs.tsx",
+      "installedSha256": "49c9d11509e18650e28f121f11e850c8a75505204b853721c3bdf937af7de4d7",
+      "repositorySha256": "49c9d11509e18650e28f121f11e850c8a75505204b853721c3bdf937af7de4d7",
+      "initialPublishSha256": "49c9d11509e18650e28f121f11e850c8a75505204b853721c3bdf937af7de4d7",
+      "bytes": 7019,
+      "match": true
+    },
+    {
+      "path": "components/lab/desktop-console.tsx",
+      "installedSha256": "b87bd4394be46cdf0284ace78561f56daa549b9e662fc42a988de5aa5d303318",
+      "repositorySha256": "b87bd4394be46cdf0284ace78561f56daa549b9e662fc42a988de5aa5d303318",
+      "initialPublishSha256": "b87bd4394be46cdf0284ace78561f56daa549b9e662fc42a988de5aa5d303318",
+      "bytes": 21764,
+      "match": true
+    },
+    {
+      "path": "components/lab/instagram-metrics.tsx",
+      "installedSha256": "99420a5eae8f34f1cb96fc8a410ca111f5d54f54521d8064aa7e47d766dc3df9",
+      "repositorySha256": "99420a5eae8f34f1cb96fc8a410ca111f5d54f54521d8064aa7e47d766dc3df9",
+      "initialPublishSha256": "99420a5eae8f34f1cb96fc8a410ca111f5d54f54521d8064aa7e47d766dc3df9",
+      "bytes": 3342,
+      "match": true
+    },
+    {
+      "path": "components/lab/instagram-overview.tsx",
+      "installedSha256": "ac89461a889ab69bcd7a75c906ab30467bfe5355f265c1070bdd0c9a46bba31f",
+      "repositorySha256": "ac89461a889ab69bcd7a75c906ab30467bfe5355f265c1070bdd0c9a46bba31f",
+      "initialPublishSha256": "ac89461a889ab69bcd7a75c906ab30467bfe5355f265c1070bdd0c9a46bba31f",
+      "bytes": 8355,
+      "match": true
+    },
+    {
+      "path": "components/lab/instagram-panel.tsx",
+      "installedSha256": "57be4e43d971e4cec4c08a088c24f87300ad1a9abb85f6296cf99466ee844424",
+      "repositorySha256": "57be4e43d971e4cec4c08a088c24f87300ad1a9abb85f6296cf99466ee844424",
+      "initialPublishSha256": "57be4e43d971e4cec4c08a088c24f87300ad1a9abb85f6296cf99466ee844424",
+      "bytes": 22522,
+      "match": true
+    },
+    {
+      "path": "components/lab/integrations.tsx",
+      "installedSha256": "447f19ebc4c002f43fb467c43410af17cad56761dccd005159fa517a942f0cf2",
+      "repositorySha256": "447f19ebc4c002f43fb467c43410af17cad56761dccd005159fa517a942f0cf2",
+      "initialPublishSha256": "447f19ebc4c002f43fb467c43410af17cad56761dccd005159fa517a942f0cf2",
+      "bytes": 10077,
+      "match": true
+    },
+    {
+      "path": "components/lab/media-preview.tsx",
+      "installedSha256": "70f99ef0fe611ac09151a0972739691e09d35b5748c4f5b54484dcd549512c58",
+      "repositorySha256": "70f99ef0fe611ac09151a0972739691e09d35b5748c4f5b54484dcd549512c58",
+      "initialPublishSha256": "70f99ef0fe611ac09151a0972739691e09d35b5748c4f5b54484dcd549512c58",
+      "bytes": 1960,
+      "match": true
+    },
+    {
+      "path": "components/lab/muse-chat.tsx",
+      "installedSha256": "73e4ac359ee29a49a12797d8d86c357c8e7e965ed6dbe7277848e0c7ab21537a",
+      "repositorySha256": "73e4ac359ee29a49a12797d8d86c357c8e7e965ed6dbe7277848e0c7ab21537a",
+      "initialPublishSha256": "73e4ac359ee29a49a12797d8d86c357c8e7e965ed6dbe7277848e0c7ab21537a",
+      "bytes": 17170,
+      "match": true
+    },
+    {
+      "path": "components/lab/muse-connection-strip.tsx",
+      "installedSha256": "eec906c9c861c2339baf8f17411c8cdd9fa20124792652bda3dabc1eaeffd472",
+      "repositorySha256": "eec906c9c861c2339baf8f17411c8cdd9fa20124792652bda3dabc1eaeffd472",
+      "initialPublishSha256": "eec906c9c861c2339baf8f17411c8cdd9fa20124792652bda3dabc1eaeffd472",
+      "bytes": 1021,
+      "match": true
+    },
+    {
+      "path": "components/lab/muse-response.tsx",
+      "installedSha256": "7089637e3007fc20263a6d2f8c82d96ef53055cc09963b51442ca3765b673a16",
+      "repositorySha256": "7089637e3007fc20263a6d2f8c82d96ef53055cc09963b51442ca3765b673a16",
+      "initialPublishSha256": "7089637e3007fc20263a6d2f8c82d96ef53055cc09963b51442ca3765b673a16",
+      "bytes": 1556,
+      "match": true
+    },
+    {
+      "path": "components/lab/operations.tsx",
+      "installedSha256": "a3391927cb1251b5f4998ea6e7c6e79b7dbedd8a627d40f13c4b81b2519082ba",
+      "repositorySha256": "a3391927cb1251b5f4998ea6e7c6e79b7dbedd8a627d40f13c4b81b2519082ba",
+      "initialPublishSha256": "a3391927cb1251b5f4998ea6e7c6e79b7dbedd8a627d40f13c4b81b2519082ba",
+      "bytes": 22770,
+      "match": true
+    },
+    {
+      "path": "components/lab/primitives.tsx",
+      "installedSha256": "96ca7296f8831aaacf545e0967a3e3548423d9db30fda83a04a2c5359c417be0",
+      "repositorySha256": "96ca7296f8831aaacf545e0967a3e3548423d9db30fda83a04a2c5359c417be0",
+      "initialPublishSha256": "96ca7296f8831aaacf545e0967a3e3548423d9db30fda83a04a2c5359c417be0",
+      "bytes": 21679,
+      "match": true
+    },
+    {
+      "path": "components/lab/production-desk.tsx",
+      "installedSha256": "012e70d2d0e63cb0c84dc81f1923bee234f85e171818fe0badca7fd81e71311f",
+      "repositorySha256": "012e70d2d0e63cb0c84dc81f1923bee234f85e171818fe0badca7fd81e71311f",
+      "initialPublishSha256": "012e70d2d0e63cb0c84dc81f1923bee234f85e171818fe0badca7fd81e71311f",
+      "bytes": 35991,
+      "match": true
+    },
+    {
+      "path": "components/lab/production-intelligence.tsx",
+      "installedSha256": "ed3396ad5a9f9e03ff4339dc3fa3a63b84c559a853baf9560f77f5a0de041691",
+      "repositorySha256": "ed3396ad5a9f9e03ff4339dc3fa3a63b84c559a853baf9560f77f5a0de041691",
+      "initialPublishSha256": "ed3396ad5a9f9e03ff4339dc3fa3a63b84c559a853baf9560f77f5a0de041691",
+      "bytes": 6966,
+      "match": true
+    },
+    {
+      "path": "components/lab/production.tsx",
+      "installedSha256": "4f94a31c88f05c4b8010fcd6bfb900b72d36268512f03e204d20021952f98842",
+      "repositorySha256": "4f94a31c88f05c4b8010fcd6bfb900b72d36268512f03e204d20021952f98842",
+      "initialPublishSha256": "4f94a31c88f05c4b8010fcd6bfb900b72d36268512f03e204d20021952f98842",
+      "bytes": 51750,
+      "match": true
+    },
+    {
+      "path": "components/lab/queue-board.tsx",
+      "installedSha256": "cc05046628b1e42aaac8b23f7c1e2cc9f6d6f57ad35a0c8100aafe4d2aefff9a",
+      "repositorySha256": "cc05046628b1e42aaac8b23f7c1e2cc9f6d6f57ad35a0c8100aafe4d2aefff9a",
+      "initialPublishSha256": "cc05046628b1e42aaac8b23f7c1e2cc9f6d6f57ad35a0c8100aafe4d2aefff9a",
+      "bytes": 20856,
+      "match": true
+    },
+    {
+      "path": "components/lab/research-candidates.tsx",
+      "installedSha256": "2e61a179d16d91d5da0ff9df3c04f0c384312a3ea08552f0f80a94ed5ca75bdf",
+      "repositorySha256": "2e61a179d16d91d5da0ff9df3c04f0c384312a3ea08552f0f80a94ed5ca75bdf",
+      "initialPublishSha256": "2e61a179d16d91d5da0ff9df3c04f0c384312a3ea08552f0f80a94ed5ca75bdf",
+      "bytes": 9923,
+      "match": true
+    },
+    {
+      "path": "components/lab/research-launcher.tsx",
+      "installedSha256": "5a38f575cfdb8597d3c3b9d8762bdc78c6f5d95ba3085a8264ca35b9bb769c3c",
+      "repositorySha256": "5a38f575cfdb8597d3c3b9d8762bdc78c6f5d95ba3085a8264ca35b9bb769c3c",
+      "initialPublishSha256": "5a38f575cfdb8597d3c3b9d8762bdc78c6f5d95ba3085a8264ca35b9bb769c3c",
+      "bytes": 3674,
+      "match": true
+    },
+    {
+      "path": "components/lab/visual-hooks.tsx",
+      "installedSha256": "4105d0c4f6baefcc968810eda065aac5e61f1f2c355aa78f76b312b4859c3488",
+      "repositorySha256": "4105d0c4f6baefcc968810eda065aac5e61f1f2c355aa78f76b312b4859c3488",
+      "initialPublishSha256": "4105d0c4f6baefcc968810eda065aac5e61f1f2c355aa78f76b312b4859c3488",
+      "bytes": 3809,
+      "match": true
+    },
+    {
+      "path": "components/lab/workbench-controls.tsx",
+      "installedSha256": "9cdfdcce2032825c40c29fd2fb30bdcb6e56d53692f8c74bef68a5df9213d159",
+      "repositorySha256": "9cdfdcce2032825c40c29fd2fb30bdcb6e56d53692f8c74bef68a5df9213d159",
+      "initialPublishSha256": "9cdfdcce2032825c40c29fd2fb30bdcb6e56d53692f8c74bef68a5df9213d159",
+      "bytes": 3674,
+      "match": true
+    },
+    {
+      "path": "components/lab/worker-activity.tsx",
+      "installedSha256": "765113c3a0b7cb497993267c00849960d7bfe43ec110ac34d8a9049bd1eb73ea",
+      "repositorySha256": "765113c3a0b7cb497993267c00849960d7bfe43ec110ac34d8a9049bd1eb73ea",
+      "initialPublishSha256": "765113c3a0b7cb497993267c00849960d7bfe43ec110ac34d8a9049bd1eb73ea",
+      "bytes": 2683,
+      "match": true
+    },
+    {
+      "path": "components/lab/workspace-library.tsx",
+      "installedSha256": "a7cbf41569c5fa3453c199ffdad1bbbac2c5a5ca1dce083d94270116732e420a",
+      "repositorySha256": "a7cbf41569c5fa3453c199ffdad1bbbac2c5a5ca1dce083d94270116732e420a",
+      "initialPublishSha256": "a7cbf41569c5fa3453c199ffdad1bbbac2c5a5ca1dce083d94270116732e420a",
+      "bytes": 15944,
+      "match": true
+    },
+    {
+      "path": "components/ui/accordion.tsx",
+      "installedSha256": "a4f153089ba886dfcf73fac26b5c01ca933fa12fbe88df6fb723912bfffdfbb0",
+      "repositorySha256": "a4f153089ba886dfcf73fac26b5c01ca933fa12fbe88df6fb723912bfffdfbb0",
+      "initialPublishSha256": "a4f153089ba886dfcf73fac26b5c01ca933fa12fbe88df6fb723912bfffdfbb0",
+      "bytes": 2048,
+      "match": true
+    },
+    {
+      "path": "components/ui/alert-dialog.tsx",
+      "installedSha256": "9a8d950f2b9b4352d5ebb762fb44d5c28c2d353aa29712071973656a8736e311",
+      "repositorySha256": "9a8d950f2b9b4352d5ebb762fb44d5c28c2d353aa29712071973656a8736e311",
+      "initialPublishSha256": "9a8d950f2b9b4352d5ebb762fb44d5c28c2d353aa29712071973656a8736e311",
+      "bytes": 5439,
+      "match": true
+    },
+    {
+      "path": "components/ui/alert.tsx",
+      "installedSha256": "2cc59b5f7bda91c1670884b1bf46bfc8a2a6f226cef184f5762acc037188885b",
+      "repositorySha256": "2cc59b5f7bda91c1670884b1bf46bfc8a2a6f226cef184f5762acc037188885b",
+      "initialPublishSha256": "2cc59b5f7bda91c1670884b1bf46bfc8a2a6f226cef184f5762acc037188885b",
+      "bytes": 1614,
+      "match": true
+    },
+    {
+      "path": "components/ui/aspect-ratio.tsx",
+      "installedSha256": "b1c157886236782cb92d8fbcd4749532aaf6d8aabefd6e157ca40358f902f407",
+      "repositorySha256": "b1c157886236782cb92d8fbcd4749532aaf6d8aabefd6e157ca40358f902f407",
+      "initialPublishSha256": "b1c157886236782cb92d8fbcd4749532aaf6d8aabefd6e157ca40358f902f407",
+      "bytes": 274,
+      "match": true
+    },
+    {
+      "path": "components/ui/attachment.tsx",
+      "installedSha256": "ae8a25dd1a896d3964e3ef54d97e51221b418cde287dfd794428b89951c5c790",
+      "repositorySha256": "ae8a25dd1a896d3964e3ef54d97e51221b418cde287dfd794428b89951c5c790",
+      "initialPublishSha256": "ae8a25dd1a896d3964e3ef54d97e51221b418cde287dfd794428b89951c5c790",
+      "bytes": 6002,
+      "match": true
+    },
+    {
+      "path": "components/ui/avatar.tsx",
+      "installedSha256": "58a846bf1617b94b9681921db9b8461d0145f311424663d11678a06b6153cb34",
+      "repositorySha256": "58a846bf1617b94b9681921db9b8461d0145f311424663d11678a06b6153cb34",
+      "initialPublishSha256": "58a846bf1617b94b9681921db9b8461d0145f311424663d11678a06b6153cb34",
+      "bytes": 2916,
+      "match": true
+    },
+    {
+      "path": "components/ui/badge.tsx",
+      "installedSha256": "46a0de5224f6a5d5d63d45246534288518dce888f031064bff925bbc7fe6ad97",
+      "repositorySha256": "46a0de5224f6a5d5d63d45246534288518dce888f031064bff925bbc7fe6ad97",
+      "initialPublishSha256": "46a0de5224f6a5d5d63d45246534288518dce888f031064bff925bbc7fe6ad97",
+      "bytes": 1776,
+      "match": true
+    },
+    {
+      "path": "components/ui/breadcrumb.tsx",
+      "installedSha256": "d4c0831bba2212e778248f54a6ace6ef378df8bba4616d1abf27787a31eabae5",
+      "repositorySha256": "d4c0831bba2212e778248f54a6ace6ef378df8bba4616d1abf27787a31eabae5",
+      "initialPublishSha256": "d4c0831bba2212e778248f54a6ace6ef378df8bba4616d1abf27787a31eabae5",
+      "bytes": 2350,
+      "match": true
+    },
+    {
+      "path": "components/ui/bubble.tsx",
+      "installedSha256": "870cc0c5cfc8a515053f7e41e706a6bd017a909b45f1305fd3b164a52cc4483b",
+      "repositorySha256": "870cc0c5cfc8a515053f7e41e706a6bd017a909b45f1305fd3b164a52cc4483b",
+      "initialPublishSha256": "870cc0c5cfc8a515053f7e41e706a6bd017a909b45f1305fd3b164a52cc4483b",
+      "bytes": 4699,
+      "match": true
+    },
+    {
+      "path": "components/ui/button-group.tsx",
+      "installedSha256": "784c89d8ee683e1bc972ae69e6ea8225a7f63abe22aa1b5fc3423ae8a2a399c0",
+      "repositorySha256": "784c89d8ee683e1bc972ae69e6ea8225a7f63abe22aa1b5fc3423ae8a2a399c0",
+      "initialPublishSha256": "784c89d8ee683e1bc972ae69e6ea8225a7f63abe22aa1b5fc3423ae8a2a399c0",
+      "bytes": 2202,
+      "match": true
+    },
+    {
+      "path": "components/ui/button.tsx",
+      "installedSha256": "cc36af0f8b5019c33cc039fbf03bb952a513072b15b55b53c592b78af3e5f4c4",
+      "repositorySha256": "cc36af0f8b5019c33cc039fbf03bb952a513072b15b55b53c592b78af3e5f4c4",
+      "initialPublishSha256": "cc36af0f8b5019c33cc039fbf03bb952a513072b15b55b53c592b78af3e5f4c4",
+      "bytes": 2392,
+      "match": true
+    },
+    {
+      "path": "components/ui/calendar.tsx",
+      "installedSha256": "3855fbe0d3f8ad3a4b93071f98b76a9f6782d46ec8b05f5d2ddbee1e4e39bc84",
+      "repositorySha256": "3855fbe0d3f8ad3a4b93071f98b76a9f6782d46ec8b05f5d2ddbee1e4e39bc84",
+      "initialPublishSha256": "3855fbe0d3f8ad3a4b93071f98b76a9f6782d46ec8b05f5d2ddbee1e4e39bc84",
+      "bytes": 7832,
+      "match": true
+    },
+    {
+      "path": "components/ui/card.tsx",
+      "installedSha256": "c48dd3b96be90a7066f1aebf294f0af9d00ebcdc367d5d4aca55429ade570c1c",
+      "repositorySha256": "c48dd3b96be90a7066f1aebf294f0af9d00ebcdc367d5d4aca55429ade570c1c",
+      "initialPublishSha256": "c48dd3b96be90a7066f1aebf294f0af9d00ebcdc367d5d4aca55429ade570c1c",
+      "bytes": 1987,
+      "match": true
+    },
+    {
+      "path": "components/ui/carousel.tsx",
+      "installedSha256": "b7ea0dda3903d972c186f739e23da61f547bc83b5a0bf13b16856577846d5fc3",
+      "repositorySha256": "b7ea0dda3903d972c186f739e23da61f547bc83b5a0bf13b16856577846d5fc3",
+      "initialPublishSha256": "b7ea0dda3903d972c186f739e23da61f547bc83b5a0bf13b16856577846d5fc3",
+      "bytes": 5556,
+      "match": true
+    },
+    {
+      "path": "components/ui/chart.tsx",
+      "installedSha256": "45aa5ea4a386f4fb5b8869ff4bab3a08cf89255190ee322043baf84c3e950b6a",
+      "repositorySha256": "45aa5ea4a386f4fb5b8869ff4bab3a08cf89255190ee322043baf84c3e950b6a",
+      "initialPublishSha256": "45aa5ea4a386f4fb5b8869ff4bab3a08cf89255190ee322043baf84c3e950b6a",
+      "bytes": 10614,
+      "match": true
+    },
+    {
+      "path": "components/ui/checkbox.tsx",
+      "installedSha256": "b23ab9d4deeedf2ac8f512c368361ede681aa383437ef48563a6f9b7dbe95f27",
+      "repositorySha256": "b23ab9d4deeedf2ac8f512c368361ede681aa383437ef48563a6f9b7dbe95f27",
+      "initialPublishSha256": "b23ab9d4deeedf2ac8f512c368361ede681aa383437ef48563a6f9b7dbe95f27",
+      "bytes": 1214,
+      "match": true
+    },
+    {
+      "path": "components/ui/collapsible.tsx",
+      "installedSha256": "c6598e5584f4258b5d9fefadbc5ad6a66888ad58729f4b634a0bb2d9c513188b",
+      "repositorySha256": "c6598e5584f4258b5d9fefadbc5ad6a66888ad58729f4b634a0bb2d9c513188b",
+      "initialPublishSha256": "c6598e5584f4258b5d9fefadbc5ad6a66888ad58729f4b634a0bb2d9c513188b",
+      "bytes": 795,
+      "match": true
+    },
+    {
+      "path": "components/ui/combobox.tsx",
+      "installedSha256": "2d68e78b2dc7e38a085f222dede60a80b4f8229a6e91732c484605e204d46735",
+      "repositorySha256": "2d68e78b2dc7e38a085f222dede60a80b4f8229a6e91732c484605e204d46735",
+      "initialPublishSha256": "2d68e78b2dc7e38a085f222dede60a80b4f8229a6e91732c484605e204d46735",
+      "bytes": 9158,
+      "match": true
+    },
+    {
+      "path": "components/ui/command.tsx",
+      "installedSha256": "361193df1e3d64a9e9b5048f045264782fcb387aab3f00f2b805fdcbf538b16a",
+      "repositorySha256": "361193df1e3d64a9e9b5048f045264782fcb387aab3f00f2b805fdcbf538b16a",
+      "initialPublishSha256": "361193df1e3d64a9e9b5048f045264782fcb387aab3f00f2b805fdcbf538b16a",
+      "bytes": 4818,
+      "match": true
+    },
+    {
+      "path": "components/ui/context-menu.tsx",
+      "installedSha256": "2cf1fcf59df0649a3e2a126d1df2f639145f6b6bf5689ee54af1f40ab1245017",
+      "repositorySha256": "2cf1fcf59df0649a3e2a126d1df2f639145f6b6bf5689ee54af1f40ab1245017",
+      "initialPublishSha256": "2cf1fcf59df0649a3e2a126d1df2f639145f6b6bf5689ee54af1f40ab1245017",
+      "bytes": 8268,
+      "match": true
+    },
+    {
+      "path": "components/ui/dialog.tsx",
+      "installedSha256": "dce39c6adc47d997bd2567f8b7a72f466b0134715105cd42f9194007b8ecdb14",
+      "repositorySha256": "dce39c6adc47d997bd2567f8b7a72f466b0134715105cd42f9194007b8ecdb14",
+      "initialPublishSha256": "dce39c6adc47d997bd2567f8b7a72f466b0134715105cd42f9194007b8ecdb14",
+      "bytes": 4303,
+      "match": true
+    },
+    {
+      "path": "components/ui/direction.tsx",
+      "installedSha256": "84ae2ad658207f0e0f367978e5508cd8027cd00c29c41d3d13db21a708c3d1e6",
+      "repositorySha256": "84ae2ad658207f0e0f367978e5508cd8027cd00c29c41d3d13db21a708c3d1e6",
+      "initialPublishSha256": "84ae2ad658207f0e0f367978e5508cd8027cd00c29c41d3d13db21a708c3d1e6",
+      "bytes": 506,
+      "match": true
+    },
+    {
+      "path": "components/ui/drawer.tsx",
+      "installedSha256": "cb6eaf58eb0757ca91af284e5d925b89a42ad7eb19cb3f44c575a3487aa9350f",
+      "repositorySha256": "cb6eaf58eb0757ca91af284e5d925b89a42ad7eb19cb3f44c575a3487aa9350f",
+      "initialPublishSha256": "cb6eaf58eb0757ca91af284e5d925b89a42ad7eb19cb3f44c575a3487aa9350f",
+      "bytes": 4255,
+      "match": true
+    },
+    {
+      "path": "components/ui/dropdown-menu.tsx",
+      "installedSha256": "98f0dcdae38225b73734aceeb9213dd751fea2c72ea520df31003cd133deac8a",
+      "repositorySha256": "98f0dcdae38225b73734aceeb9213dd751fea2c72ea520df31003cd133deac8a",
+      "initialPublishSha256": "98f0dcdae38225b73734aceeb9213dd751fea2c72ea520df31003cd133deac8a",
+      "bytes": 8418,
+      "match": true
+    },
+    {
+      "path": "components/ui/empty.tsx",
+      "installedSha256": "ae95bdcf367a076ae02e7925f14522a148798f72d9651749c6d55497dba584c0",
+      "repositorySha256": "ae95bdcf367a076ae02e7925f14522a148798f72d9651749c6d55497dba584c0",
+      "initialPublishSha256": "ae95bdcf367a076ae02e7925f14522a148798f72d9651749c6d55497dba584c0",
+      "bytes": 2396,
+      "match": true
+    },
+    {
+      "path": "components/ui/field.tsx",
+      "installedSha256": "ba67d76f017ac059fc86cf8c344e0b2991c4322d3619e125498c19b87f6eefbd",
+      "repositorySha256": "ba67d76f017ac059fc86cf8c344e0b2991c4322d3619e125498c19b87f6eefbd",
+      "initialPublishSha256": "ba67d76f017ac059fc86cf8c344e0b2991c4322d3619e125498c19b87f6eefbd",
+      "bytes": 6159,
+      "match": true
+    },
+    {
+      "path": "components/ui/form.tsx",
+      "installedSha256": "315b46bb75ab7d1c6061b5d750aa4bedf6e7a455e15e2d7f9182f053d5972b1e",
+      "repositorySha256": "315b46bb75ab7d1c6061b5d750aa4bedf6e7a455e15e2d7f9182f053d5972b1e",
+      "initialPublishSha256": "315b46bb75ab7d1c6061b5d750aa4bedf6e7a455e15e2d7f9182f053d5972b1e",
+      "bytes": 3757,
+      "match": true
+    },
+    {
+      "path": "components/ui/hover-card.tsx",
+      "installedSha256": "f5d8df42c59370ec14d61bcc54f7d68e9bb7dfa0d6a872b2f7cffc2aafbf23b8",
+      "repositorySha256": "f5d8df42c59370ec14d61bcc54f7d68e9bb7dfa0d6a872b2f7cffc2aafbf23b8",
+      "initialPublishSha256": "f5d8df42c59370ec14d61bcc54f7d68e9bb7dfa0d6a872b2f7cffc2aafbf23b8",
+      "bytes": 1526,
+      "match": true
+    },
+    {
+      "path": "components/ui/input-group.tsx",
+      "installedSha256": "6afbd58fea4c438e6252dc4568bddc122e84ababead4ad5cee50ace01100c9a0",
+      "repositorySha256": "6afbd58fea4c438e6252dc4568bddc122e84ababead4ad5cee50ace01100c9a0",
+      "initialPublishSha256": "6afbd58fea4c438e6252dc4568bddc122e84ababead4ad5cee50ace01100c9a0",
+      "bytes": 5065,
+      "match": true
+    },
+    {
+      "path": "components/ui/input-otp.tsx",
+      "installedSha256": "161946daa89f0eda2575b9271c0494e35807c4ffb55598a49f67160c17fec299",
+      "repositorySha256": "161946daa89f0eda2575b9271c0494e35807c4ffb55598a49f67160c17fec299",
+      "initialPublishSha256": "161946daa89f0eda2575b9271c0494e35807c4ffb55598a49f67160c17fec299",
+      "bytes": 2254,
+      "match": true
+    },
+    {
+      "path": "components/ui/input.tsx",
+      "installedSha256": "8c4612a7c41319ac5049daa3b34b080f9784b6245c17780eb87c127e58e473db",
+      "repositorySha256": "8c4612a7c41319ac5049daa3b34b080f9784b6245c17780eb87c127e58e473db",
+      "initialPublishSha256": "8c4612a7c41319ac5049daa3b34b080f9784b6245c17780eb87c127e58e473db",
+      "bytes": 962,
+      "match": true
+    },
+    {
+      "path": "components/ui/item.tsx",
+      "installedSha256": "6e2144d6d87142dbbe56d568810bf546318c8aa661447ebb0d76ebbf382cb45f",
+      "repositorySha256": "6e2144d6d87142dbbe56d568810bf546318c8aa661447ebb0d76ebbf382cb45f",
+      "initialPublishSha256": "6e2144d6d87142dbbe56d568810bf546318c8aa661447ebb0d76ebbf382cb45f",
+      "bytes": 4486,
+      "match": true
+    },
+    {
+      "path": "components/ui/kbd.tsx",
+      "installedSha256": "6088c3a5432338b1719c17e9b5d0e1fa74fd1f66060f248fc88909d33a82cd13",
+      "repositorySha256": "6088c3a5432338b1719c17e9b5d0e1fa74fd1f66060f248fc88909d33a82cd13",
+      "initialPublishSha256": "6088c3a5432338b1719c17e9b5d0e1fa74fd1f66060f248fc88909d33a82cd13",
+      "bytes": 862,
+      "match": true
+    },
+    {
+      "path": "components/ui/label.tsx",
+      "installedSha256": "a476e41f08b9de5bd447de66a33d8bc2ad18f2fa6b96c064778bab4b6f439f4c",
+      "repositorySha256": "a476e41f08b9de5bd447de66a33d8bc2ad18f2fa6b96c064778bab4b6f439f4c",
+      "initialPublishSha256": "a476e41f08b9de5bd447de66a33d8bc2ad18f2fa6b96c064778bab4b6f439f4c",
+      "bytes": 606,
+      "match": true
+    },
+    {
+      "path": "components/ui/marker.tsx",
+      "installedSha256": "3d798763f094b2bb5e7ade2d5cd1b9bab498bc8ca7fd4cfaf4e5835bdedc34a0",
+      "repositorySha256": "3d798763f094b2bb5e7ade2d5cd1b9bab498bc8ca7fd4cfaf4e5835bdedc34a0",
+      "initialPublishSha256": "3d798763f094b2bb5e7ade2d5cd1b9bab498bc8ca7fd4cfaf4e5835bdedc34a0",
+      "bytes": 1864,
+      "match": true
+    },
+    {
+      "path": "components/ui/menubar.tsx",
+      "installedSha256": "9243af8afcea03703398ccd1c2a8c0a87ad6cbaf2bd272fb609f5b79fe46aebb",
+      "repositorySha256": "9243af8afcea03703398ccd1c2a8c0a87ad6cbaf2bd272fb609f5b79fe46aebb",
+      "initialPublishSha256": "9243af8afcea03703398ccd1c2a8c0a87ad6cbaf2bd272fb609f5b79fe46aebb",
+      "bytes": 8389,
+      "match": true
+    },
+    {
+      "path": "components/ui/message-scroller.tsx",
+      "installedSha256": "bb7660a248e4e9589c3816c7c1c199ea1381a70d2c8476ae895b567a7a4d86cf",
+      "repositorySha256": "bb7660a248e4e9589c3816c7c1c199ea1381a70d2c8476ae895b567a7a4d86cf",
+      "initialPublishSha256": "bb7660a248e4e9589c3816c7c1c199ea1381a70d2c8476ae895b567a7a4d86cf",
+      "bytes": 3992,
+      "match": true
+    },
+    {
+      "path": "components/ui/message.tsx",
+      "installedSha256": "9d2952bf3b641081f09aa2739535e6bbd1be0a4946789752a2c20d8aaef43185",
+      "repositorySha256": "9d2952bf3b641081f09aa2739535e6bbd1be0a4946789752a2c20d8aaef43185",
+      "initialPublishSha256": "9d2952bf3b641081f09aa2739535e6bbd1be0a4946789752a2c20d8aaef43185",
+      "bytes": 2232,
+      "match": true
+    },
+    {
+      "path": "components/ui/native-select.tsx",
+      "installedSha256": "007516b111fca8c98a6c40c94ab91bb68cc5b52afce1ed1f5e510c3d86e7347c",
+      "repositorySha256": "007516b111fca8c98a6c40c94ab91bb68cc5b52afce1ed1f5e510c3d86e7347c",
+      "initialPublishSha256": "007516b111fca8c98a6c40c94ab91bb68cc5b52afce1ed1f5e510c3d86e7347c",
+      "bytes": 1995,
+      "match": true
+    },
+    {
+      "path": "components/ui/navigation-menu.tsx",
+      "installedSha256": "889d358a77de88e9cb6f39ea4895ea4c76eaf01d731b74e44f1c41e97a78a044",
+      "repositorySha256": "889d358a77de88e9cb6f39ea4895ea4c76eaf01d731b74e44f1c41e97a78a044",
+      "initialPublishSha256": "889d358a77de88e9cb6f39ea4895ea4c76eaf01d731b74e44f1c41e97a78a044",
+      "bytes": 6658,
+      "match": true
+    },
+    {
+      "path": "components/ui/pagination.tsx",
+      "installedSha256": "374ad135c3d4ff3ec080a0009cd9745cdd0e12faa89d2b0e86074f11e5127fd1",
+      "repositorySha256": "374ad135c3d4ff3ec080a0009cd9745cdd0e12faa89d2b0e86074f11e5127fd1",
+      "initialPublishSha256": "374ad135c3d4ff3ec080a0009cd9745cdd0e12faa89d2b0e86074f11e5127fd1",
+      "bytes": 2717,
+      "match": true
+    },
+    {
+      "path": "components/ui/popover.tsx",
+      "installedSha256": "31c350309ff5d3034e6ecf1b0eda75ba8855bdbf987fc7ad6d71f0ef07c5a447",
+      "repositorySha256": "31c350309ff5d3034e6ecf1b0eda75ba8855bdbf987fc7ad6d71f0ef07c5a447",
+      "initialPublishSha256": "31c350309ff5d3034e6ecf1b0eda75ba8855bdbf987fc7ad6d71f0ef07c5a447",
+      "bytes": 2357,
+      "match": true
+    },
+    {
+      "path": "components/ui/progress.tsx",
+      "installedSha256": "c8c26e8f5f041c3cdf4915347dc1d9c022f9448f149990fadcaf303e952fa57d",
+      "repositorySha256": "c8c26e8f5f041c3cdf4915347dc1d9c022f9448f149990fadcaf303e952fa57d",
+      "initialPublishSha256": "c8c26e8f5f041c3cdf4915347dc1d9c022f9448f149990fadcaf303e952fa57d",
+      "bytes": 755,
+      "match": true
+    },
+    {
+      "path": "components/ui/radio-group.tsx",
+      "installedSha256": "fe5ce39636d0818c2bf9c4eebddff893d1225fa2c81b5fa4bb8cbb39a8c913ce",
+      "repositorySha256": "fe5ce39636d0818c2bf9c4eebddff893d1225fa2c81b5fa4bb8cbb39a8c913ce",
+      "initialPublishSha256": "fe5ce39636d0818c2bf9c4eebddff893d1225fa2c81b5fa4bb8cbb39a8c913ce",
+      "bytes": 1460,
+      "match": true
+    },
+    {
+      "path": "components/ui/resizable.tsx",
+      "installedSha256": "bc63958467aa00557c551bb0d96a5ae4c965c1e1ba2380e595949d933b132f7c",
+      "repositorySha256": "bc63958467aa00557c551bb0d96a5ae4c965c1e1ba2380e595949d933b132f7c",
+      "initialPublishSha256": "bc63958467aa00557c551bb0d96a5ae4c965c1e1ba2380e595949d933b132f7c",
+      "bytes": 1815,
+      "match": true
+    },
+    {
+      "path": "components/ui/scroll-area.tsx",
+      "installedSha256": "8bd9d986b2844c9a87de825c6de4787b6739b36c3dc9a05ccf3eb107160e4043",
+      "repositorySha256": "8bd9d986b2844c9a87de825c6de4787b6739b36c3dc9a05ccf3eb107160e4043",
+      "initialPublishSha256": "8bd9d986b2844c9a87de825c6de4787b6739b36c3dc9a05ccf3eb107160e4043",
+      "bytes": 1639,
+      "match": true
+    },
+    {
+      "path": "components/ui/select.tsx",
+      "installedSha256": "0b796a108a4eb5ba52d9ad938b7aea36dc56ae66c703a6d0a23dbc24f96daff3",
+      "repositorySha256": "0b796a108a4eb5ba52d9ad938b7aea36dc56ae66c703a6d0a23dbc24f96daff3",
+      "initialPublishSha256": "0b796a108a4eb5ba52d9ad938b7aea36dc56ae66c703a6d0a23dbc24f96daff3",
+      "bytes": 6353,
+      "match": true
+    },
+    {
+      "path": "components/ui/separator.tsx",
+      "installedSha256": "6da346505c8629a4668420d2a5ca48891383bbe0b0ceb14163537c671879427e",
+      "repositorySha256": "6da346505c8629a4668420d2a5ca48891383bbe0b0ceb14163537c671879427e",
+      "initialPublishSha256": "6da346505c8629a4668420d2a5ca48891383bbe0b0ceb14163537c671879427e",
+      "bytes": 694,
+      "match": true
+    },
+    {
+      "path": "components/ui/sheet.tsx",
+      "installedSha256": "63863cf2df8f8973e52b3459ac9bdbf81be1262dbc70eb53d5271ffb03488e16",
+      "repositorySha256": "63863cf2df8f8973e52b3459ac9bdbf81be1262dbc70eb53d5271ffb03488e16",
+      "initialPublishSha256": "63863cf2df8f8973e52b3459ac9bdbf81be1262dbc70eb53d5271ffb03488e16",
+      "bytes": 4188,
+      "match": true
+    },
+    {
+      "path": "components/ui/sidebar.tsx",
+      "installedSha256": "4a8d73e7730a2b1fcecfca31299ed26db65c2307b84197a59c6ec7c01c7ad28e",
+      "repositorySha256": "4a8d73e7730a2b1fcecfca31299ed26db65c2307b84197a59c6ec7c01c7ad28e",
+      "initialPublishSha256": "4a8d73e7730a2b1fcecfca31299ed26db65c2307b84197a59c6ec7c01c7ad28e",
+      "bytes": 21526,
+      "match": true
+    },
+    {
+      "path": "components/ui/skeleton.tsx",
+      "installedSha256": "ba48dd5be5a6a1378bd4e011028654b5bf419f1e7d20ee4b9f8330c1264e7239",
+      "repositorySha256": "ba48dd5be5a6a1378bd4e011028654b5bf419f1e7d20ee4b9f8330c1264e7239",
+      "initialPublishSha256": "ba48dd5be5a6a1378bd4e011028654b5bf419f1e7d20ee4b9f8330c1264e7239",
+      "bytes": 276,
+      "match": true
+    },
+    {
+      "path": "components/ui/slider.tsx",
+      "installedSha256": "0e37484f4b416e79ac18c655cac961aefacf6e67085cfc2b320ea8af545635a3",
+      "repositorySha256": "0e37484f4b416e79ac18c655cac961aefacf6e67085cfc2b320ea8af545635a3",
+      "initialPublishSha256": "0e37484f4b416e79ac18c655cac961aefacf6e67085cfc2b320ea8af545635a3",
+      "bytes": 1991,
+      "match": true
+    },
+    {
+      "path": "components/ui/sonner.tsx",
+      "installedSha256": "13ccc9b0fe4248e622f83a1d3b2f0566b72b5e04162d7d0c8db8945ecc71b55f",
+      "repositorySha256": "13ccc9b0fe4248e622f83a1d3b2f0566b72b5e04162d7d0c8db8945ecc71b55f",
+      "initialPublishSha256": "13ccc9b0fe4248e622f83a1d3b2f0566b72b5e04162d7d0c8db8945ecc71b55f",
+      "bytes": 1034,
+      "match": true
+    },
+    {
+      "path": "components/ui/spinner.tsx",
+      "installedSha256": "3e6e6e8d37fb4069f8e43e55318f8db06fbc36e6c8be0096da3c9337c1c798b9",
+      "repositorySha256": "3e6e6e8d37fb4069f8e43e55318f8db06fbc36e6c8be0096da3c9337c1c798b9",
+      "initialPublishSha256": "3e6e6e8d37fb4069f8e43e55318f8db06fbc36e6c8be0096da3c9337c1c798b9",
+      "bytes": 331,
+      "match": true
+    },
+    {
+      "path": "components/ui/switch.tsx",
+      "installedSha256": "386d4d4deb39f34126f9700fe9bf5393d238485dd94018bba9d154dda84c62ae",
+      "repositorySha256": "386d4d4deb39f34126f9700fe9bf5393d238485dd94018bba9d154dda84c62ae",
+      "initialPublishSha256": "386d4d4deb39f34126f9700fe9bf5393d238485dd94018bba9d154dda84c62ae",
+      "bytes": 1408,
+      "match": true
+    },
+    {
+      "path": "components/ui/table.tsx",
+      "installedSha256": "20e5a7f224959c6b75802995706a97e9da171f693d4b6b1b436388fcd9df96f3",
+      "repositorySha256": "20e5a7f224959c6b75802995706a97e9da171f693d4b6b1b436388fcd9df96f3",
+      "initialPublishSha256": "20e5a7f224959c6b75802995706a97e9da171f693d4b6b1b436388fcd9df96f3",
+      "bytes": 2478,
+      "match": true
+    },
+    {
+      "path": "components/ui/tabs.tsx",
+      "installedSha256": "865d0194331b9b2be36723fa79d3575dc83078b4cb941cafee87cb72fc2cff46",
+      "repositorySha256": "865d0194331b9b2be36723fa79d3575dc83078b4cb941cafee87cb72fc2cff46",
+      "initialPublishSha256": "865d0194331b9b2be36723fa79d3575dc83078b4cb941cafee87cb72fc2cff46",
+      "bytes": 3782,
+      "match": true
+    },
+    {
+      "path": "components/ui/textarea.tsx",
+      "installedSha256": "253cdeb487c73beaaccdf47fc163e36e7d5b7ae6ddf09a4f64998a109a112979",
+      "repositorySha256": "253cdeb487c73beaaccdf47fc163e36e7d5b7ae6ddf09a4f64998a109a112979",
+      "initialPublishSha256": "253cdeb487c73beaaccdf47fc163e36e7d5b7ae6ddf09a4f64998a109a112979",
+      "bytes": 759,
+      "match": true
+    },
+    {
+      "path": "components/ui/toggle-group.tsx",
+      "installedSha256": "69f643e889e933f05c1439084480d8646f66a161c7d1cf0730ee926382ade35e",
+      "repositorySha256": "69f643e889e933f05c1439084480d8646f66a161c7d1cf0730ee926382ade35e",
+      "initialPublishSha256": "69f643e889e933f05c1439084480d8646f66a161c7d1cf0730ee926382ade35e",
+      "bytes": 2308,
+      "match": true
+    },
+    {
+      "path": "components/ui/toggle.tsx",
+      "installedSha256": "ba4d0b0a2b2fee75dc36dfc19e32082e721024b919050c97fd5dc70faa924e16",
+      "repositorySha256": "ba4d0b0a2b2fee75dc36dfc19e32082e721024b919050c97fd5dc70faa924e16",
+      "initialPublishSha256": "ba4d0b0a2b2fee75dc36dfc19e32082e721024b919050c97fd5dc70faa924e16",
+      "bytes": 1565,
+      "match": true
+    },
+    {
+      "path": "components/ui/tooltip.tsx",
+      "installedSha256": "a0784eb77831a799fad7991df4f1b666f876201565a80175e1aa68733574a2e4",
+      "repositorySha256": "a0784eb77831a799fad7991df4f1b666f876201565a80175e1aa68733574a2e4",
+      "initialPublishSha256": "a0784eb77831a799fad7991df4f1b666f876201565a80175e1aa68733574a2e4",
+      "bytes": 1830,
+      "match": true
+    },
+    {
+      "path": "DESIGN.md",
+      "installedSha256": "4eb20295ec0b735a5f3059a858c454afda3ad5398ba7790554cc6f311a2fdd57",
+      "repositorySha256": "4eb20295ec0b735a5f3059a858c454afda3ad5398ba7790554cc6f311a2fdd57",
+      "initialPublishSha256": "4eb20295ec0b735a5f3059a858c454afda3ad5398ba7790554cc6f311a2fdd57",
+      "bytes": 18835,
+      "match": true
+    },
+    {
+      "path": "desktop/integrations-lock.json",
+      "installedSha256": "d63aec4d901163a85ee82d41b9dca8f99eeaf939968d1429ec8e2e332f09ee24",
+      "repositorySha256": "d63aec4d901163a85ee82d41b9dca8f99eeaf939968d1429ec8e2e332f09ee24",
+      "initialPublishSha256": "d63aec4d901163a85ee82d41b9dca8f99eeaf939968d1429ec8e2e332f09ee24",
+      "bytes": 347,
+      "match": true
+    },
+    {
+      "path": "desktop/integrations-requirements.txt",
+      "installedSha256": "058f3e73902690c8a5a4ebdfa1b25c54f7a3e634ea6402895e65f5aa4866fd76",
+      "repositorySha256": "058f3e73902690c8a5a4ebdfa1b25c54f7a3e634ea6402895e65f5aa4866fd76",
+      "initialPublishSha256": "058f3e73902690c8a5a4ebdfa1b25c54f7a3e634ea6402895e65f5aa4866fd76",
+      "bytes": 278,
+      "match": true
+    },
+    {
+      "path": "desktop/local/import-worker.mjs",
+      "installedSha256": "f4c4a28b1601756321445ec415e56603a7e2360b4aa6332be69acc1b4de80ad3",
+      "repositorySha256": "f4c4a28b1601756321445ec415e56603a7e2360b4aa6332be69acc1b4de80ad3",
+      "initialPublishSha256": "f4c4a28b1601756321445ec415e56603a7e2360b4aa6332be69acc1b4de80ad3",
+      "bytes": 3224,
+      "match": true
+    },
+    {
+      "path": "desktop/local/instagram-workspace.mjs",
+      "installedSha256": "f6d5c39c2738dca256eb624747ae534c07af672cdf8ece4c36d33223e83b6380",
+      "repositorySha256": "f6d5c39c2738dca256eb624747ae534c07af672cdf8ece4c36d33223e83b6380",
+      "initialPublishSha256": "f6d5c39c2738dca256eb624747ae534c07af672cdf8ece4c36d33223e83b6380",
+      "bytes": 7579,
+      "match": true
+    },
+    {
+      "path": "desktop/local/runtime.mjs",
+      "installedSha256": "d100e202505015ed0aa545ebdb37ae9582d5786fca2b16a9e86b7f9c16b7fe57",
+      "repositorySha256": "d100e202505015ed0aa545ebdb37ae9582d5786fca2b16a9e86b7f9c16b7fe57",
+      "initialPublishSha256": "d100e202505015ed0aa545ebdb37ae9582d5786fca2b16a9e86b7f9c16b7fe57",
+      "bytes": 684,
+      "match": true
+    },
+    {
+      "path": "desktop/local/seed-media/product-reference.png",
+      "installedSha256": "4d19122fc3b2ab887597387558442d8b0dfec77b995b8dc1040dcbe8acd61c04",
+      "repositorySha256": "4d19122fc3b2ab887597387558442d8b0dfec77b995b8dc1040dcbe8acd61c04",
+      "initialPublishSha256": "4d19122fc3b2ab887597387558442d8b0dfec77b995b8dc1040dcbe8acd61c04",
+      "bytes": 340575,
+      "match": true
+    },
+    {
+      "path": "desktop/local/seed.json",
+      "installedSha256": "778a786232cf51b1b2bc1c9ac505dc4337ed32d385d90613c36dff78395852e2",
+      "repositorySha256": "778a786232cf51b1b2bc1c9ac505dc4337ed32d385d90613c36dff78395852e2",
+      "initialPublishSha256": "778a786232cf51b1b2bc1c9ac505dc4337ed32d385d90613c36dff78395852e2",
+      "bytes": 458366,
+      "match": true
+    },
+    {
+      "path": "desktop/local/server.mjs",
+      "installedSha256": "f4ca8b2bb6ceee90cd373706616cfbedf7b0928d1ae0a9fb9df685d1fb2440dc",
+      "repositorySha256": "f4ca8b2bb6ceee90cd373706616cfbedf7b0928d1ae0a9fb9df685d1fb2440dc",
+      "initialPublishSha256": "f4ca8b2bb6ceee90cd373706616cfbedf7b0928d1ae0a9fb9df685d1fb2440dc",
+      "bytes": 10621,
+      "match": true
+    },
+    {
+      "path": "desktop/local/thumbnails.mjs",
+      "installedSha256": "a5bb980344e4092a894958b1025d57636ce12f3a37999d5c5581dd2902580236",
+      "repositorySha256": "a5bb980344e4092a894958b1025d57636ce12f3a37999d5c5581dd2902580236",
+      "initialPublishSha256": "a5bb980344e4092a894958b1025d57636ce12f3a37999d5c5581dd2902580236",
+      "bytes": 2056,
+      "match": true
+    },
+    {
+      "path": "desktop/package-lock.json",
+      "installedSha256": "24f02cc3e4537f0e4c19eacf907029fd3a3df40b82346e5ad9da672d9c94b534",
+      "repositorySha256": "24f02cc3e4537f0e4c19eacf907029fd3a3df40b82346e5ad9da672d9c94b534",
+      "initialPublishSha256": "24f02cc3e4537f0e4c19eacf907029fd3a3df40b82346e5ad9da672d9c94b534",
+      "bytes": 130971,
+      "match": true
+    },
+    {
+      "path": "desktop/package.json",
+      "installedSha256": "79c7fb959db026fc3b284cd4f3459592d052599bd742a25fb2457905f94f0c39",
+      "repositorySha256": "79c7fb959db026fc3b284cd4f3459592d052599bd742a25fb2457905f94f0c39",
+      "initialPublishSha256": "79c7fb959db026fc3b284cd4f3459592d052599bd742a25fb2457905f94f0c39",
+      "bytes": 1302,
+      "match": true
+    },
+    {
+      "path": "desktop/SETUP-INTEGRATIONS.ps1",
+      "installedSha256": "354fd7687dbcb558ab17c9e73289c9a3cd6baf0d492c928a47d0c59c1acb519b",
+      "repositorySha256": "354fd7687dbcb558ab17c9e73289c9a3cd6baf0d492c928a47d0c59c1acb519b",
+      "initialPublishSha256": "354fd7687dbcb558ab17c9e73289c9a3cd6baf0d492c928a47d0c59c1acb519b",
+      "bytes": 2572,
+      "match": true
+    },
+    {
+      "path": "desktop/setup-local.mjs",
+      "installedSha256": "f48ce8f32a530bfd4b3b2ec61bab4e801b2abb06e4fdff1044c055a5cff03b6a",
+      "repositorySha256": "f48ce8f32a530bfd4b3b2ec61bab4e801b2abb06e4fdff1044c055a5cff03b6a",
+      "initialPublishSha256": "f48ce8f32a530bfd4b3b2ec61bab4e801b2abb06e4fdff1044c055a5cff03b6a",
+      "bytes": 2202,
+      "match": true
+    },
+    {
+      "path": "desktop/SETUP-LOCAL.ps1",
+      "installedSha256": "085f8a2d4064800f1280dab8aa5c9f65d04a57abebf3b526be57eb87ec8f4346",
+      "repositorySha256": "085f8a2d4064800f1280dab8aa5c9f65d04a57abebf3b526be57eb87ec8f4346",
+      "initialPublishSha256": "085f8a2d4064800f1280dab8aa5c9f65d04a57abebf3b526be57eb87ec8f4346",
+      "bytes": 396,
+      "match": true
+    },
+    {
+      "path": "desktop/src/assistant-settings.mjs",
+      "installedSha256": "5adf267d4fe0ff360bbadb5405f21876fcf91196794ebb72d68bfa9b80b4ce31",
+      "repositorySha256": "5adf267d4fe0ff360bbadb5405f21876fcf91196794ebb72d68bfa9b80b4ce31",
+      "initialPublishSha256": "5adf267d4fe0ff360bbadb5405f21876fcf91196794ebb72d68bfa9b80b4ce31",
+      "bytes": 1638,
+      "match": true
+    },
+    {
+      "path": "desktop/src/contracts.mjs",
+      "installedSha256": "489bb40aa70ccf9f531be26b38509adda56408a59e7a85d4f0e66b6894f0b5a0",
+      "repositorySha256": "489bb40aa70ccf9f531be26b38509adda56408a59e7a85d4f0e66b6894f0b5a0",
+      "initialPublishSha256": "489bb40aa70ccf9f531be26b38509adda56408a59e7a85d4f0e66b6894f0b5a0",
+      "bytes": 4016,
+      "match": true
+    },
+    {
+      "path": "desktop/src/defaults.mjs",
+      "installedSha256": "846aa14f13a1d3abfdaab75449a7c37053d45906bfe394dd7be2b3dcb21251ac",
+      "repositorySha256": "846aa14f13a1d3abfdaab75449a7c37053d45906bfe394dd7be2b3dcb21251ac",
+      "initialPublishSha256": "846aa14f13a1d3abfdaab75449a7c37053d45906bfe394dd7be2b3dcb21251ac",
+      "bytes": 270,
+      "match": true
+    },
+    {
+      "path": "desktop/src/instagram-adapter.mjs",
+      "installedSha256": "20db9ece1a6454a98fdbedd595bec030189602f3efd86c83fe1d447af054d905",
+      "repositorySha256": "20db9ece1a6454a98fdbedd595bec030189602f3efd86c83fe1d447af054d905",
+      "initialPublishSha256": "20db9ece1a6454a98fdbedd595bec030189602f3efd86c83fe1d447af054d905",
+      "bytes": 12707,
+      "match": true
+    },
+    {
+      "path": "desktop/src/instagram-browser.mjs",
+      "installedSha256": "a3677c5866083b2e6a66a91ae0c81899c598a19eaaa46f3baf02d560aa35fd07",
+      "repositorySha256": "a3677c5866083b2e6a66a91ae0c81899c598a19eaaa46f3baf02d560aa35fd07",
+      "initialPublishSha256": "a3677c5866083b2e6a66a91ae0c81899c598a19eaaa46f3baf02d560aa35fd07",
+      "bytes": 8836,
+      "match": true
+    },
+    {
+      "path": "desktop/src/instagram-insights.mjs",
+      "installedSha256": "f38641f01293fe605b4255c57cd8c31d63483d3d9d846f6b1eff02f590dfa732",
+      "repositorySha256": "f38641f01293fe605b4255c57cd8c31d63483d3d9d846f6b1eff02f590dfa732",
+      "initialPublishSha256": "f38641f01293fe605b4255c57cd8c31d63483d3d9d846f6b1eff02f590dfa732",
+      "bytes": 6320,
+      "match": true
+    },
+    {
+      "path": "desktop/src/instagram-metrics.mjs",
+      "installedSha256": "9640880be942e2ba7df35186de6d6249c86d80d1a742ca2f09e238a40be93273",
+      "repositorySha256": "9640880be942e2ba7df35186de6d6249c86d80d1a742ca2f09e238a40be93273",
+      "initialPublishSha256": "9640880be942e2ba7df35186de6d6249c86d80d1a742ca2f09e238a40be93273",
+      "bytes": 5603,
+      "match": true
+    },
+    {
+      "path": "desktop/src/instagram.mjs",
+      "installedSha256": "a4cb5dbb9c78832e643e66fc45eb098bab068892e9a400702d0cc2a3813bcfce",
+      "repositorySha256": "a4cb5dbb9c78832e643e66fc45eb098bab068892e9a400702d0cc2a3813bcfce",
+      "initialPublishSha256": "a4cb5dbb9c78832e643e66fc45eb098bab068892e9a400702d0cc2a3813bcfce",
+      "bytes": 14584,
+      "match": true
+    },
+    {
+      "path": "desktop/src/integrations.mjs",
+      "installedSha256": "3b8fac2e09ba4ef6dc5a6695cbb3f6ec2e1f1c2c09a53336aae7392c70c3b58b",
+      "repositorySha256": "3b8fac2e09ba4ef6dc5a6695cbb3f6ec2e1f1c2c09a53336aae7392c70c3b58b",
+      "initialPublishSha256": "3b8fac2e09ba4ef6dc5a6695cbb3f6ec2e1f1c2c09a53336aae7392c70c3b58b",
+      "bytes": 13477,
+      "match": true
+    },
+    {
+      "path": "desktop/src/main.mjs",
+      "installedSha256": "6f392c0f9adfc6a5eb1ea1e4af4741d1d2a4f5a6bac8b70cf311ecc70e375065",
+      "repositorySha256": "6f392c0f9adfc6a5eb1ea1e4af4741d1d2a4f5a6bac8b70cf311ecc70e375065",
+      "initialPublishSha256": "6f392c0f9adfc6a5eb1ea1e4af4741d1d2a4f5a6bac8b70cf311ecc70e375065",
+      "bytes": 8928,
+      "match": true
+    },
+    {
+      "path": "desktop/src/media.mjs",
+      "installedSha256": "dbc59f974b5e5d11028d2e7a0881555270153003553ccc9cd84ccee656d642b0",
+      "repositorySha256": "dbc59f974b5e5d11028d2e7a0881555270153003553ccc9cd84ccee656d642b0",
+      "initialPublishSha256": "dbc59f974b5e5d11028d2e7a0881555270153003553ccc9cd84ccee656d642b0",
+      "bytes": 3393,
+      "match": true
+    },
+    {
+      "path": "desktop/src/montage_bridge.py",
+      "installedSha256": "f794854c3b5f389c9f4b77a317eec7748b6ebd6588088e97ddd9c57d51f7a222",
+      "repositorySha256": "f794854c3b5f389c9f4b77a317eec7748b6ebd6588088e97ddd9c57d51f7a222",
+      "initialPublishSha256": "f794854c3b5f389c9f4b77a317eec7748b6ebd6588088e97ddd9c57d51f7a222",
+      "bytes": 4507,
+      "match": true
+    },
+    {
+      "path": "desktop/src/muse-chat.mjs",
+      "installedSha256": "e3ae2cd09a7c720f2f8922f95ffb0cacfe6f57df8e01a4f110047fbd8c5f5816",
+      "repositorySha256": "e3ae2cd09a7c720f2f8922f95ffb0cacfe6f57df8e01a4f110047fbd8c5f5816",
+      "initialPublishSha256": "e3ae2cd09a7c720f2f8922f95ffb0cacfe6f57df8e01a4f110047fbd8c5f5816",
+      "bytes": 15543,
+      "match": true
+    },
+    {
+      "path": "desktop/src/muse-quota.mjs",
+      "installedSha256": "539f057b2e825fef6da273abf236f1327231d0b252423c0b31a2b8a560faf49c",
+      "repositorySha256": "539f057b2e825fef6da273abf236f1327231d0b252423c0b31a2b8a560faf49c",
+      "initialPublishSha256": "539f057b2e825fef6da273abf236f1327231d0b252423c0b31a2b8a560faf49c",
+      "bytes": 2745,
+      "match": true
+    },
+    {
+      "path": "desktop/src/muse.mjs",
+      "installedSha256": "187e9caecb12632b0f62b1de4546856bd08b8eb029daf71e0c3894d9997a951b",
+      "repositorySha256": "187e9caecb12632b0f62b1de4546856bd08b8eb029daf71e0c3894d9997a951b",
+      "initialPublishSha256": "187e9caecb12632b0f62b1de4546856bd08b8eb029daf71e0c3894d9997a951b",
+      "bytes": 13342,
+      "match": true
+    },
+    {
+      "path": "desktop/src/preload.cjs",
+      "installedSha256": "c5d6fba33d40d2aafc221d5be6a128f3e2a56d3bf12f5a1057b483fd81e01b0c",
+      "repositorySha256": "c5d6fba33d40d2aafc221d5be6a128f3e2a56d3bf12f5a1057b483fd81e01b0c",
+      "initialPublishSha256": "c5d6fba33d40d2aafc221d5be6a128f3e2a56d3bf12f5a1057b483fd81e01b0c",
+      "bytes": 1387,
+      "match": true
+    },
+    {
+      "path": "desktop/src/proxy.mjs",
+      "installedSha256": "027049499de4924388755943b61c4cf0b6e5cf8072e954a1b47b43e8c4f63048",
+      "repositorySha256": "027049499de4924388755943b61c4cf0b6e5cf8072e954a1b47b43e8c4f63048",
+      "initialPublishSha256": "027049499de4924388755943b61c4cf0b6e5cf8072e954a1b47b43e8c4f63048",
+      "bytes": 1064,
+      "match": true
+    },
+    {
+      "path": "desktop/src/research-runner.mjs",
+      "installedSha256": "d686773729c1f08e80d422c913bc21bee45908ddff7a1d23dec183547fedbaa8",
+      "repositorySha256": "d686773729c1f08e80d422c913bc21bee45908ddff7a1d23dec183547fedbaa8",
+      "initialPublishSha256": "d686773729c1f08e80d422c913bc21bee45908ddff7a1d23dec183547fedbaa8",
+      "bytes": 8043,
+      "match": true
+    },
+    {
+      "path": "desktop/src/runtime-tools.mjs",
+      "installedSha256": "bb523c70462b1732368c12a38607abce6d529c96269c29b769cc3f94cd63e802",
+      "repositorySha256": "bb523c70462b1732368c12a38607abce6d529c96269c29b769cc3f94cd63e802",
+      "initialPublishSha256": "bb523c70462b1732368c12a38607abce6d529c96269c29b769cc3f94cd63e802",
+      "bytes": 456,
+      "match": true
+    },
+    {
+      "path": "desktop/src/shared.mjs",
+      "installedSha256": "0d0c884ca2f7e026a05502b888da77af567e17b9a690e86fe7c5cd8312f736f6",
+      "repositorySha256": "0d0c884ca2f7e026a05502b888da77af567e17b9a690e86fe7c5cd8312f736f6",
+      "initialPublishSha256": "0d0c884ca2f7e026a05502b888da77af567e17b9a690e86fe7c5cd8312f736f6",
+      "bytes": 1914,
+      "match": true
+    },
+    {
+      "path": "desktop/src/storage-policy.mjs",
+      "installedSha256": "9526ff85f25a5fe804f16379410a5b90693c6f8bd8b99129d392b5d39d9fae6f",
+      "repositorySha256": "9526ff85f25a5fe804f16379410a5b90693c6f8bd8b99129d392b5d39d9fae6f",
+      "initialPublishSha256": "9526ff85f25a5fe804f16379410a5b90693c6f8bd8b99129d392b5d39d9fae6f",
+      "bytes": 9050,
+      "match": true
+    },
+    {
+      "path": "desktop/src/store.mjs",
+      "installedSha256": "1608ed488ef8404c3ecc7ff7a0e794aa47d2d824166c4ff210c7bc288d110ae7",
+      "repositorySha256": "1608ed488ef8404c3ecc7ff7a0e794aa47d2d824166c4ff210c7bc288d110ae7",
+      "initialPublishSha256": "1608ed488ef8404c3ecc7ff7a0e794aa47d2d824166c4ff210c7bc288d110ae7",
+      "bytes": 4993,
+      "match": true
+    },
+    {
+      "path": "desktop/src/touch-vpn.mjs",
+      "installedSha256": "90bb97f3b208413bd599205d5ede40fe5916f974d5e8a9f38b62ee9387c1340e",
+      "repositorySha256": "90bb97f3b208413bd599205d5ede40fe5916f974d5e8a9f38b62ee9387c1340e",
+      "initialPublishSha256": "90bb97f3b208413bd599205d5ede40fe5916f974d5e8a9f38b62ee9387c1340e",
+      "bytes": 7268,
+      "match": true
+    },
+    {
+      "path": "desktop/src/ui-copy.mjs",
+      "installedSha256": "452ff16977bd9f406650ee89f257b8f1d6784a2b0e6acaed38c67158b7147e61",
+      "repositorySha256": "452ff16977bd9f406650ee89f257b8f1d6784a2b0e6acaed38c67158b7147e61",
+      "initialPublishSha256": "452ff16977bd9f406650ee89f257b8f1d6784a2b0e6acaed38c67158b7147e61",
+      "bytes": 3927,
+      "match": true
+    },
+    {
+      "path": "desktop/src/ui-preferences.mjs",
+      "installedSha256": "8b22f627e735054a39ddf32b31f0c712ce131b3957c5ec16fa3b28e7fe69e239",
+      "repositorySha256": "8b22f627e735054a39ddf32b31f0c712ce131b3957c5ec16fa3b28e7fe69e239",
+      "initialPublishSha256": "8b22f627e735054a39ddf32b31f0c712ce131b3957c5ec16fa3b28e7fe69e239",
+      "bytes": 2169,
+      "match": true
+    },
+    {
+      "path": "desktop/src/worker.mjs",
+      "installedSha256": "64c1e4e93a5c07c7e9c964e7eae2a20150414fed72744a92c8543f1b9a80c31c",
+      "repositorySha256": "64c1e4e93a5c07c7e9c964e7eae2a20150414fed72744a92c8543f1b9a80c31c",
+      "initialPublishSha256": "64c1e4e93a5c07c7e9c964e7eae2a20150414fed72744a92c8543f1b9a80c31c",
+      "bytes": 36641,
+      "match": true
+    },
+    {
+      "path": "desktop/test/assistant-settings.test.mjs",
+      "installedSha256": "e1adf8e694a4b1376263e6d014e73b5d7d619751bf7239e94016a12c86e543f7",
+      "repositorySha256": "e1adf8e694a4b1376263e6d014e73b5d7d619751bf7239e94016a12c86e543f7",
+      "initialPublishSha256": "e1adf8e694a4b1376263e6d014e73b5d7d619751bf7239e94016a12c86e543f7",
+      "bytes": 2162,
+      "match": true
+    },
+    {
+      "path": "desktop/test/background-worker.test.mjs",
+      "installedSha256": "e297c84f8456538b7b81073d3139a5493ad458a6ca40e1a92e286c47d5333a83",
+      "repositorySha256": "e297c84f8456538b7b81073d3139a5493ad458a6ca40e1a92e286c47d5333a83",
+      "initialPublishSha256": "e297c84f8456538b7b81073d3139a5493ad458a6ca40e1a92e286c47d5333a83",
+      "bytes": 14131,
+      "match": true
+    },
+    {
+      "path": "desktop/test/hermes.test.mjs",
+      "installedSha256": "7d16b3db7cf6ccd55bde8b8596085e013aacc8314ddc75d094c9860719a57194",
+      "repositorySha256": "7d16b3db7cf6ccd55bde8b8596085e013aacc8314ddc75d094c9860719a57194",
+      "initialPublishSha256": "7d16b3db7cf6ccd55bde8b8596085e013aacc8314ddc75d094c9860719a57194",
+      "bytes": 3420,
+      "match": true
+    },
+    {
+      "path": "desktop/test/import-worker.test.mjs",
+      "installedSha256": "4ba2b73198b88fc6c5478f68f7a3dfcc2f6e8024d58d87d24e1b8c4b176f176b",
+      "repositorySha256": "4ba2b73198b88fc6c5478f68f7a3dfcc2f6e8024d58d87d24e1b8c4b176f176b",
+      "initialPublishSha256": "4ba2b73198b88fc6c5478f68f7a3dfcc2f6e8024d58d87d24e1b8c4b176f176b",
+      "bytes": 4883,
+      "match": true
+    },
+    {
+      "path": "desktop/test/instagram-metrics.test.mjs",
+      "installedSha256": "999322dfc20b91a789ec354953ae2927dfb3e2e8568d0542eb9877743946c33d",
+      "repositorySha256": "999322dfc20b91a789ec354953ae2927dfb3e2e8568d0542eb9877743946c33d",
+      "initialPublishSha256": "999322dfc20b91a789ec354953ae2927dfb3e2e8568d0542eb9877743946c33d",
+      "bytes": 6574,
+      "match": true
+    },
+    {
+      "path": "desktop/test/instagram-workspace.test.mjs",
+      "installedSha256": "9efbf2335871c673d385ee72d4b89b287535a447e3bcddbe0922b33ab22350a2",
+      "repositorySha256": "9efbf2335871c673d385ee72d4b89b287535a447e3bcddbe0922b33ab22350a2",
+      "initialPublishSha256": "9efbf2335871c673d385ee72d4b89b287535a447e3bcddbe0922b33ab22350a2",
+      "bytes": 5464,
+      "match": true
+    },
+    {
+      "path": "desktop/test/instagram.test.mjs",
+      "installedSha256": "9c3253810ac0327f702c6b54a52941eef133f964e5bf3b70c376c35e9e37c716",
+      "repositorySha256": "9c3253810ac0327f702c6b54a52941eef133f964e5bf3b70c376c35e9e37c716",
+      "initialPublishSha256": "9c3253810ac0327f702c6b54a52941eef133f964e5bf3b70c376c35e9e37c716",
+      "bytes": 12138,
+      "match": true
+    },
+    {
+      "path": "desktop/test/integrations.test.mjs",
+      "installedSha256": "7c8ada990327e9c09bb5a1d838030e47bf9b95a221b92c008dd9a31a0698abe7",
+      "repositorySha256": "7c8ada990327e9c09bb5a1d838030e47bf9b95a221b92c008dd9a31a0698abe7",
+      "initialPublishSha256": "7c8ada990327e9c09bb5a1d838030e47bf9b95a221b92c008dd9a31a0698abe7",
+      "bytes": 9613,
+      "match": true
+    },
+    {
+      "path": "desktop/test/local.test.mjs",
+      "installedSha256": "176cd3a46b17de458a07aaedce652a80230b6ef05ffbc40cf44a058382b0d6d4",
+      "repositorySha256": "176cd3a46b17de458a07aaedce652a80230b6ef05ffbc40cf44a058382b0d6d4",
+      "initialPublishSha256": "176cd3a46b17de458a07aaedce652a80230b6ef05ffbc40cf44a058382b0d6d4",
+      "bytes": 13325,
+      "match": true
+    },
+    {
+      "path": "desktop/test/montage-live.test.mjs",
+      "installedSha256": "26a576e13fa43c8f5132b59194cd5bb98af97d6aa34792111361b9e722239b2f",
+      "repositorySha256": "26a576e13fa43c8f5132b59194cd5bb98af97d6aa34792111361b9e722239b2f",
+      "initialPublishSha256": "26a576e13fa43c8f5132b59194cd5bb98af97d6aa34792111361b9e722239b2f",
+      "bytes": 2506,
+      "match": true
+    },
+    {
+      "path": "desktop/test/muse-chat.test.mjs",
+      "installedSha256": "07b3e5175ceba5891ffeb2f3c7c3be1be4ffedce92cde2f587dc11877340f73e",
+      "repositorySha256": "07b3e5175ceba5891ffeb2f3c7c3be1be4ffedce92cde2f587dc11877340f73e",
+      "initialPublishSha256": "07b3e5175ceba5891ffeb2f3c7c3be1be4ffedce92cde2f587dc11877340f73e",
+      "bytes": 14937,
+      "match": true
+    },
+    {
+      "path": "desktop/test/muse-connection.test.mjs",
+      "installedSha256": "2962fe58059464770416362818b85703106ae9bc6cf1c44991c9f41e81cef82b",
+      "repositorySha256": "2962fe58059464770416362818b85703106ae9bc6cf1c44991c9f41e81cef82b",
+      "initialPublishSha256": "2962fe58059464770416362818b85703106ae9bc6cf1c44991c9f41e81cef82b",
+      "bytes": 2785,
+      "match": true
+    },
+    {
+      "path": "desktop/test/muse.test.mjs",
+      "installedSha256": "e14723385f6cd3c3c846534299c080e3de5b8bdd6d2876de0a976f360c564fb1",
+      "repositorySha256": "e14723385f6cd3c3c846534299c080e3de5b8bdd6d2876de0a976f360c564fb1",
+      "initialPublishSha256": "e14723385f6cd3c3c846534299c080e3de5b8bdd6d2876de0a976f360c564fb1",
+      "bytes": 17176,
+      "match": true
+    },
+    {
+      "path": "desktop/test/proxy.test.mjs",
+      "installedSha256": "ad5b54b7eee19ea7b2e573a0156d1b62fb445a8c0b3eccb08a4a8abfb1a1acb0",
+      "repositorySha256": "ad5b54b7eee19ea7b2e573a0156d1b62fb445a8c0b3eccb08a4a8abfb1a1acb0",
+      "initialPublishSha256": "ad5b54b7eee19ea7b2e573a0156d1b62fb445a8c0b3eccb08a4a8abfb1a1acb0",
+      "bytes": 2599,
+      "match": true
+    },
+    {
+      "path": "desktop/test/research-runner.test.mjs",
+      "installedSha256": "683bd4b72668a6c464423600f2b3641db36713bfe5d217356c9e9eda8dafc5a8",
+      "repositorySha256": "683bd4b72668a6c464423600f2b3641db36713bfe5d217356c9e9eda8dafc5a8",
+      "initialPublishSha256": "683bd4b72668a6c464423600f2b3641db36713bfe5d217356c9e9eda8dafc5a8",
+      "bytes": 5247,
+      "match": true
+    },
+    {
+      "path": "desktop/test/storage-policy.test.mjs",
+      "installedSha256": "438a692bf26b182d84f8e0eff4aafa88e72665a927510d3ba317c55ca4fbcd74",
+      "repositorySha256": "438a692bf26b182d84f8e0eff4aafa88e72665a927510d3ba317c55ca4fbcd74",
+      "initialPublishSha256": "438a692bf26b182d84f8e0eff4aafa88e72665a927510d3ba317c55ca4fbcd74",
+      "bytes": 5770,
+      "match": true
+    },
+    {
+      "path": "desktop/test/ui-preferences.test.mjs",
+      "installedSha256": "ed74c69692c46c8084a0236c6e5f1556f8c5d450f85caa849c0dda425c47f9df",
+      "repositorySha256": "ed74c69692c46c8084a0236c6e5f1556f8c5d450f85caa849c0dda425c47f9df",
+      "initialPublishSha256": "ed74c69692c46c8084a0236c6e5f1556f8c5d450f85caa849c0dda425c47f9df",
+      "bytes": 2689,
+      "match": true
+    },
+    {
+      "path": "desktop/test/worker-controls.test.mjs",
+      "installedSha256": "64e2c4b2a26225e4a28e9084d2e7c33bc28f544dae440f4b990f0d7bb21a576a",
+      "repositorySha256": "64e2c4b2a26225e4a28e9084d2e7c33bc28f544dae440f4b990f0d7bb21a576a",
+      "initialPublishSha256": "64e2c4b2a26225e4a28e9084d2e7c33bc28f544dae440f4b990f0d7bb21a576a",
+      "bytes": 9214,
+      "match": true
+    },
+    {
+      "path": "desktop/test/worker.test.mjs",
+      "installedSha256": "8326f233ba875ce312690bcf7e6855e021c4940c8dfd3de6ee46c10c80a9a787",
+      "repositorySha256": "8326f233ba875ce312690bcf7e6855e021c4940c8dfd3de6ee46c10c80a9a787",
+      "initialPublishSha256": "8326f233ba875ce312690bcf7e6855e021c4940c8dfd3de6ee46c10c80a9a787",
+      "bytes": 21450,
+      "match": true
+    },
+    {
+      "path": "desktop/ui/index.html",
+      "installedSha256": "b260198d5bab0c55031bade8caa2163411c6de8ce2e9db4959d8efc55342e217",
+      "repositorySha256": "b260198d5bab0c55031bade8caa2163411c6de8ce2e9db4959d8efc55342e217",
+      "initialPublishSha256": "b260198d5bab0c55031bade8caa2163411c6de8ce2e9db4959d8efc55342e217",
+      "bytes": 307,
+      "match": true
+    },
+    {
+      "path": "desktop/ui/main.tsx",
+      "installedSha256": "fd6cb1a59c98c2bb199b14e8f73b53d625aa02ec40997034a5088bb9eae9cce9",
+      "repositorySha256": "fd6cb1a59c98c2bb199b14e8f73b53d625aa02ec40997034a5088bb9eae9cce9",
+      "initialPublishSha256": "fd6cb1a59c98c2bb199b14e8f73b53d625aa02ec40997034a5088bb9eae9cce9",
+      "bytes": 486,
+      "match": true
+    },
+    {
+      "path": "docs/CODEX-RUNNER.md",
+      "installedSha256": "54b3b21b7c25576be0a529314c669c8016f5323db93aeca6b6f0590d3c11258f",
+      "repositorySha256": "54b3b21b7c25576be0a529314c669c8016f5323db93aeca6b6f0590d3c11258f",
+      "initialPublishSha256": "54b3b21b7c25576be0a529314c669c8016f5323db93aeca6b6f0590d3c11258f",
+      "bytes": 4383,
+      "match": true
+    },
+    {
+      "path": "docs/DESKTOP-WORKER.md",
+      "installedSha256": "cedb6a8c1497f8f934334274e8116136c049be6ae10fc008ad56dff3aa3f93a7",
+      "repositorySha256": "cedb6a8c1497f8f934334274e8116136c049be6ae10fc008ad56dff3aa3f93a7",
+      "initialPublishSha256": "cedb6a8c1497f8f934334274e8116136c049be6ae10fc008ad56dff3aa3f93a7",
+      "bytes": 6033,
+      "match": true
+    },
+    {
+      "path": "docs/INSTAGRAM-BROWSER.md",
+      "installedSha256": "a37c70aa50e51e1ea2325b6bf4f3c9e86ac4d7941b2ffd4ebe647022d00f8ae1",
+      "repositorySha256": "a37c70aa50e51e1ea2325b6bf4f3c9e86ac4d7941b2ffd4ebe647022d00f8ae1",
+      "initialPublishSha256": "a37c70aa50e51e1ea2325b6bf4f3c9e86ac4d7941b2ffd4ebe647022d00f8ae1",
+      "bytes": 8347,
+      "match": true
+    },
+    {
+      "path": "docs/MEOSU-HANDOFF.md",
+      "installedSha256": "fb3eaad90b72abe195f7e47eac85b3be16e563a45d6cb77e0f17e2558db85102",
+      "repositorySha256": "fb3eaad90b72abe195f7e47eac85b3be16e563a45d6cb77e0f17e2558db85102",
+      "initialPublishSha256": "fb3eaad90b72abe195f7e47eac85b3be16e563a45d6cb77e0f17e2558db85102",
+      "bytes": 4586,
+      "match": true
+    },
+    {
+      "path": "docs/MEOSU-IMPLEMENTATION.md",
+      "installedSha256": "0551f74aa2e2d892e135d1a99e8803b00d504f56ab3a317bae98d187a0717eed",
+      "repositorySha256": "0551f74aa2e2d892e135d1a99e8803b00d504f56ab3a317bae98d187a0717eed",
+      "initialPublishSha256": "0551f74aa2e2d892e135d1a99e8803b00d504f56ab3a317bae98d187a0717eed",
+      "bytes": 9365,
+      "match": true
+    },
+    {
+      "path": "docs/MEOSU-REFERENCE.md",
+      "installedSha256": "156d369eac24ca9b393314890d6e8acc098638fc0e3aef455da2d2a231df4698",
+      "repositorySha256": "156d369eac24ca9b393314890d6e8acc098638fc0e3aef455da2d2a231df4698",
+      "initialPublishSha256": "156d369eac24ca9b393314890d6e8acc098638fc0e3aef455da2d2a231df4698",
+      "bytes": 4712,
+      "match": true
+    },
+    {
+      "path": "docs/PRODUCTION-WORKBENCH.md",
+      "installedSha256": "2e026a0a6d306065c63d604dfcb21095409dccf45bf411a48e13db7b6ce31af4",
+      "repositorySha256": "2e026a0a6d306065c63d604dfcb21095409dccf45bf411a48e13db7b6ce31af4",
+      "initialPublishSha256": "2e026a0a6d306065c63d604dfcb21095409dccf45bf411a48e13db7b6ce31af4",
+      "bytes": 7316,
+      "match": true
+    },
+    {
+      "path": "docs/QA.md",
+      "installedSha256": "f78701ba6271acfedb5f4c37f1cf97f62fa3c8e08a0a788c3439c925360fede4",
+      "repositorySha256": "f78701ba6271acfedb5f4c37f1cf97f62fa3c8e08a0a788c3439c925360fede4",
+      "initialPublishSha256": "f78701ba6271acfedb5f4c37f1cf97f62fa3c8e08a0a788c3439c925360fede4",
+      "bytes": 29058,
+      "match": true
+    },
+    {
+      "path": "docs/REPO-INTEGRATIONS.md",
+      "installedSha256": "ba0aa5fc9ae355bea8c91c9f3d6716fc176837342436d3e42ee3da2f7cfb462a",
+      "repositorySha256": "ba0aa5fc9ae355bea8c91c9f3d6716fc176837342436d3e42ee3da2f7cfb462a",
+      "initialPublishSha256": "ba0aa5fc9ae355bea8c91c9f3d6716fc176837342436d3e42ee3da2f7cfb462a",
+      "bytes": 4507,
+      "match": true
+    },
+    {
+      "path": "docs/STORAGE.md",
+      "installedSha256": "01bf4947c11657bd2b73a11b6ecc76e229e2827c071cce6a795f4b9127711131",
+      "repositorySha256": "01bf4947c11657bd2b73a11b6ecc76e229e2827c071cce6a795f4b9127711131",
+      "initialPublishSha256": "01bf4947c11657bd2b73a11b6ecc76e229e2827c071cce6a795f4b9127711131",
+      "bytes": 2609,
+      "match": true
+    },
+    {
+      "path": "docs/UI-REFRESH.md",
+      "installedSha256": "a2a4212bf8134b341251a455704b565e884d2ee03b5e7eeb1f4aa0125f6c7f54",
+      "repositorySha256": "a2a4212bf8134b341251a455704b565e884d2ee03b5e7eeb1f4aa0125f6c7f54",
+      "initialPublishSha256": "a2a4212bf8134b341251a455704b565e884d2ee03b5e7eeb1f4aa0125f6c7f54",
+      "bytes": 1944,
+      "match": true
+    },
+    {
+      "path": "docs/VIDEO_ADAPTER.md",
+      "installedSha256": "e23c1e07495cc69d05c91744ce4f531e3e2f201ff333edf548ebb8450a46aae3",
+      "repositorySha256": "e23c1e07495cc69d05c91744ce4f531e3e2f201ff333edf548ebb8450a46aae3",
+      "initialPublishSha256": "e23c1e07495cc69d05c91744ce4f531e3e2f201ff333edf548ebb8450a46aae3",
+      "bytes": 3108,
+      "match": true
+    },
+    {
+      "path": "drizzle/0000_icy_zodiak.sql",
+      "installedSha256": "27ba92185f2c94129f67c63275309163f41fb9b7ac2ffa67502319d3b3d517f6",
+      "repositorySha256": "27ba92185f2c94129f67c63275309163f41fb9b7ac2ffa67502319d3b3d517f6",
+      "initialPublishSha256": "27ba92185f2c94129f67c63275309163f41fb9b7ac2ffa67502319d3b3d517f6",
+      "bytes": 353,
+      "match": true
+    },
+    {
+      "path": "drizzle/meta/_journal.json",
+      "installedSha256": "293c198a030f152c0be410dd7a6dcde4e7a4eae88caec8680e4e417d883dbd87",
+      "repositorySha256": "293c198a030f152c0be410dd7a6dcde4e7a4eae88caec8680e4e417d883dbd87",
+      "initialPublishSha256": "293c198a030f152c0be410dd7a6dcde4e7a4eae88caec8680e4e417d883dbd87",
+      "bytes": 200,
+      "match": true
+    },
+    {
+      "path": "drizzle/meta/0000_snapshot.json",
+      "installedSha256": "9410cfdf3909c165b4e8da38bd6855940cc156e41e7abd58aa5fbfcd7cb80d0d",
+      "repositorySha256": "9410cfdf3909c165b4e8da38bd6855940cc156e41e7abd58aa5fbfcd7cb80d0d",
+      "initialPublishSha256": "9410cfdf3909c165b4e8da38bd6855940cc156e41e7abd58aa5fbfcd7cb80d0d",
+      "bytes": 2169,
+      "match": true
+    },
+    {
+      "path": "hooks/use-mobile.ts",
+      "installedSha256": "03e3e0f2b519d1925d7a8d7e8760588795e20c12005c913145c9860c46a76a2b",
+      "repositorySha256": "03e3e0f2b519d1925d7a8d7e8760588795e20c12005c913145c9860c46a76a2b",
+      "initialPublishSha256": "03e3e0f2b519d1925d7a8d7e8760588795e20c12005c913145c9860c46a76a2b",
+      "bytes": 581,
+      "match": true
+    },
+    {
+      "path": "lib/connector-context.ts",
+      "installedSha256": "bbddff68689cb0f6926fecd4b8b96f12f2054277c296e97b0df07d4ad5ece24e",
+      "repositorySha256": "bbddff68689cb0f6926fecd4b8b96f12f2054277c296e97b0df07d4ad5ece24e",
+      "initialPublishSha256": "bbddff68689cb0f6926fecd4b8b96f12f2054277c296e97b0df07d4ad5ece24e",
+      "bytes": 612,
+      "match": true
+    },
+    {
+      "path": "lib/connector-contract.mts",
+      "installedSha256": "e1a7b24a8793af34b595690d9b1300c897c7321c14f215cedf58ad95799d7c3e",
+      "repositorySha256": "e1a7b24a8793af34b595690d9b1300c897c7321c14f215cedf58ad95799d7c3e",
+      "initialPublishSha256": "e1a7b24a8793af34b595690d9b1300c897c7321c14f215cedf58ad95799d7c3e",
+      "bytes": 5362,
+      "match": true
+    },
+    {
+      "path": "lib/connector-errors.mts",
+      "installedSha256": "a22edf13d6873ae832c4a2a0d579fc666c73ec996ef0722d39172649d38f0871",
+      "repositorySha256": "a22edf13d6873ae832c4a2a0d579fc666c73ec996ef0722d39172649d38f0871",
+      "initialPublishSha256": "a22edf13d6873ae832c4a2a0d579fc666c73ec996ef0722d39172649d38f0871",
+      "bytes": 2717,
+      "match": true
+    },
+    {
+      "path": "lib/connector-preview.d.ts",
+      "installedSha256": "abd69a94f7f61f1359063bb557574faae35e8ff5a028cc4c04b9ee248ef52642",
+      "repositorySha256": "abd69a94f7f61f1359063bb557574faae35e8ff5a028cc4c04b9ee248ef52642",
+      "initialPublishSha256": "abd69a94f7f61f1359063bb557574faae35e8ff5a028cc4c04b9ee248ef52642",
+      "bytes": 433,
+      "match": true
+    },
+    {
+      "path": "lib/connectors.ts",
+      "installedSha256": "1c93d747e384c8e17e3e3dd5361b24412babf5eba2a11d2ae7a75f4e0924112c",
+      "repositorySha256": "1c93d747e384c8e17e3e3dd5361b24412babf5eba2a11d2ae7a75f4e0924112c",
+      "initialPublishSha256": "1c93d747e384c8e17e3e3dd5361b24412babf5eba2a11d2ae7a75f4e0924112c",
+      "bytes": 416,
+      "match": true
+    },
+    {
+      "path": "lib/lab/client-media.ts",
+      "installedSha256": "ea711232556460413b1b30273e9e0287034c4444b812baebd4b7f97a5f097d5c",
+      "repositorySha256": "ea711232556460413b1b30273e9e0287034c4444b812baebd4b7f97a5f097d5c",
+      "initialPublishSha256": "ea711232556460413b1b30273e9e0287034c4444b812baebd4b7f97a5f097d5c",
+      "bytes": 1685,
+      "match": true
+    },
+    {
+      "path": "lib/lab/codex-exchange.ts",
+      "installedSha256": "c7fcd3332cd447d1380e53e0115e9d2434cd1c457232719d006969ea9a9bee47",
+      "repositorySha256": "c7fcd3332cd447d1380e53e0115e9d2434cd1c457232719d006969ea9a9bee47",
+      "initialPublishSha256": "c7fcd3332cd447d1380e53e0115e9d2434cd1c457232719d006969ea9a9bee47",
+      "bytes": 3358,
+      "match": true
+    },
+    {
+      "path": "lib/lab/demo.ts",
+      "installedSha256": "562f1fff87a3ee6480bb84afebb9b1bd641a54d564bb0dc8b73caaf27446d1c6",
+      "repositorySha256": "562f1fff87a3ee6480bb84afebb9b1bd641a54d564bb0dc8b73caaf27446d1c6",
+      "initialPublishSha256": "562f1fff87a3ee6480bb84afebb9b1bd641a54d564bb0dc8b73caaf27446d1c6",
+      "bytes": 2641,
+      "match": true
+    },
+    {
+      "path": "lib/lab/desktop-client.ts",
+      "installedSha256": "26015a58de2a9a824b5088bbf9fb4bdb27e51f32d9f3d5bc8a7e28e4eaf2c72b",
+      "repositorySha256": "26015a58de2a9a824b5088bbf9fb4bdb27e51f32d9f3d5bc8a7e28e4eaf2c72b",
+      "initialPublishSha256": "26015a58de2a9a824b5088bbf9fb4bdb27e51f32d9f3d5bc8a7e28e4eaf2c72b",
+      "bytes": 3067,
+      "match": true
+    },
+    {
+      "path": "lib/lab/domain.ts",
+      "installedSha256": "621478a08c29e0a53169f6485cd897315c54bee403e0ffe23408a2328b778f87",
+      "repositorySha256": "621478a08c29e0a53169f6485cd897315c54bee403e0ffe23408a2328b778f87",
+      "initialPublishSha256": "621478a08c29e0a53169f6485cd897315c54bee403e0ffe23408a2328b778f87",
+      "bytes": 12772,
+      "match": true
+    },
+    {
+      "path": "lib/lab/instagram-client.ts",
+      "installedSha256": "29d37814854c81cfcede56043570469b4c2064fc9e92180733959ec0c4ea7a28",
+      "repositorySha256": "29d37814854c81cfcede56043570469b4c2064fc9e92180733959ec0c4ea7a28",
+      "initialPublishSha256": "29d37814854c81cfcede56043570469b4c2064fc9e92180733959ec0c4ea7a28",
+      "bytes": 2098,
+      "match": true
+    },
+    {
+      "path": "lib/lab/instagram-summary.ts",
+      "installedSha256": "4636be7391b817d1e472e0650e970a632dbd36d08cf107eef979ae188438f41f",
+      "repositorySha256": "4636be7391b817d1e472e0650e970a632dbd36d08cf107eef979ae188438f41f",
+      "initialPublishSha256": "4636be7391b817d1e472e0650e970a632dbd36d08cf107eef979ae188438f41f",
+      "bytes": 3292,
+      "match": true
+    },
+    {
+      "path": "lib/lab/intelligence.ts",
+      "installedSha256": "a05c3451d2dbd7140b9df4aa19f9cef3d3510558e5f5fcbb7070dbd874011ac8",
+      "repositorySha256": "a05c3451d2dbd7140b9df4aa19f9cef3d3510558e5f5fcbb7070dbd874011ac8",
+      "initialPublishSha256": "a05c3451d2dbd7140b9df4aa19f9cef3d3510558e5f5fcbb7070dbd874011ac8",
+      "bytes": 4684,
+      "match": true
+    },
+    {
+      "path": "lib/lab/media-catalog.ts",
+      "installedSha256": "770d78b38e455deab13cf5887e1a206a648fc99c2ce0cc5f7e152a8a97f61ea3",
+      "repositorySha256": "770d78b38e455deab13cf5887e1a206a648fc99c2ce0cc5f7e152a8a97f61ea3",
+      "initialPublishSha256": "770d78b38e455deab13cf5887e1a206a648fc99c2ce0cc5f7e152a8a97f61ea3",
+      "bytes": 4840,
+      "match": true
+    },
+    {
+      "path": "lib/lab/media-organization.ts",
+      "installedSha256": "0eecdce73e3d57101914c0a8048d35ee7419e49197c8b18be24e2871b9ede89b",
+      "repositorySha256": "0eecdce73e3d57101914c0a8048d35ee7419e49197c8b18be24e2871b9ede89b",
+      "initialPublishSha256": "0eecdce73e3d57101914c0a8048d35ee7419e49197c8b18be24e2871b9ede89b",
+      "bytes": 1056,
+      "match": true
+    },
+    {
+      "path": "lib/lab/media.ts",
+      "installedSha256": "591a501604472e73b5e318e62a8f934e4df7922869f1e795a5cb114bc69b5962",
+      "repositorySha256": "591a501604472e73b5e318e62a8f934e4df7922869f1e795a5cb114bc69b5962",
+      "initialPublishSha256": "591a501604472e73b5e318e62a8f934e4df7922869f1e795a5cb114bc69b5962",
+      "bytes": 4793,
+      "match": true
+    },
+    {
+      "path": "lib/lab/muse-connection.ts",
+      "installedSha256": "7af8a8f90ae8845d44346d8dedc9caaafb83c80202a384e04b78bae65fdccb54",
+      "repositorySha256": "7af8a8f90ae8845d44346d8dedc9caaafb83c80202a384e04b78bae65fdccb54",
+      "initialPublishSha256": "7af8a8f90ae8845d44346d8dedc9caaafb83c80202a384e04b78bae65fdccb54",
+      "bytes": 2394,
+      "match": true
+    },
+    {
+      "path": "lib/lab/muse-workflows.ts",
+      "installedSha256": "8f6163e0490a331a6b41cac049618660ee4794891b52d3eb648b4f04b5df3153",
+      "repositorySha256": "8f6163e0490a331a6b41cac049618660ee4794891b52d3eb648b4f04b5df3153",
+      "initialPublishSha256": "8f6163e0490a331a6b41cac049618660ee4794891b52d3eb648b4f04b5df3153",
+      "bytes": 7373,
+      "match": true
+    },
+    {
+      "path": "lib/lab/operations.ts",
+      "installedSha256": "234e6f8bc6b1ea0452ca0acae08c77238364930bf145b124660ceb143100bb6a",
+      "repositorySha256": "234e6f8bc6b1ea0452ca0acae08c77238364930bf145b124660ceb143100bb6a",
+      "initialPublishSha256": "234e6f8bc6b1ea0452ca0acae08c77238364930bf145b124660ceb143100bb6a",
+      "bytes": 9260,
+      "match": true
+    },
+    {
+      "path": "lib/lab/package.ts",
+      "installedSha256": "e35326b7b9f259d0117c1990f1f667f462caeeb8010ef8258fbec84d2f98aa86",
+      "repositorySha256": "e35326b7b9f259d0117c1990f1f667f462caeeb8010ef8258fbec84d2f98aa86",
+      "initialPublishSha256": "e35326b7b9f259d0117c1990f1f667f462caeeb8010ef8258fbec84d2f98aa86",
+      "bytes": 8026,
+      "match": true
+    },
+    {
+      "path": "lib/lab/production.ts",
+      "installedSha256": "c5db5c997f4922d83971f26785c7794a5e3ff9d095344500290b14226cf2dc4a",
+      "repositorySha256": "c5db5c997f4922d83971f26785c7794a5e3ff9d095344500290b14226cf2dc4a",
+      "initialPublishSha256": "c5db5c997f4922d83971f26785c7794a5e3ff9d095344500290b14226cf2dc4a",
+      "bytes": 22230,
+      "match": true
+    },
+    {
+      "path": "lib/lab/provider.ts",
+      "installedSha256": "903058940358a4e7fd479a14172687f98eb5e188707c0fc263d60a8e7031ca0b",
+      "repositorySha256": "903058940358a4e7fd479a14172687f98eb5e188707c0fc263d60a8e7031ca0b",
+      "initialPublishSha256": "903058940358a4e7fd479a14172687f98eb5e188707c0fc263d60a8e7031ca0b",
+      "bytes": 1791,
+      "match": true
+    },
+    {
+      "path": "lib/lab/queue-view.ts",
+      "installedSha256": "689edef11b4380dffea4348afd42138e366f364462da793b313b5043559c74f9",
+      "repositorySha256": "689edef11b4380dffea4348afd42138e366f364462da793b313b5043559c74f9",
+      "initialPublishSha256": "689edef11b4380dffea4348afd42138e366f364462da793b313b5043559c74f9",
+      "bytes": 3035,
+      "match": true
+    },
+    {
+      "path": "lib/lab/server.ts",
+      "installedSha256": "8608fd4b392eabf4735ef1ce34ce82eecdd358e9487ce7cbbcc2cee642df2297",
+      "repositorySha256": "8608fd4b392eabf4735ef1ce34ce82eecdd358e9487ce7cbbcc2cee642df2297",
+      "initialPublishSha256": "8608fd4b392eabf4735ef1ce34ce82eecdd358e9487ce7cbbcc2cee642df2297",
+      "bytes": 4254,
+      "match": true
+    },
+    {
+      "path": "lib/lab/use-desktop-preference.ts",
+      "installedSha256": "0d747fe029d2d1f53223bce8def1d2653c0f0f5a8a0f3ca1c937bb3c26e09363",
+      "repositorySha256": "0d747fe029d2d1f53223bce8def1d2653c0f0f5a8a0f3ca1c937bb3c26e09363",
+      "initialPublishSha256": "0d747fe029d2d1f53223bce8def1d2653c0f0f5a8a0f3ca1c937bb3c26e09363",
+      "bytes": 2840,
+      "match": true
+    },
+    {
+      "path": "lib/lab/use-desktop-status.ts",
+      "installedSha256": "a8aa479af550f9a9ef60e41f9b94b33929410c822d5c15c0bc6d27eda21c9183",
+      "repositorySha256": "a8aa479af550f9a9ef60e41f9b94b33929410c822d5c15c0bc6d27eda21c9183",
+      "initialPublishSha256": "a8aa479af550f9a9ef60e41f9b94b33929410c822d5c15c0bc6d27eda21c9183",
+      "bytes": 1348,
+      "match": true
+    },
+    {
+      "path": "lib/lab/visual-hooks.ts",
+      "installedSha256": "d83aed4830e9433fe661c92466c3b8df2d0b72ab9edce7130f3e7961870f64fc",
+      "repositorySha256": "d83aed4830e9433fe661c92466c3b8df2d0b72ab9edce7130f3e7961870f64fc",
+      "initialPublishSha256": "d83aed4830e9433fe661c92466c3b8df2d0b72ab9edce7130f3e7961870f64fc",
+      "bytes": 3341,
+      "match": true
+    },
+    {
+      "path": "lib/lab/workflow-guidance.ts",
+      "installedSha256": "1bbcbfa8fd6dbe070c620b870558b8455f9366de318ff5470c2d4768a445ddb4",
+      "repositorySha256": "1bbcbfa8fd6dbe070c620b870558b8455f9366de318ff5470c2d4768a445ddb4",
+      "initialPublishSha256": "1bbcbfa8fd6dbe070c620b870558b8455f9366de318ff5470c2d4768a445ddb4",
+      "bytes": 3330,
+      "match": true
+    },
+    {
+      "path": "lib/utils.ts",
+      "installedSha256": "53f3d3d070f0a9082934da25b875f9499855c2b0693868dd28be8c23d8730f68",
+      "repositorySha256": "53f3d3d070f0a9082934da25b875f9499855c2b0693868dd28be8c23d8730f68",
+      "initialPublishSha256": "53f3d3d070f0a9082934da25b875f9499855c2b0693868dd28be8c23d8730f68",
+      "bytes": 177,
+      "match": true
+    },
+    {
+      "path": "package.json",
+      "installedSha256": "7396b4aee6e067f2fec1c4156688e1bf85df908d6355aac5fd85607fa0059901",
+      "repositorySha256": "7396b4aee6e067f2fec1c4156688e1bf85df908d6355aac5fd85607fa0059901",
+      "initialPublishSha256": "7396b4aee6e067f2fec1c4156688e1bf85df908d6355aac5fd85607fa0059901",
+      "bytes": 3241,
+      "match": true
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "installedSha256": "e7daa609dcee1d2c791fa5889caacf8d35ea2d36c0237b4ba28ac5d0100296d3",
+      "repositorySha256": "e7daa609dcee1d2c791fa5889caacf8d35ea2d36c0237b4ba28ac5d0100296d3",
+      "initialPublishSha256": "e7daa609dcee1d2c791fa5889caacf8d35ea2d36c0237b4ba28ac5d0100296d3",
+      "bytes": 345573,
+      "match": true
+    },
+    {
+      "path": "postcss.config.mjs",
+      "installedSha256": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde",
+      "repositorySha256": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde",
+      "initialPublishSha256": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde",
+      "bytes": 94,
+      "match": true
+    },
+    {
+      "path": "public/favicon.svg",
+      "installedSha256": "99320c354e6b6de8bbe10b5ae58e028a5eca0164173644b0cd030500ea3d7b47",
+      "repositorySha256": "99320c354e6b6de8bbe10b5ae58e028a5eca0164173644b0cd030500ea3d7b47",
+      "initialPublishSha256": "99320c354e6b6de8bbe10b5ae58e028a5eca0164173644b0cd030500ea3d7b47",
+      "bytes": 453,
+      "match": true
+    },
+    {
+      "path": "public/fonts/be-vietnam-pro-latin-400-normal.woff2",
+      "installedSha256": "03d1b589cff172e1a670b3573e731d3380bc326f80cf83b0d3504e3188e2e074",
+      "repositorySha256": "03d1b589cff172e1a670b3573e731d3380bc326f80cf83b0d3504e3188e2e074",
+      "initialPublishSha256": "03d1b589cff172e1a670b3573e731d3380bc326f80cf83b0d3504e3188e2e074",
+      "bytes": 21168,
+      "match": true
+    },
+    {
+      "path": "public/fonts/be-vietnam-pro-latin-500-normal.woff2",
+      "installedSha256": "b621f77d35f777023aa11ca524462d511b4b28a813adbc0e9d15a10fc61dfe4e",
+      "repositorySha256": "b621f77d35f777023aa11ca524462d511b4b28a813adbc0e9d15a10fc61dfe4e",
+      "initialPublishSha256": "b621f77d35f777023aa11ca524462d511b4b28a813adbc0e9d15a10fc61dfe4e",
+      "bytes": 21892,
+      "match": true
+    },
+    {
+      "path": "public/fonts/be-vietnam-pro-latin-600-normal.woff2",
+      "installedSha256": "9503dec2a7c532c8331e9600bcafea287a4fd208573b8668d85ab8d8de1863c7",
+      "repositorySha256": "9503dec2a7c532c8331e9600bcafea287a4fd208573b8668d85ab8d8de1863c7",
+      "initialPublishSha256": "9503dec2a7c532c8331e9600bcafea287a4fd208573b8668d85ab8d8de1863c7",
+      "bytes": 22032,
+      "match": true
+    },
+    {
+      "path": "public/fonts/be-vietnam-pro-latin-700-normal.woff2",
+      "installedSha256": "a193dd87699bd2e18ddf72dc271493ea82a23dad9f5c334d9f2a257b1e05fc30",
+      "repositorySha256": "a193dd87699bd2e18ddf72dc271493ea82a23dad9f5c334d9f2a257b1e05fc30",
+      "initialPublishSha256": "a193dd87699bd2e18ddf72dc271493ea82a23dad9f5c334d9f2a257b1e05fc30",
+      "bytes": 22152,
+      "match": true
+    },
+    {
+      "path": "public/fonts/be-vietnam-pro-latin-ext-400-normal.woff2",
+      "installedSha256": "f7a2811e471c2973a1179ce39da3ad6bb8082381aa8d1535ccfcbc3d6d78a052",
+      "repositorySha256": "f7a2811e471c2973a1179ce39da3ad6bb8082381aa8d1535ccfcbc3d6d78a052",
+      "initialPublishSha256": "f7a2811e471c2973a1179ce39da3ad6bb8082381aa8d1535ccfcbc3d6d78a052",
+      "bytes": 13056,
+      "match": true
+    },
+    {
+      "path": "public/fonts/be-vietnam-pro-latin-ext-500-normal.woff2",
+      "installedSha256": "947d592eb7676914507ff68fc11fcf2cfdecd6ebaf0fa2af6047f66a63ea7d0f",
+      "repositorySha256": "947d592eb7676914507ff68fc11fcf2cfdecd6ebaf0fa2af6047f66a63ea7d0f",
+      "initialPublishSha256": "947d592eb7676914507ff68fc11fcf2cfdecd6ebaf0fa2af6047f66a63ea7d0f",
+      "bytes": 13548,
+      "match": true
+    },
+    {
+      "path": "public/fonts/be-vietnam-pro-latin-ext-600-normal.woff2",
+      "installedSha256": "20cc75daeaaaa0fa8af2b616b2de2b2900f0ce14ae8e9faa47d272cedd93827f",
+      "repositorySha256": "20cc75daeaaaa0fa8af2b616b2de2b2900f0ce14ae8e9faa47d272cedd93827f",
+      "initialPublishSha256": "20cc75daeaaaa0fa8af2b616b2de2b2900f0ce14ae8e9faa47d272cedd93827f",
+      "bytes": 13608,
+      "match": true
+    },
+    {
+      "path": "public/fonts/be-vietnam-pro-latin-ext-700-normal.woff2",
+      "installedSha256": "33d57e5bd840b03921568e08d2be1082d453e55f1ba55f421e41a1aa54e12601",
+      "repositorySha256": "33d57e5bd840b03921568e08d2be1082d453e55f1ba55f421e41a1aa54e12601",
+      "initialPublishSha256": "33d57e5bd840b03921568e08d2be1082d453e55f1ba55f421e41a1aa54e12601",
+      "bytes": 13852,
+      "match": true
+    },
+    {
+      "path": "public/fonts/be-vietnam-pro-vietnamese-400-normal.woff2",
+      "installedSha256": "dc085e2fba3414e5c5bf1e6172f921a9f81c5859946a4ed3d63c1e470d96a9e2",
+      "repositorySha256": "dc085e2fba3414e5c5bf1e6172f921a9f81c5859946a4ed3d63c1e470d96a9e2",
+      "initialPublishSha256": "dc085e2fba3414e5c5bf1e6172f921a9f81c5859946a4ed3d63c1e470d96a9e2",
+      "bytes": 11532,
+      "match": true
+    },
+    {
+      "path": "public/fonts/be-vietnam-pro-vietnamese-500-normal.woff2",
+      "installedSha256": "86341610cbe907eecf461c9159c168d5efb52bb1a33963813a08f520555d8e66",
+      "repositorySha256": "86341610cbe907eecf461c9159c168d5efb52bb1a33963813a08f520555d8e66",
+      "initialPublishSha256": "86341610cbe907eecf461c9159c168d5efb52bb1a33963813a08f520555d8e66",
+      "bytes": 12172,
+      "match": true
+    },
+    {
+      "path": "public/fonts/be-vietnam-pro-vietnamese-600-normal.woff2",
+      "installedSha256": "97658c6f9a384f29a3005c3d96e2a0d1c810192cf68979071c290f5a377a9f99",
+      "repositorySha256": "97658c6f9a384f29a3005c3d96e2a0d1c810192cf68979071c290f5a377a9f99",
+      "initialPublishSha256": "97658c6f9a384f29a3005c3d96e2a0d1c810192cf68979071c290f5a377a9f99",
+      "bytes": 12176,
+      "match": true
+    },
+    {
+      "path": "public/fonts/be-vietnam-pro-vietnamese-700-normal.woff2",
+      "installedSha256": "4f58af2d1c3e28a9ba14c51c82db2751d78344b75bdcb34de24a1031ebe59da6",
+      "repositorySha256": "4f58af2d1c3e28a9ba14c51c82db2751d78344b75bdcb34de24a1031ebe59da6",
+      "initialPublishSha256": "4f58af2d1c3e28a9ba14c51c82db2751d78344b75bdcb34de24a1031ebe59da6",
+      "bytes": 12468,
+      "match": true
+    },
+    {
+      "path": "public/fonts/LICENSE-be-vietnam-pro.txt",
+      "installedSha256": "0bd4db1cda123af9d91794b0f98324b7d7d81aef0fcaf78c433160153f2c6f25",
+      "repositorySha256": "0bd4db1cda123af9d91794b0f98324b7d7d81aef0fcaf78c433160153f2c6f25",
+      "initialPublishSha256": "0bd4db1cda123af9d91794b0f98324b7d7d81aef0fcaf78c433160153f2c6f25",
+      "bytes": 6476,
+      "match": true
+    },
+    {
+      "path": "public/fonts/LICENSE-sora.txt",
+      "installedSha256": "1ec9623d38c445eb4dfe5fcc783e0f0ee728cc97ca157ce1f8cb2b3bf9d9b0d9",
+      "repositorySha256": "1ec9623d38c445eb4dfe5fcc783e0f0ee728cc97ca157ce1f8cb2b3bf9d9b0d9",
+      "initialPublishSha256": "1ec9623d38c445eb4dfe5fcc783e0f0ee728cc97ca157ce1f8cb2b3bf9d9b0d9",
+      "bytes": 4382,
+      "match": true
+    },
+    {
+      "path": "public/fonts/sora-latin-500-normal.woff2",
+      "installedSha256": "edd010ebf2f4940b52d8b98296a499c0a783d838e427fa301c67f80959c1f441",
+      "repositorySha256": "edd010ebf2f4940b52d8b98296a499c0a783d838e427fa301c67f80959c1f441",
+      "initialPublishSha256": "edd010ebf2f4940b52d8b98296a499c0a783d838e427fa301c67f80959c1f441",
+      "bytes": 15056,
+      "match": true
+    },
+    {
+      "path": "public/fonts/sora-latin-600-normal.woff2",
+      "installedSha256": "fa9ab76f30510ad92153c6d6d72d0508884b85e9f0148abdfa963231b2a4845a",
+      "repositorySha256": "fa9ab76f30510ad92153c6d6d72d0508884b85e9f0148abdfa963231b2a4845a",
+      "initialPublishSha256": "fa9ab76f30510ad92153c6d6d72d0508884b85e9f0148abdfa963231b2a4845a",
+      "bytes": 15000,
+      "match": true
+    },
+    {
+      "path": "public/fonts/sora-latin-700-normal.woff2",
+      "installedSha256": "c3337a673c9bbbfe433091d3831714dd9a257951f16f41eb3fc650ec593cfac2",
+      "repositorySha256": "c3337a673c9bbbfe433091d3831714dd9a257951f16f41eb3fc650ec593cfac2",
+      "initialPublishSha256": "c3337a673c9bbbfe433091d3831714dd9a257951f16f41eb3fc650ec593cfac2",
+      "bytes": 15128,
+      "match": true
+    },
+    {
+      "path": "public/fonts/sora-latin-ext-500-normal.woff2",
+      "installedSha256": "0685d4dea03a9d6b26479cf5018cfcce9521278f946bba7935983f973539d75e",
+      "repositorySha256": "0685d4dea03a9d6b26479cf5018cfcce9521278f946bba7935983f973539d75e",
+      "initialPublishSha256": "0685d4dea03a9d6b26479cf5018cfcce9521278f946bba7935983f973539d75e",
+      "bytes": 7476,
+      "match": true
+    },
+    {
+      "path": "public/fonts/sora-latin-ext-600-normal.woff2",
+      "installedSha256": "2c17a94fef4242d1c33ffcc9bb43c7eb93ad88db53409c1067ac23cc914523e2",
+      "repositorySha256": "2c17a94fef4242d1c33ffcc9bb43c7eb93ad88db53409c1067ac23cc914523e2",
+      "initialPublishSha256": "2c17a94fef4242d1c33ffcc9bb43c7eb93ad88db53409c1067ac23cc914523e2",
+      "bytes": 7536,
+      "match": true
+    },
+    {
+      "path": "public/fonts/sora-latin-ext-700-normal.woff2",
+      "installedSha256": "d4d06da761976749e6f33a3640ae610301491d65bc3f1c56faa2489b520a7ac7",
+      "repositorySha256": "d4d06da761976749e6f33a3640ae610301491d65bc3f1c56faa2489b520a7ac7",
+      "initialPublishSha256": "d4d06da761976749e6f33a3640ae610301491d65bc3f1c56faa2489b520a7ac7",
+      "bytes": 7448,
+      "match": true
+    },
+    {
+      "path": "README-LOCAL-VI.md",
+      "installedSha256": "b3b3b612f547585a8df86e6c70ad7493e07d6e5d7500108eaa612c3bd4c13a16",
+      "repositorySha256": "b3b3b612f547585a8df86e6c70ad7493e07d6e5d7500108eaa612c3bd4c13a16",
+      "initialPublishSha256": "b3b3b612f547585a8df86e6c70ad7493e07d6e5d7500108eaa612c3bd4c13a16",
+      "bytes": 5092,
+      "match": true
+    },
+    {
+      "path": "scripts/build-local.mjs",
+      "installedSha256": "1750ee45346b6ab1133bd4ec99034178bd08c41c56f61f2de35b512fc8b2005f",
+      "repositorySha256": "1750ee45346b6ab1133bd4ec99034178bd08c41c56f61f2de35b512fc8b2005f",
+      "initialPublishSha256": "1750ee45346b6ab1133bd4ec99034178bd08c41c56f61f2de35b512fc8b2005f",
+      "bytes": 3090,
+      "match": true
+    },
+    {
+      "path": "scripts/package-local.mjs",
+      "installedSha256": "1c1f1b1273ecdf7d68c8d060bd9e4c17b494aebe36d2a9e5c5a9246f0246ae2c",
+      "repositorySha256": "1c1f1b1273ecdf7d68c8d060bd9e4c17b494aebe36d2a9e5c5a9246f0246ae2c",
+      "initialPublishSha256": "1c1f1b1273ecdf7d68c8d060bd9e4c17b494aebe36d2a9e5c5a9246f0246ae2c",
+      "bytes": 2484,
+      "match": true
+    },
+    {
+      "path": "scripts/run-codex.mjs",
+      "installedSha256": "d53b9e17c7664c88c478ae215e9dea51bc96e250638a0cfa2b4462c7f58ba38d",
+      "repositorySha256": "d53b9e17c7664c88c478ae215e9dea51bc96e250638a0cfa2b4462c7f58ba38d",
+      "initialPublishSha256": "d53b9e17c7664c88c478ae215e9dea51bc96e250638a0cfa2b4462c7f58ba38d",
+      "bytes": 13395,
+      "match": true
+    },
+    {
+      "path": "skills-lock.json",
+      "installedSha256": "97a6cdebf1eb40d73c5d772a6607336d817692ff58109564ac146d08e8dff4ab",
+      "repositorySha256": "97a6cdebf1eb40d73c5d772a6607336d817692ff58109564ac146d08e8dff4ab",
+      "initialPublishSha256": "97a6cdebf1eb40d73c5d772a6607336d817692ff58109564ac146d08e8dff4ab",
+      "bytes": 4130,
+      "match": true
+    },
+    {
+      "path": "START-HERMES-CLIP.cmd",
+      "installedSha256": "775adb9fddd20edfaa49f2284cc16b837b859a88125edeae50995b4b699e5f76",
+      "repositorySha256": "775adb9fddd20edfaa49f2284cc16b837b859a88125edeae50995b4b699e5f76",
+      "initialPublishSha256": "775adb9fddd20edfaa49f2284cc16b837b859a88125edeae50995b4b699e5f76",
+      "bytes": 294,
+      "match": true
+    },
+    {
+      "path": "START-LOCAL.cmd",
+      "installedSha256": "42977035ca46c5e5580499cd939c2c4d3777d12c0420edc42ddc6b1ad61e7b80",
+      "repositorySha256": "42977035ca46c5e5580499cd939c2c4d3777d12c0420edc42ddc6b1ad61e7b80",
+      "initialPublishSha256": "42977035ca46c5e5580499cd939c2c4d3777d12c0420edc42ddc6b1ad61e7b80",
+      "bytes": 294,
+      "match": true
+    },
+    {
+      "path": "tests/assistant-api.test.mjs",
+      "installedSha256": "ead66310f7482c795ff8a9d8b02f645017fa51e01e32898df90271dbe334b7cb",
+      "repositorySha256": "ead66310f7482c795ff8a9d8b02f645017fa51e01e32898df90271dbe334b7cb",
+      "initialPublishSha256": "ead66310f7482c795ff8a9d8b02f645017fa51e01e32898df90271dbe334b7cb",
+      "bytes": 2692,
+      "match": true
+    },
+    {
+      "path": "tests/codex-api.test.mjs",
+      "installedSha256": "87b3976015077048a2e285f21ce9f0b23c6fdd2f50adcf8da24ad010fcc40a43",
+      "repositorySha256": "87b3976015077048a2e285f21ce9f0b23c6fdd2f50adcf8da24ad010fcc40a43",
+      "initialPublishSha256": "87b3976015077048a2e285f21ce9f0b23c6fdd2f50adcf8da24ad010fcc40a43",
+      "bytes": 3516,
+      "match": true
+    },
+    {
+      "path": "tests/codex-runner.test.mjs",
+      "installedSha256": "fcf4a897e3fa8314508c518eed9a6c305aa8f27a077ab135f7bbba77e0977388",
+      "repositorySha256": "fcf4a897e3fa8314508c518eed9a6c305aa8f27a077ab135f7bbba77e0977388",
+      "initialPublishSha256": "fcf4a897e3fa8314508c518eed9a6c305aa8f27a077ab135f7bbba77e0977388",
+      "bytes": 9455,
+      "match": true
+    },
+    {
+      "path": "tests/contracts.test.mjs",
+      "installedSha256": "83a1d97195e9ee6c21251ad98d00251681ddd0d641004ed3f83fd595bf8302e4",
+      "repositorySha256": "83a1d97195e9ee6c21251ad98d00251681ddd0d641004ed3f83fd595bf8302e4",
+      "initialPublishSha256": "83a1d97195e9ee6c21251ad98d00251681ddd0d641004ed3f83fd595bf8302e4",
+      "bytes": 10523,
+      "match": true
+    },
+    {
+      "path": "tests/domain.test.mjs",
+      "installedSha256": "5d5dd2e0cfdaae2981fc83605db4ffc1d3eb826d88d6817052d523bbcaa9c22b",
+      "repositorySha256": "5d5dd2e0cfdaae2981fc83605db4ffc1d3eb826d88d6817052d523bbcaa9c22b",
+      "initialPublishSha256": "5d5dd2e0cfdaae2981fc83605db4ffc1d3eb826d88d6817052d523bbcaa9c22b",
+      "bytes": 4761,
+      "match": true
+    },
+    {
+      "path": "tests/guidance.test.mjs",
+      "installedSha256": "d7117758e939d33ba654fc6d9a24d726567df48294215da2ff2e6fa85310ea76",
+      "repositorySha256": "d7117758e939d33ba654fc6d9a24d726567df48294215da2ff2e6fa85310ea76",
+      "initialPublishSha256": "d7117758e939d33ba654fc6d9a24d726567df48294215da2ff2e6fa85310ea76",
+      "bytes": 1506,
+      "match": true
+    },
+    {
+      "path": "tests/intelligence.test.mjs",
+      "installedSha256": "decc66198b461909a1fe7e502bfbf046f439933fc66fee434d71b0e55ced8e12",
+      "repositorySha256": "decc66198b461909a1fe7e502bfbf046f439933fc66fee434d71b0e55ced8e12",
+      "initialPublishSha256": "decc66198b461909a1fe7e502bfbf046f439933fc66fee434d71b0e55ced8e12",
+      "bytes": 2843,
+      "match": true
+    },
+    {
+      "path": "tests/operations-api.test.mjs",
+      "installedSha256": "cbc208e6859255d6619a109f60dc34287f59708cba3faca09cca4936880a7429",
+      "repositorySha256": "cbc208e6859255d6619a109f60dc34287f59708cba3faca09cca4936880a7429",
+      "initialPublishSha256": "cbc208e6859255d6619a109f60dc34287f59708cba3faca09cca4936880a7429",
+      "bytes": 8574,
+      "match": true
+    },
+    {
+      "path": "tests/operations.test.mjs",
+      "installedSha256": "bc6134cfe3dd8aeb70c9ba625a8472c20e8f16f4e3e64259da076788586dea3a",
+      "repositorySha256": "bc6134cfe3dd8aeb70c9ba625a8472c20e8f16f4e3e64259da076788586dea3a",
+      "initialPublishSha256": "bc6134cfe3dd8aeb70c9ba625a8472c20e8f16f4e3e64259da076788586dea3a",
+      "bytes": 11219,
+      "match": true
+    },
+    {
+      "path": "tests/production-api.test.mjs",
+      "installedSha256": "b2b71dbb5278e2d61e2b0e0dbffc09fd13436f11e39cb9ce8e889883528210f1",
+      "repositorySha256": "b2b71dbb5278e2d61e2b0e0dbffc09fd13436f11e39cb9ce8e889883528210f1",
+      "initialPublishSha256": "b2b71dbb5278e2d61e2b0e0dbffc09fd13436f11e39cb9ce8e889883528210f1",
+      "bytes": 15190,
+      "match": true
+    },
+    {
+      "path": "tests/production.test.mjs",
+      "installedSha256": "1871e79d220e40878bcb268e8d384509b64d2f3f8497d61b2f38910e539e1762",
+      "repositorySha256": "1871e79d220e40878bcb268e8d384509b64d2f3f8497d61b2f38910e539e1762",
+      "initialPublishSha256": "1871e79d220e40878bcb268e8d384509b64d2f3f8497d61b2f38910e539e1762",
+      "bytes": 18876,
+      "match": true
+    },
+    {
+      "path": "tests/runtime-fixture.mjs",
+      "installedSha256": "0f2cdd6deecfbc34b2c7f71ef12d81b7a40835f360505de278b339e6fa457930",
+      "repositorySha256": "0f2cdd6deecfbc34b2c7f71ef12d81b7a40835f360505de278b339e6fa457930",
+      "initialPublishSha256": "0f2cdd6deecfbc34b2c7f71ef12d81b7a40835f360505de278b339e6fa457930",
+      "bytes": 1476,
+      "match": true
+    },
+    {
+      "path": "tests/runtime-register.mjs",
+      "installedSha256": "3cca4973baff7bd931fd380597244ebc2ea0289345742e826cd64524ea0ee9c8",
+      "repositorySha256": "3cca4973baff7bd931fd380597244ebc2ea0289345742e826cd64524ea0ee9c8",
+      "initialPublishSha256": "3cca4973baff7bd931fd380597244ebc2ea0289345742e826cd64524ea0ee9c8",
+      "bytes": 1178,
+      "match": true
+    },
+    {
+      "path": "tests/storage.test.py",
+      "installedSha256": "c477d7306d7a0ba7da4175c33cf1a63241f80d47a0758a0270059fc2623224d9",
+      "repositorySha256": "c477d7306d7a0ba7da4175c33cf1a63241f80d47a0758a0270059fc2623224d9",
+      "initialPublishSha256": "c477d7306d7a0ba7da4175c33cf1a63241f80d47a0758a0270059fc2623224d9",
+      "bytes": 1156,
+      "match": true
+    },
+    {
+      "path": "tests/visual-hooks.test.mjs",
+      "installedSha256": "2449e090599435dab0b2fa89e339471d922fe09504cba1fab4d9cceb2cde98e7",
+      "repositorySha256": "2449e090599435dab0b2fa89e339471d922fe09504cba1fab4d9cceb2cde98e7",
+      "initialPublishSha256": "2449e090599435dab0b2fa89e339471d922fe09504cba1fab4d9cceb2cde98e7",
+      "bytes": 1016,
+      "match": true
+    },
+    {
+      "path": "tsconfig.json",
+      "installedSha256": "f9418bf9a00763ba53f1683ab7a8ae9c9a9ffc8626f01abcd2ed089f871b7cf7",
+      "repositorySha256": "f9418bf9a00763ba53f1683ab7a8ae9c9a9ffc8626f01abcd2ed089f871b7cf7",
+      "initialPublishSha256": "f9418bf9a00763ba53f1683ab7a8ae9c9a9ffc8626f01abcd2ed089f871b7cf7",
+      "bytes": 933,
+      "match": true
+    },
+    {
+      "path": "vendor/shadcn-tailwind-4.13.0.css",
+      "installedSha256": "bc7d83425702955b4cb67cb14ede9d603f9d912376d57a2d81d661094d2a782a",
+      "repositorySha256": "bc7d83425702955b4cb67cb14ede9d603f9d912376d57a2d81d661094d2a782a",
+      "initialPublishSha256": "bc7d83425702955b4cb67cb14ede9d603f9d912376d57a2d81d661094d2a782a",
+      "bytes": 16041,
+      "match": true
+    },
+    {
+      "path": "vendor/shadcn-tailwind-4.13.0.LICENSE.md",
+      "installedSha256": "1564074e13439397221ffd522e2e504d56561994a23d371aa5e3ad43e4f5423f",
+      "repositorySha256": "1564074e13439397221ffd522e2e504d56561994a23d371aa5e3ad43e4f5423f",
+      "initialPublishSha256": "1564074e13439397221ffd522e2e504d56561994a23d371aa5e3ad43e4f5423f",
+      "bytes": 1063,
+      "match": true
+    },
+    {
+      "path": "worker-configuration.d.ts",
+      "installedSha256": "fde24658741172ca2a0ae24ec3189c919318081a3604324e52b77642a753c70c",
+      "repositorySha256": "fde24658741172ca2a0ae24ec3189c919318081a3604324e52b77642a753c70c",
+      "initialPublishSha256": "fde24658741172ca2a0ae24ec3189c919318081a3604324e52b77642a753c70c",
+      "bytes": 97,
+      "match": true
+    }
+  ],
+  "generatedBuild": [
+    {
+      "path": "desktop/local-dist/ui/index.html",
+      "bytes": 410,
+      "sha256": "6313ecc586ac132e9c18de7847c10a850d4ed8aae88d99e2e53f21a28d402d50"
+    },
+    {
+      "path": "desktop/local-dist/server/routes.mjs",
+      "bytes": 570,
+      "sha256": "b7c62542fbe35afc72acbe995c4fde490e0574be80ce3130df6cfc49873eee54"
+    }
+  ],
+  "gitStatusBeforeEvidenceCommit": "## main...origin/main\nM  .gitignore\nMM AGENTS.md\nA  MANIFEST.json\nMM README.md\nA  data/2026-11-11/export-provenance.json\nA  data/2026-11-11/media-index.json\nA  data/2026-11-11/muse-chats.json\nA  data/2026-11-11/muse-jobs.json\nA  data/2026-11-11/operations.json\nA  data/2026-11-11/record-hashes.json\nA  data/2026-11-11/workspace-records.json\nA  data/README.md\nA  data/research/2026-11-11/GALLERY.md\nA  data/research/2026-11-11/README.md\nA  data/research/2026-11-11/all-batches.json\nA  data/research/2026-11-11/candidates-1745.json\nA  data/research/2026-11-11/candidates-earlier.json\nA  data/research/2026-11-11/data-quality.json\nA  data/research/2026-11-11/image-index.json\nA  data/research/2026-11-11/images/38351ad71a36adb1fcfbd0ab8ea0626c65249a3ea206ab8b60b88e7179de515f.webp\nA  data/research/2026-11-11/images/55504fc78925cbf07136ccf7dded68c39edeb8ea6eb95f6daf9d5a7f3933735c.webp\nA  data/research/2026-11-11/images/71865879331557ffccebfaeb162c54c70eca12f53e4d8e07a4ade29e012d8efd.webp\nA  data/research/2026-11-11/images/7ea2c89b35fa4a045942bdbfbb1d1371cb63b4e9fea2929f6fcd8c81e6cb202c.webp\nA  data/research/2026-11-11/images/91bc26fd1d88abdcfd4ff0f7946d80de044347a814528a9786c68a956ca2913e.webp\nA  data/research/2026-11-11/images/aa8c7b9c7d14eb9240def2c0a382155d6717a157ab8c89f7aa543d4045c746c1.webp\nA  data/research/2026-11-11/images/dc234d917d26e8baab174d53126c061de066ae68aaacdb8b362f531d324aeaf0.webp\nA  data/research/2026-11-11/images/e16ce265241cd9a777f6a8c9e40f86ee6fc1156bd250193dc9e268c4c51c4b9b.webp\nA  data/research/2026-11-11/images/ee7fce006e25b5e559c5744ad575e3d787af2ed403b2a0344bc81bb0edde7728.webp\nA  data/research/2026-11-11/images/f55587e5b4ef936fb3480eefffb260999cf94f377aaf570c626aa726eb8ec50f.webp\nM  docs/context/02-SO-DO-SOURCE-VA-NGHIEM-THU.md\nA  evidence/2026-11-11/PROVENANCE.json\nA  evidence/2026-11-11/earlier-research/final-verification.json\nA  evidence/2026-11-11/earlier-research/gui-verification.json\nA  evidence/2026-11-11/earlier-research/source-reviewed-batch.json\nA  evidence/2026-11-11/gui/01-research-start.png\nA  evidence/2026-11-11/gui/02-library-thumbnails.png\nA  evidence/2026-11-11/gui/03-library-native.png\nA  evidence/2026-11-11/gui/04-queue-native.png\nA  evidence/2026-11-11/gui/05-muse-native.png\nA  evidence/2026-11-11/gui/06-settings-native.png\nA  evidence/2026-11-11/gui/07-research-native.png\nA  evidence/2026-11-11/gui/08-research-detail-native.png\nA  evidence/2026-11-11/gui/09-research-1080.png\nA  evidence/2026-11-11/gui/09-research-390.png\nA  evidence/2026-11-11/gui/09-research-800.png\nA  evidence/2026-11-11/gui/10-research-table-final.png\nA  evidence/2026-11-11/instagram-metrics/06-metrics-after-restart.png\nA  evidence/2026-11-11/instagram-metrics/BAO-CAO.md\nA  evidence/2026-11-11/instagram-metrics/final-verification.json\nA  evidence/2026-11-11/instagram-metrics/live-verification.json\nA  evidence/2026-11-11/instagram/11-bai-dang-that-trong-hermes.png\nA  evidence/2026-11-11/instagram/12-video-da-dang.png\nA  evidence/2026-11-11/instagram/BAO-CAO-DANG-THAT.md\nA  evidence/2026-11-11/instagram/live-publication-verification.json\nA  evidence/2026-11-11/research-source-pages/0.html.txt\nA  evidence/2026-11-11/research-source-pages/11.html.txt\nA  evidence/2026-11-11/research-source-pages/15.html.txt\nA  evidence/2026-11-11/research-source-pages/17.html.txt\nA  evidence/2026-11-11/research-source-pages/19.html.txt\nA  evidence/2026-11-11/research-source-pages/2.html.txt\nA  evidence/2026-11-11/research-source-pages/3.html.txt\nA  evidence/2026-11-11/research-source-pages/5.html.txt\nA  evidence/2026-11-11/research-source-pages/9.html.txt\nA  evidence/2026-11-11/research-source-pages/index.json\nA  evidence/2026-11-11/storage-research/BAO-CAO.md\nA  evidence/2026-11-11/storage-research/DANH-SACH-DA-DON.csv\nA  evidence/2026-11-11/storage-research/download-import-e2e.json\nA  evidence/2026-11-11/storage-research/final-disk.json\nA  evidence/2026-11-11/storage-research/final-verification.json\nA  evidence/2026-11-11/storage-research/gui-verification.json\nA  evidence/2026-11-11/storage-research/idle-measurement.json\nA  evidence/2026-11-11/storage-research/idle-summary.json\nA  evidence/2026-11-11/storage-research/research-source-review.json\nA  evidence/2026-11-11/storage-research/source-evidence.json\nA  evidence/2026-11-11/storage-research/storage-summary.json\nA  evidence/2026-11-11/tests/api-complete.log\nA  evidence/2026-11-11/tests/build-final.log\nA  evidence/2026-11-11/tests/desktop-complete.log\nA  evidence/2026-11-11/tests/domain-complete.log\nA  evidence/2026-11-11/tests/research-regression.log\nA  evidence/2026-11-11/tests/runner-complete.log\nA  evidence/2026-11-11/tests/storage-tests.log\nA  evidence/2026-11-11/tests/suite-verification.json\nA  evidence/2026-11-11/tests/typecheck.log\nA  evidence/2026-11-11/three-products/01-Treat-Trader-caption.txt\nA  evidence/2026-11-11/three-products/01-Treat-Trader-khung-hinh.png\nA  evidence/2026-11-11/three-products/02-ChomChom-Roller-caption.txt\nA  evidence/2026-11-11/three-products/02-ChomChom-Roller-khung-hinh.png\nA  evidence/2026-11-11/three-products/03-Front-Range-Flex-Leash-caption.txt\nA  evidence/2026-11-11/three-products/03-Front-Range-Flex-Leash-khung-hinh.png\nA  evidence/2026-11-11/three-products/KET-QUA.md\nA  evidence/2026-11-11/three-products/delivery-gallery-verification.json\nA  evidence/2026-11-11/three-products/delivery-verification.json\nA  evidence/2026-11-11/three-products/final-runtime-verification.json\nA  evidence/2026-11-11/three-products/manifest.json\nA  evidence/README.md\nA  evidence/current/2026-11-11/app-window.json\nA  evidence/current/2026-11-11/app-window.png\nA  evidence/current/2026-11-11/process-identity.json\nA  evidence/current/2026-11-11/source-parity.json\nA  evidence/media/README.md\nA  evidence/media/library/01e3630c428955dead9dc57ccdca74c93ef1dd2ddcb3019fc8e989707d3869c3.mp4\nA  evidence/media/library/28d34a263a8d3178f39ec6930787e8209b651b84c66f6fecc3c5efeaa790776a.mp4\nA  evidence/media/library/3c221f730d9846a1f6bb92996e5e1f282b7ca3ae5b474583afb0087b86f55df4.mp4\nA  evidence/media/library/46c11fd0f900b0e0184b4d1d3bc63da52607f7e13b294f93b84a7bd09bcdf8d9.mp4\nA  evidence/media/library/4aa33b5a59c8540daf93df8b68234891a987de6b8be00d3002d9b5813ccb3faf.mp4\nA  evidence/media/library/4d19122fc3b2ab887597387558442d8b0dfec77b995b8dc1040dcbe8acd61c04.png\nA  evidence/media/library/52e4e204c50db891fbe02837fe97d28e3c2c2499de14744852a45d2f87394b1f.mp4\nA  evidence/media/library/7721f1a0914aa23a73dcf8ed98ad619b833cf512881a89948b80091b79ba3de9.png\nA  evidence/media/library/8f92a522470c756d5745a88266218e9f1becb48ddbb3195eecc6e58f5f657dc0.mp4\nA  evidence/media/library/940afd00255c2fb071d464cfa680e8082e209fe48515b84d49969c6e94233398.mp4\nA  evidence/media/library/95286128603a505798bb70f4487ccf21d011b6b2d842259da1fe91cb285be393.mp4\nA  evidence/media/library/a13f835025b5de2c9166582a860d6cd67eb987ec6ae330eb975814c90069ef23.mp4\nA  evidence/media/library/afac84066a90234de1907560af234af3e8a8c54258bdf7aed101fd9b94e87d60.mp4\nA  evidence/media/library/b78b720813879835774432cab04a5b70fa865783dfa78696c1a7492c5eddcd12.mp4\nA  evidence/media/library/c39c0c699a7905bad99e701d6308704c210b901e11b53883e62924e0f93b9f39.mp4\nA  evidence/media/library/c6aa4d97c00a49ded12be1b3b57fd2f1f8c3b883089fb6532a7f9b290e1007c8.webp\nA  evidence/media/library/cccf0851ce8899a7da8155504cfd4e7ae8c68ac8e33ea845d4e1738ca5da7169.webp\nA  evidence/media/library/db76bd1057cda1560067ceef0c82f11e1e72d4fcfe9aa038431a910965498eb7.mp4\nA  evidence/media/library/dd192bc13cb0e7f68cafb0dd41d48b3cafb31b9e3b8b4406bd3a15e3b09f118a.jpg\nA  evidence/media/library/e6c508941acedc2757bbcc38c9a294d9a53fa84236e3a96562f8ebdbf05c0d75.mp4\nA  evidence/media/library/fbb8821cd45f04dbe3d9c46fb78471cf3746ab677a6745798cc3bdcdb23476b6.mp4\nA  scripts/verify-evidence.mjs\n",
+  "notes": [
+    "All 261 existing application source/config/asset files match byte-for-byte.",
+    "The installed source folder has no Git history; compare hashes, not its git status.",
+    "README/AGENTS/context/gitignore and new data/evidence are repository additions, not changes to installed application code.",
+    "Process identity and current screenshot are in this same folder. No app rebuild/restart or provider submission performed in this export.",
+    "Historical tests remain historical; current verification only proves snapshot/file parity."
+  ]
+}
