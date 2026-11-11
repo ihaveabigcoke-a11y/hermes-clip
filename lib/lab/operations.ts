@@ -17,6 +17,17 @@ const logisticsFlag = z.boolean().nullable().default(null);
 const observationStatus = z.enum(['ok', 'unavailable', 'blocked', 'failed']);
 const observedAt = z.string().datetime({offset: true});
 const observationFile = z.string().max(2048).nullable().default(null);
+export const usRetailSchema = z.object({
+  low: amount, high: amount,
+  currency: z.literal('USD').nullable().default(null),
+  sources: z.array(z.object({
+    url: sourceLink, title: nullableText(300), price: amount,
+    observedAt: observedAt.nullable().default(null),
+  })).max(4).default([]),
+}).superRefine((value, ctx) => {
+  if (value.low != null && value.high != null && value.low > value.high)
+    ctx.addIssue({code: 'custom', path: ['high'], message: 'Giá cao phải lớn hơn hoặc bằng giá thấp.'});
+});
 export const listingCheckSchema = z.object({
   status: observationStatus, fetchedAt: observedAt,
   title: nullableText(500), priceText: nullableText(500), currencyDetected: nullableText(20),
@@ -54,6 +65,8 @@ export const candidateSchema = z.object({
   // Missing/null overrides inherit the shared currency used by legacy batches.
   costCurrency: candidateCurrencySchema.nullable().optional(),
   shippingCurrency: candidateCurrencySchema.nullable().optional(),
+  usRetail: usRetailSchema.nullable().optional(),
+  ipNotes: nullableText(600),
   verdict: z.enum(["try", "hold", "reject"]).nullable().default(null),
   verdictReason: nullableText(1200),
   matchType: z.enum(["exact_sku", "similar", "unknown"]).nullable().default(null),
@@ -62,6 +75,7 @@ export const candidateSchema = z.object({
   logisticsFlags: z.object({
     battery: logisticsFlag, liquid: logisticsFlag, fragile: logisticsFlag,
     sizeFit: logisticsFlag, vehicleFit: logisticsFlag, bulky: logisticsFlag, brandRisk: logisticsFlag,
+    ipRisk: z.boolean().nullable().optional(),
   }).nullable().default(null),
   competition: z.object({
     activeAdsObserved: count.nullable().default(null),
@@ -97,6 +111,7 @@ export const researchBatchSchema = z.object({
   name: z.string().trim().min(2).max(140),
   market: z.string().trim().min(2).max(100).default("United States"),
   locale: z.string().trim().min(2).max(40).default("en-US"),
+  maxLandedCostUsd: z.number().finite().positive().max(1e9).nullable().optional(),
   candidates: z.array(candidateSchema).max(10).default([]),
   selectedIds: z.array(identifier).max(3, "Mỗi đợt chọn tối đa 3 sản phẩm.").default([]),
   notes: text(20000),

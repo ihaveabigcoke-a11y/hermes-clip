@@ -16,6 +16,20 @@ async function save(kind, id, data, revision = 0, who = 'ops-owner', action = 's
   return {status: response.status, ...await response.json()};
 }
 
+test('candidate retail/IP and user ceiling survive API saves, validation and CAS with local receipt intact',async()=>{
+  const at='2026-11-12T00:00:00Z';
+  const listingCheck={status:'ok',sourceUrl:'https://supplier.example/item/1',fetchedAt:at,productCountReliable:true,productCountOnPage:1};
+  const row={id:'generic',name:'Generic product',supplierUrl:listingCheck.sourceUrl,evidenceNotes:'Fixture only',usRetail:{low:20,high:30,currency:'USD',sources:[{url:'https://retail.example/item/1',title:'Generic retail',price:24.99,observedAt:at}]},logisticsFlags:{brandRisk:false,ipRisk:true},ipNotes:'Compare design',listingCheck};
+  const created=await save('research_batch','retail_api',{name:'Retail fixture',maxLandedCostUsd:12,candidates:[row],notes:'[Muse keep]'});
+  assert.equal(created.status,200);const saved=created.record;
+  assert.deepEqual(saved.data.candidates[0].usRetail,row.usRetail);assert.equal(saved.data.candidates[0].logisticsFlags.ipRisk,true);assert.equal(saved.data.maxLandedCostUsd,12);
+  const edited=await save('research_batch',saved.id,{...saved.data,candidates:[{...saved.data.candidates[0],ipNotes:'Updated manual observation'}]},saved.revision);
+  assert.equal(edited.status,200);assert.equal(edited.record.data.notes,'[Muse keep]');assert.deepEqual(edited.record.data.candidates[0].listingCheck,saved.data.candidates[0].listingCheck);
+  assert.equal((await save('research_batch',saved.id,saved.data,saved.revision)).status,409);
+  const unsafe={...edited.record.data,candidates:[{...row,usRetail:{...row.usRetail,sources:[{...row.usRetail.sources[0],url:'javascript:alert(1)'}]}}]};
+  assert.equal((await save('research_batch',saved.id,unsafe,edited.record.revision)).status,422);
+});
+
 test('one check creates a profile through promote; repeat, uncheck and recheck retain the edited profile',async()=>{
   const created=await save('research_batch','one_check',{name:'One check fixture',candidates:[{id:'pick',name:'Product',supplierUrl:'https://example.test/item/pick',evidenceNotes:'Read source',cost:null}],notes:'[Muse keep_receipt]'});
   assert.equal(created.status,200);

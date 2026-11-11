@@ -1,0 +1,37 @@
+{
+  "fixtureOnly": true,
+  "networkRequestsSent": 0,
+  "measurements": [
+    {
+      "pageWidth": 1356,
+      "viewport": 1366,
+      "tableWidth": 1755,
+      "scrollWidth": 1076,
+      "maxRowHeight": 100.890625
+    },
+    {
+      "pageWidth": 1070,
+      "viewport": 1080,
+      "tableWidth": 1755,
+      "scrollWidth": 790,
+      "maxRowHeight": 100.890625
+    }
+  ],
+  "apiFixturePosts": 2,
+  "checks": [
+    "retail column and unknown dash",
+    "table scroll contained at 1366 and 1080",
+    "three evidence sections",
+    "try/hold/reject suggestions",
+    "saved decision unchanged",
+    "clipboard English and IP questions",
+    "HTTPS links through existing external-link handler",
+    "retail/IP manual save and reload",
+    "HTTPS validation",
+    "four-source limit",
+    "null restored without zero",
+    "local receipt preserved",
+    "launcher retry keeps ceiling and request"
+  ],
+  "consoleErrors": []
+}

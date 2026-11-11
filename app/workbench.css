@@ -427,7 +427,7 @@ input::placeholder,textarea::placeholder { opacity:1; }
 .research-selection-bar strong { font-size:17px; font-weight:600; }
 .research-selection-bar p { color:var(--lab-muted); font-size:13px; margin:6px 0 0; max-width:700px; }
 .research-selection-bar .queue-filters { flex-shrink:0; }
-.research-candidate-table { min-width:1507px; table-layout:fixed; scroll-margin-top:90px; }
+.research-candidate-table { min-width:1755px; table-layout:fixed; scroll-margin-top:90px; }
 .research-candidate-table th,.research-candidate-table td { padding:8px; vertical-align:middle; }
 .research-candidate-table thead th { white-space:normal; }
 .research-candidate-table tbody th { min-width:0; max-width:none; }
@@ -448,6 +448,18 @@ input::placeholder,textarea::placeholder { opacity:1; }
 .research-risk-chips { display:flex; flex-wrap:wrap; gap:3px; font-size:12px; line-height:1.4; }
 .research-risk-chips > span { padding:1px 5px; border:1px solid var(--lab-subtle-border); border-radius:5px; white-space:nowrap; }
 .research-quality-cell .research-warning { color:var(--lab-warning); }
+.research-retail-cell { white-space:normal; overflow-wrap:normal; }
+.research-risk-chips > span { max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+.product-check-detail { display:flex; flex-direction:column; gap:12px; overflow-wrap:anywhere; }
+.product-check-detail ul,.product-check-detail ol { padding-left:22px; }
+.product-check-detail ul { list-style:disc; }
+.product-check-detail ol { list-style:decimal; }
+.product-check-detail .button-row,.product-check-fields .button-row { display:flex; flex-wrap:wrap; gap:12px; }
+.product-check-detail .button-row a { padding:4px 0; }
+.product-check-fields { display:flex; flex-direction:column; gap:12px; min-width:0; }
+.product-check-fields .research-structured-fields { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.product-check-fields input,.product-check-fields select,.product-check-fields textarea { width:100%; }
+.product-check-fields fieldset { min-width:0; }
 .research-selection-note { color:var(--lab-muted); font-size:13px; margin:0 0 10px; }
 .research-candidate-detail { display:flex; flex-direction:column; gap:12px; }
 .research-candidate-detail p { margin:0; }

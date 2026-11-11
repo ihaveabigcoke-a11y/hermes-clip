@@ -7,6 +7,7 @@ import {annotateResearchQuality,sharedSourceWarning,pageLevelEvidenceWarning} fr
 import {researchCoverage,landedCostBadge,researchRisks,logisticsLabels} from '@/lib/lab/research-view';
 import {Badge,Button,Empty,Modal} from './primitives';
 import {SourceCheckControls,SourceChip,ShortsSignal,SourceDetails} from './research-sources';
+import {ProductCheck,RetailMarkup} from './product-check';
 type Props={record:LabRecord;records:LabRecord[];disabled:boolean;onEdit:(candidate:Candidate)=>void;onSelect:(candidate:Candidate,checked:boolean)=>void};
 function ProductPhoto({candidate}:{candidate:Candidate}){
   const [failed,setFailed]=useState(false);
@@ -23,8 +24,11 @@ export default function ResearchCandidates({record,records,disabled,onEdit,onSel
   const savedBatch=record.data as ResearchBatch;
   const batch={...savedBatch,candidates:annotateResearchQuality(savedBatch.candidates)};
   const [detailId,setDetailId]=useState('');
+  const [checkId,setCheckId]=useState('');
   const [selectedOnly,setSelectedOnly]=useState(false);
   const detail=batch.candidates.find(c=>c.id===detailId);
+  const checkCandidate=batch.candidates.find(c=>c.id===checkId);
+  const ceilingUsd=batch.maxLandedCostUsd??20;
   const selected=batch.candidates.filter(c=>batch.selectedIds.includes(c.id));
   const candidates=selectedOnly?selected:batch.candidates;
   const coverage=researchCoverage(batch.candidates);
@@ -42,23 +46,27 @@ export default function ResearchCandidates({record,records,disabled,onEdit,onSel
     <p className="research-selection-note">Tick chọn sẽ tạo hồ sơ sản phẩm. Bỏ tick chỉ bỏ chọn · Hồ sơ vẫn giữ.</p>
     {candidates.length?<div className="operations-table-scroll" role="region" aria-label="Bảng 10 ứng viên" tabIndex={0}>
       <table className="operations-comparison research-candidate-table"><caption className="sr-only">Ứng viên nguồn hàng để chọn tối đa ba sản phẩm, giá bán chỉ là giả thuyết.</caption>
-        <colgroup>{[42,292,90,178,108,150,145,90,240,72].map((width,index)=><col key={index} style={{width}}/>)}</colgroup>
-        <thead><tr><th scope="col">Chọn</th><th scope="col">Sản phẩm / nguồn</th><th scope="col">Đối chiếu SKU</th><th scope="col">Giá vốn + ship</th><th scope="col">Giá bán giả định</th><th scope="col">Cảnh kết quả</th><th scope="col">Cờ rủi ro</th><th scope="col">Thử / giữ / loại</th><th scope="col">Chất lượng nguồn</th><th scope="col">Chi tiết</th></tr></thead>
+        <colgroup>{[42,292,90,178,170,108,150,145,90,240,150].map((width,index)=><col key={index} style={{width}}/>)}</colgroup>
+        <thead><tr><th scope="col">Chọn</th><th scope="col">Sản phẩm / nguồn</th><th scope="col">Đối chiếu SKU</th><th scope="col">Giá vốn + ship</th><th scope="col">Bán lẻ Mỹ → vốn tối đa</th><th scope="col">Giá bán giả định</th><th scope="col">Cảnh kết quả</th><th scope="col">Cờ rủi ro</th><th scope="col">Thử / giữ / loại</th><th scope="col">Chất lượng nguồn</th><th scope="col">Chi tiết</th></tr></thead>
         <tbody>{candidates.map(candidate=>{const checked=batch.selectedIds.includes(candidate.id),cost=landedCostBadge(candidate),product=productFor(candidate);return <tr key={candidate.id} className={checked?'is-selected':''}>
           <td><input type="checkbox" aria-label={'Chọn '+candidate.name} checked={checked} disabled={disabled||!checked&&selected.length>=3} onChange={event=>onSelect(candidate,event.target.checked)}/></td>
           <th scope="row"><div className="research-product-cell"><button type="button" className="research-photo-button" onClick={()=>setDetailId(candidate.id)} aria-label={'Xem ảnh và số liệu '+candidate.name}><ProductPhoto key={candidate.imageUrl||candidate.id} candidate={candidate}/></button><div><span className="research-product-name" title={candidate.name}>{candidate.name}</span><a className="research-source-link" href={candidate.supplierUrl} target="_blank" rel="noreferrer" title={candidate.supplierUrl}>{new URL(candidate.supplierUrl).hostname} <ExternalLink size={13}/></a>{product?<small>{checked?'Hồ sơ đã tạo':'Hồ sơ vẫn giữ'}</small>:checked?<button type="button" className="comparison-name research-retry" disabled={disabled} onClick={()=>onSelect(candidate,true)}>Hoàn tất chọn</button>:null}</div></div></th>
           <td>{matchLabel(candidate.matchType)}</td>
           <td className="numeric"><span title={cost.explanation}><Badge tone={cost.tone}>{cost.label}</Badge></span><small>Vốn: {price(candidate,'cost')}</small><small>Ship: {price(candidate,'shipping')}</small><small>{cost.amount==null?cost.explanation:'Tổng: '+formatMoney(cost.amount,cost.currency!)}</small></td>
+          <td className="numeric research-retail-cell"><RetailMarkup candidate={candidate} ceilingUsd={ceilingUsd}/></td>
           <td className="numeric">{price(candidate,'price')}</td>
           <td><p className="research-payoff" title={candidate.visualPayoff||'Chưa xác định'}>{candidate.visualPayoff||'Chưa xác định'}</p></td>
           <td><div className="research-risk-chips">{researchRisks(candidate).map(label=><span key={label}>{label}</span>)}</div></td>
           <td><span title={candidate.verdictReason||'Chưa có lý do đề xuất'}><Badge tone={candidate.verdict==='reject'?'error':'neutral'}>{verdictLabel(candidate.verdict)}</Badge></span></td>
           <td className="research-quality-cell"><SourceChip candidate={candidate}/>{candidate.qualityWarnings?.includes('shared_supplier_url')&&<small className="research-warning" title={sharedSourceWarning}>{sharedSourceWarning}</small>}{candidate.marketEvidence?.some(m=>m.pageLevel)&&<small className="research-warning" title={pageLevelEvidenceWarning}>{pageLevelEvidenceWarning}</small>}<div className="research-shorts" title="Tín hiệu YouTube tương tự; xem nguồn và kỳ đo trong chi tiết"><ShortsSignal candidate={candidate}/></div></td>
-          <td><Button tone="neutral" onClick={()=>setDetailId(candidate.id)} aria-label={'Xem nguồn và điều kiện '+candidate.name}>Xem</Button></td>
+          <td><Button tone="neutral" onClick={()=>setDetailId(candidate.id)} aria-label={'Xem nguồn và điều kiện '+candidate.name}>Xem</Button><Button tone="ghost" onClick={()=>setCheckId(candidate.id)} aria-label={'Kiểm sản phẩm '+candidate.name}>Kiểm sản phẩm</Button></td>
         </tr>;})}</tbody>
       </table>
     </div>:<Empty title={selectedOnly?'Chưa chọn ứng viên':'Đang chờ danh sách ứng viên'} text={selectedOnly?'Mở Tất cả rồi chọn tối đa 3 sản phẩm.':'Dùng Nghiên cứu bằng Muse để tìm nguồn và lưu danh sách tại đây.'}/>}
     <p className="instagram-data-note">Giá vốn có thể yêu cầu mua nhiều sản phẩm. Mở chi tiết để xem số lượng tối thiểu và điều kiện nguồn hàng. Chưa xác nhận phí giao tới Mỹ hoặc lợi nhuận.</p>
+    <Modal open={!!checkCandidate} title={'Kiểm sản phẩm · '+(checkCandidate?.name??'')} description="Đã quan sát / Suy luận / Chưa biết" onClose={()=>setCheckId('')}>
+      {checkCandidate&&<div className="modal-body research-candidate-detail"><ProductCheck key={checkCandidate.id} candidate={checkCandidate} ceilingUsd={ceilingUsd}/><div className="button-row"><Button tone="neutral" disabled={disabled} onClick={()=>{setCheckId('');onEdit(checkCandidate);}}>Sửa ứng viên</Button></div></div>}
+    </Modal>
     <Modal open={!!detail} title={detail?.name??''} description="Nguồn hàng, giả thuyết nội dung và điều cần xác minh" onClose={()=>setDetailId('')}>
       {detail&&<div className="modal-body research-candidate-detail"><Badge>{batch.selectedIds.includes(detail.id)?'Đã chọn để thử':'Ứng viên · chờ chọn'}</Badge>
         {detail.qualityWarnings?.includes('shared_supplier_url')&&<p className="info-panel">{sharedSourceWarning}</p>}

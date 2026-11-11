@@ -4,7 +4,7 @@ import {mergeMuseResearch,museTaskPrompt} from '../local-dist/server/lib/lab/mus
 import {assertDiskSpace,storagePolicy} from './storage-policy.mjs';
 import {ResearchSources} from './research-sources.mjs';
 
-const input=z.object({requestId:z.string().regex(/^[a-zA-Z0-9_-]{1,80}$/),profileId:z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/).optional(),query:z.string().trim().min(2).max(1500).default('Sản phẩm nguồn Trung Quốc phù hợp video ngắn cho thị trường Mỹ; ưu tiên sản phẩm không thương hiệu, nhẹ, dễ trình diễn.')});
+const input=z.object({requestId:z.string().regex(/^[a-zA-Z0-9_-]{1,80}$/),profileId:z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/).optional(),maxLandedCostUsd:z.number().finite().positive().max(1e9).nullable().optional(),query:z.string().trim().min(2).max(1500).default('Sản phẩm nguồn Trung Quốc phù hợp video ngắn cho thị trường Mỹ; ưu tiên sản phẩm không thương hiệu, nhẹ, dễ trình diễn.')});
 const activeStates=['queued','running'];
 export class ResearchRunner{
   constructor({worker,chat,local,integrations,changed=()=>{}}){this.worker=worker;this.store=worker.store;this.chat=chat;this.local=local;this.changed=changed;this.running=null;this.stopped=false;this.sources=integrations?new ResearchSources({integrations,records:()=>this.records(),save:r=>this.save(r),changed}):null;}
@@ -26,7 +26,7 @@ export class ResearchRunner{
     const profiles=this.worker.profiles().filter(p=>p.enabled&&!p.busy&&(!value.profileId||p.id===value.profileId)&&(usage[p.id]??0)<3)
       .sort((a,b)=>(usage[a.id]??0)-(usage[b.id]??0));
     if(!profiles.length)throw Error('Chưa có hồ sơ Muse còn lượt trong đợt. Kiểm tra Tài khoản Muse hoặc mở đợt mới.');
-    const row=this.update(value.requestId,{id:value.requestId,batchId:'research_'+value.requestId,profileId:profiles[0].id,query:value.query,state:'queued',createdAt:Date.now(),step:0,count:0,requestIds:[],error:'',target:10});
+    const row=this.update(value.requestId,{id:value.requestId,batchId:'research_'+value.requestId,profileId:profiles[0].id,query:value.query,maxLandedCostUsd:value.maxLandedCostUsd??null,state:'queued',createdAt:Date.now(),step:0,count:0,requestIds:[],error:'',target:10});
     this.launch(row.id);return row;
   }
   launch(id){if(this.running||this.stopped)return;const promise=this.run(id).catch(error=>this.update(id,{state:'needs_attention',error:error.message})).finally(()=>{this.running=null;});this.running={id,promise};}
@@ -51,7 +51,7 @@ export class ResearchRunner{
     try{
       this.update(id,{state:'running',error:''});
       let record=(await this.records()).find(r=>r.id===row.batchId);
-      if(!record)record=await this.save({id:row.batchId,kind:'research_batch',revision:0,data:{name:'10 sản phẩm · '+new Date(row.createdAt).toLocaleString('vi-VN'),market:'United States',locale:'en-US',candidates:[],selectedIds:[],notes:''}});
+      if(!record)record=await this.save({id:row.batchId,kind:'research_batch',revision:0,data:{name:'10 sản phẩm · '+new Date(row.createdAt).toLocaleString('vi-VN'),market:'United States',locale:'en-US',maxLandedCostUsd:row.maxLandedCostUsd??null,candidates:[],selectedIds:[],notes:''}});
       // Replay durable completed receipts before spending another Muse turn.
       // This also recovers products omitted by older import versions.
       for(const requestId of row.requestIds){
@@ -75,7 +75,7 @@ export class ResearchRunner{
         }
         if(!result){
           const remaining=10-record.data.candidates.length;
-          const prompt=museTaskPrompt('research',{query:row.query,market:'United States',locale:'en-US',remainingSlots:remaining,desiredCount:remaining,
+          const prompt=museTaskPrompt('research',{query:row.query,maxLandedCostUsd:record.data.maxLandedCostUsd??20,market:'United States',locale:'en-US',remainingSlots:remaining,desiredCount:remaining,
             existing:record.data.candidates.map(c=>({name:c.name,url:c.supplierUrl})),
             priority:'Ưu tiên kết quả thấy trong một khung hình (visual payoff), hợp Problem → Vs → Result → CTA: phát sáng ban đêm, thú cưng, chạy bộ hoặc đạp xe trong tình huống cụ thể. Hàng nhẹ, không thương hiệu; tránh phụ thuộc size/đời xe, cồng kềnh và claim y tế/an toàn chưa chứng minh. Mục tiêu giá vốn + ship Mỹ ≤ 20 USD; cần báo giá đúng SKU/MOQ, thiếu thì null, không đoán hay quy đổi. Tối đa 10 ứng viên, mỗi ứng viên có listing riêng và ảnh nguồn; không dùng chung showroom hoặc gán số liệu một bài review cho nhiều sản phẩm. Điền verdict, lý do, matchType, rủi ro AI/vận chuyển. Số cạnh tranh chỉ lấy từ trang đã quan sát, có nguồn, ngày và kỳ đo; chưa biết để null. Tách quan sát, suy luận và chưa biết; không bịa để đủ số lượng. Tối đa 3 lượt, người dùng chọn tối đa 3 sản phẩm.'});
           const parentId=step?row.requestIds[step-1]:null;

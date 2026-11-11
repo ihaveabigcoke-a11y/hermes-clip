@@ -35,7 +35,7 @@ export function landedCostBadge(candidate: Candidate) {
     tone: total.amount <= 20 ? 'success' as const : 'warning' as const, explanation: 'Giá vốn + phí giao hàng theo số đã lưu'};
 }
 
-export const logisticsLabels = {battery:'Pin', liquid:'Chất lỏng', fragile:'Dễ vỡ', sizeFit:'Kích cỡ', vehicleFit:'Đời xe', bulky:'Cồng kềnh', brandRisk:'Thương hiệu'} as const;
+export const logisticsLabels = {battery:'Pin', liquid:'Chất lỏng', fragile:'Dễ vỡ', sizeFit:'Kích cỡ', vehicleFit:'Đời xe', bulky:'Cồng kềnh', brandRisk:'Thương hiệu', ipRisk:'Bằng sáng chế / kiểu dáng'} as const;
 export function researchRisks(candidate: Candidate) {
   const flags = candidate.logisticsFlags;
   const known = Object.entries(logisticsLabels).filter(([key]) => flags?.[key as keyof typeof logisticsLabels] === true).map(([,label]) => label);

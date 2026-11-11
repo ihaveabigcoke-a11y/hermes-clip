@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {candidateSchema, candidateCurrency, landedCost, researchBatchSchema, socialMetricSchema, landingPageSchema, landingHtml, socialTotals, contentPlanSchema} from '../lib/lab/operations.ts';
+import {listingStatus,markupCheck,suggestVerdict,supplierQuestions,manualCheckLinks} from '../lib/lab/product-check.ts';
 import {formatMoney} from '../lib/lab/domain.ts';
 import {mergeMuseResearch, parseMuseResponse, museTaskPrompt} from '../lib/lab/muse-workflows.ts';
 import {instagramProductSummary,instagramAccountContentRows,visibleInstagramProducts} from '../lib/lab/instagram-summary.ts';
@@ -196,6 +197,113 @@ test('Muse structured drafts accept fenced JSON and preserve commercial fields o
 });
 
 const candidate = id => candidateSchema.parse({id, name: 'Sourced product', supplierUrl: 'https://supplier.example/product', evidenceNotes: 'Listing reviewed'});
+
+const retailFixture = (prices=[24,30,18]) => ({low:10,high:50,currency:'USD',sources:prices.map((price,i)=>({url:`https://retail.example/item/${i}`,title:'Generic version',price,observedAt:'2026-11-12T00:00:00Z'}))});
+const checkFixture = patch => candidateSchema.parse({...candidate('check'),supplierUrl:'https://supplier.example/item/check',cost:4,shipping:2,matchType:'exact_sku',visualPayoff:'Visible before and after',logisticsFlags:{brandRisk:false,ipRisk:false},usRetail:retailFixture(),listingCheck:{status:'ok',sourceUrl:'https://supplier.example/item/check',fetchedAt:'2026-11-12T00:00:00Z',title:'Exact generic item',productCountReliable:true,productCountOnPage:1},...patch});
+
+test('product check fields parse legacy/null data, retain source provenance and enforce bounds',()=>{
+  const old=candidate('old_check');assert.equal(old.usRetail,undefined);assert.equal(old.ipNotes,null);
+  assert.equal(candidateSchema.parse({...old,logisticsFlags:{brandRisk:false}}).logisticsFlags.ipRisk,undefined);
+  const row=checkFixture({ipNotes:'Compare the branded design.'});
+  assert.deepEqual(row.usRetail,retailFixture());assert.equal(row.logisticsFlags.ipRisk,false);
+  assert.equal(candidateSchema.parse({...row,usRetail:null,ipNotes:null,logisticsFlags:{ipRisk:null}}).usRetail,null);
+  assert.deepEqual(candidateSchema.parse({...old,usRetail:{currency:null,sources:[]}}).usRetail,{low:null,high:null,currency:null,sources:[]});
+  const invalid=[{usRetail:{...retailFixture(),currency:'CNY'}},{usRetail:{...retailFixture(),low:10,high:9}},{usRetail:retailFixture([1,2,3,4,5])},{ipNotes:'a'.repeat(601)},{logisticsFlags:{ipRisk:'unknown'}}];
+  for(const url of ['http://retail.example/item','javascript:alert(1)','https://user:password@retail.example/item']) invalid.push({usRetail:{...retailFixture(),sources:[{...retailFixture().sources[0],url}]}});
+  for(const price of [-1,Infinity,NaN]) invalid.push({usRetail:retailFixture([price])});
+  invalid.push({usRetail:{...retailFixture(),sources:[{...retailFixture().sources[0],observedAt:'yesterday'}]}});
+  for(const patch of invalid) assert.equal(candidateSchema.safeParse({...row,...patch}).success,false,JSON.stringify(patch));
+  assert.equal(researchBatchSchema.parse({name:'Old'}).maxLandedCostUsd,undefined);
+  assert.equal(researchBatchSchema.parse({name:'New',maxLandedCostUsd:12}).maxLandedCostUsd,12);
+  assert.equal(researchBatchSchema.safeParse({name:'Bad',maxLandedCostUsd:0}).success,false);
+});
+
+test('listing status covers five states, current-source checks and uncertain T14 counts',()=>{
+  const row=checkFixture(),check=row.listingCheck;
+  assert.equal(listingStatus(row),'single');
+  assert.equal(listingStatus({...row,qualityWarnings:['shared_supplier_url']}),'showroom');
+  for(const productCountOnPage of [2,6,12])assert.equal(listingStatus({...row,listingCheck:{...check,productCountOnPage}}),'showroom');
+  assert.equal(listingStatus({...row,listingCheck:null}),'not_found');
+  assert.equal(listingStatus({...row,listingCheck:{...check,sourceUrl:'https://supplier.example/old'}}),'not_found');
+  assert.equal(listingStatus({...row,listingCheck:{...check,productCountOnPage:0}}),'not_found');
+  assert.equal(listingStatus({...row,listingCheck:{...check,status:'blocked'}}),'blocked');
+  for(const status of ['failed','unavailable'])assert.equal(listingStatus({...row,listingCheck:{...check,status}}),'unavailable');
+  for(const productCountReliable of [null,false,undefined])assert.equal(listingStatus({...row,listingCheck:{...check,productCountReliable}}),'unavailable');
+  // T14 does not count the current item or related recommendations.
+  assert.equal(listingStatus({...row,listingCheck:{...check,productCountOnPage:null}}),'single');
+  assert.equal(listingStatus({...row,listingCheck:{...check,productCountOnPage:null,title:null}}),'unavailable');
+  assert.equal(listingStatus({...row,supplierUrl:'https://supplier.example/showroom',listingCheck:{...check,sourceUrl:'https://supplier.example/showroom',productCountOnPage:null}}),'unavailable');
+});
+
+test('markup compares only USD using median sources, midpoint fallback and inclusive x4/x3 boundaries',()=>{
+  const row=checkFixture(),before=structuredClone(row);
+  assert.deepEqual(markupCheck(row,20),{status:'ok_x4',typicalRetailUsd:24,maxLandedUsd:[6,8],notes:['Giá bán lẻ Mỹ chỉ cho phép vốn+ship tối đa 8 USD']});
+  assert.equal(markupCheck({...row,cost:6},20).status,'ok_x3');
+  assert.equal(markupCheck({...row,cost:6.01},20).status,'fail');
+  for(const patch of [{costCurrency:'CNY'},{shippingCurrency:'CNY'},{currency:'CNY'},{cost:null},{shipping:null},{usRetail:null},{usRetail:{...row.usRetail,currency:null}},{usRetail:{low:24,high:null,currency:'USD',sources:[]}}])assert.equal(markupCheck({...row,...patch},20).status,'unknown',JSON.stringify(patch));
+  assert.equal(markupCheck({...row,usRetail:retailFixture([20,null,30,40])},20).typicalRetailUsd,30);
+  assert.equal(markupCheck({...row,usRetail:retailFixture([20,30])},20).typicalRetailUsd,25);
+  assert.equal(markupCheck({...row,usRetail:{low:20,high:28,currency:'USD',sources:[]}},20).typicalRetailUsd,24);
+  assert.equal(markupCheck({...row,usRetail:retailFixture([0])},20).typicalRetailUsd,0);
+  assert.equal(markupCheck({...row,usRetail:{low:0,high:0,currency:'USD',sources:[]}},20).status,'fail');
+  assert.equal(markupCheck({...row,usRetail:retailFixture([0,20,30])},20).typicalRetailUsd,20);
+  assert.deepEqual(markupCheck(row,8).notes,[]);
+  assert.equal(markupCheck({...row,cost:0,shipping:0},20).status,'ok_x4');
+  assert.deepEqual(row,before);
+});
+
+test('verdict suggestion requires all try conditions and never overwrites the saved user choice',()=>{
+  const row=checkFixture({verdict:'reject',verdictReason:'User choice'}),before=structuredClone(row);
+  assert.equal(suggestVerdict(row,20).verdict,'try');assert.deepEqual(suggestVerdict(row,20).missing,[]);
+  assert.equal(suggestVerdict({...row,cost:6},20).verdict,'try');
+  for(const patch of [{qualityWarnings:['shared_supplier_url']},{logisticsFlags:{brandRisk:false,ipRisk:true}},{logisticsFlags:{brandRisk:true,ipRisk:false}},{logisticsFlags:{brandRisk:false,ipRisk:null}},{logisticsFlags:null},{visualPayoff:' '},{matchType:'similar'},{matchType:null},{listingCheck:null},{shippingCurrency:'CNY'},{usRetail:null},{cost:null},{shipping:null}]) {
+    const result=suggestVerdict({...row,...patch},20);assert.equal(result.verdict,'hold',JSON.stringify(patch));assert.ok(result.reasons.length);
+  }
+  assert.equal(suggestVerdict(row,5).verdict,'hold');assert.equal(suggestVerdict(row,6).verdict,'try');
+  assert.equal(suggestVerdict(row,NaN).verdict,'hold');
+  assert.equal(suggestVerdict({...row,cost:6.01},20).verdict,'reject');
+  assert.equal(suggestVerdict({...row,cost:7,qualityWarnings:['shared_supplier_url'],logisticsFlags:{ipRisk:true}},20).verdict,'reject');
+  assert.deepEqual(row,before);
+});
+
+test('supplier questions cover MOQ, sizes, US shipping, samples, real media and conditional design evidence',()=>{
+  const row=checkFixture();const questions=supplierQuestions(row);assert.equal(questions.length,5);
+  for(const pattern of [/exact item/,/MOQ/,/box dimensions/,/sample/i,/real photos and videos/])assert.match(questions.join('\n'),pattern);
+  assert.doesNotMatch(questions.join('\n'),/design differ/);
+  const risky=supplierQuestions({...row,logisticsFlags:{sizeFit:true,ipRisk:true}});
+  assert.equal(risky.length,6);assert.match(risky.join('\n'),/each size/);assert.match(risky.join('\n'),/design differ from the branded original/);
+});
+
+test('manual check links encode the entire keyword as data and only use fixed HTTPS destinations',()=>{
+  const keyword='a & #đèn?/ javascript:alert(1) 🐈';const links=manualCheckLinks(keyword);
+  assert.equal(links.length,5);
+  const parsed=links.map(link=>new URL(link.url));
+  assert.deepEqual(parsed.map(url=>url.hostname),['www.facebook.com','www.youtube.com','www.amazon.com','www.walmart.com','patents.google.com']);
+  for(const url of parsed){assert.equal(url.protocol,'https:');assert.equal(url.hash,'');assert.equal(url.username,'');assert.equal(url.password,'');assert.ok(!url.href.includes('javascript:'));}
+  assert.equal(parsed[0].searchParams.get('country'),'US');assert.equal(parsed[0].searchParams.get('q'),keyword);
+  assert.equal(parsed[1].searchParams.get('search_query'),keyword+' #shorts');assert.equal(parsed[2].searchParams.get('k'),keyword);
+  assert.equal(parsed[3].searchParams.get('q'),keyword);assert.equal(parsed[4].searchParams.get('q'),keyword);
+});
+
+test('Muse retail and IP survive merge but cannot supply local listing or derived quality and markup fields',()=>{
+  const original=checkFixture({verdict:'hold'});
+  const spoof={...original,id:'fake',name:'New generic',listingStatus:'single',maxLandedForMarkup:[100,200],suggestedVerdict:'try',qualityWarnings:['shared_supplier_url'],marketEvidence:[{label:'reviews',value:1,unit:'reviews',market:'US',period:'2026',sourceUrl:'https://retail.example/reviews',observedAt:'2026-11-12T00:00:00Z',pageLevel:true}]};
+  const response=JSON.stringify({summary:'Fixture',candidates:[spoof]});
+  const parsed=parseMuseResponse('research',response).candidates[0];
+  for(const key of ['listingCheck','listingStatus','maxLandedForMarkup','suggestedVerdict'])assert.equal(parsed[key],undefined);
+  assert.deepEqual(parsed.qualityWarnings,[]);assert.equal(parsed.marketEvidence[0].pageLevel,undefined);
+  assert.deepEqual(parsed.usRetail,original.usRetail);assert.equal(parsed.logisticsFlags.ipRisk,false);
+  const batch=researchBatchSchema.parse({name:'Retail fixture',maxLandedCostUsd:12,candidates:[original]});
+  const merged=mergeMuseResearch(batch,{requestId:'retail',profileId:'fixture',providerUrl:null,response});
+  assert.equal(merged.maxLandedCostUsd,12);assert.deepEqual(merged.candidates[0].listingCheck,original.listingCheck);assert.equal(merged.candidates[0].verdict,'hold');
+  assert.equal(merged.candidates[1].listingCheck,undefined);assert.equal(listingStatus(merged.candidates[1]),'showroom');
+});
+
+test('product research prompt requires opened generic US retail, IP notes and null uncountable competition within ten percent growth',()=>{
+  const before=3625;const prompt=museTaskPrompt('research',{});
+  assert.ok(prompt.length<=Math.floor(before*1.1),`${before} -> ${prompt.length}`);
+  for(const requirement of [/2–3 US retail prices of the generic version/,/Walmart\/Amazon\/Chewy/,/pages actually opened, with URL\/date/,/usRetail/,/observedAt:ISO_DATETIME/,/ipRisk/,/ipNotes <=600/,/branded original or patent\/design/,/Never estimate ads or Shorts counts/,/if uncountable keep null, not zero/])assert.match(prompt,requirement);
+});
 
 test('research decision fields parse and survive Muse merge with null distinct from observed zero', () => {
   const legacy = candidate('legacy_decision');

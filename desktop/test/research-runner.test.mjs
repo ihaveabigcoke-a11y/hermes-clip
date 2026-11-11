@@ -23,6 +23,17 @@ test('background research persists ten numeric/photo candidates without renderer
  assert.equal(batch.data.candidates.length,10);assert.equal(batch.data.selectedIds.length,0);assert.equal(batch.data.candidates[0].marketEvidence[0].value,0);assert.equal(counts().sends,1);
  assert.equal(runner.start({requestId:'one'}).state,'done');assert.equal(counts().sends,1);
 }));
+test('research persists the launcher ceiling and retries cannot replace it or the receipt',()=>fixture(async({runner,chats,counts})=>{
+ const first=runner.start({requestId:'ceiling',query:'Find generic products',maxLandedCostUsd:12});
+ assert.equal(runner.start({requestId:'ceiling',query:'Changed query',maxLandedCostUsd:99}).maxLandedCostUsd,12);
+ await runner.running.promise;
+ const batch=(await runner.records()).find(record=>record.id===first.batchId);
+ assert.equal(batch.data.maxLandedCostUsd,12);assert.equal(counts().sends,1);
+ const receipt=chats.get('research_ceiling_0');const context=JSON.parse(receipt.prompt.slice(receipt.prompt.lastIndexOf('\n')+1));
+ assert.equal(context.maxLandedCostUsd,12);
+ assert.throws(()=>runner.start({requestId:'bad_ceiling',maxLandedCostUsd:0}));
+ assert.equal(runner.start({requestId:'ceiling'}).maxLandedCostUsd,12);
+}));
 test('restart after completed response imports the existing receipt without submitting again',()=>fixture(async({runner,store,chats,chat,worker,local,counts})=>{
  const response=await chat.send({requestId:'research_resume_0',projectId:'research_resume',profileId:'profile'});
  store.set('research_runs',[{id:'resume',batchId:'research_resume',profileId:'profile',query:'Find products',state:'running',createdAt:Date.now(),step:0,count:0,requestIds:[response.requestId]}]);

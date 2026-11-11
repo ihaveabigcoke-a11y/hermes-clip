@@ -8,14 +8,14 @@ type Run={id:string;batchId:string;state:string;count:number;step:number;error:s
 export default function ResearchLauncher({disabled,onOpen}:{disabled:boolean;onOpen:(id:string)=>void}){
  const [runs,setRuns]=useState<Run[]>([]),[error,setError]=useState(''),[busy,setBusy]=useState(false);
  const [criteria,setCriteria]=useState(defaultResearchCriteria),[maximum,setMaximum]=useState('20'),[niche,setNiche]=useState(''),[exclusions,setExclusions]=useState(defaultResearchExclusions);
- const lock=useRef(false),request=useRef<{requestId:string;query:string}|null>(null);
+ const lock=useRef(false),request=useRef<{requestId:string;query:string;maxLandedCostUsd:number}|null>(null);
  let query='',queryError='';
  try {query=buildResearchQuery({criteria,maxLandedCost:maximum,niche,exclusions});} catch (failure) {queryError=(failure as Error).message;}
  useEffect(()=>{let live=true;const refresh=async()=>{try{const api=desktopBridge();if(api?.researchStatus){const value=await api.researchStatus();if(live)setRuns(value.runs);}}catch(e){if(live)setError((e as Error).message);}};
  void refresh();const timer=setInterval(refresh,3000);window.addEventListener('product-lab:workspace-changed',refresh);return()=>{live=false;clearInterval(timer);window.removeEventListener('product-lab:workspace-changed',refresh);};},[]);
  const latest=runs[0],active=runs.some(r=>['queued','running'].includes(r.state));
  async function start(){if(lock.current||queryError)return;lock.current=true;setBusy(true);setError('');
- try{const api=desktopBridge();if(!api?.researchStart)throw Error('Mở Hermes Clip desktop để nghiên cứu bằng hồ sơ Muse.');request.current??={requestId:crypto.randomUUID(),query};const row=await api.researchStart(request.current);setRuns(old=>[row,...old.filter(r=>r.id!==row.id)]);onOpen(row.batchId);request.current=null;}
+ try{const api=desktopBridge();if(!api?.researchStart)throw Error('Mở Hermes Clip desktop để nghiên cứu bằng hồ sơ Muse.');request.current??={requestId:crypto.randomUUID(),query,maxLandedCostUsd:Number(maximum)};const row=await api.researchStart(request.current);setRuns(old=>[row,...old.filter(r=>r.id!==row.id)]);onOpen(row.batchId);request.current=null;}
  catch(e){setError((e as Error).message);}finally{lock.current=false;setBusy(false);}}
  async function recover(){if(!latest||lock.current)return;lock.current=true;setBusy(true);setError('');try{await desktopBridge()!.researchResume({id:latest.id});}catch(e){setError((e as Error).message);}finally{lock.current=false;setBusy(false);}}
  const states:Record<string,string>={queued:'Chờ nghiên cứu',running:'Đang tìm nguồn và số liệu',done:'Đã có 10 ứng viên',partial:'Chưa đủ 10 ứng viên',needs_attention:'Cần kiểm tra'};

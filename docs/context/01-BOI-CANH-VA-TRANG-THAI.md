@@ -1,5 +1,9 @@
 # Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
 
+## Cập nhật source đêm T23 — tự kiểm sản phẩm từ dữ liệu đã lưu
+
+Clone `night-20261111` đã đưa quy tắc của skill `hermes-product-check` vào form/bảng Nghiên cứu: giá bán lẻ Mỹ có nguồn, cờ IP/ghi chú, listing gộp, giả thuyết ×3–4, gợi ý Thử/Giữ/Loại, câu hỏi supplier và link tự kiểm. Gợi ý không thay quyết định người dùng; thiếu giữ null, không quy đổi tiền. Trần launcher được lưu optional trong đợt mới; đợt cũ dùng 20 USD. Prompt 3.625 → 3.945 ký tự (+8,83%). Domain 144/144, API 17/17, desktop 249 đạt/1 skip OpenMontage, typecheck và build riêng đạt. UI fixture offline có ảnh 1366/1080; chưa triển khai bản cài hoặc kiểm Muse/Instagram/nguồn bán lẻ thật. Xem [checkpoint, quy tắc listing và cách chạy T23](../../ops/night/out/T23.md).
+
 ## Cập nhật source đêm T19 — test từ build tạm dùng chung
 
 Clone `night-20261111` đã bỏ hook nạp module trong desktop/API test. Các lệnh test dùng một build từ source tại `outputs/local-api-test-*`, dùng chung server/domain/JSON và UI cho kiểm HTTP/font, rồi dọn khi kết thúc. Không cần cập nhật `desktop/local-dist`. Desktop tăng từ 244 lên 248 test (247 đạt, 1 skip OpenMontage); domain 136/136, API 16/16, typecheck và build output riêng đạt. 543 assertion cũ giữ nguyên điều kiện; 48 file build khớp SHA-256 với baseline. Chỉ kiểm fixture trên Node 26.13.0, chưa triển khai bản cài. Xem [checkpoint và cách chạy T19](../../ops/night/out/T19.md).

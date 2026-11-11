@@ -9,10 +9,24 @@ import {renderToStaticMarkup} from 'react-dom/server';
 const {SourceChip,SourceDetails,ShortsSignal,shouldPollSourceChecks,SOURCE_POLL_MS}=await importModule('components/lab/research-sources.tsx');
 const {default:ResearchCandidates}=await importModule('components/lab/research-candidates.tsx');
 const {default:ResearchLauncher}=await importModule('components/lab/research-launcher.tsx');
+const {ProductCheck,RetailMarkup}=await importModule('components/lab/product-check.tsx');
 const {candidateSchema,researchBatchSchema}=await importModule('lib/lab/operations.ts');
 const {extractListing,listingWarnings,youtubeObservation}=await import('../src/listing-check.mjs');
 const candidate=candidateSchema.parse({id:'fixture',name:'Night leash',supplierUrl:'https://example.test/item',evidenceNotes:'Muse',cost:5,costCurrency:'CNY',minimumOrder:1});
 const render=(Component,candidate)=>renderToStaticMarkup(React.createElement(Component,{candidate}));
+
+test('product check renders three evidence sections, retail markup, manual checks and supplier questions without saving a verdict',()=>{
+ const row=candidateSchema.parse({...candidate,cost:4,shipping:2,costCurrency:'USD',shippingCurrency:'USD',verdict:'reject',matchType:'exact_sku',visualPayoff:'Visible result',logisticsFlags:{brandRisk:false,ipRisk:true},ipNotes:'Compare design',usRetail:{low:24.99,high:24.99,currency:'USD',sources:[{url:'https://retail.example/item/1',title:'Generic retail',price:24.99,observedAt:'2026-11-12T00:00:00Z'}]}});
+ const before=structuredClone(row);
+ const html=renderToStaticMarkup(React.createElement(ProductCheck,{candidate:row,ceilingUsd:12}));
+ for(const text of ['Đã quan sát','Suy luận','Chưa biết','Giữ','Trần người dùng: $12,00','không thay quyết định đã lưu','Compare design','Generic retail','Sao chép câu hỏi','design differ','Meta Ad Library','Google Patents'])assert.ok(html.includes(text),text);
+ assert.ok(html.includes('$24,99 → ≤ $6,25–$8,33'));assert.match(html,/target="_blank" rel="noopener noreferrer"/);
+ assert.deepEqual(row,before);
+ assert.equal(render(RetailMarkup,candidate),'<span>—</span>');
+ const record={id:'checks',kind:'research_batch',data:researchBatchSchema.parse({name:'Checks',maxLandedCostUsd:12,candidates:[row]})};
+ const table=renderToStaticMarkup(React.createElement(ResearchCandidates,{record,records:[],disabled:false,onEdit(){},onSelect(){}}));
+ assert.ok(table.includes('Bán lẻ Mỹ → vốn tối đa'));assert.match(table,/>Kiểm sản phẩm<\/button>/);assert.match(table,/>Loại<\/span>/);
+});
 
 test('compact comparison renders ten rows, decision columns, honest coverage and one detail action per row',()=>{
  const candidates=Array.from({length:10},(_,i)=>({...candidate,id:'compact'+i,name:'Product '+i,cost:null,supplierUrl:'https://example.test/shared',marketEvidence:[{label:'Page reviews',value:100,unit:'reviews',market:'US',period:'Snapshot',sourceUrl:'https://example.test/review',observedAt:'2026-11-12T00:00:00Z'}]}));

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode, type ComponentProps } from "react";
 import { z } from "zod";
 import { Plus, Search, Download, Eye, ArrowLeft } from "lucide-react";
 import { Button, Badge, Empty, Modal, RecordForm, ClientError, api, type FieldDef } from "./primitives";
@@ -13,6 +13,7 @@ import InstagramPanel from './instagram-panel';
 import InstagramOverview from './instagram-overview';
 import ResearchCandidates from './research-candidates';
 import ResearchLauncher from './research-launcher';
+import {ProductCheckFields} from './product-check-fields';
 import ViralFormulas from './viral-formulas';
 import {instagramProductSummary} from '@/lib/lab/instagram-summary';
 
@@ -31,6 +32,7 @@ type FormSpec = {
   initial: Record<string, any>;
   fields: FieldDef[];
   validation?: {safeParse: (value: any) => any};
+  extra?: ComponentProps<typeof RecordForm>['extra'];
   save: (value: any) => Promise<unknown>;
 };
 const newId = () => crypto.randomUUID().replaceAll("-", "");
@@ -96,6 +98,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
     if (!chosen) return;
     const batch = chosen.data as ResearchBatch;
     show({title: candidate ? "Sửa ứng viên" : "Thêm ứng viên có nguồn", kind: "research_batch", validation: candidateFormSchema,
+      extra: (values, change, errors) => <ProductCheckFields values={values} change={change} errors={errors}/>,
       initial: candidate ?? {id: newId(), name: "", supplierUrl: "", supplierCountry: "", evidenceUrl: "", evidenceNotes: "", contentAngle: "", risks: "", cost: null, shipping: null, price: null, currency: "USD"},
       fields: [
         {name: "name", label: "Tên sản phẩm"}, {name: "supplierCountry", label: "Quốc gia nhà cung cấp", help: "Điền theo nguồn đã đọc."},
@@ -114,7 +117,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
   function openMuseTask(kind: MuseTaskKind) {
     if (!chosen) return;
     const context = view === 'research'
-      ? {query: chosen.data.name, market: chosen.data.market, locale: chosen.data.locale,
+      ? {query: chosen.data.name, market: chosen.data.market, locale: chosen.data.locale, maxLandedCostUsd: chosen.data.maxLandedCostUsd ?? 20,
         remainingSlots: 10 - chosen.data.candidates.length, existing: chosen.data.candidates.map((candidate: Candidate) => candidate.name),
         sourcing:'Ưu tiên nguồn Trung Quốc giá vốn thấp, sản phẩm không thương hiệu phù hợp video thử cho Mỹ. Đọc listing cụ thể; ghi giá theo tier, MOQ, điều kiện dropship một chiếc. Không lấy giá bán lẻ thương hiệu làm giá vốn. Giữ ship chưa rõ là null. Giá bán chỉ là giả thuyết. Giải thích bằng tiếng Việt, hook bằng tiếng Anh.'}
       : {product: chosen.data, metrics: instagramProductSummary(records,chosen.id)};
@@ -264,7 +267,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
       {landing && <article className="production-card production-card-body"><h2>{landing.data.headline}</h2><p>{landing.data.description}</p><Badge>Bản nháp trên máy</Badge><small>Cập nhật {formatTime(landing.updatedAt)}</small></article>}
     </>}
     <Modal open={!!form} title={form?.title ?? ""} dirty={dirty} locked={busy} onClose={() => { setForm(null); setDirty(false); }}>
-      {form && <RecordForm key={form.title + String(form.initial.id ?? "")} kind={form.kind} initial={form.initial} fields={form.fields} validation={form.validation ?? schemas[form.kind]} demo={demo} onDirty={setDirty} onCancel={() => setForm(null)} onSave={async value => { await execute(() => form.save(value)); setDirty(false); setForm(null); }}/>}</Modal>
+      {form && <RecordForm key={form.title + String(form.initial.id ?? "")} kind={form.kind} initial={form.initial} fields={form.fields} extra={form.extra} validation={form.validation ?? schemas[form.kind]} demo={demo} onDirty={setDirty} onCancel={() => setForm(null)} onSave={async value => { await execute(() => form.save(value)); setDirty(false); setForm(null); }}/>}</Modal>
     <Modal open={!!museTask} title={museTask?.kind === 'research' ? 'Nghiên cứu bằng Muse' : 'Trợ lý Muse'} locked={busy} onClose={() => setMuseTask(null)}
       description={museTask?.kind === 'research' ? 'Muse tìm nguồn và tự lưu ứng viên vào đợt. Bạn kiểm tra nguồn và chọn tối đa 3 sản phẩm.' : 'Muse dùng hồ sơ sản phẩm và số liệu đã lưu để soạn nội dung.'}>
       {museTask && <div className="modal-body"><MuseChatPanel key={museTask.kind + museTask.recordId}
