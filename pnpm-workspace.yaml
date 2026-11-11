@@ -1,6 +1,6 @@
-allowBuilds:
-  esbuild: set this to true or false
-  unrs-resolver: set this to true or false
-  workerd: set this to true or false
 overrides:
   miniflare>sharp: 0.35.4
+allowBuilds:
+  esbuild: true
+  unrs-resolver: true
+  workerd: true
