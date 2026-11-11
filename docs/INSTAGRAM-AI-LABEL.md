@@ -1,23 +1,25 @@
 # Nhãn AI khi đăng Instagram — T09
 
-Checkpoint source ngày 12/11/2026, clone `C:/HermesNight/hermes-clip`, nhánh `night-20261111`. **CHƯA kiểm trên Instagram thật.** Chưa triển khai vào bản cài Windows; không mở Electron/Muse/Instagram, không truy cập AppData, profile, phiên hay SQLite của người dùng trong task này. Không thay đổi dependency, `data/`, `evidence/`, input đêm hoặc `desktop/local-dist/`.
+Checkpoint source ngày 12/11/2026, clone `C:/HermesNight/hermes-clip`, nhánh `night-20261111`. **CHƯA kiểm trên Instagram thật.**
+
+> **Cập nhật 12/11/2026 (commit `9a5a3e6`, theo quyết định của người dùng): nhãn AI mặc định TẮT.** Kế hoạch nội dung thiếu `aiLabel` hoặc `aiLabel=null` được hiểu là `off`. Chỉ khi chọn tường minh **Bắt buộc bật nhãn AI** (`required`) thì luồng bật nhãn và chặn trước Share bên dưới mới chạy. Chế độ `required` vẫn fail closed như mô tả. Chưa triển khai vào bản cài Windows; không mở Electron/Muse/Instagram, không truy cập AppData, profile, phiên hay SQLite của người dùng trong task này. Không thay đổi dependency, `data/`, `evidence/`, input đêm hoặc `desktop/local-dist/`.
 
 ## Vị trí trong luồng đăng
 
 1. `InstagramPublisher.enqueue` trong `desktop/src/instagram.mjs` lấy snapshot qua `InstagramWorkspace.snapshot`: tài khoản, revision, video/checksum, caption và cấu hình nhãn.
 2. `InstagramBrowsers` trong `desktop/src/instagram-browser.mjs` quản lý cửa sổ/profile; không phải nơi điền nội dung hay bấm nhãn. T09 không sửa file này.
 3. `InstagramAdapter.prepare` trong `desktop/src/instagram-adapter.mjs` đọc danh sách bài trước lượt đăng → Create/Post → chọn video qua input trong dialog → xử lý thông báo Reel/crop → Next đến màn caption → điền và so khớp caption.
-4. **Ngay tại màn caption có nút Share, sau chọn video và trước Share:** gọi `ensureInstagramAiLabel` để tìm, bật và đọc lại trạng thái công tắc. Có thể mở Advanced settings trong cùng dialog. Chỉ trả kết quả chuẩn bị khi xác nhận được nhãn hoặc cấu hình là `off`.
+4. **Ngay tại màn caption có nút Share, sau chọn video và trước Share:** gọi `ensureInstagramAiLabel`. Với `off` (mặc định), hàm trả `skipped` ngay, không đụng DOM. Với `required`, hàm tìm, bật và đọc lại trạng thái công tắc, có thể mở Advanced settings trong cùng dialog, và chỉ trả kết quả chuẩn bị khi xác nhận được nhãn.
 5. `InstagramAdapter.publish` kiểm lại nhãn ở chế độ chỉ đọc trước callback `beforeShare`, rồi kiểm lại sau callback kiểm tra snapshot/tài khoản và ghi checkpoint `submitting`, ngay trước **một** lệnh `.click()` Share hiện có. Nếu trạng thái bị đổi lúc chờ callback, dừng, không bật lại rồi tự thử Share.
 6. Receipt, permalink, chống trùng fingerprint, snapshot tài khoản/video/caption và đối soát kết quả sau Share giữ cơ chế cũ. Kiểm nhãn không phải bằng chứng bài đã đăng hoặc bằng chứng Meta lưu nhãn phía server.
 
 ## Cấu hình và dữ liệu cũ
 
-`content_plan.data.aiLabel` nhận `required | off | null`, optional trong schema. Bản ghi cũ thiếu trường vẫn parse được; không ghi lại hàng loạt. Khi tạo snapshot cho lượt đăng, thiếu/null được giải quyết thành `required`. Mặc định này áp dụng cho luồng Muse và cả video cũ chưa rõ nguồn; không suy đoán nguồn từ caption hoặc tên file. Form Sửa kế hoạch nội dung có lựa chọn **Nhãn AI khi đăng**, mặc định **Bắt buộc bật nhãn AI**.
+`content_plan.data.aiLabel` nhận `required | off | null`, optional trong schema. Bản ghi cũ thiếu trường vẫn parse được; không ghi lại hàng loạt. Khi tạo snapshot cho lượt đăng, thiếu/null được giải quyết thành **`off`** (`instagramAiLabelMode` trong `desktop/src/instagram-ai-label.mjs`). Mặc định này áp dụng cho nội dung mới, nội dung Muse và cả kế hoạch cũ; không suy đoán nguồn từ caption hoặc tên file. Form Sửa kế hoạch nội dung có lựa chọn **Nhãn AI khi đăng**, mặc định **Không gắn nhãn AI (mặc định)**, lựa chọn còn lại là **Bắt buộc bật nhãn AI**. Xem trước hiện “Nhãn AI: Không gắn nhãn” trừ khi chọn bắt buộc.
 
-`snapshot.aiLabel` cố định cấu hình của lượt đăng. Trước upload và trước Share, revalidation so cả revision, tài khoản, checksum, caption và cấu hình nhãn; sửa plan không thay cấu hình âm thầm cho lượt đang chờ. Snapshot job cũ thiếu/null vẫn yêu cầu nhãn khi chuẩn bị/đăng. Job đã published không được gán ngược bằng chứng đã bật nhãn.
+`snapshot.aiLabel` cố định cấu hình của lượt đăng. Trước upload và trước Share, revalidation so cả revision, tài khoản, checksum, caption và cấu hình nhãn; sửa plan không thay cấu hình âm thầm cho lượt đang chờ. Snapshot job cũ thiếu/null được hiểu là `off`. Job đã published không được gán ngược bằng chứng đã bật nhãn.
 
-`off` phải được chọn tường minh. Chế độ này không tìm công tắc, không mở Advanced settings, không bật/tắt nhãn và không chặn Share do nhãn; các gate cũ vẫn chạy. Không dùng `off` để vượt qua lỗi selector cho video Muse cần nhãn. Câu caption “AI-generated concept” không thay thế nhãn Instagram.
+`off` (mặc định) không tìm công tắc, không mở Advanced settings, không bật/tắt nhãn và không chặn Share do nhãn; các gate cũ vẫn chạy. Lưu ý: `off` chỉ có nghĩa là script không tự bật nhãn. Script không chủ động tắt nhãn, nên Instagram vẫn có thể tự gắn “AI info” nếu video mang metadata AI. Meta yêu cầu tự khai báo với video AI trông như thật; chọn `required` cho bài cần nhãn. Câu caption “AI-generated concept” không thay thế nhãn Instagram.
 
 ## Selector và chiến lược fail closed
 
@@ -66,6 +68,8 @@ npm run local:build
 Log mới ở `ops/night/out/T09-*.log`; kết quả cuối được ghi trong checkpoint context. `local:build` phải có override như trên để không ghi `desktop/local-dist`. Desktop baseline trước T09: 218 đạt, 1 skip OpenMontage vì thiếu môi trường tích hợp.
 
 ## Người dùng kiểm sáng mai — chỉ draft, không Share
+
+Chỉ cần nếu định dùng chế độ **Bắt buộc bật nhãn AI**. Với mặc định `off`, script không đụng tới công tắc nhãn.
 
 1. Tự mở đúng tài khoản Instagram đã duyệt, kiểm username. Không bấm **Đăng video/Đăng sau khi đăng nhập** trong Hermes để kiểm nháp: luồng đó có thể đi tiếp đến Share khi đủ gate, không có chế độ dry-run mới trong T09.
 2. Trong Instagram, tự tạo Reel nháp với một video đã duyệt, qua crop/edit đến màn nhập caption. Không bấm Share ở bất kỳ bước nào. Nếu nền tảng tự lưu draft, giữ lại draft theo lựa chọn của người dùng.

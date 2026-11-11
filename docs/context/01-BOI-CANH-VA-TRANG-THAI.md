@@ -18,7 +18,7 @@ Tổng kết T10 cho đêm 11–12/11, giờ Asia/Saigon. Checkout `C:/HermesNig
 | T06 | `3a80892` | [Kịch bản nháp theo công thức, hai hook A/B, overlay và CTA](T06-FORMULA-STORYBOARD.md). |
 | T07 | `95c35ad` | [Instagram theo tài khoản × nội dung, CTA, lọc lưu trữ và số liệu](T07-INSTAGRAM-OVERVIEW.md). |
 | T08 | `5dfa6a5` | [Sửa UI nhỏ: lưu nháp, preview, hàng đợi, thẻ sản phẩm và sidebar](T08-SMALL-UI.md). |
-| T09 | `5f1d4bb` | [Bắt buộc kiểm nhãn AI trước Share; dừng nếu chưa xác nhận](T09-INSTAGRAM-AI-LABEL.md); chỉ kiểm fixture. |
+| T09 | `5f1d4bb` | [Kiểm nhãn AI trước Share khi chọn bắt buộc; dừng nếu chưa xác nhận](T09-INSTAGRAM-AI-LABEL.md); chỉ kiểm fixture. Sau đêm: mặc định tắt (`9a5a3e6`). |
 | T11 | `74c88f7` | [Kiểm listing và tham khảo YouTube/web bằng Agent Reach](T11-AGENT-REACH-RESEARCH.md); công cụ/dịch vụ thật chưa được xác minh. |
 | T12 | `c66140b` | [MP4 → contact sheet/cuts → tham chiếu nháp](T12-REFERENCE-VIDEO.md); tải Shorts bị khóa khi thiếu công cụ. |
 | T13 | `deb5620` | [Giữ tiền tệ khi tạo hồ sơ và sửa form](T13-PROMOTE-CURRENCIES.md); khác tiền tệ không tính biên. |
@@ -45,7 +45,7 @@ T10 chỉ sửa tài liệu; kiểm diff, liên kết nội bộ, commit và ph�
 
 ## Cập nhật source đêm T09 — nhãn AI trước Share
 
-Clone `night-20261111` đã thêm `content_plan.aiLabel` optional/null, mặc định hiệu lực `required`, lưu snapshot và kiểm thay đổi cấu hình. Adapter bật nhãn ở màn caption sau chọn video, đọc lại trước Share; thiếu/không xác nhận được nhãn thì giữ `needs_attention` với “Cần đối soát/thao tác tay”, không gửi lại. `off` giữ hành vi đăng cũ. Domain 136/136, API 16/16, desktop 242 đạt/1 skip OpenMontage, typecheck và build output riêng đạt. DOM fixture dùng HTML tĩnh, chặn mạng, không có tài khoản/file video thật. **CHƯA kiểm trên Instagram thật**, chưa triển khai bản cài; job chặn chưa có luồng tự tiếp tục. Xem [checkpoint T09](T09-INSTAGRAM-AI-LABEL.md) và [selector/cách kiểm draft sáng mai, không Share](../INSTAGRAM-AI-LABEL.md).
+Clone `night-20261111` đã thêm `content_plan.aiLabel` optional/null, mặc định hiệu lực ban đầu `required` (sau đêm đổi thành **`off`** theo quyết định của người dùng, commit `9a5a3e6`; chỉ `required` tường minh mới bật nhãn), lưu snapshot và kiểm thay đổi cấu hình. Adapter bật nhãn ở màn caption sau chọn video, đọc lại trước Share; thiếu/không xác nhận được nhãn thì giữ `needs_attention` với “Cần đối soát/thao tác tay”, không gửi lại. `off` giữ hành vi đăng cũ. Domain 136/136, API 16/16, desktop 242 đạt/1 skip OpenMontage, typecheck và build output riêng đạt. DOM fixture dùng HTML tĩnh, chặn mạng, không có tài khoản/file video thật. **CHƯA kiểm trên Instagram thật**, chưa triển khai bản cài; job chặn chưa có luồng tự tiếp tục. Xem [checkpoint T09](T09-INSTAGRAM-AI-LABEL.md) và [selector/cách kiểm draft sáng mai, không Share](../INSTAGRAM-AI-LABEL.md).
 
 ## Cập nhật source đêm T08 — sửa UI nhỏ
 

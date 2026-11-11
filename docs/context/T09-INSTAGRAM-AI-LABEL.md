@@ -4,7 +4,7 @@ Checkpoint source: `C:/HermesNight/hermes-clip`, nhánh `night-20261111`, checko
 
 ## Đã hoàn thành
 
-- `content_plan.aiLabel` optional/null, enum `required | off`; mặc định hiệu lực là required khi đóng snapshot, bao gồm Muse và dữ liệu cũ. Form hiển thị cấu hình; preview ghi rõ chế độ, không khẳng định nhãn cho bài lịch sử.
+- `content_plan.aiLabel` optional/null, enum `required | off`. **Cập nhật 12/11/2026 (commit `9a5a3e6`, quyết định của người dùng): mặc định hiệu lực là `off`** khi đóng snapshot, bao gồm Muse và dữ liệu cũ; chỉ `required` tường minh mới bật nhãn và chặn trước Share. Form mặc định “Không gắn nhãn AI (mặc định)”; preview ghi rõ chế độ, không khẳng định nhãn cho bài lịch sử.
 - `InstagramWorkspace` cố định cấu hình vào snapshot và đối chiếu lại trước khi đăng cùng revision/tài khoản/video/caption. Không đổi fingerprint chống trùng hoặc số lần Share.
 - `InstagramAdapter.prepare` bật nhãn sau khi chọn video/Next/điền caption, tại màn có Share. Module `instagram-ai-label.mjs` tìm công tắc theo accessible role/name, mở Advanced settings có tên khớp khi cần, click tối đa một lần, đọc native checked hoặc aria-checked để xác nhận.
 - `publish` kiểm ở chế độ chỉ đọc trước callback kiểm tài khoản/workspace và ngay sau callback, trước lệnh Share duy nhất. Thiếu/mơ hồ/disabled/unknown/không đổi trạng thái/thay đổi trước Share đều dừng. `off` không tương tác với nhãn, giữ đường đăng cũ.

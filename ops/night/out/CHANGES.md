@@ -73,10 +73,10 @@ Chặn lưu prompt rỗng, tên cảnh hai dòng, Duyệt/Từ chối nằm đ�
 
 ### T09 — Kiểm nhãn AI trước khi đăng · `5f1d4bb`
 
-Kế hoạch nội dung mặc định yêu cầu nhãn AI, kể cả bản ghi cũ thiếu trường. Adapter bật/đọc lại nhãn trước Share; không xác nhận được thì dừng ở “Cần đối soát/thao tác tay”, không tự gửi lại. Chưa có luồng tiếp tục job bị chặn nhãn.
+**Cập nhật sau đêm (commit `9a5a3e6`, theo quyết định của bạn): nhãn AI mặc định TẮT**, kể cả bản ghi cũ thiếu trường. Chỉ khi chọn “Bắt buộc bật nhãn AI”, adapter mới bật/đọc lại nhãn trước Share; không xác nhận được thì dừng ở “Cần đối soát/thao tác tay”, không tự gửi lại. Chưa có luồng tiếp tục job bị chặn nhãn.
 
 - File chính: [instagram-ai-label.mjs](../../../desktop/src/instagram-ai-label.mjs), [instagram-adapter.mjs](../../../desktop/src/instagram-adapter.mjs), [instagram.mjs](../../../desktop/src/instagram.mjs). [Checkpoint T09](../../../docs/context/T09-INSTAGRAM-AI-LABEL.md).
-- Kiểm sáng mai: **Instagram → chọn sản phẩm/nội dung → Sửa kế hoạch nội dung → Nhãn AI khi đăng** phải mặc định “Bắt buộc bật nhãn AI”. Kiểm công tắc thật bằng **bài nháp tạo thủ công trong Instagram**, theo phần việc làm tay bên dưới. Không dùng nút Đăng của Hermes để thử nháp: luồng đó có thể Share khi đủ điều kiện. **Chưa kiểm trên Instagram thật.**
+- Kiểm sáng mai: **Instagram → chọn sản phẩm/nội dung → Sửa kế hoạch nội dung → Nhãn AI khi đăng** phải mặc định “Không gắn nhãn AI (mặc định)”. Chỉ khi định dùng chế độ bắt buộc mới cần kiểm công tắc thật bằng **bài nháp tạo thủ công trong Instagram**, theo phần việc làm tay bên dưới. Không dùng nút Đăng của Hermes để thử nháp: luồng đó có thể Share khi đủ điều kiện. **Chưa kiểm trên Instagram thật.**
 
 ### T10 — Tài liệu tổng kết · đang chờ runner kiểm/commit
 
@@ -117,7 +117,7 @@ Thiếu công cụ là “chưa kiểm được”; CAPTCHA/403/429/đăng nhậ
 
 1. **Lưu trữ ba sản phẩm cũ trong app:** Treat Trader, ChomChom Roller, Ruffwear Front Range Flex Leash. Vào **Sản phẩm → Lưu trữ** ở từng thẻ → xác nhận **Lưu trữ sản phẩm**. Sau đó tại **Instagram**, mặc định không thấy sản phẩm; bật **Hiện sản phẩm đã lưu trữ** để kiểm vẫn còn lịch sử. Lưu trữ chỉ ẩn hồ sơ, không xóa media/receipt, không gỡ bài trên Instagram và không tự hủy lịch đo/lượt đăng đang chờ; kiểm hàng đợi trước khi thao tác.
 2. **Gỡ Reel Ruffwear trên Instagram nếu muốn:** người dùng tự mở đúng tài khoản và đúng Reel, đối chiếu nội dung rồi dùng thao tác gỡ của Instagram. Tổng kết này không xác nhận Reel Ruffwear đang tồn tại trên tài khoản nào; snapshot cũ chỉ nghiệm thu một bài Treat Trader. Nếu không tìm thấy đúng Reel thì dừng, không gỡ bài khác. Codex chưa thao tác gỡ bài.
-3. **Kiểm nhãn AI bằng bài nháp:** tự tạo Reel nháp trong đúng tài khoản đã duyệt, chọn video rồi tới màn caption, tìm công tắc nhãn AI (có thể trong Advanced settings), bật và đọc lại On. Nếu không thấy thì dừng và ghi lại tình trạng. **Dừng trước Share; không bấm Đăng video/Đăng sau khi đăng nhập trong Hermes để làm dry-run.** Ghi tên/ngôn ngữ/vị trí công tắc; nếu cung cấp DOM chỉ lấy đoạn tối thiểu đã bỏ dữ liệu cá nhân. Không đổi cấu hình sang tắt nhãn để vượt lỗi. [Hướng dẫn chi tiết](../../../docs/INSTAGRAM-AI-LABEL.md).
+3. **Kiểm nhãn AI bằng bài nháp (chỉ cần nếu dùng chế độ “Bắt buộc bật nhãn AI”; mặc định đã tắt):** tự tạo Reel nháp trong đúng tài khoản đã duyệt, chọn video rồi tới màn caption, tìm công tắc nhãn AI (có thể trong Advanced settings), bật và đọc lại On. Nếu không thấy thì dừng và ghi lại tình trạng. **Dừng trước Share; không bấm Đăng video/Đăng sau khi đăng nhập trong Hermes để làm dry-run.** Ghi tên/ngôn ngữ/vị trí công tắc; nếu cung cấp DOM chỉ lấy đoạn tối thiểu đã bỏ dữ liệu cá nhân. Với bài đã chọn bắt buộc, không đổi sang tắt nhãn chỉ để vượt lỗi selector. [Hướng dẫn chi tiết](../../../docs/INSTAGRAM-AI-LABEL.md).
 
 ## Bằng chứng đã có và giới hạn
 
