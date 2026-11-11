@@ -16,7 +16,7 @@ param(
   [string]$Branch = ("night-" + (Get-Date -Format "yyyyMMdd")),
   [int]$TaskTimeoutMin = 120,
   [int]$CheckTimeoutMin = 30,
-  [string]$CodexArgs = "--sandbox danger-full-access",
+  [string]$CodexArgs = "--sandbox workspace-write",
   [string]$CodexModel = "",
   [switch]$NoLastMessageFlag,
   [switch]$SkipInstall,
@@ -34,18 +34,20 @@ $script:RunLog = Join-Path $RunDir "runner.log"
 # ---------------------------------------------------------------- tasks
 # Order = priority. Deps = tasks that must be DONE/NOCHANGE first.
 $Tasks = @(
-  @{ Id = "T01"; File = "T01-tien-te-CNY.md";                Title = "Research: CNY + tien te tung con so";        Deps = @() },
-  @{ Id = "T02"; File = "T02-research-truong-quyet-dinh.md"; Title = "Research: truong quyet dinh + brief + co";    Deps = @("T01") },
+  @{ Id = "T01"; File = "T01-tien-te-CNY.md";                       Title = "Research: CNY + tien te tung con so";            Deps = @() },
+  @{ Id = "T02"; File = "T02-research-truong-quyet-dinh.md";        Title = "Research: truong quyet dinh + brief + co";       Deps = @("T01") },
   @{ Id = "T11"; File = "T11-agent-reach-kiem-listing-va-tin-hieu.md"; Title = "Agent Reach: kiem listing + tin hieu canh tranh"; Deps = @("T02") },
-  @{ Id = "T03"; File = "T03-sua-stage-san-pham.md";         Title = "Sua buoc tien do san pham";                  Deps = @() },
-  @{ Id = "T05"; File = "T05-thu-vien-cong-thuc.md";         Title = "Thu vien cong thuc viral";                   Deps = @() },
-  @{ Id = "T12"; File = "T12-agent-reach-nap-video-mau-vao-cong-thuc.md"; Title = "Nap video mau vao thu vien cong thuc"; Deps = @("T05") },
-  @{ Id = "T06"; File = "T06-mau-kich-ban-theo-cong-thuc.md";Title = "Mau kich ban theo cong thuc";                Deps = @("T05") },
-  @{ Id = "T04"; File = "T04-giao-dien-nghien-cuu.md";       Title = "Giao dien Nghien cuu";                       Deps = @("T01","T02") },
-  @{ Id = "T07"; File = "T07-instagram-tong-quan.md";        Title = "Instagram tong quan theo tai khoan";          Deps = @() },
-  @{ Id = "T08"; File = "T08-sua-ui-nho.md";                 Title = "Sua UI nho";                                 Deps = @() },
-  @{ Id = "T09"; File = "T09-nhan-AI-instagram-khao-sat.md"; Title = "Nhan AI Instagram (fixture only)";           Deps = @() },
-  @{ Id = "T10"; File = "T10-tai-lieu-va-tong-ket.md";       Title = "Tai lieu + tong ket";                        Deps = @() }
+  @{ Id = "T03"; File = "T03-sua-stage-san-pham.md";                Title = "Sua buoc tien do san pham";                     Deps = @() },
+  @{ Id = "T05"; File = "T05-thu-vien-cong-thuc.md";                Title = "Thu vien cong thuc viral";                      Deps = @() },
+  @{ Id = "T13"; File = "T13-sua-T01-promote-tien-te.md";           Title = "Sua T01: promote + form tien te";               Deps = @("T01") },
+  @{ Id = "T14"; File = "T14-sua-T11-trang-thai-heuristic.md";      Title = "Sua T11: trang thai + heuristic";               Deps = @("T11") },
+  @{ Id = "T06"; File = "T06-mau-kich-ban-theo-cong-thuc.md";       Title = "Mau kich ban theo cong thuc";                   Deps = @("T05") },
+  @{ Id = "T12"; File = "T12-agent-reach-nap-video-mau-vao-cong-thuc.md"; Title = "Nap video mau vao thu vien cong thuc";  Deps = @("T05") },
+  @{ Id = "T04"; File = "T04-giao-dien-nghien-cuu.md";              Title = "Giao dien Nghien cuu";                          Deps = @("T01","T02") },
+  @{ Id = "T07"; File = "T07-instagram-tong-quan.md";               Title = "Instagram tong quan theo tai khoan";             Deps = @() },
+  @{ Id = "T08"; File = "T08-sua-ui-nho.md";                        Title = "Sua UI nho";                                    Deps = @() },
+  @{ Id = "T09"; File = "T09-nhan-AI-instagram-khao-sat.md";        Title = "Nhan AI Instagram (fixture only)";              Deps = @() },
+  @{ Id = "T10"; File = "T10-tai-lieu-va-tong-ket.md";              Title = "Tai lieu + tong ket";                           Deps = @() }
 )
 
 $Checks = @(
@@ -136,10 +138,28 @@ function Run-Checks([string]$tag) {
   return $res
 }
 
+function Test-AuthError([string]$logPath) {
+  if (-not (Test-Path $logPath)) { return $false }
+  $txt = Get-Content $logPath -Raw -Encoding UTF8
+  return ($txt -match '(?i)unexpected status (401|403)' -or $txt -match '(?i)\b401 Unauthorized\b' -or $txt -match '(?i)not logged in')
+}
+
+function Read-Report([string]$path, [string]$id) {
+  # Valid report = Codex's own final message containing the report block for THIS task.
+  $res = @{ Ok = $false; Status = "" }
+  if (-not (Test-Path $path)) { return $res }
+  $txt = Get-Content $path -Raw -Encoding UTF8
+  if ($txt -match ('(?i)===\s*B\S*O C\S*O\s+' + $id + '\b')) {
+    if ($txt -match '(?im)^\s*TR\S*NG TH\S*I\s*:\s*(done|partial|blocked)') { $res.Ok = $true; $res.Status = $Matches[1].ToLower() }
+  }
+  return $res
+}
+
 function Run-Codex([string]$promptText, [string]$tag, [string]$reportPath) {
   $promptFile = Join-Path $RunDir ($tag + "-prompt.md")
   [IO.File]::WriteAllText($promptFile, $promptText, $Utf8)
   $log = Join-Path $RunDir ($tag + "-codex.log")
+  if (Test-Path $reportPath) { Remove-Item $reportPath -Force }
   $cmd = "codex exec " + $CodexArgs
   if ($CodexModel) { $cmd += " -m " + $CodexModel }
   if (-not $NoLastMessageFlag) { $cmd += ' --output-last-message "' + $reportPath + '"' }
@@ -148,9 +168,11 @@ function Run-Codex([string]$promptText, [string]$tag, [string]$reportPath) {
   $code = Exec-Cmd $cmd $Repo $log $TaskTimeoutMin
   Log ("    codex exit " + $code)
   if ($NoLastMessageFlag -or -not (Test-Path $reportPath)) {
-    [IO.File]::WriteAllText($reportPath, (Tail $log 80), $Utf8)
+    # keep the log tail OUTSIDE the repo; a missing report must stay missing
+    [IO.File]::WriteAllText((Join-Path $RunDir ($tag + "-tail.md")), (Tail $log 80), $Utf8)
   }
-  return @{ Code = $code; Log = $log }
+  $auth = ($code -ne 0) -and (Test-AuthError $log)
+  return @{ Code = $code; Log = $log; Auth = $auth }
 }
 
 function Gate([hashtable]$baseline, [string]$tag) {
@@ -239,6 +261,7 @@ try {
   $smokeReport = Join-Path $RunDir "smoke-report.md"
   $smokeFile = Join-Path $Repo "ops\night\out\smoke.txt"
   $r = Run-Codex "Create the file ops/night/out/smoke.txt containing exactly READY. Do not change any other file. Do not commit. Then reply READY." "smoke" $smokeReport
+  if ($r.Auth) { throw ("Codex AUTH ERROR (401/403): key het han hoac chua dang nhap. Gia han key / codex login roi chay lai. Log: " + $r.Log) }
   if ($r.Code -ne 0 -or -not (Test-Path $smokeFile)) {
     throw ("Codex smoke test failed (exit " + $r.Code + "). Read " + $r.Log + " and README-VI.md section 'Neu smoke test fail'.")
   }
@@ -252,22 +275,35 @@ try {
   if ($PreflightOnly) { Log "PreflightOnly: stop here. Everything is ready."; return }
 
   # ------------------------------------------------------------ task loop
+  # Done = a "night Txx: ..." commit that is not "report only" and not reverted later.
   $already = @{}
-  foreach ($s in (& git -C $Repo log --format=%s ("origin/main.." + $Branch))) {
-    if ($s -match '^night (T\d\d):') { $already[$Matches[1]] = $true }
+  foreach ($s in @(& git -C $Repo log --reverse --format=%s ("origin/main.." + $Branch))) {
+    if ($s -match '^Revert "night (T\d\d):') { $already.Remove($Matches[1]); continue }
+    if ($s -match '^night (T\d\d): ') {
+      $tid = $Matches[1]
+      if ($s -match 'report only\s*$') { continue }
+      $already[$tid] = $true
+    }
   }
   $only = @()
   if ($OnlyTasks) { $only = $OnlyTasks.Split(",") | ForEach-Object { $_.Trim() } }
   $status = [ordered]@{}
   $rows = @()
+  $authDead = $false
   $common = Get-Content (Join-Path $Pack "COMMON.md") -Raw -Encoding UTF8
+  $okStates = @("DONE", "NOCHANGE", "PARTIAL")
 
   foreach ($t in $Tasks) {
     $id = $t.Id
     $start = Get-Date
     if ($only.Count -gt 0 -and -not ($only -contains $id)) { $status[$id] = "NOT-SELECTED"; continue }
     if ($already[$id]) { $status[$id] = "DONE"; Log ($id + " already committed earlier, skip"); continue }
-    $blocked = @($t.Deps | Where-Object { -not ($status[$_] -eq "DONE" -or $status[$_] -eq "NOCHANGE" -or $already[$_]) })
+    if ($authDead) {
+      $status[$id] = "NOT-RUN"
+      $rows += ("| " + $id + " | " + $t.Title + " | NOT-RUN (Codex auth loi) | - | - |")
+      continue
+    }
+    $blocked = @($t.Deps | Where-Object { -not (($okStates -contains $status[$_]) -or $already[$_]) })
     if ($blocked.Count -gt 0) {
       $status[$id] = "SKIPPED"
       $rows += ("| " + $id + " | " + $t.Title + " | SKIPPED (thieu " + ($blocked -join ",") + ") | - | - |")
@@ -277,47 +313,57 @@ try {
 
     Log ("==== " + $id + " " + $t.Title)
     $task = Get-Content (Join-Path $Pack ("tasks\" + $t.File)) -Raw -Encoding UTF8
-    $prompt = $common + "`n`n---`n`n" + $task + "`n`n---`nTASK-ID: " + $id + ". Ket thuc bang bao cao theo mau trong quy tac chung.`n"
-    $report = Join-Path $Repo ("ops\night\out\reports\" + $id + ".md")
+    $prompt = $common + "`n`n---`n`n" + $task + "`n`n---`nTASK-ID: " + $id + ". Ket thuc bang bao cao theo mau trong quy tac chung, dong dau la === BAO CAO " + $id + " ===`n"
 
     $final = $null
+    $finalReport = $null
     for ($attempt = 1; $attempt -le 2; $attempt++) {
       $tag = $id + "-a" + $attempt
-      $r = Run-Codex $prompt $tag $report
-      if ($r.Code -eq -999) { Log ("    codex timed out after " + $TaskTimeoutMin + " min") }
+      $attemptReport = Join-Path $Repo ("ops\night\out\reports\" + $id + "-a" + $attempt + ".md")
+      $r = Run-Codex $prompt $tag $attemptReport
+      if ($r.Auth) {
+        $authDead = $true
+        Log "    CODEX AUTH ERROR (401/403) - stopping all remaining tasks"
+        $final = @{ Ok = $false; NoChange = $false; Reasons = @("codex auth error 401/403 - gia han key"); FailLogs = ""; Files = @(); Checks = @{} }
+        break
+      }
+      $rep = Read-Report $attemptReport $id
       $g = Gate $baseline $tag
-      if ($r.Code -eq -999) { $g.Ok = $false; $g.Reasons += "codex timeout" }
-      if ($g.Ok) { $final = $g; break }
-      Log ("    gate failed: " + ($g.Reasons -join "; "))
+      if ($r.Code -eq -999) { $g.Ok = $false; $g.Reasons += ("codex timeout after " + $TaskTimeoutMin + " min") }
+      elseif ($r.Code -ne 0) { $g.Ok = $false; $g.Reasons += ("codex exit " + $r.Code) }
+      if (-not $rep.Ok) { $g.Ok = $false; $g.Reasons += ("missing/invalid report block '=== BAO CAO " + $id + " ===' + 'TRANG THAI:'") }
+      if ($g.Ok) { $final = $g; $final.ReportStatus = $rep.Status; $finalReport = $attemptReport; break }
+      Log ("    attempt " + $attempt + " failed: " + ($g.Reasons -join "; "))
       if ($attempt -eq 1) {
-        $prompt = $common + "`n`n---`n`n" + $task + "`n`n---`nTASK-ID: " + $id + "`n`n## LAN CHAY TRUOC KHONG QUA KIEM TRA`nLy do:`n- " + ($g.Reasons -join "`n- ") + "`n`nLog loi:`n" + $g.FailLogs + "`n`nSua dung cac loi tren (giu phan da lam dung). Khong lam them viec ngoai task. Ket thuc bang bao cao.`n"
+        $prompt = $common + "`n`n---`n`n" + $task + "`n`n---`nTASK-ID: " + $id + "`n`n## LAN CHAY TRUOC KHONG QUA KIEM TRA`nLy do:`n- " + ($g.Reasons -join "`n- ") + "`n`nLog loi:`n" + $g.FailLogs + "`n`nSua dung cac loi tren (giu phan da lam dung). Khong lam them viec ngoai task. Ket thuc bang bao cao, dong dau la === BAO CAO " + $id + " ===`n"
       } else {
         $final = $g
       }
     }
 
     $mins = [int]((Get-Date) - $start).TotalMinutes
-    if ($final.Ok -and $final.NoChange) {
-      $status[$id] = "NOCHANGE"
-      if ((& git -C $Repo status --porcelain).Count -gt 0) { Invoke-Git @("add", "-A") | Out-Null; Invoke-Git @("commit", "-m", ("night " + $id + ": report only")) | Out-Null }
-      $rows += ("| " + $id + " | " + $t.Title + " | NOCHANGE | " + $mins + " | reports/" + $id + ".md |")
-      Log ($id + " finished with no code change")
-    } elseif ($final.Ok) {
-      Invoke-Git @("add", "-A") | Out-Null
-      Invoke-Git @("commit", "-m", ("night " + $id + ": " + $t.Title)) | Out-Null
-      $sha = (Invoke-Git @("rev-parse", "--short", "HEAD")) | Select-Object -First 1
-      $status[$id] = "DONE"
-      $rows += ("| " + $id + " | " + $t.Title + " | DONE " + $sha + " (" + $final.Files.Count + " file) | " + $mins + " | reports/" + $id + ".md |")
-      Log ($id + " DONE " + $sha)
+    if ($final.Ok) {
+      Copy-Item -Force $finalReport (Join-Path $Repo ("ops\night\out\reports\" + $id + ".md"))
+      if ($final.NoChange) {
+        $status[$id] = "NOCHANGE"
+        if ((& git -C $Repo status --porcelain).Count -gt 0) { Invoke-Git @("add", "-A") | Out-Null; Invoke-Git @("commit", "-m", ("night " + $id + ": no code change")) | Out-Null }
+        $rows += ("| " + $id + " | " + $t.Title + " | NOCHANGE (" + $final.ReportStatus + ") | " + $mins + " | reports/" + $id + ".md |")
+        Log ($id + " finished with no code change")
+      } else {
+        Invoke-Git @("add", "-A") | Out-Null
+        Invoke-Git @("commit", "-m", ("night " + $id + ": " + $t.Title)) | Out-Null
+        $sha = (Invoke-Git @("rev-parse", "--short", "HEAD")) | Select-Object -First 1
+        if ($final.ReportStatus -eq "done") { $status[$id] = "DONE" } else { $status[$id] = "PARTIAL" }
+        $rows += ("| " + $id + " | " + $t.Title + " | " + $status[$id] + " " + $sha + " (" + $final.Files.Count + " file) | " + $mins + " | reports/" + $id + ".md |")
+        Log ($id + " " + $status[$id] + " " + $sha)
+      }
     } else {
-      $failReport = Join-Path $RunDir ($id + "-FAILED-report.md")
-      if (Test-Path $report) { Copy-Item -Force $report $failReport }
       $ErrorActionPreference = "Continue"
       & git -C $Repo stash push -u -m ("night-FAILED-" + $id) *> $null
       $ErrorActionPreference = "Stop"
-      $status[$id] = "FAILED"
-      $rows += ("| " + $id + " | " + $t.Title + " | FAILED (stash: night-FAILED-" + $id + ") | " + $mins + " | " + ($final.Reasons -join "; ") + " |")
-      Log ($id + " FAILED, work kept in git stash")
+      if ($authDead) { $status[$id] = "FAILED-AUTH" } else { $status[$id] = "FAILED" }
+      $rows += ("| " + $id + " | " + $t.Title + " | " + $status[$id] + " (stash: night-FAILED-" + $id + ") | " + $mins + " | " + ($final.Reasons -join "; ") + " |")
+      Log ($id + " " + $status[$id] + ", work kept in git stash")
     }
   }
 
@@ -333,6 +379,7 @@ try {
   [void]$sb.AppendLine("|---|---|---|---|---|")
   foreach ($row in $rows) { [void]$sb.AppendLine($row) }
   [void]$sb.AppendLine("")
+  if ($authDead) { [void]$sb.AppendLine("**CODEX AUTH ERROR (401/403): key het han giua dem. Gia han key roi chay lai START-NIGHT; task DONE se tu bo qua.**"); [void]$sb.AppendLine("") }
   [void]$sb.AppendLine("Log chi tiet (ngoai repo): " + $RunDir)
   [void]$sb.AppendLine("Task FAILED: xem bang lenh ``git stash list`` trong " + $Repo + ".")
   $reportText = $sb.ToString()

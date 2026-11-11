@@ -41,3 +41,9 @@ Phụ thuộc: T05 (thư viện công thức và taxonomy).
 - Test thuần: dựng beat nháp từ `structure.json` mẫu; prompt Muse chứa đủ danh mục taxonomy.
 - Test runner giả cho argv youtube info/tải.
 - `npm run test:desktop`, `npm test`, `npm run typecheck`, `npm run local:build` không hỏng thêm.
+
+## Ghi chú từ review đêm 11/11 (bắt buộc đọc)
+- Lần chạy trước (commit `a83d5b9`) bị cắt giữa chừng vì key Codex hết hạn và đã bị **revert**. Bạn có thể xem bằng `git show a83d5b9` để tham khảo, nhưng phải làm lại đầy đủ: test, UI, wiring IPC trong `desktop/src/main.mjs` và `preload.cjs`.
+- Không mở kind API mới (ví dụ `reference_video_draft`) nếu không có test API kèm theo.
+- Không sửa hàm dùng chung `runJson` trừ khi thật cần. Nếu sửa thì phải có test, vì T11/T14 và mọi tác vụ tích hợp đều dùng hàm này.
+- Test desktop cần server build từ source thì dùng `scripts/build-local-server.mjs` (tạo ở T05). Không thêm `module.registerHooks` mới.

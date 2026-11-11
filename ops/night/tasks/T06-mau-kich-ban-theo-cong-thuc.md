@@ -29,3 +29,7 @@ Phụ thuộc: T05.
 ## Nghiệm thu
 - Test thuần: sinh cảnh từ công thức seed đúng số beat, đúng vai trò, tổng thời lượng trong 10–18s; hai biến thể chỉ khác cảnh hook; ba cảnh báo mới bắt đúng ví dụ dương và không bắt nhầm ví dụ âm.
 - `npm test`, `npm run typecheck`, `npm run test:api`, `npm run local:build` qua.
+
+## Ghi chú từ review đêm 11/11
+- `formulasForProduct` mặc định dùng seed. Phải truyền `workspaceFormulas(records)` để dùng cả công thức người dùng đã lưu (kind `viral_formula`, append-only theo id+version).
+- Test desktop cần server build từ source thì dùng `scripts/build-local-server.mjs`. Không thêm `module.registerHooks` mới.

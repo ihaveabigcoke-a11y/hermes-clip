@@ -23,7 +23,11 @@ Bạn là **worker Codex duy nhất** đang chạy qua đêm theo hàng đợi t
 - Trước khi kết thúc, tự chạy các lệnh kiểm liên quan. Runner sẽ chạy lại: `npm test`, `npm run typecheck`, `npm run test:api`, `npm run test:desktop`, `npm run local:build`. Nếu lệnh nào đã fail từ baseline thì runner bỏ qua lệnh đó, nhưng bạn không được làm lệnh đang qua bị fail.
 - Làm nhỏ, đúng phạm vi. Task sau có thể dựa trên task trước đã được commit trên cùng nhánh.
 
+## Test desktop
+- Test cần server build từ source thì dùng `scripts/build-local-server.mjs`. Không thêm `module.registerHooks` mới, không ghi vào `desktop/local-dist`.
+
 ## Báo cáo cuối (bắt buộc, là tin nhắn cuối cùng của bạn)
+Runner sẽ **coi task là FAILED** nếu tin nhắn cuối không có dòng `=== BAO CAO <TASK-ID> ===` với đúng mã task, và dòng `TRANG THAI: done | partial | blocked`.
 ```
 === BAO CAO <TASK-ID> ===
 TRANG THAI: done | partial | blocked
