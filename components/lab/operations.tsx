@@ -16,6 +16,7 @@ import ResearchLauncher from './research-launcher';
 import {ProductCheckFields} from './product-check-fields';
 import ViralFormulas from './viral-formulas';
 import {instagramProductSummary} from '@/lib/lab/instagram-summary';
+import {sampleCheckWarning} from '@/lib/lab/sample-check';
 
 type Props = {
   view: "research" | "social" | "landing";
@@ -61,6 +62,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
   const accounts = records.filter(record => record.kind === "social_account" && record.data.productId === chosen?.id);
   const plans = records.filter(record => record.kind === "content_plan" && record.data.productId === chosen?.id);
   const landing = records.find(record => record.kind === "landing_page" && record.data.productId === chosen?.id);
+  const sampleWarning = chosen && sampleCheckWarning(chosen.data);
   const disabled = busy || (!demo && offline);
   useEffect(()=>{const restore=()=>setSelected(new URL(location.href).searchParams.get('ops_id')??'');window.addEventListener('popstate',restore);return()=>window.removeEventListener('popstate',restore);},[]);
 
@@ -195,6 +197,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
   function landingForm(draft: Record<string, any> = {}) {
     if (!chosen) return;
     show({title: "Nội dung landing page tiếng Anh", kind: "landing_page",
+      extra: () => sampleWarning ? <div className="advice-banner warning" role="status">{sampleWarning}</div> : null,
       initial: {...(landing?.data ?? {productId: chosen.id, headline: chosen.data.name, description: "", benefits: "", limitations: "", imageAssetId: "", ctaLabel: "Learn more", ctaUrl: ""}), ...draft},
       fields: [{name: "headline", label: "Tiêu đề chính", full: true}, {name: "description", label: "Mô tả tiếng Anh", type: "textarea", full: true},
         {name: "benefits", label: "Điểm nổi bật có bằng chứng · mỗi dòng một ý", type: "textarea", full: true},
@@ -262,6 +265,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
     </div>}
     {error && <div className="inline-error" role="alert"><p>{error}</p><Button tone="ghost" onClick={reload}>Tải lại dữ liệu</Button></div>}
     {view === "research" ? researchView() : view === "social" ? socialView() : !chosen ? <Empty title="Cần hồ sơ sản phẩm" text="Thêm sản phẩm trước khi soạn landing page."/> : <>
+      {sampleWarning && <div className="advice-banner warning" role="status">{sampleWarning}</div>}
       <div className="info-panel">Soạn trang tiếng Anh, xem trước và xuất HTML trên máy. Xuất bản, thu lead và nhận tiền đang chờ quyết định thương mại.</div>
       <div className="operations-toolbar"><Button disabled={disabled} onClick={() => landingForm()}>{landing ? "Sửa nội dung trang" : "Soạn landing page"}</Button><Button tone="neutral" disabled={disabled || !landing || demo} onClick={() => act(() => makeLanding(false))}><Eye size={16}/>Xem trước</Button><Button tone="neutral" disabled={disabled || !landing || demo} onClick={() => act(() => makeLanding(true))}><Download size={16}/>Xuất HTML trên máy</Button></div>
       {landing && <article className="production-card production-card-body"><h2>{landing.data.headline}</h2><p>{landing.data.description}</p><Badge>Bản nháp trên máy</Badge><small>Cập nhật {formatTime(landing.updatedAt)}</small></article>}

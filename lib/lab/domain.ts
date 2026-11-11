@@ -4,6 +4,7 @@ import { codexRunSchema } from "./codex-exchange.ts";
 import { operationSchemas, candidateCurrencySchema, type Candidate, type ResearchBatch } from "./operations.ts";
 import { viralFormulaSchema } from "./viral-formulas.ts";
 import { referenceVideoDraftSchema } from "./viral-reference.ts";
+import { sampleCheckSchema } from "./sample-check.ts";
 export const kinds = [
   "product",
   "experiment",
@@ -74,6 +75,7 @@ export const schemas = {
       proofUrl: link,
       proofNotes: str(2000),
       sampleVerified: z.boolean().default(false),
+      sampleCheck: sampleCheckSchema.nullable().optional(),
       price: money.nullable(),
       cost: money.nullable(),
       shipping: money.nullable(),

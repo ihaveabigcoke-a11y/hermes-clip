@@ -18,6 +18,19 @@ async function save(kind, id, data, revision = 0, who = 'ops-owner', action = 's
   return {status: response.status, ...await response.json()};
 }
 
+test('product sample checklist survives API save/read/CAS; legacy product remains readable',async()=>{
+  const who='sample-check-owner';
+  const created=await save('product','sample_check_product',{...emptyProduct,name:'Sample fixture'},0,who);
+  assert.equal(created.status,200);assert.equal(created.record.data.sampleCheck,undefined);
+  const sampleCheck={receivedAt:'2026-11-12',colorSizeMatches:true,matchesVideo:false,packagingIntact:null,notes:'Fixture observation',photos:['fixture_photo']};
+  const updated=await save('product',created.record.id,{...created.record.data,sampleCheck},created.record.revision,who);
+  assert.equal(updated.status,200);assert.deepEqual(updated.record.data.sampleCheck,sampleCheck);assert.equal(updated.record.data.cost,null);
+  assert.equal((await save('product',created.record.id,created.record.data,created.record.revision,who)).status,409);
+  assert.equal((await save('product',created.record.id,{...updated.record.data,sampleCheck:{matchesVideo:'yes'}},updated.record.revision,who)).status,422);
+  const response=await call(lab.GET,new Request('https://qa.invalid/api/lab',{headers:{'oai-authenticated-user-id':who,'oai-authenticated-user-email':who+'@example.invalid'}}));
+  assert.deepEqual((await response.json()).records.find(r=>r.id===created.record.id).data.sampleCheck,sampleCheck);
+});
+
 test('formula analysis context/observations round-trip through draft CAS and explicit formula append; legacy fields stay optional',async()=>{
   const who='analysis-owner',structure=structureFor(),caption='Comment LED for the link',fileName='LED.mp4';
   const analysis=parseFormulaAnalysis(JSON.stringify({...analysisResponse(),ctaSource:'caption',cutCount:999}),structure,{caption,fileName});

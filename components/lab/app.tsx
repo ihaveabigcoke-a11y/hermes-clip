@@ -72,6 +72,8 @@ import { desktopBridge } from "@/lib/lab/desktop-client";
 import { demoRecords } from "@/lib/lab/demo";
 import {productCardDetails, showWorkspaceBanner} from "@/lib/lab/ui-state";
 import { productStage } from "@/lib/lab/product-stage";
+import { productNextStep, latestProductProduction } from "@/lib/lab/product-next-step";
+import { SampleCheckFields } from "./sample-check-fields";
 import {
   type LabRecord,
   type Kind,
@@ -906,6 +908,23 @@ export default function LabApp() {
   function productCard(p: LabRecord) {
     const margin = unitMargin(p.data);
     const details = productCardDetails(p, records);
+    const next = productNextStep(p, records);
+    const sampleVerified = p.data.sampleCheck == null ? p.data.sampleVerified : p.data.sampleCheck.matchesVideo === true;
+    const openNextStep = () => {
+      if (next.actionView === "products") return openEditor("product", p);
+      const url = urlState(next.actionView, "", 1);
+      for (const key of ["production", "stage", "ops_id", "ig_tab", "ig_plan", "new_product"]) url.searchParams.delete(key);
+      if (next.actionView === "social") url.searchParams.set("ops_id", p.id);
+      else {
+        const latest = latestProductProduction(p, records);
+        if (latest) {
+          url.searchParams.set("production", latest.id);
+          url.searchParams.set("stage", next.stage);
+        } else url.searchParams.set("new_product", p.id);
+      }
+      history.pushState({}, "", url);
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    };
     return (
       <article className="product-card" key={p.id}>
         {productVisual(p)}
@@ -916,14 +935,14 @@ export default function LabApp() {
               tone={
                 p.data.archived
                   ? "neutral"
-                  : p.data.sampleVerified
+                  : sampleVerified
                     ? "success"
                     : "warning"
               }
             >
               {p.data.archived
                 ? "Đang lưu trữ"
-                : p.data.sampleVerified
+                : sampleVerified
                   ? "Đã kiểm mẫu sản phẩm"
                   : "Chờ kiểm mẫu sản phẩm"}
             </Badge>
@@ -938,6 +957,7 @@ export default function LabApp() {
               "Ghi vấn đề khách hàng để bắt đầu đánh giá sản phẩm."}
           </p>
           <p className="product-card-summary">{details.costLabel} · {details.accountCount} tài khoản · {stageNames[details.stage]}</p>
+          <p className="product-card-summary" title={next.detail}>Bước tiếp theo: {next.title}</p>
           <div className="product-finance">
             <div>
               <span>Giá dự kiến</span>
@@ -951,8 +971,8 @@ export default function LabApp() {
             </div>
           </div>
           <div className="product-card-footer">
-            <Button tone="neutral" onClick={() => openEditor("product", p)}>
-              Mở hồ sơ
+            <Button tone="neutral" onClick={openNextStep} title={next.detail} aria-label={`${next.title} · ${p.data.name}`}>
+              Tiếp tục
               <ArrowUpRight size={15} />
             </Button>
             <button
@@ -2334,6 +2354,7 @@ export default function LabApp() {
             kind={editor.kind}
             initial={editor.initial}
             fields={fieldDefs()}
+            extra={editor.kind === "product" ? (values, change, errors) => <SampleCheckFields values={values} change={change} errors={errors} records={records}/> : undefined}
             onSave={saveEditor}
             onCancel={() => {
               setEditor(null);

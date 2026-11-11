@@ -45,6 +45,6 @@ export function productStage(
     notes.startsWith("Muse đề xuất · cần kiểm tra nguồn");
   const hasProofNotes =
     notes && !hasResearchNotes;
-  if (product.data.sampleVerified === true || proofUrl || hasProofNotes) return 1;
+  if (product.data.sampleCheck?.matchesVideo === true || product.data.sampleVerified === true || proofUrl || hasProofNotes) return 1;
   return 0;
 }

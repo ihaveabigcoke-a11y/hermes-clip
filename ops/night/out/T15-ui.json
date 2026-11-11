@@ -1,0 +1,27 @@
+{
+  "fixtureOnly": true,
+  "measurements": [
+    {
+      "width": 1366,
+      "pageWidth": 1356,
+      "sidebar": 232
+    },
+    {
+      "width": 1920,
+      "pageWidth": 1910,
+      "sidebar": 232
+    }
+  ],
+  "productSaves": 1,
+  "errors": [],
+  "blocked": [],
+  "checks": [
+    "five next-step cards",
+    "supplier editor",
+    "sample tri-state/date/notes/photos save",
+    "new project product selection",
+    "latest production deep link",
+    "social product deep link",
+    "landing warning false/true and non-blocking controls"
+  ]
+}
