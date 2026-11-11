@@ -1,5 +1,9 @@
 # Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
 
+## Cập nhật source đêm T06 — kịch bản công thức và hai mở đầu A/B
+
+Clone `night-20261111` đã nối thư viện T05 (gồm phiên bản công thức người dùng lưu) vào **Tạo nội dung → Mẫu prompt**. Sinh cảnh nháp tiếng Anh 9:16 tổng 10–18 giây, overlay một dòng và CTA keyword; lưu hai hook dùng chung body/CTA, không tự duyệt hoặc gửi Muse. Overlay/CTA optional; giữ revision, snapshot và chặn xuất khi chưa chọn đủ take đã duyệt. Thêm cảnh báo hook thiếu chữ, testimonial và hiệu ứng ngoài invariants/allowedClaims. Domain 117/117, API 13/13, desktop 197 đạt/1 skip OpenMontage, TypeScript và build output riêng đạt. Chưa triển khai bản cài/kiểm GUI hay dịch vụ thật; chưa tự render overlay. Xem [checkpoint T06](T06-FORMULA-STORYBOARD.md) cho hợp đồng, test, giới hạn và cách chạy tiếp. Ghi chú T05 “chưa tự áp công thức vào kịch bản” mô tả trạng thái trước T06.
+
 ## Cập nhật source đêm T14 — phân biệt lỗi công cụ và giảm cảnh báo nguồn sai
 
 Đã sửa review T11 trên clone `night-20261111`: công cụ thiếu/chưa xác nhận lệnh đọc → `unavailable`, chip “Nguồn: chưa kiểm được (công cụ)”; `blocked` dành cho CAPTCHA/403/429/yêu cầu đăng nhập. Bộ đếm showroom loại URL hiện tại và vùng gợi ý; kết quả không tách rõ vùng chỉ gợi ý trong chi tiết. Giá khoảng so sánh gồm hai đầu mút; thêm GBP và giữ ¥ ngoài domain supplier đã biết là null kèm ghi chú CNY/JPY. Poll nguồn 10 giây chỉ khi đợt đang chờ/chạy; stdout đếm byte từng chunk, giữ trần 4 MiB. Domain 108/108, API 12/12, desktop 195 đạt/1 skip OpenMontage, typecheck và build output riêng đạt. Chưa triển khai bản cài hay kiểm dịch vụ/GUI thật. Xem [checkpoint T14](T14-SOURCE-STATUS-HEURISTICS.md); phần T11 ghi thiếu CLI thành `blocked` là trạng thái lịch sử đã được sửa.

@@ -29,7 +29,34 @@ const compiledUrl=name=>pathToFileURL(join(buildRoot,'server/lib/lab',name)).hre
 const {emptyProduct,productFromCandidate,unitMargin,productMarginLabel}=await import(compiledUrl('domain.mjs'));
 const {researchProductId}=await import(compiledUrl('operations.mjs'));
 const {viralFormulas,viralFormulaRecordId,workspaceFormulas,formulasForProduct}=await import(compiledUrl('viral-formulas.mjs'));
+const {formulaStoryboard}=await import(compiledUrl('formula-storyboard.mjs'));
 const startLocalServer=options=>startBuiltLocalServer({...options,routesPath});
+
+test('formula draft scenes and shared variants survive isolated local restart without approving or enqueueing',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'product-lab-formula-draft-'));
+  let server;
+  const request=async(path,payload)=>{
+    const response=await fetch(server.origin+path,{method:payload?'POST':'GET',headers:{Cookie:sessionCookie+'='+server.session,Origin:server.origin,'Content-Type':'application/json'},...(payload?{body:JSON.stringify(payload)}:{})});
+    return {status:response.status,...await response.json()};
+  };
+  try{
+    server=await startLocalServer({root,seedPath:join(root,'no-seed.json')});
+    assert.equal((await request('/api/lab',{id:'draft_product',kind:'product',revision:0,data:{...emptyProduct,name:'Fixture light'}})).status,200);
+    const created=await request('/api/production',{id:'draft_project',revision:0,commandId:'create_draft',action:'create',input:{name:'Formula',productId:'draft_product',locale:'en-US'}});
+    assert.equal(created.status,200);
+    const draft=formulaStoryboard({},created.record.data,viralFormulas[0],'LED');
+    const saved=await request('/api/production',{id:'draft_project',revision:1,commandId:'save_formula',action:'formula_draft',input:draft});
+    assert.equal(saved.status,200);
+    await server.close();server=await startLocalServer({root,seedPath:join(root,'no-seed.json')});
+    const restored=(await request('/api/lab')).records.find(row=>row.id==='draft_project');
+    assert.deepEqual(restored,saved.record);
+    assert.equal(restored.data.variants[0].ctaKeyword,'LED');
+    assert.equal(restored.data.variants[0].bodyId,restored.data.variants[1].bodyId);
+    assert.ok(restored.data.bodies[0].items.every(item=>item.takeId===null));
+    assert.ok(restored.data.scenes.every(scene=>scene.overlayText&&!scene.storyboardApproved&&scene.attempts.length===0));
+    assert.equal((await request('/api/production',{id:'draft_project',revision:restored.revision,commandId:'blocked_prepare',action:'prepare',input:{sceneId:restored.data.scenes[0].id}})).status,422);
+  }finally{await server?.close();assert.equal(dirname(root),resolve(tmpdir()));await rm(root,{recursive:true,force:true});}
+});
 
 test('fresh local API build packages the exact formula seed without a prebuilt server',async()=>{
   const source=await readFile(new URL('../../lib/lab/viral-formulas.seed.json',import.meta.url));

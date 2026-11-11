@@ -3,9 +3,46 @@ import {useRef, useState} from 'react';
 import {z} from 'zod';
 import {Button, Badge, Empty, Modal, RecordForm, type FieldDef} from './primitives';
 import MuseChatPanel from './muse-chat';
-import {briefSchema, structuredStoryboard, productionInsights} from '@/lib/lab/intelligence';
+import {briefSchema, structuredStoryboard, productionInsights, formulaStoryboard, promptWarnings} from '@/lib/lab/intelligence';
+import {formulasForProduct, workspaceFormulas} from '@/lib/lab/viral-formulas';
 import {type Production} from '@/lib/lab/production';
 import {type LabRecord} from '@/lib/lab/domain';
+
+export function FormulaDraftPanel({records, production:p, product, disabled, onDrafts}: {
+  records:LabRecord[]; production:Production; product:Record<string,unknown>; disabled:boolean;
+  onDrafts:(draft:ReturnType<typeof formulaStoryboard>)=>Promise<unknown>;
+}) {
+  const library=workspaceFormulas(records);
+  const suggested=formulasForProduct(Array.isArray(product.traits)?product.traits.filter((v):v is string=>typeof v==='string'):[],library);
+  const formulas=[...suggested,...library.filter(formula=>!suggested.includes(formula))];
+  const [selected,setSelected]=useState('problem-vs-result-cta'),[keyword,setKeyword]=useState('LINK');
+  const [draft,setDraft]=useState<ReturnType<typeof formulaStoryboard>|null>(null);
+  const [error,setError]=useState(''),[busy,setBusy]=useState(false),[saved,setSaved]=useState(false);
+  const formula=formulas.find(row=>row.id===selected)??formulas[0];
+  return <section className="production-card production-card-body" aria-label="Kịch bản từ công thức">
+    <h3>Mẫu kịch bản từ công thức</h3>
+    <p>Hai mở đầu A/B dùng chung nội dung chính và CTA. Chỉ lưu cảnh nháp, chưa duyệt hoặc gửi Muse.</p>
+    <div className="desk-field"><label htmlFor="formula-choice">Công thức</label><select id="formula-choice" disabled={disabled||busy} value={formula?.id??''} onChange={event=>{setSelected(event.target.value);setDraft(null);setSaved(false);}}>
+      {formulas.map(row=><option key={row.id} value={row.id}>{row.name} · v{row.version}{suggested.includes(row)?' · Gợi ý':''}</option>)}
+    </select></div>
+    <div className="desk-field"><label htmlFor="formula-keyword">Từ khóa CTA · một từ tiếng Anh in hoa</label><input id="formula-keyword" value={keyword} maxLength={20} disabled={disabled||busy} onChange={event=>{setKeyword(event.target.value.toUpperCase());setDraft(null);setSaved(false);}}/></div>
+    {formula?.guardrails.map((guardrail,index)=><p key={index} className="prompt-warning">{guardrail}</p>)}
+    <Button tone="neutral" disabled={disabled||busy||!formula} onClick={()=>{try{setDraft(formulaStoryboard(product,p,formula,keyword));setError('');setSaved(false);}catch(reason){setError((reason as Error).message);}}}>Soạn hai mở đầu A/B</Button>
+    {draft&&<>
+      <p>9:16 · {Number(draft.rows.reduce((sum,row)=>sum+row.duration,0).toFixed(1))} giây mỗi biến thể · {draft.ctaText}</p>
+      <p>Mốc beat đã điều chỉnh thành các cảnh nối tiếp; chữ gợi ý một dòng, tối đa 60 ký tự, được thêm khi dựng.</p>
+      {!draft.rows.some(row=>row.role==='cta')&&<p>Công thức không có cảnh CTA riêng; CTA từ khóa được lưu trong chú thích của cả hai biến thể.</p>}
+      {[...draft.rows,draft.alternateHook].map((row,index)=><details key={index}>
+        <summary>{row.name} · {row.duration}s · {index===draft.rows.length?'Mở đầu thay thế':row.role==='hook'?'Mở đầu A':'Dùng chung A/B'}</summary>
+        <p>Chữ trên màn hình: {row.overlayText}</p><p>{row.prompt}</p>
+        {promptWarnings({...row,references:row.referenceIds.flatMap(id=>{const ref=p.references.filter(r=>r.id===id).at(-1);return ref?[{id,version:ref.version}]:[];})},p,product).map(warning=><p key={warning} className="prompt-warning">{warning}</p>)}
+      </details>)}
+      <Button busy={busy} disabled={disabled} onClick={()=>{setBusy(true);setError('');void onDrafts(draft).then(()=>{setDraft(null);setSaved(true);}).catch(reason=>setError(reason.message)).finally(()=>setBusy(false));}}>Lưu cảnh nháp và hai biến thể</Button>
+    </>}
+    {saved&&<p role="status">Đã lưu cảnh nháp A/B. Xem từng cảnh và duyệt kịch bản trước khi chạy.</p>}
+    {error&&<p role="alert" className="inline-error">{error}</p>}
+  </section>;
+}
 
 export function PromptAssistant({projectId, production: p, product, disabled, demo, onDrafts}: {
   projectId: string; production: Production; product: LabRecord; disabled: boolean;

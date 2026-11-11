@@ -27,7 +27,27 @@ registerHooks({resolve(specifier, context, next) {
 }});
 const {default: ViralFormulas} = await import('../../components/lab/viral-formulas.tsx');
 const {viralFormulas, viralFormulaRecordId} = await import('../../lib/lab/viral-formulas.ts');
+const {FormulaDraftPanel} = await import('../../components/lab/production-intelligence.tsx');
+const {newProduction} = await import('../../lib/lab/production.ts');
 const render = records => renderToStaticMarkup(React.createElement(ViralFormulas, {records}));
+test('formula composer includes saved versions, keyword entry and draft-only controls without provider calls',()=>{
+  const custom={...viralFormulas[0],version:3,name:'Saved English formula'};
+  const extra={...custom,id:'user_formula',name:'User formula'};
+  let saves=0;
+  const html=renderToStaticMarkup(React.createElement(FormulaDraftPanel,{
+    records:[custom,extra].map(data=>({id:viralFormulaRecordId(data),kind:'viral_formula',data})),
+    production:newProduction('Fixture','p',1),product:{traits:['night_glow']},disabled:true,onDrafts:async()=>{saves++;},
+  }));
+  assert.match(html,/Mẫu kịch bản từ công thức/);
+  assert.match(html,/Saved English formula · v3 · Gợi ý/);
+  assert.match(html,/User formula · v3/);
+  assert.match(html,/Từ khóa CTA · một từ tiếng Anh in hoa/);
+  assert.match(html,/value="LINK"/);
+  assert.match(html,/Soạn hai mở đầu A\/B/);
+  assert.match(html,/Chỉ lưu cảnh nháp, chưa duyệt hoặc gửi Muse/);
+  assert.match(html,/<select[^>]*disabled/);assert.match(html,/<button[^>]*disabled/);
+  assert.doesNotMatch(html,/<(?:img|video|iframe)\b/);assert.equal(saves,0);
+});
 
 test('formula viewer shows beats, relative CTA, all references and guardrails without edit or network controls', () => {
   const html = render([]);

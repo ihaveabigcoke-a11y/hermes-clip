@@ -148,3 +148,16 @@ test('library shows immutable prompt and reference bytes from the selected take 
   assert.equal(mediaInstructions(entry).prompt,'Archived attempt prompt');
   assert.equal(mediaInstructions(entry).fromSnapshot,true);
 });
+
+test('library overlay follows the selected immutable snapshot, including unknown in legacy snapshots',()=>{
+  const entry=mediaEntry('overlay',1);
+  entry.scene.overlayText='Edited later';
+  entry.take.snapshot=JSON.stringify({prompt:'Original',overlayText:'The problem'});
+  assert.equal(mediaInstructions(entry).overlayText,'The problem');
+  entry.take.snapshot=JSON.stringify({prompt:'Old snapshot without overlay'});
+  assert.equal(mediaInstructions(entry).overlayText,undefined);
+  entry.take.snapshot=JSON.stringify({prompt:'Original',overlayText:null});
+  assert.equal(mediaInstructions(entry).overlayText,null);
+  delete entry.take.snapshot;
+  assert.equal(mediaInstructions(entry).overlayText,'Edited later');
+});

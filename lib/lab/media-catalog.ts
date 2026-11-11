@@ -36,7 +36,7 @@ export function mediaInstructions(entry: Pick<MediaEntry, 'production' | 'scene'
     return typeof assetId === 'string' && /^[a-zA-Z0-9_-]{1,120}$/.test(assetId)
       ? [{assetId, name: original?.name ?? 'Ảnh tham chiếu đã gửi'}] : [];
   });
-  return {prompt, references, fromSnapshot: !!snapshot};
+  return {prompt, ...(typeof source.overlayText==='string'||source.overlayText===null?{overlayText:source.overlayText as string|null}:{}), references, fromSnapshot: !!snapshot};
 }
 
 export function preferredMedia(entries: MediaEntry[], organization: MediaOrganization) {
