@@ -51,7 +51,7 @@ export const instagramSessionLabels = {unknown: 'Chưa xác nhận phiên', logi
 /** @type {Record<string, string>} */
 export const instagramMetricLabels = {views:'Lượt xem',likes:'Lượt thích',comments:'Bình luận',saves:'Lượt lưu',shares:'Lượt chia sẻ',
   follows:'Lượt theo dõi mới',viewers:'Người xem',interactions:'Lượt tương tác',reelInteractions:'Tương tác với Reel',
-  accountsEngaged:'Tài khoản tương tác',profileActivity:'Hoạt động trên hồ sơ',profileVisits:'Lượt truy cập hồ sơ',linkClicks:'Lượt bấm liên kết'};
+  accountsEngaged:'Tài khoản tương tác',profileActivity:'Hoạt động trên hồ sơ',profileVisits:'Vào profile',linkClicks:'Bấm link'};
 
 /** @type {Record<string, string>} */
 export const instagramMetricStates = {idle:'Chờ cập nhật',running:'Đang cập nhật',ready:'Đã cập nhật',partial:'Có chỉ số chưa được cung cấp',

@@ -1,5 +1,9 @@
 # Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
 
+## Cập nhật source đêm T07 — Instagram theo tài khoản × nội dung
+
+Clone `night-20261111` đã thêm Vào profile/Bấm link, mở rộng sản phẩm thành bảng tài khoản × content_plan, CTA T06 có liên kết và bản đo mới nhất. Giữ null/0 riêng và chống trùng permalink trước khi chia tài khoản. Mặc định ẩn archived/QA, có công tắc hiện lại và mở chi tiết sản phẩm lưu trữ. Thao tác lưu trữ có xác nhận đã tồn tại ở Sản phẩm, được kiểm bằng fixture; không lưu trữ dữ liệu người dùng trong đêm. Domain 132/132, API 15/15, desktop 218 đạt/1 skip OpenMontage, typecheck và `local:build` output riêng đạt. UI fixture offline qua mở rộng/lọc/lưu trữ ở 1920/1366/800/390 px; chưa triển khai hoặc kiểm Instagram thật. Xem [checkpoint T07](T07-INSTAGRAM-OVERVIEW.md) và `ops/night/out/T07-*`.
+
 ## Cập nhật source đêm T04 — bảng so sánh và chọn tạo hồ sơ
 
 Clone `night-20261111` đã thu gọn bảng nghiên cứu với cột SKU, vốn + ship, ngưỡng 20 USD, cảnh kết quả, rủi ro, quyết định và cảnh báo T02. Tick chọn lưu lựa chọn rồi gọi API `promote` chống trùng; bỏ chọn giữ hồ sơ, lỗi giữa chừng có đường đối soát/hoàn tất chọn. Form có textarea và tiêu chí cấu trúc, giữ một nút chính Bắt đầu nghiên cứu. Domain 126/126, API 15/15, desktop 214 đạt/1 skip OpenMontage, typecheck và build output riêng đạt. UI build với fixture offline đo hàng 101–109 px ở 1920×1080; ảnh và báo cáo trong `ops/night/out/T04-*`. Chưa triển khai hoặc kiểm bản cài/dịch vụ thật. Xem [checkpoint T04](T04-RESEARCH-COMPARISON.md) cho quy tắc độ đầy đủ, retry, bằng chứng và cách chạy tiếp.

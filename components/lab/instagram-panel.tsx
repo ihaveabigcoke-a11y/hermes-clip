@@ -8,14 +8,12 @@ import {useInstagramStatus, type InstagramJob, type InstagramProfile} from '@/li
 import {mediaCatalog, preferredMedia} from '@/lib/lab/media-catalog';
 import {useDesktopPreference} from '@/lib/lab/use-desktop-preference';
 import {type MediaOrganization} from '@/lib/lab/media-organization';
-import {instagramProductSummary,type SummaryMetric} from '@/lib/lab/instagram-summary';
 import {instagramStateLabels, instagramSessionLabels, contentPlanLabels, reviewLabels} from '@/desktop/src/ui-copy.mjs';
 import {profileInput} from '@/desktop/src/shared.mjs';
 import {Badge, Button, Empty, Modal, Pagination, RecordForm} from './primitives';
 import {MediaPlayer} from './media-preview';
 import InstagramMetrics from './instagram-metrics';
-import {ProductMetrics,MetricValue} from './instagram-overview';
-import {instagramMetricLabels} from '@/desktop/src/ui-copy.mjs';
+import {ProductMetrics,InstagramContentTable} from './instagram-overview';
 
 type Props = {
   product: LabRecord; accounts: LabRecord[]; plans: LabRecord[]; records: LabRecord[]; demo: boolean; disabled: boolean;
@@ -48,7 +46,6 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
   useEffect(()=>{const restore=()=>updateTab(readTab());window.addEventListener('popstate',restore);return()=>window.removeEventListener('popstate',restore);},[]);
   const [page, setPage] = useState(1);
   const [historyPage, setHistoryPage] = useState(1);
-  const [overviewPage,setOverviewPage]=useState(1);
   const [selectedId, setSelectedId] = useState('');
   const [selection, setSelection] = useState<Record<string, {accountId?: string; assetId?: string}>>({});
   const [busy, setBusy] = useState(false);
@@ -77,8 +74,6 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
     && !pending && !published && !disabled && !busy && !demo && !!live.status;
   const configProfile = live.status?.profiles.find(profile => profile.id === config?.id);
   const historyCurrentPage = Math.min(historyPage, Math.max(1, Math.ceil(jobs.length / 8)));
-  const summary=instagramProductSummary(records,product.id,live.status?.jobs);
-  const overviewCurrentPage=Math.min(overviewPage,Math.max(1,Math.ceil(summary.posts.length/10)));
   function openContent(id:string){setSelectedId(id);setPage(Math.max(1,Math.floor(plans.findIndex(p=>p.id===id)/8)+1));setTab('content');}
 
   async function action(method: string, payload: unknown, message = '') {
@@ -128,13 +123,7 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
       <button type="button" aria-pressed={tab==='history'} onClick={()=>setTab('history')}>Lượt đăng <span>{jobs.length}</span></button>
     </div>{tab==='content'&&<Button tone="neutral" disabled={disabled||busy} onClick={()=>onPlan()}><Plus size={16}/>Thêm nội dung</Button>}</div>
     {tab==='overview'&&<><ProductMetrics productId={product.id} records={records} status={live.status}/>
-      {!summary.posts.length?<Empty title="Chưa có bài đăng cho sản phẩm này" text={`${summary.drafts} nội dung chưa đăng. Số liệu sẽ tự xuất hiện sau khi có bài đăng.`} action={<Button tone="neutral" onClick={()=>setTab('content')}>Xem nội dung</Button>}/>:<div className="operations-table-scroll" role="region" aria-label="Bài đăng của sản phẩm" tabIndex={0}>
-        <table className="operations-comparison"><caption className="sr-only">Số liệu từng bài đăng của sản phẩm</caption><thead><tr><th scope="col">Bài đăng</th>{(['views','likes','comments','saves','shares'] as SummaryMetric[]).map(key=><th key={key} scope="col">{instagramMetricLabels[key]}</th>)}<th scope="col">Lần đo</th></tr></thead>
-          <tbody>{summary.posts.slice((overviewCurrentPage-1)*10,overviewCurrentPage*10).map(post=><tr key={post.plan.id}><th scope="row"><button type="button" className="comparison-name" onClick={()=>openContent(post.plan.id)}>{post.plan.data.name}</button><small>{accounts.find(a=>a.id===post.plan.data.accountId)?.data.name??'Hồ sơ đã lưu'}</small></th>
-            {(['views','likes','comments','saves','shares'] as SummaryMetric[]).map(key=><td key={key}><MetricValue metric={{value:post.metric?.data[key]??null,known:post.metric?.data[key]!=null?1:0,total:1,approximate:!!post.metric?.data.approximate?.includes(key)}}/></td>)}
-            <td>{post.metric?formatTime(Date.parse(post.metric.data.observedAt)):'Chưa đo'}<small>{live.status?.metrics?.rows.find(r=>post.planIds.includes(r.planId))?.error}</small></td></tr>)}</tbody>
-        </table></div>}
-      {summary.posts.length>10&&<Pagination page={overviewCurrentPage} total={summary.posts.length} size={10} onPage={setOverviewPage}/>}
+      <InstagramContentTable records={records} productId={product.id} status={live.status} onOpenPlan={openContent}/>
     </>}
     {tab==='accounts'&&<section className="instagram-accounts" aria-label="Tài khoản Instagram của sản phẩm">
       <header className="instagram-section-heading"><h2>Tài khoản của sản phẩm</h2><Button disabled={disabled || busy} onClick={() => onAccount()}><Plus size={16}/>Thêm hồ sơ</Button></header>

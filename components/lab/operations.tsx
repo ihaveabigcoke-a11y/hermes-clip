@@ -52,7 +52,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
   const [preview, setPreview] = useState("");
   const [museTask, setMuseTask] = useState<{kind: MuseTaskKind; recordId: string; prompt: string} | null>(null);
   const lock = useRef(false);
-  const products = records.filter(record => record.kind === "product" && !record.data.archived);
+  const products = records.filter(record => record.kind === "product" && (view === 'social' || !record.data.archived));
   const batches = records.filter(record => record.kind === "research_batch").sort((a,b)=>b.updatedAt-a.updatedAt);
   const choices = view === "research" ? batches : products;
   const chosen = choices.find(record => record.id === selected) ?? (view === 'social' ? undefined : choices[0]);

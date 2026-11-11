@@ -395,12 +395,14 @@ input::placeholder,textarea::placeholder { opacity:1; }
 .instagram-overview-toolbar { display:flex; flex-wrap:wrap; align-items:flex-end; gap:12px; margin-bottom:20px; }
 .instagram-overview-toolbar .search-box { flex:1 1 240px; min-height:44px; }
 .instagram-overview-toolbar .field { flex:0 1 220px; margin:0; }
+.instagram-archived-toggle { display:flex; align-items:center; gap:8px; font-size:14px; }
+.instagram-archived-toggle small { display:block; color:var(--lab-muted); font-size:12px; }
 .operations-table-scroll { max-width:100%; min-width:0; overflow-x:auto; border:1px solid var(--lab-subtle-border); border-radius:var(--lab-rounded-lg); background:var(--lab-surface); scrollbar-gutter:stable; }
 .operations-table-scroll:focus-visible { outline:2px solid var(--lab-focus); outline-offset:3px; }
 .operations-comparison { width:100%; border-collapse:collapse; text-align:left; font-size:14px; line-height:1.5; }
 .operations-comparison th,.operations-comparison td { padding:16px 12px; vertical-align:top; border-bottom:1px solid var(--lab-subtle-border); }
 .operations-comparison thead th { color:var(--lab-muted); font-size:13px; font-weight:500; white-space:nowrap; background:var(--lab-sidebar); }
-.operations-comparison tbody th { font-weight:500; min-width:210px; max-width:290px; }
+.operations-comparison > tbody > tr > th { font-weight:500; min-width:210px; max-width:290px; }
 .operations-comparison tbody tr:last-child > * { border-bottom:0; }
 .operations-comparison tbody tr:hover { background:var(--lab-raised); }
 .operations-comparison tbody tr.is-selected { background:var(--lab-accent); }
@@ -411,13 +413,14 @@ input::placeholder,textarea::placeholder { opacity:1; }
 .comparison-name:hover { color:var(--lab-primary-text); text-decoration:underline; text-underline-offset:3px; }
 .comparison-name:focus-visible { outline:2px solid var(--lab-focus); outline-offset:4px; border-radius:4px; }
 .instagram-overview-table { min-width:940px; }
+.instagram-overview .operations-table-scroll,.instagram-panel .operations-table-scroll { position:relative; }
 .instagram-total { display:block; font-size:17px; font-weight:500; white-space:nowrap; }
 .instagram-total small { display:block; color:var(--lab-muted); font-size:12px; line-height:1.5; font-weight:400; white-space:normal; margin-top:5px; }
 .instagram-data-note { color:var(--lab-muted); font-size:13px; line-height:1.55; margin:14px 0; }
 .instagram-product-metrics { padding:18px; border:1px solid var(--lab-subtle-border); border-radius:var(--lab-rounded-lg); background:var(--lab-surface); }
 .instagram-product-metrics header { flex-wrap:wrap; }
 .instagram-product-metrics header span { color:var(--lab-muted); font-size:13px; }
-.instagram-product-metrics dl { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); margin:24px 0 0; gap:14px; }
+.instagram-product-metrics dl { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); margin:24px 0 0; gap:14px; }
 .instagram-product-metrics dt { color:var(--lab-muted); font-size:13px; }
 .instagram-product-metrics dd { margin:6px 0 0; }
 .research-selection-bar { display:flex; align-items:center; justify-content:space-between; gap:18px; margin:12px 0 20px; }

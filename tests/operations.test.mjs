@@ -4,7 +4,8 @@ import {readFileSync} from 'node:fs';
 import {candidateSchema, candidateCurrency, landedCost, researchBatchSchema, socialMetricSchema, landingPageSchema, landingHtml, socialTotals} from '../lib/lab/operations.ts';
 import {formatMoney} from '../lib/lab/domain.ts';
 import {mergeMuseResearch, parseMuseResponse, museTaskPrompt} from '../lib/lab/muse-workflows.ts';
-import {instagramProductSummary} from '../lib/lab/instagram-summary.ts';
+import {instagramProductSummary,instagramAccountContentRows,visibleInstagramProducts} from '../lib/lab/instagram-summary.ts';
+import {instagramOverviewFixture} from './fixtures/instagram-overview.mjs';
 import {annotateResearchQuality, sharedSourceWarning, pageLevelEvidenceWarning} from '../lib/lab/research-quality.ts';
 import {draftReferenceVideo, referenceVideoDraftSchema, videoStructureSchema, referenceMusePrompt} from '../lib/lab/viral-reference.ts';
 import {formulaTaxonomy, formulaProductTraits, viralFormulas, referenceVideoSchema} from '../lib/lab/viral-formulas.ts';
@@ -432,6 +433,93 @@ test('product overview aggregates multiple accounts and latest snapshots without
   assert.equal(summary.publishedPosts,2);assert.equal(summary.measuredPosts,2);assert.equal(summary.totals.views.value,120);
   assert.equal(summary.totals.likes.value,0);assert.equal(summary.oldestMeasuredAt,2000);assert.equal(summary.newestMeasuredAt,3000);
   assert.equal(summary.drafts,0);
+});
+
+test('account × content keeps six posts across three accounts, latest per post, CTA and unknown metrics',()=>{
+  const {records,product,at}=instagramOverviewFixture();
+  const newest=records.find(row=>row.id==='metric_plan_1_1');
+  records.push({...newest,id:'older',updatedAt:at+1000,data:{...newest.data,observedAt:new Date(at-1000).toISOString(),views:999,profileVisits:999,linkClicks:999}});
+  const before=structuredClone(records),rows=instagramAccountContentRows(records,product.id);
+  assert.equal(rows.length,6);
+  assert.deepEqual(rows.map(row=>[row.account.id,row.plan.id]),[['account_1','plan_1_1'],['account_1','plan_1_2'],['account_2','plan_2_1'],['account_2','plan_2_2'],['account_3','plan_3_1'],['account_3','plan_3_2']]);
+  assert.deepEqual(rows.map(row=>row.ctaKeyword),['LED','LED','LED','LED','LINK','LINK']);
+  assert.equal(rows[0].metric.id,newest.id);assert.equal(rows[0].metric.data.observedAt,newest.data.observedAt);
+  assert.equal(rows[5].metric.data.views,null);assert.equal(rows[5].metric.data.profileVisits,null);assert.equal(rows[5].metric.data.linkClicks,null);
+  assert.equal(rows[0].metric.data.linkClicks,0);
+  const summary=instagramProductSummary(records,product.id);
+  assert.deepEqual(summary.totals.profileVisits,{value:null,known:5,total:6,approximate:false});
+  assert.deepEqual(summary.totals.linkClicks,{value:null,known:5,total:6,approximate:false});
+  const missing=records.find(row=>row.id==='metric_plan_3_2');
+  const complete=records.map(row=>row===missing?{...row,data:{...row.data,profileVisits:0,linkClicks:0,approximate:['profileVisits']}}:row);
+  assert.deepEqual(instagramProductSummary(complete,product.id).totals.profileVisits,{value:25,known:6,total:6,approximate:true});
+  assert.equal(instagramProductSummary(complete,product.id).totals.linkClicks.value,0);
+  assert.deepEqual(records,before);
+});
+
+test('account/content deduplicates permalink aliases before grouping and keeps the winning content identity',()=>{
+  const {records,product,at}=instagramOverviewFixture();
+  const plan=records.find(row=>row.id==='plan_1_1'),metric=records.find(row=>row.id==='metric_plan_1_1');
+  records.push({...plan,id:'alias',data:{...plan.data,name:'Alias hook',accountId:'account_2',postUrl:'https://instagram.com/p/plan_1_1/?tracking=fixture'}},
+    {...metric,id:'alias_metric',updatedAt:at+10,data:{...metric.data,planId:'alias',accountId:'account_2',views:200}});
+  const rows=instagramAccountContentRows(records,product.id),post=rows.find(row=>row.planIds.includes('alias'));
+  assert.equal(rows.length,6);assert.equal(post.plan.id,'alias');assert.equal(post.account.id,'account_2');assert.equal(post.metric.data.views,200);
+  assert.deepEqual(post.planIds,['plan_1_1','alias']);assert.equal(instagramProductSummary(records,product.id).drafts,0);
+  assert.equal(rows.filter(row=>row.accountId==='account_1').length,1);
+  assert.equal(rows.filter(row=>row.accountId==='account_2').length,3);
+});
+
+test('published snapshot identifies an unsynced account and ignores mismatched observations',()=>{
+  const {records,product,at}=instagramOverviewFixture();
+  const plan=records.find(row=>row.id==='plan_1_1'),metric=records.find(row=>row.id==='metric_plan_1_1');
+  plan.data={...plan.data,status:'draft',accountId:'stale_account',assetId:'stale_asset',postUrl:'https://instagram.com/p/stale/'};
+  const jobs=[{state:'published',updatedAt:at,postUrl:metric.data.sourceUrl,snapshot:{planId:plan.id,productId:product.id,accountId:'account_1',assetId:'asset_'+plan.id}}];
+  records.push({...metric,id:'wrong_account',data:{...metric.data,accountId:'account_2',observedAt:new Date(at+1000).toISOString(),views:999}});
+  const rows=instagramAccountContentRows(records,product.id,jobs),post=rows.find(row=>row.plan.id===plan.id);
+  assert.equal(rows.length,6);assert.equal(post.account.id,'account_1');assert.equal(post.ctaKeyword,'LED');assert.equal(post.metric.id,metric.id);
+  assert.equal(post.url,metric.data.sourceUrl);
+});
+
+test('CTA uses the linked T06 variant or pinned take, never an unrelated product or ambiguous keyword',()=>{
+  const {records,product}=instagramOverviewFixture();
+  const plan=records.find(row=>row.id==='plan_1_1'),project=records.find(row=>row.id==='production_plan_1_1');
+  const keyword=()=>instagramAccountContentRows(records,product.id).find(row=>row.plan.id===plan.id).ctaKeyword;
+  project.data.variants.push({id:'other_variant',ctaKeyword:'OTHER'});
+  assert.equal(keyword(),'LED'); // Exact render selects one variant even if the project has others.
+  project.data.exports=[];
+  assert.equal(keyword(),null);
+  project.data.scenes=[{id:'hook',takes:[{id:'take',assetId:plan.data.assetId}]}];
+  project.data.variants[0].hook={sceneId:'hook',takeId:'take'};
+  assert.equal(keyword(),'LED');
+  project.data.variants[1].hook={sceneId:'hook',takeId:'take'};
+  assert.equal(keyword(),null);
+  project.data.variants[1].ctaKeyword='LED';assert.equal(keyword(),'LED');
+  delete project.data.variants[1].ctaKeyword;assert.equal(keyword(),null);
+  project.data.variants.pop();project.data.productId='another_product';assert.equal(keyword(),null);
+  project.data.productId=product.id;delete plan.data.productionId;assert.equal(keyword(),'LED');
+  delete plan.data.assetId;assert.equal(keyword(),'LED');
+  project.data.variants.push({id:'draft_other',ctaKeyword:'OTHER'});assert.equal(keyword(),null);
+  project.data.variants.pop();
+  project.data.contentPlanId='unrelated_plan';assert.equal(keyword(),null);
+});
+
+test('legacy posts without production, account record or metric keep nullable fields and empty summaries',()=>{
+  const plan={id:'legacy',kind:'content_plan',updatedAt:1,data:{name:'Legacy hook',productId:'product',accountId:'missing',status:'published_manual',postUrl:'https://instagram.com/p/legacy/'}};
+  const rows=instagramAccountContentRows([plan],'product');
+  assert.equal(rows.length,1);assert.equal(rows[0].account,null);assert.equal(rows[0].accountId,'missing');
+  assert.equal(rows[0].ctaKeyword,null);assert.equal(rows[0].metric,null);
+  assert.equal(instagramProductSummary([plan],'product').totals.profileVisits.value,null);
+  assert.equal(instagramProductSummary([],'product').totals.linkClicks.value,null);
+  assert.deepEqual(instagramAccountContentRows([plan],'other'),[]);
+});
+
+test('Instagram hides archived and QA products by default and reveals them without mutating stored records',()=>{
+  const product=(id,name,archived)=>({id,kind:'product',updatedAt:1,data:{name,...(archived===undefined?{}:{archived})}});
+  const products=[product('active','Active product'),product('archived','ChomChom',true),product('local_qa_product','Treat Trader'),product('test','TEST LOCAL demo'),product('case','  test local draft'),product('normal','A TEST LOCAL phrase',false)];
+  const before=structuredClone(products);
+  assert.deepEqual(visibleInstagramProducts(products).map(row=>row.id),['active','normal']);
+  assert.deepEqual(visibleInstagramProducts(products,true),products);
+  assert.deepEqual(visibleInstagramProducts([...products,{...products[0],kind:'content_plan'}],true),products);
+  assert.deepEqual(products,before);
 });
 
 test('product totals reject mismatched sources and account provenance, and retain unknown coverage',()=>{
