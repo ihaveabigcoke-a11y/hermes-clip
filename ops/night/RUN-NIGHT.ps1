@@ -13,15 +13,18 @@
 param(
   [string]$Repo = "C:\HermesNight\hermes-clip",
   [string]$RepoUrl = "https://github.com/ihaveabigcoke-a11y/hermes-clip.git",
-  [string]$Branch = ("night-" + (Get-Date -Format "yyyyMMdd")),
+  [string]$Branch = "night-20261111",
   [int]$TaskTimeoutMin = 120,
   [int]$CheckTimeoutMin = 30,
-  [string]$CodexArgs = "--sandbox workspace-write",
+  [string]$CodexArgs = "--sandbox danger-full-access",
   [string]$CodexModel = "",
   [switch]$NoLastMessageFlag,
   [switch]$SkipInstall,
   [switch]$PreflightOnly,
-  [string]$OnlyTasks = ""
+  [string]$OnlyTasks = "",
+  [string]$FfmpegBin = "C:\Users\ADMIN\Downloads\Product-Lab-Local\Product-Lab-Local\desktop\tools\ffmpeg\bin",
+  [string]$TaskFolder = "",
+  [string]$FixLabel = "fix"
 )
 
 $ErrorActionPreference = "Stop"
@@ -47,8 +50,31 @@ $Tasks = @(
   @{ Id = "T07"; File = "T07-instagram-tong-quan.md";               Title = "Instagram tong quan theo tai khoan";             Deps = @() },
   @{ Id = "T08"; File = "T08-sua-ui-nho.md";                        Title = "Sua UI nho";                                    Deps = @() },
   @{ Id = "T09"; File = "T09-nhan-AI-instagram-khao-sat.md";        Title = "Nhan AI Instagram (fixture only)";              Deps = @() },
-  @{ Id = "T10"; File = "T10-tai-lieu-va-tong-ket.md";              Title = "Tai lieu + tong ket";                           Deps = @() }
+  @{ Id = "T10"; File = "T10-tai-lieu-va-tong-ket.md";              Title = "Tai lieu + tong ket";                           Deps = @() },
+  # ---- dem 3
+  @{ Id = "T19"; File = "T19-thong-nhat-harness-test-desktop.md";   Title = "Thong nhat harness test desktop";               Deps = @() },
+  @{ Id = "T23"; File = "T23-hermes-tu-kiem-san-pham.md";           Title = "Hermes tu kiem san pham";                       Deps = @("T04","T14") },
+  @{ Id = "T21"; File = "T21-hermes-tu-phan-tich-video-mau.md";     Title = "Hermes tu phan tich video mau";                 Deps = @("T12") },
+  @{ Id = "T22"; File = "T22-muse-dinh-kem-anh-phan-tich-video.md"; Title = "Muse dinh kem anh phan tich video";             Deps = @("T21") },
+  @{ Id = "T24"; File = "T24-tu-review-dem.md";                     Title = "Tu review dem bang script";                     Deps = @() },
+  @{ Id = "T26"; File = "T26-don-ghi-chu-review-1.md";              Title = "Don ghi chu review 1";                          Deps = @() },
+  @{ Id = "T27"; File = "T27-don-ghi-chu-review-2.md";              Title = "Don ghi chu review 2";                          Deps = @() },
+  @{ Id = "T15"; File = "T15-trang-san-pham-buoc-tiep-va-kiem-mau.md"; Title = "San pham: buoc tiep theo + kiem mau";        Deps = @("T03") },
+  @{ Id = "T16"; File = "T16-dem-comment-tu-khoa.md";               Title = "Dem comment tu khoa CTA";                       Deps = @() },
+  @{ Id = "T17"; File = "T17-link-utm-theo-tai-khoan-hook.md";      Title = "Link UTM theo tai khoan x hook";                Deps = @() },
+  @{ Id = "T18"; File = "T18-instagram-api-chinh-thuc-khao-sat-va-adapter.md"; Title = "Instagram API adapter (tat mac dinh)"; Deps = @() },
+  @{ Id = "T20"; File = "T20-tong-ket-dem-3.md";                    Title = "Tong ket dem 3 + skills vao AGENTS";            Deps = @() }
 )
+
+if ($TaskFolder) {
+  # Fix tasks written by the Claude Code boss: Fxx-ascii-slug.md, run in name order, no deps.
+  $Tasks = @()
+  foreach ($f in @(Get-ChildItem -Path $TaskFolder -Filter "F*.md" | Sort-Object Name)) {
+    if ($f.Name -match '^(F\d\d)-([A-Za-z0-9-]+)\.md$') {
+      $Tasks += @{ Id = $Matches[1]; File = $f.FullName; Title = ("Fix " + ($Matches[2] -replace '-', ' ')); Deps = @() }
+    }
+  }
+}
 
 $Checks = @(
   @{ Name = "unit";    Cmd = "npm test" },
@@ -61,7 +87,7 @@ $Checks = @(
 $ForbiddenPatterns = @(
   '^data/', '^evidence/', '^ops/night/tasks/', '^ops/night/input/', '^ops/night/COMMON\.md$',
   '^ops/night/RUN-NIGHT\.ps1$', '^desktop/local-dist/', '^pnpm-lock\.yaml$', '^desktop/package-lock\.json$',
-  '^\.github/'
+  '^\.github/', '^\.claude/', '^ops/night/fix/'
 )
 
 # ---------------------------------------------------------------- helpers
@@ -198,6 +224,12 @@ function Gate([hashtable]$baseline, [string]$tag) {
 
 # ---------------------------------------------------------------- keep PC awake while running
 $env:COREPACK_ENABLE_DOWNLOAD_PROMPT = "0"
+$script:FfmpegNote = ""
+if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
+  if ($FfmpegBin -and (Test-Path (Join-Path $FfmpegBin "ffmpeg.exe"))) { $env:Path = $FfmpegBin + ";" + $env:Path }
+  else { $script:FfmpegNote = "WARNING: ffmpeg not on PATH and not found in " + $FfmpegBin + " - tests that need ffmpeg may fail at baseline" }
+}
+$script:PreStash = ""
 try { Add-Type -Namespace HermesNight -Name Power -MemberDefinition '[DllImport("kernel32.dll")] public static extern uint SetThreadExecutionState(uint esFlags);' } catch { }
 # ES_CONTINUOUS | ES_SYSTEM_REQUIRED = 0x80000001 : keep the PC from sleeping while this window runs
 [HermesNight.Power]::SetThreadExecutionState([uint32]2147483649) | Out-Null
@@ -207,7 +239,7 @@ try {
 
   # ------------------------------------------------------------ preflight
   foreach ($tool in @("git", "node", "npm", "codex")) {
-    if (-not (Get-Command $tool -ErrorAction SilentlyContinue)) { throw ("Missing tool on PATH: " + $tool + ". See README-VI.md.") }
+    if (-not (Get-Command $tool -ErrorAction SilentlyContinue)) { throw ("Missing tool on PATH: " + $tool + ". See README-DEM3.md.") }
   }
   $nodeMajor = [int](((& node -v) -replace '^v', '') -split '\.')[0]
   if ($nodeMajor -lt 22) { throw ("Node >= 22 required, found " + (& node -v)) }
@@ -223,7 +255,16 @@ try {
     $ErrorActionPreference = "Stop"
     if ($cloneCode -ne 0) { throw "git clone failed" }
   }
-  if ((& git -C $Repo status --porcelain).Count -gt 0) { throw ("Repo has uncommitted changes: " + $Repo + ". Use a clean clone.") }
+  if ($script:FfmpegNote) { Log $script:FfmpegNote }
+  if ((& git -C $Repo status --porcelain).Count -gt 0) {
+    # Never delete work: park uncommitted changes in a named stash and continue.
+    $script:PreStash = "night-PRESTASH-" + (Get-Date -Format "yyyyMMdd-HHmmss")
+    $ErrorActionPreference = "Continue"
+    & git -C $Repo stash push -u -m $script:PreStash *> $null
+    $ErrorActionPreference = "Stop"
+    if ((& git -C $Repo status --porcelain).Count -gt 0) { throw ("Repo has uncommitted changes that could not be stashed: " + $Repo) }
+    Log ("Repo had uncommitted changes -> saved in git stash '" + $script:PreStash + "' (nothing deleted)")
+  }
   Invoke-Git @("fetch", "origin") | Out-Null
   $ErrorActionPreference = "Continue"
   & git -C $Repo rev-parse --verify --quiet $Branch *> $null
@@ -241,9 +282,21 @@ try {
   Copy-Item -Recurse -Force (Join-Path $Pack "input") $dest
   Copy-Item -Force (Join-Path $Pack "COMMON.md") $dest
   Copy-Item -Force (Join-Path $Pack "RUN-NIGHT.ps1") $dest
+  if ($TaskFolder) {
+    $fixDest = Join-Path $dest ("fix\" + $FixLabel)
+    New-Item -ItemType Directory -Force -Path $fixDest | Out-Null
+    Copy-Item -Force (Join-Path $TaskFolder "F*.md") $fixDest
+  }
+  if (Test-Path (Join-Path $Pack "skills")) {
+    # project skills for Claude Code / Codex: <repo>\.claude\skills\<name>\SKILL.md
+    New-Item -ItemType Directory -Force -Path (Join-Path $Repo ".claude") | Out-Null
+    Copy-Item -Recurse -Force (Join-Path $Pack "skills") (Join-Path $Repo ".claude")
+  }
   if ((& git -C $Repo status --porcelain).Count -gt 0) {
     Invoke-Git @("add", "-A") | Out-Null
-    Invoke-Git @("commit", "-m", "night: add task pack") | Out-Null
+    $packMsg = "night: add task pack"
+    if ($TaskFolder) { $packMsg = "night: add fix pack " + $FixLabel }
+    Invoke-Git @("commit", "-m", $packMsg) | Out-Null
     Log "Committed task pack"
   }
 
@@ -263,7 +316,7 @@ try {
   $r = Run-Codex "Create the file ops/night/out/smoke.txt containing exactly READY. Do not change any other file. Do not commit. Then reply READY." "smoke" $smokeReport
   if ($r.Auth) { throw ("Codex AUTH ERROR (401/403): key het han hoac chua dang nhap. Gia han key / codex login roi chay lai. Log: " + $r.Log) }
   if ($r.Code -ne 0 -or -not (Test-Path $smokeFile)) {
-    throw ("Codex smoke test failed (exit " + $r.Code + "). Read " + $r.Log + " and README-VI.md section 'Neu smoke test fail'.")
+    throw ("Codex smoke test failed (exit " + $r.Code + "). Read " + $r.Log + " and README-DEM3.md.")
   }
   Remove-Item $smokeFile -Force
   Log "Codex smoke test OK"
@@ -278,8 +331,8 @@ try {
   # Done = a "night Txx: ..." commit that is not "report only" and not reverted later.
   $already = @{}
   foreach ($s in @(& git -C $Repo log --reverse --format=%s ("origin/main.." + $Branch))) {
-    if ($s -match '^Revert "night (T\d\d):') { $already.Remove($Matches[1]); continue }
-    if ($s -match '^night (T\d\d): ') {
+    if ($s -match '^Revert "night ([TF]\d\d):') { $already.Remove($Matches[1]); continue }
+    if ($s -match '^night ([TF]\d\d): ') {
       $tid = $Matches[1]
       if ($s -match 'report only\s*$') { continue }
       $already[$tid] = $true
@@ -312,7 +365,9 @@ try {
     }
 
     Log ("==== " + $id + " " + $t.Title)
-    $task = Get-Content (Join-Path $Pack ("tasks\" + $t.File)) -Raw -Encoding UTF8
+    $taskPath = Join-Path $Pack ("tasks\" + $t.File)
+    if ([IO.Path]::IsPathRooted($t.File)) { $taskPath = $t.File }
+    $task = Get-Content $taskPath -Raw -Encoding UTF8
     $prompt = $common + "`n`n---`n`n" + $task + "`n`n---`nTASK-ID: " + $id + ". Ket thuc bang bao cao theo mau trong quy tac chung, dong dau la === BAO CAO " + $id + " ===`n"
 
     $final = $null
@@ -367,6 +422,16 @@ try {
     }
   }
 
+  # ------------------------------------------------------------ auto review (T24 script, read-only)
+  $autoReview = ""
+  if (Test-Path (Join-Path $Repo "scripts\night-review.mjs")) {
+    $arLog = Join-Path $RunDir "auto-review.log"
+    $arCode = Exec-Cmd ('node scripts/night-review.mjs --base origin/main --out ops/night/out/AUTO-REVIEW.md --runs "' + (Join-Path $Pack "runs") + '"') $Repo $arLog 10
+    Log ("Auto review: exit " + $arCode)
+    if ($arCode -eq 0) { $autoReview = "Tu review may moc: ops/night/out/AUTO-REVIEW.md (van can review noi dung truoc khi ap vao app chinh)" }
+    else { $autoReview = "Tu review may moc loi (exit " + $arCode + "), xem " + $arLog }
+  }
+
   # ------------------------------------------------------------ morning report
   $sb = New-Object System.Text.StringBuilder
   [void]$sb.AppendLine("# Bao cao dem " + $Branch)
@@ -379,7 +444,9 @@ try {
   [void]$sb.AppendLine("|---|---|---|---|---|")
   foreach ($row in $rows) { [void]$sb.AppendLine($row) }
   [void]$sb.AppendLine("")
-  if ($authDead) { [void]$sb.AppendLine("**CODEX AUTH ERROR (401/403): key het han giua dem. Gia han key roi chay lai START-NIGHT; task DONE se tu bo qua.**"); [void]$sb.AppendLine("") }
+  if ($authDead) { [void]$sb.AppendLine("**CODEX AUTH ERROR (401/403): key het han giua dem. Gia han key roi chay lai START-NIGHT3.cmd; task DONE se tu bo qua.**"); [void]$sb.AppendLine("") }
+  if ($script:PreStash) { [void]$sb.AppendLine("Truoc khi chay, repo co thay doi chua commit: da cat vao git stash '" + $script:PreStash + "' (khong xoa gi)."); [void]$sb.AppendLine("") }
+  if ($autoReview) { [void]$sb.AppendLine($autoReview); [void]$sb.AppendLine("") }
   [void]$sb.AppendLine("Log chi tiet (ngoai repo): " + $RunDir)
   [void]$sb.AppendLine("Task FAILED: xem bang lenh ``git stash list`` trong " + $Repo + ".")
   $reportText = $sb.ToString()

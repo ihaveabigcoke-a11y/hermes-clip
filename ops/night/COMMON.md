@@ -6,13 +6,14 @@ Bạn là **worker Codex duy nhất** đang chạy qua đêm theo hàng đợi t
 - Thư mục hiện tại là **bản clone riêng** của repo `hermes-clip`, trên nhánh `night-*`. Đây không phải bản cài đang chạy của người dùng.
 - Đọc trước: `AGENTS.md`, `docs/context/01-BOI-CANH-VA-TRANG-THAI.md`, `docs/context/02-SO-DO-SOURCE-VA-NGHIEM-THU.md`, rồi các file liên quan đến task.
 - Dữ liệu đầu vào cho các task nằm trong `ops/night/input/`.
+- Skill của dự án nằm trong `.claude/skills/` (chỉ đọc). Task nào nhắc tới skill thì đọc `SKILL.md` của skill đó trước khi code.
 
 ## Tuyệt đối không
 - Không đọc, sửa hoặc copy bất cứ thứ gì trong `C:/Users/ADMIN/AppData/`, profile Chromium, SQLite thật, cookie, phiên Muse/Instagram, proxy.
 - Không chạy `START-*.cmd`, `npm start`, Electron, Playwright tới website thật, không mở Muse hay Instagram, không gửi request mạng ra ngoài.
 - Không `git push`, không tự `git commit` (runner sẽ commit sau khi kiểm), không đổi nhánh.
 - Không cài dependency mới, không sửa `pnpm-lock.yaml`, `desktop/package-lock.json`, `package.json` dependencies.
-- Không sửa `data/`, `evidence/`, `ops/night/tasks/`, `ops/night/input/`, `desktop/local-dist/`.
+- Không sửa `data/`, `evidence/`, `ops/night/tasks/`, `ops/night/input/`, `desktop/local-dist/`, `.claude/`.
 - Không xóa test, không nới assertion để test qua. Hành vi mới phải có test mới.
 - Không đổi font, theme hay bố cục lớn ngoài phạm vi task. Nhãn UI bằng tiếng Việt có dấu; prompt gửi Muse và nội dung bán hàng bằng tiếng Anh.
 
