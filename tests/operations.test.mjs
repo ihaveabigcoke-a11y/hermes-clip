@@ -33,6 +33,16 @@ test('Muse cannot forge local checks and replay preserves existing Agent Reach e
   assert.deepEqual(later.candidates[0].listingCheck,checked.candidates[0].listingCheck);
   assert.deepEqual(later.candidates[0].competition.youtubeShorts,checked.candidates[0].competition.youtubeShorts);
 });
+test('source status and heuristic metadata remain compatible with older saved checks',()=>{
+ const base=candidate('sources'),check={status:'ok',fetchedAt:'2026-11-11T00:00:00Z',sourceUrl:base.supplierUrl,productCountOnPage:12};
+ const old=candidateSchema.parse({...base,listingCheck:check});
+ assert.equal(old.listingCheck.productCountReliable,null);assert.equal(old.listingCheck.currencyNote,null);
+ for(const status of ['ok','unavailable','blocked','failed']){
+  const next=candidateSchema.parse({...base,listingCheck:{...check,status,currencyDetected:null,currencyNote:'¥ không rõ CNY/JPY',productCountReliable:false}});
+  assert.equal(next.listingCheck.status,status);assert.equal(next.listingCheck.currencyDetected,null);assert.equal(next.listingCheck.productCountReliable,false);assert.equal(next.listingCheck.currencyNote,'¥ không rõ CNY/JPY');
+ }
+ assert.equal(candidateSchema.safeParse({...base,listingCheck:{...check,productCountReliable:'true'}}).success,false);
+});
 
 test('Muse research imports provenance once and retains manual selection and unknown prices', () => {
   const batch = researchBatchSchema.parse({name: 'Pet products', candidates: [candidate('existing')], selectedIds: ['existing']});

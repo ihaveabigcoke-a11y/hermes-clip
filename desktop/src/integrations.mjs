@@ -20,15 +20,15 @@ export const composeInput=z.object({projectId:id,variantId:id,ratio:z.enum(['9:1
 // No shell, no caller-provided argv; kill the local subprocess tree on timeout.
 export function runJson(command,args,{input,timeout=60000,cwd,format='json',maxBytes=4*1024*1024}={}){
  maxBytes=Math.min(4*1024*1024,Math.max(1,maxBytes));
- return new Promise((resolve,reject)=>{let stdout='',stderr='',done=false;const child=spawn(command,args,{cwd,windowsHide:true,shell:false,detached:process.platform!=='win32',stdio:['pipe','pipe','pipe'],env:{...process.env,PYTHONIOENCODING:'utf-8'}});
+ return new Promise((resolve,reject)=>{let stdout='',stdoutBytes=0,stderr='',done=false;const child=spawn(command,args,{cwd,windowsHide:true,shell:false,detached:process.platform!=='win32',stdio:['pipe','pipe','pipe'],env:{...process.env,PYTHONIOENCODING:'utf-8'}});
   function stop(){if(process.platform==='win32')spawn('taskkill',['/pid',String(child.pid),'/t','/f'],{windowsHide:true,stdio:'ignore'}).on('error',()=>{child.kill();});else try{process.kill(-child.pid,'SIGKILL');}catch{} }
   function finish(error,value){if(done)return;done=true;clearTimeout(timer);error?reject(error):resolve(value);}
   const timer=setTimeout(()=>{stop();finish(Error('Tác vụ quá thời gian; đã dừng tiến trình local. Kết quả trước vẫn được giữ.'));},timeout);
   child.stdout.setEncoding('utf8');
   child.stderr.setEncoding('utf8');
-  child.stdout.on('data',b=>{stdout+=b;if(Buffer.byteLength(stdout,'utf8')>maxBytes){stop();finish(Error('Kết quả vượt giới hạn đọc.'));}});
+  child.stdout.on('data',b=>{if(done)return;stdoutBytes+=Buffer.byteLength(b,'utf8');if(stdoutBytes>maxBytes){stop();finish(Error('Kết quả vượt giới hạn đọc.'));return;}stdout+=b;});
   child.stderr.on('data',b=>{stderr=(stderr+b).slice(-2000);});
-  child.on('error',()=>finish(Error('Không mở được công cụ. Kiểm tra đường dẫn Python/Agent Reach.')));
+  child.on('error',()=>finish(Object.assign(Error('Không mở được công cụ. Kiểm tra đường dẫn Python/Agent Reach.'),{unavailable:true})));
   child.on('close',code=>{if(done)return;if(format==='text')return code===0?finish(null,stdout):finish(Error('Không đọc được trợ giúp CLI local.'));let data;try{data=JSON.parse(stdout.trim());}catch{return finish(Error(`Công cụ không trả JSON hợp lệ (exit ${code}). Kiểm tra cài đặt local.`));}if(!data||typeof data!=='object'||Array.isArray(data))return finish(Error('Công cụ không trả đối tượng JSON hợp lệ. Kiểm tra cài đặt local.'));if(code!==0||data.ok!==true)return finish(Error(data.error?.hint||data.error?.message||data.error||'Công cụ báo lỗi; chưa có kết quả xác minh.'));finish(null,data);});
   child.stdin.on('error',()=>{});child.stdin.end(input?JSON.stringify(input):undefined);
  });
@@ -63,7 +63,7 @@ export class Integrations {
 
  async invokeReach(args, options) {
   const config = this.config();
-  if (!config) throw Error('Chưa có cấu hình local.');
+  if (!config) throw Object.assign(Error('Chưa có cấu hình local.'),{unavailable:true});
   const sameEnvironment = isAbsolute(config.reach) && isAbsolute(config.python)
    && dirname(config.reach).toLowerCase() === dirname(config.python).toLowerCase();
   const usePython = process.platform === 'win32' && sameEnvironment && /[\\/]agent-reach\.exe$/i.test(config.reach);

@@ -4,7 +4,7 @@ import {z} from 'zod';
 import {accessBlocked,boundedText,extractListing,listingWarnings,pageText,publicUrl,youtubeObservation,webObservation} from './listing-check.mjs';
 
 export const sourceCheckInput=z.object({batchId:z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/)}).strict();
-const failedStatus=error=>accessBlocked(error.message)?'blocked':'failed';
+const failedStatus=error=>error.unavailable?'unavailable':accessBlocked(error.message)?'blocked':'failed';
 const queryFor=candidate=>candidate.name.replace(/[\r\n\0]/g,' ').replace(/^[\s-]+/,'').slice(0,120)||'product';
 
 /** A durable integration job, with an in-memory callback only for this app session.
@@ -56,14 +56,15 @@ export class ResearchSources {
    const read=i.store.get('integration-health',null)?.reach?.listingRead;
    try{
     if(!publicUrl(candidate.supplierUrl))throw Error('URL nguồn không hợp lệ.');
-    if(!read?.command||!['read','web read'].includes(read.command.join(' ')))throw Object.assign(Error(read?.error||'Chưa xác nhận lệnh đọc trong --help; bấm Kiểm tra công cụ trước.'),{blocked:true});
+    this.requireReady();
+    if(!read?.command||!['read','web read'].includes(read.command.join(' ')))throw Object.assign(Error(read?.error||'Chưa xác nhận lệnh đọc trong --help; bấm Kiểm tra công cụ trước.'),{unavailable:true});
     const args=[...read.command,candidate.supplierUrl];
     if(read.timeoutFlag)args.push('--timeout','45');
     const response=await i.reach(args,{timeout:45000});
     const raw=pageText(response);await writeFile(rawPath,raw,'utf8');
     listingCheck=extractListing(raw,{fetchedAt:new Date().toISOString(),rawPath,sourceUrl:candidate.supplierUrl});
    }catch(error){
-    listingCheck={...listingCheck,status:error.blocked?'blocked':failedStatus(error),error:boundedText(error.message,1000)};
+    listingCheck={...listingCheck,status:failedStatus(error),error:boundedText(error.message,1000)};
     await writeFile(rawPath,boundedText(error.message),'utf8');
    }
    if(i.stopped)break;
@@ -78,15 +79,20 @@ export class ResearchSources {
    let error=null;
    try{await this.persist(job,candidate,patch);}catch(failure){error=boundedText(failure.message,1000);}
    const states=[listingCheck.status,youtubeShorts.status,webReferences.status];
-   const status=error?'failed':states.every(s=>s==='ok')?'ok':states.includes('ok')?'partial':states.includes('blocked')?'blocked':'failed';
+   const status=error?'failed':states.every(s=>s==='ok')?'ok':states.includes('ok')?'partial':states.includes('blocked')?'blocked':states.includes('failed')?'failed':'unavailable';
    results.push({candidateId:candidate.id,status,error,...patch});
    i.update({...i.job(job.id),result:{candidates:results},completed:results.length});this.changed();
   }
   return {result:{candidates:results},completed:results.length};
  }
+ requireReady(){
+  const health=this.integrations.store.get('integration-health',null)?.reach;
+  if(health?.ready===false)throw Object.assign(Error(health.error||'Agent Reach chưa sẵn sàng; bấm Kiểm tra công cụ trước.'),{unavailable:true});
+ }
  async search(args,rawPath,observation){
   const observedAt=new Date().toISOString();
   try{
+   this.requireReady();
    const response=await this.integrations.reach(args,{timeout:45000});
    await writeFile(rawPath,boundedText(JSON.stringify(response,null,2)),'utf8');
    return observation(response.items,observedAt,rawPath);

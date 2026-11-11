@@ -7,11 +7,90 @@ export function boundedText(value, limit = RAW_LIMIT) {
 const clean = value => String(value ?? '').replace(/&#(?:x([\da-f]+)|(\d+));/gi, (_, hex, dec) => {
  const code = Number.parseInt(hex || dec, hex ? 16 : 10);
  return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : '';
-}).replace(/&(nbsp|amp|lt|gt|quot|yen|euro);/gi, (_, key) => ({nbsp:' ', amp:'&', lt:'<', gt:'>', quot:'"', yen:'¥', euro:'€'}[key.toLowerCase()]));
+}).replace(/&(nbsp|amp|lt|gt|quot|yen|euro|pound);/gi, (_, key) => ({nbsp:' ', amp:'&', lt:'<', gt:'>', quot:'"', yen:'¥', euro:'€', pound:'£'}[key.toLowerCase()]));
 const plain = value => clean(value).replace(/<[^>]*>/g, ' ').replace(/[ \t]+/g, ' ').trim();
 const short = value => value ? plain(value).slice(0, 500) || null : null;
 export function accessBlocked(value) {
- return /captcha|access denied|access forbidden|verify (?:that )?you are human|sign in to continue|log in to continue|登录后查看|访问受限|验证码|\b(?:HTTP|status(?: code)?)\s*[:=]?\s*(?:403|429)\b|\b403\s+forbidden|too many requests/i.test(String(value));
+ return /captcha|verify (?:that )?you are human|sign in to continue|log in to continue|login required|authentication required|登录后查看|请登录|验证码|\b(?:HTTP(?:\/\d(?:\.\d)?)?|status(?: code)?)\s*[:=]?\s*(?:403|429)\b|\b403\s+forbidden|too many requests/i.test(String(value));
+}
+const currencySymbols = {CNY:['¥','CN¥'], USD:['US$','$'], VND:['₫'], EUR:['€'], GBP:['£']};
+function sourceCurrency(symbol, sourceUrl) {
+ if (symbol !== '¥') return Object.keys(currencySymbols).find(code => currencySymbols[code].includes(symbol)) ?? null;
+ try {
+  const host = new URL(sourceUrl).hostname;
+  return ['1688.com','alibaba.com','aliexpress.com','aliexpress.us','taobao.com','tmall.com'].some(domain => host === domain || host.endsWith('.'+domain)) ? 'CNY' : null;
+ } catch { return null; }
+}
+const relatedLabel = /(?:^|[\s_-])(?:related|recommend(?:ed|ation|ations)?)(?=$|[\s_-])|you[\s_-]+may[\s_-]+also[\s_-]+like|相关推荐|猜你喜欢/i;
+const productPath = /^\/(?:offer\/\d+\.html|item\/\d+\.html|products\/[^/?#]+)\/?$/i;
+const attributes = tag => Object.fromEntries([...tag.matchAll(/\b([\w-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g)].map(m => [m[1].toLowerCase(), clean(m[2] ?? m[3] ?? m[4])]));
+function productKey(value, sourceUrl) {
+ try { const url = new URL(clean(value), sourceUrl); return /^https?:$/.test(url.protocol) && productPath.test(url.pathname) ? url.hostname+url.pathname.replace(/\/$/,'') : null; } catch { return null; }
+}
+// A small, conservative structural scan, not a browser/HTML renderer. Ambiguous
+// markup or plain/Markdown text may suggest a showroom only in the details.
+export function listingProducts(raw, sourceUrl) {
+ const html = raw.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, '').replace(/<!--[\s\S]*?-->/g, '');
+ const root = {tag:'root',children:[],parent:null,text:''}, stack = [root], nodes = [];
+ let reliable = true, cursor = 0;
+ for (const token of html.matchAll(/<\/?[a-z][^>]*>/gi)) {
+  stack.at(-1).text += html.slice(cursor,token.index);cursor = token.index+token[0].length;
+  const tag = token[0].match(/^<\/?([\w-]+)/)[1].toLowerCase();
+  if (token[0].startsWith('</')) {
+   if (stack.at(-1).tag !== tag) reliable = false;
+   const index = stack.findLastIndex(node => node.tag === tag);
+   if (index > 0) { for (const node of stack.splice(index)) node.end = token.index; }
+   continue;
+  }
+  const attrs = attributes(token[0]), parent = stack.at(-1);
+  const node = {tag,attrs,parent,children:[],text:'',start:token.index+token[0].length,end:html.length,excluded:false};
+  parent.children.push(node);nodes.push(node);
+  if (relatedLabel.test([attrs.class,attrs.id,attrs['aria-label']].filter(Boolean).join(' ').replace(/([a-z])([A-Z])/g,'$1-$2'))) node.excluded=true;
+  if (!/^(?:area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)$/.test(tag) && !token[0].endsWith('/>')) stack.push(node);
+ }
+ stack.at(-1).text += html.slice(cursor);
+ if (stack.length > 1 || relatedLabel.test(clean(root.text))) reliable = false;
+ for (const node of nodes) {
+  if (!/^(?:h[1-6]|p|strong|span|div)$/.test(node.tag)) continue;
+  // Only short labels, never a whole container full of product descriptions.
+  if (node.end-node.start > 1000) continue;
+  if (node.children.some(child => !/^(?:span|strong|em|b|i)$/.test(child.tag))) continue;
+  const label = plain(html.slice(node.start,node.end));
+  if (label.length > 100 || !relatedLabel.test(label)) continue;
+  // A heading may sit in its own wrapper; exclude the enclosing region that
+  // actually contains products, not just the heading's immediate parent.
+  let region=node.parent,found=false;
+  while(region && !/^(?:root|html|body|main)$/.test(region.tag)) {
+   if (/^(?:section|aside|div)$/.test(region.tag) && /data-(?:product|offer)-id|\b(?:product-card|product-item|offer-card|offer-item)\b|\/(?:item|offer)\/\d+\.html|\/products\//i.test(html.slice(region.start,region.end))) {region.excluded=true;found=true;break;}
+   region=region.parent;
+  }
+  if (!found && !node.excluded) reliable = false;
+ }
+ const current = productKey(sourceUrl,sourceUrl), links = new Set(), ids = new Set();
+ let cards = 0;
+ for (const node of nodes) {
+  node.excluded ||= node.parent.excluded === true;
+  if (node.excluded) continue;
+  // A provider may flatten a recommendation region so its boundaries disappear.
+  if (relatedLabel.test(clean(node.text))) reliable = false;
+  const key = node.tag === 'a' ? productKey(node.attrs.href,sourceUrl) : null;
+  if (key && key !== current) links.add(key);
+  const card = /(?:^|\s)(?:product-card|product-item|offer-card|offer-item)(?:\s|$)/.test(node.attrs.class ?? '');
+  const id = node.attrs['data-product-id'] ?? node.attrs['data-offer-id'];
+  if (!card && !id) continue;
+  const cardLinks = [...html.slice(node.start,node.end).matchAll(/<a\b[^>]*>/gi)].map(m => productKey(attributes(m[0]).href,sourceUrl)).filter(Boolean);
+  if (cardLinks.length && cardLinks.every(link => link === current)) continue;
+  if (id && current?.match(/\/(?:offer|item)\/(\d+)\.html$/)?.[1] === id) continue;
+  if (card) cards++;
+  if (id) ids.add(id);
+ }
+ if (!nodes.length) {
+  reliable = false;
+  for (const m of html.matchAll(/(?:https?:\/\/[^\s"'<>]+)?\/(?:offer\/\d+\.html|item\/\d+\.html|products\/[^\s"'<>?#)]+)/gi)) {
+   const key = productKey(m[0],sourceUrl);if (key && key !== current) links.add(key);
+  }
+ }
+ return {productCountOnPage:Math.max(cards,ids.size,links.size)||null, productCountReliable:reliable};
 }
 export function pageText(response) {
  const result = response?.result ?? response;
@@ -30,29 +109,34 @@ export function extractListing(raw, {fetchedAt, rawPath, sourceUrl}) {
  const blocked = accessBlocked(text);
  const title = short(html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i)?.[1]
   ?? html.match(/^(?:Title:\s*|#\s+)(.+)$/im)?.[1]);
- const priceText = short(text.match(/(?:CN¥|US\$|¥|\$|₫|€)\s*\d[\d.,]*(?:\s*[-–~]\s*(?:CN¥|US\$|¥|\$|₫|€)?\s*\d[\d.,]*)?|\d[\d.,]*\s*(?:₫|€)/)?.[0]);
- const currencyDetected = priceText?.match(/CN¥|US\$|¥|\$|₫|€/)?.[0] ?? null;
+ const priceText = short(text.match(/(?:CN¥|US\$|¥|\$|₫|€|£)\s*\d[\d.,]*(?:\s*[-–~]\s*(?:CN¥|US\$|¥|\$|₫|€|£)?\s*\d[\d.,]*)?|\d[\d.,]*(?:\s*(?:₫|€|£)?\s*[-–~]\s*\d[\d.,]*)?\s*(?:₫|€|£)/)?.[0]);
+ const symbol = priceText?.match(/CN¥|US\$|¥|\$|₫|€|£/)?.[0] ?? null;
+ const ambiguousYen = symbol === '¥' && sourceCurrency(symbol,sourceUrl) === null;
+ const currencyDetected = ambiguousYen ? null : symbol;
+ const currencyNote = ambiguousYen ? '¥ không rõ CNY/JPY' : null;
  const moqText = short(text.match(/(?:Min(?:imum)?\.?\s*order(?:\s*quantity)?|MOQ|起订(?:量)?)\s*[:：]?\s*\d[\d,]*(?:\s*(?:pieces?|pcs|件))?|\d[\d,]*\s*(?:件起批|件起订|pieces?\s*\(?min\.?\s*order\)?)/i)?.[0]);
  const shippingText = short(text.split(/\r?\n/).find(line => /\b(?:shipping|ships?\s+(?:to|from)|delivery|freight)\b|运费|发货|包邮/i.test(line)));
- const cards = [...html.matchAll(/<[^>]+\bclass\s*=\s*["'][^"']*\b(?:product-card|product-item|offer-card|offer-item)\b[^"']*["'][^>]*>/gi)].length;
- const ids = new Set([...html.matchAll(/\bdata-(?:product|offer)-id\s*=\s*["']([^"']+)["']/gi)].map(m => m[1]));
- const links = new Set([...html.matchAll(/(?:https?:\/\/[^\s"'<>]+)?\/(?:offer\/\d+\.html|item\/\d+\.html|products\/[^\s"'<>?#]+)/gi)].map(m => m[0].replace(/^https?:\/\/[^/]+/, '')));
- const productCountOnPage = Math.max(cards, ids.size, links.size) || null;
+ const {productCountOnPage,productCountReliable} = listingProducts(html,sourceUrl);
  return {status: blocked ? 'blocked' : text ? 'ok' : 'failed', fetchedAt, title,
   priceText: blocked ? null : priceText, currencyDetected: blocked ? null : currencyDetected,
+  currencyNote: blocked ? null : currencyNote, productCountReliable: blocked ? null : productCountReliable,
   moqText: blocked ? null : moqText, shippingText: blocked ? null : shippingText,
   productCountOnPage: blocked ? null : productCountOnPage, rawPath, sourceUrl};
 }
 export function listingWarnings(candidate, check) {
- if (check.status !== 'ok') return [check.status === 'blocked' ? 'Không đọc được trang (bị chặn).' : 'Không đọc được trang (lỗi đọc hoặc mất mạng).'];
+ if (check.status !== 'ok') return [check.status === 'unavailable' ? 'Chưa kiểm được nguồn (công cụ chưa sẵn sàng hoặc chưa xác nhận lệnh đọc).' : check.status === 'blocked' ? 'Không đọc được trang (bị chặn).' : 'Không đọc được trang (lỗi đọc hoặc mất mạng).'];
  const warnings = [];
- if (check.productCountOnPage >= 6) warnings.push(`Trang nguồn có ${check.productCountOnPage} sản phẩm → có thể là showroom hoặc danh sách gợi ý; cần đối chiếu listing riêng.`);
- const symbols = {CNY:['¥','CN¥'], USD:['US$','$'], VND:['₫'], EUR:['€']};
+ if (check.productCountOnPage >= 6) warnings.push(check.productCountReliable === true
+  ? `Trang nguồn có ${check.productCountOnPage} sản phẩm ngoài vùng gợi ý → có thể là showroom; cần đối chiếu listing riêng.`
+  : `Trang nguồn có ${check.productCountOnPage} dấu hiệu sản phẩm; chưa tách được vùng gợi ý, chỉ gợi ý có thể là showroom trong chi tiết.`);
  const currency = candidate.costCurrency ?? candidate.currency;
- // Compare only one unambiguous numeric price in the same stated currency. No FX.
+ // Compare one price or an inclusive range in the same currency. No FX.
  const prices = check.priceText?.match(/\d[\d.,]*/g) ?? [];
- const numeric = prices.length === 1 && /^\d+(?:\.\d{1,2})?$/.test(prices[0]) ? Number(prices[0]) : null;
- if (candidate.cost != null && check.priceText && (!symbols[currency]?.includes(check.currencyDetected) || numeric === null || numeric !== candidate.cost)) {
+ const numbers = prices.every(price => /^\d+(?:\.\d{1,2})?$/.test(price)) ? prices.map(Number) : [];
+ const range = numbers.length === 1 ? [numbers[0],numbers[0]] : numbers.length === 2 && /[-–~]/.test(check.priceText) && numbers[0] <= numbers[1] ? numbers : null;
+ const symbols = check.priceText?.match(/CN¥|US\$|¥|\$|₫|€|£/g) ?? [];
+ const sameCurrency = symbols.length > 0 && symbols.every(symbol => sourceCurrency(symbol,check.sourceUrl) === currency);
+ if (candidate.cost != null && check.priceText && (!sameCurrency || !range || candidate.cost < range[0] || candidate.cost > range[1])) {
   warnings.push(`Muse ghi giá ${candidate.cost} ${currency}, trang nguồn hiện ${check.priceText}; cần đối chiếu SKU/MOQ và tiền tệ, chưa quy đổi.`);
  }
  const moq = check.moqText?.match(/\d[\d,]*/)?.[0];

@@ -5,19 +5,25 @@ import {desktopBridge} from '@/lib/lab/desktop-client';
 import {Button} from './primitives';
 
 const states:Record<string,string>={queued:'Chờ kiểm nguồn',running:'Đang kiểm nguồn',done:'Đã kết thúc kiểm nguồn',failed:'Kiểm nguồn gặp lỗi',interrupted:'Kiểm nguồn bị gián đoạn · bấm Kiểm lại nguồn để tiếp tục'};
+export const SOURCE_POLL_MS=10_000;
+export function shouldPollSourceChecks(status:{jobs?:{kind:string;projectId:string;state:string}[]}|null,batchId:string){
+ return status?.jobs?.some(job=>job.kind==='source-check'&&job.projectId===batchId&&['queued','running'].includes(job.state))??false;
+}
 export function SourceCheckControls({batchId,disabled}:{batchId:string;disabled:boolean}){
  const [status,setStatus]=useState<any>(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const lock=useRef(false);
+ const statusRef=useRef(status);statusRef.current=status;
  useEffect(()=>{
-  let live=true;
-  const refresh=async()=>{try{const value=await desktopBridge()?.integrationStatus?.();if(live)setStatus(value??null);}catch(e){if(live)setError((e as Error).message);}};
-  void refresh();const timer=setInterval(refresh,3000);
+  let live=true,inFlight=false;
+  setStatus(null);statusRef.current=null;
+  const refresh=async()=>{if(inFlight)return;inFlight=true;try{const value=await desktopBridge()?.integrationStatus?.();if(live)setStatus(value??null);}catch(e){if(live)setError((e as Error).message);}finally{inFlight=false;}};
+  void refresh();const timer=setInterval(()=>{if(shouldPollSourceChecks(statusRef.current,batchId))void refresh();},SOURCE_POLL_MS);
   window.addEventListener('product-lab:workspace-changed',refresh);
   return()=>{live=false;clearInterval(timer);window.removeEventListener('product-lab:workspace-changed',refresh);};
  },[batchId]);
  if(!status)return null;
  const jobs=(status.jobs??[]).filter((job:any)=>job.kind==='source-check'&&job.projectId===batchId);
- const active=jobs.some((job:any)=>['queued','running'].includes(job.state));
+ const active=shouldPollSourceChecks(status,batchId);
  const latest=jobs[0];
  async function act(method:string,payload:any){
   if(lock.current)return;lock.current=true;setBusy(true);setError('');
@@ -37,7 +43,7 @@ export function SourceCheckControls({batchId,disabled}:{batchId:string;disabled:
 export function SourceChip({candidate}:{candidate:Candidate}){
  const check=candidate.listingCheck;
  if(check?.sourceUrl&&check.sourceUrl!==candidate.supplierUrl)return <small>Nguồn: đã đổi URL · cần kiểm lại</small>;
- return <small>{!check?'Nguồn: chưa đọc':check.status==='blocked'?'Nguồn: bị chặn':check.status==='failed'?'Nguồn: lỗi đọc':(check.productCountOnPage??0)>=6?'Nguồn: có thể là showroom':'Nguồn: đã đọc'}</small>;
+ return <small>{!check?'Nguồn: chưa đọc':check.status==='unavailable'?'Nguồn: chưa kiểm được (công cụ)':check.status==='blocked'?'Nguồn: bị chặn':check.status==='failed'?'Nguồn: lỗi đọc':check.productCountReliable===true&&(check.productCountOnPage??0)>=6?'Nguồn: có thể là showroom':'Nguồn: đã đọc'}</small>;
 }
 export function ShortsSignal({candidate}:{candidate:Candidate}){
  const count=candidate.competition?.youtubeShorts?.resultCount;
@@ -50,6 +56,7 @@ export function SourceDetails({candidate}:{candidate:Candidate}){
   {check?<>
    <p>Đọc lúc {new Date(check.fetchedAt).toLocaleString('vi-VN')} · <a href={check.sourceUrl} target="_blank" rel="noreferrer">Trang đã đọc</a></p>
    <dl className="preview-facts"><div><dt>Tiêu đề trang</dt><dd>{check.title??'Chưa biết'}</dd></div><div><dt>Giá trên trang</dt><dd>{check.priceText??'Chưa biết'}</dd></div><div><dt>Ký hiệu tiền</dt><dd>{check.currencyDetected??'Chưa biết'}</dd></div><div><dt>MOQ trên trang</dt><dd>{check.moqText??'Chưa biết'}</dd></div><div><dt>Dòng vận chuyển</dt><dd>{check.shippingText??'Chưa biết'}</dd></div><div><dt>Sản phẩm trên trang</dt><dd>{check.productCountOnPage??'Chưa biết'}</dd></div></dl>
+   {check.currencyNote&&<p>{check.currencyNote}</p>}
    {check.warnings?.map(warning=><p className="info-panel" key={warning}>{warning}</p>)}
    {check.error&&<p className="inline-error">{check.error}</p>}
    <p>Trích xuất tự động từ trang; cần đối chiếu đúng SKU, giá theo MOQ và đơn vị tiền. Giá/MOQ Muse vẫn được giữ.</p>

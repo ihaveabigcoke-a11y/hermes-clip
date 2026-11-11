@@ -1,5 +1,9 @@
 # Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
 
+## Cập nhật source đêm T14 — phân biệt lỗi công cụ và giảm cảnh báo nguồn sai
+
+Đã sửa review T11 trên clone `night-20261111`: công cụ thiếu/chưa xác nhận lệnh đọc → `unavailable`, chip “Nguồn: chưa kiểm được (công cụ)”; `blocked` dành cho CAPTCHA/403/429/yêu cầu đăng nhập. Bộ đếm showroom loại URL hiện tại và vùng gợi ý; kết quả không tách rõ vùng chỉ gợi ý trong chi tiết. Giá khoảng so sánh gồm hai đầu mút; thêm GBP và giữ ¥ ngoài domain supplier đã biết là null kèm ghi chú CNY/JPY. Poll nguồn 10 giây chỉ khi đợt đang chờ/chạy; stdout đếm byte từng chunk, giữ trần 4 MiB. Domain 108/108, API 12/12, desktop 195 đạt/1 skip OpenMontage, typecheck và build output riêng đạt. Chưa triển khai bản cài hay kiểm dịch vụ/GUI thật. Xem [checkpoint T14](T14-SOURCE-STATUS-HEURISTICS.md); phần T11 ghi thiếu CLI thành `blocked` là trạng thái lịch sử đã được sửa.
+
 ## Cập nhật source đêm T13 — promote và form tiền tệ
 
 Clone `night-20261111` đã sửa giới hạn còn lại của T01: sản phẩm nhận CNY và tiền tệ riêng optional/null cho giá vốn, ship; promote giữ nguyên số và đơn vị từng khoản. Form ứng viên/sản phẩm hiển thị CNY và lựa chọn kế thừa tiền tệ chung. Khi khác tiền tệ, biên là null và UI hiện “Khác tiền tệ · chưa tính biên”; không quy đổi tỷ giá. Domain 107/107, API 12/12, desktop 183 đạt/1 skip OpenMontage, typecheck và build output riêng đạt. Chưa triển khai bản cài hay kiểm GUI thật. Xem [checkpoint T13](T13-PROMOTE-CURRENCIES.md) cho hợp đồng, bằng chứng và cách kiểm tiếp.

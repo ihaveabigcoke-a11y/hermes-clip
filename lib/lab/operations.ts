@@ -14,7 +14,7 @@ const count = z.number().int().min(0).max(1e12);
 export const candidateCurrencySchema = z.enum(["USD", "VND", "GBP", "EUR", "CNY"]);
 const nullableText = (max: number) => z.string().trim().max(max).nullable().default(null);
 const logisticsFlag = z.boolean().nullable().default(null);
-const observationStatus = z.enum(['ok', 'blocked', 'failed']);
+const observationStatus = z.enum(['ok', 'unavailable', 'blocked', 'failed']);
 const observedAt = z.string().datetime({offset: true});
 const observationFile = z.string().max(2048).nullable().default(null);
 export const listingCheckSchema = z.object({
@@ -22,6 +22,7 @@ export const listingCheckSchema = z.object({
   title: nullableText(500), priceText: nullableText(500), currencyDetected: nullableText(20),
   moqText: nullableText(500), shippingText: nullableText(500),
   productCountOnPage: count.nullable().default(null), rawPath: observationFile,
+  productCountReliable: z.boolean().nullable().default(null), currencyNote: nullableText(500),
   sourceUrl: sourceLink, warnings: z.array(z.string().max(1200)).max(6).default([]),
   error: nullableText(1000),
 });

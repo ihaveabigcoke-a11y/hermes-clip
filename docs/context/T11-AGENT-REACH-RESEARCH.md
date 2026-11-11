@@ -1,5 +1,7 @@
 # T11 — kiểm nguồn và tín hiệu Agent Reach sau research
 
+**Cập nhật 12/11 — T14:** ghi chú dưới đây giữ nguyên bằng chứng lịch sử T11. Trạng thái thiếu công cụ/lệnh đọc, showroom, khoảng giá/tiền tệ, polling và giới hạn stdout đã được sửa theo [checkpoint T14](T14-SOURCE-STATUS-HEURISTICS.md). Thiếu CLI hiện là `unavailable`, không còn `blocked`; receipt cũ chỉ được thay bằng lần kiểm mới, không sửa dữ liệu thật trong clone đêm.
+
 Checkpoint source trên `C:/HermesNight/hermes-clip`, nhánh `night-20261111`. Chưa triển khai vào bản cài Windows. Bản cài thật chỉ được xác định theo context hiện hành; không mở bản cài, AppData, profile, DB thật hoặc cấu hình tài khoản trong lượt đêm.
 
 ## Thay đổi

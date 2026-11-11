@@ -124,6 +124,6 @@ test('manual Muse import can queue source checks using a saved batch ID and hono
  await runner.save({id:'manual_batch',kind:'research_batch',revision:0,data:{name:'Manual fixture',candidates:[{id:'one',name:'Leash fixture',supplierUrl:'https://example.test/item',evidenceNotes:'Muse saved'}]}});
  integrations.saveSourceCheckPreference({enabled:false});assert.equal(await runner.queueSources({batchId:'manual_batch'}),null);assert.equal(calls,0);
  integrations.saveSourceCheckPreference({enabled:true});await runner.queueSources({batchId:'manual_batch'});await integrations.idle();assert.equal(calls,2);
- const record=(await runner.records()).find(r=>r.id==='manual_batch');assert.equal(record.data.candidates[0].listingCheck.status,'blocked');
+ const record=(await runner.records()).find(r=>r.id==='manual_batch');assert.equal(record.data.candidates[0].listingCheck.status,'unavailable');
  assert.equal(await runner.queueSources({batchId:'manual_batch'}),null);assert.equal(calls,2);
 }));
