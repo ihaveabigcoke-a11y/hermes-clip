@@ -2,7 +2,7 @@
 
 # Tự review đêm
 
-Phạm vi: `origin/main..HEAD`; SHA đã chốt: `0e1571627d75b29cf918ea5c14cc683b08a973a1..5af01f7f270cc70eb170c526f60048666ccfc6a4`.
+Phạm vi: `origin/main..HEAD`; SHA đã chốt: `0e1571627d75b29cf918ea5c14cc683b08a973a1..0f4f0e47535af29cf0504f2d7342d26253ffa157`.
 Mỗi dòng là một commit; báo cáo được đọc tại commit đó. Cờ là dấu hiệu cần đọc diff, không phải kết luận chất lượng. Không kiểm GUI, Muse, Instagram hoặc tiêu chí nghiệp vụ.
 Log chỉ được gắn khi có mã task và SHA commit; dùng lượt cuối trước dòng hoàn tất. Không suy trạng thái từ log khác lượt hoặc chỉ từ thời gian.
 
@@ -33,14 +33,16 @@ Log chỉ được gắn khi có mã task và SHA commit; dùng lượt cuối t
 | T23 | `0aad44c528e7` | done | Muse workflows: 8687 → 9190 ký tự (+503) | `ops/night/out/reports/T23.md` |
 | T21 | `e7e823489f5e` | done | Mặc định 0 ngoài test: components/lab/reference-video.tsx:131, scripts/check-formula-analysis-ui.mjs:37, scripts/check-formula-analysis-ui.mjs:38 | `ops/night/out/reports/T21.md` |
 | T22 | `a35780130b33` | done | Mặc định 0 ngoài test: components/lab/reference-video.tsx:93, components/lab/reference-video.tsx:145, components/lab/reference-video.tsx:148, lib/lab/reference-muse.ts:16 | `ops/night/out/reports/T22.md` |
-| T24 | `bc31c49a6d71` | done | Mặc định 0 ngoài test: docs/NIGHT-REVIEW.md:24 | `ops/night/out/reports/T24.md` |
+| T24 | `bc31c49a6d71` | done | Không | `ops/night/out/reports/T24.md` |
 | T26 | `5b3681bfe18f` | done | Dòng test bị xóa: 1; tests/domain.test.mjs (1) | `ops/night/out/reports/T26.md` |
 | T27 | `02db98216b86` | done | Không | `ops/night/out/reports/T27.md` |
 | T15 | `d00d5f486355` | done | Không | `ops/night/out/reports/T15.md` |
 | T16 | `763a5e01fd06` | done | Không | `ops/night/out/reports/T16.md` |
 | T17 | `f446325bd4e7` | done | Không | `ops/night/out/reports/T17.md` |
 | T18 | `a5113d63f298` | done | Mặc định 0 ngoài test: desktop/src/instagram-browser.mjs:67, desktop/src/instagram.mjs:145, desktop/src/instagram.mjs:181 | `ops/night/out/reports/T18.md` |
-| T20 | `5af01f7f270c` | done | Mặc định 0 ngoài test: ops/night/out/CHANGES-3.md:115 | `ops/night/out/reports/T20.md` |
+| T20 | `5af01f7f270c` | done | Không | `ops/night/out/reports/T20.md` |
+| F01 | `731c0604c9a9` | done | Không | `ops/night/out/reports/F01.md` |
+| F02 | `0f4f0e47535a` | done | Không | `ops/night/out/reports/F02.md` |
 
 ## T01 · 709280ebd343
 
@@ -357,7 +359,7 @@ Log chỉ được gắn khi có mã task và SHA commit; dùng lượt cuối t
 - Spec cần review nội dung: `ops/night/tasks/T24-*.md`.
 - File có thay đổi: `docs/NIGHT-REVIEW.md`, `docs/context/01-BOI-CANH-VA-TRANG-THAI.md`, `ops/night/out/T24-AUTO-REVIEW.md`, `ops/night/out/T24.md`, `ops/night/out/reports/T24-a1.md`, `ops/night/out/reports/T24.md`, `package.json`, `scripts/night-review.mjs`, `tests/night-review.test.mjs`.
 - Có thay đổi ngoài báo cáo/tài liệu: có.
-- Cờ: Mặc định 0 ngoài test: docs/NIGHT-REVIEW.md:24.
+- Cờ: Không.
 - Log đối soát: `E:\Hermes Night\hermes-night3\runs\night-20261111-031219\runner.log:74`, `T24-a1`, codex exit 0.
 
 ## T26 · 5b3681bfe18f
@@ -434,7 +436,29 @@ Log chỉ được gắn khi có mã task và SHA commit; dùng lượt cuối t
 - Spec cần review nội dung: `ops/night/tasks/T20-*.md`.
 - File có thay đổi: `AGENTS.md`, `docs/context/01-BOI-CANH-VA-TRANG-THAI.md`, `ops/night/out/CHANGES-3.md`, `ops/night/out/T20-AUTO-REVIEW.md`, `ops/night/out/T20.md`, `ops/night/out/reports/T20-a1.md`, `ops/night/out/reports/T20.md`.
 - Có thay đổi ngoài báo cáo/tài liệu: không.
-- Cờ: Mặc định 0 ngoài test: ops/night/out/CHANGES-3.md:115.
+- Cờ: Không.
 - Log đối soát: `E:\Hermes Night\hermes-night3\runs\night-20261111-031219\runner.log:145`, `T20-a1`, codex exit 0.
 
-Đối chiếu trước/sau: Trước [HEAD=`5af01f7f270cc70eb170c526f60048666ccfc6a4`; nhánh=`night-20261111`; git stash list=`(trống)`]; Sau [HEAD=`5af01f7f270cc70eb170c526f60048666ccfc6a4`; nhánh=`night-20261111`; git stash list=`(trống)`]. Xác nhận HEAD, nhánh và git stash list không đổi.
+## F01 · 731c0604c9a9
+
+- Commit: night F01: Fix badge kiem mau khop buoc tiep.
+- Trạng thái máy đọc: **done**.
+- Báo cáo: `731c0604c9a93a5638180c6b7b7d103bc9fbe858:ops/night/out/reports/F01.md`.
+- Spec cần review nội dung: `ops/night/fix/&lt;vòng&gt;/F01-*.md`.
+- File có thay đổi: `components/lab/app.tsx`, `lib/lab/sample-check.ts`, `ops/night/out/F01-landing-warning.png`, `ops/night/out/F01-legacy-badge.png`, `ops/night/out/F01-products-1366x768.png`, `ops/night/out/F01-products-1920x1080.png`, `ops/night/out/F01-sample-check.png`, `ops/night/out/F01-ui.json`, `ops/night/out/F01.md`, `ops/night/out/reports/F01-a1.md`, `ops/night/out/reports/F01.md`, `scripts/check-product-next-step-ui.mjs`, `tests/guidance.test.mjs`.
+- Có thay đổi ngoài báo cáo/tài liệu: có.
+- Cờ: Không.
+- Log đối soát: `E:\Hermes Night\hermes-night3\runs\night-20261111-053140\runner.log:22`, `F01-a1`, codex exit 0.
+
+## F02 · 0f4f0e47535a
+
+- Commit: night F02: Fix night review co 0 bo tai lieu.
+- Trạng thái máy đọc: **done**.
+- Báo cáo: `0f4f0e47535af29cf0504f2d7342d26253ffa157:ops/night/out/reports/F02.md`.
+- Spec cần review nội dung: `ops/night/fix/&lt;vòng&gt;/F02-*.md`.
+- File có thay đổi: `ops/night/out/F02.md`, `ops/night/out/reports/F02-a1.md`, `ops/night/out/reports/F02.md`, `scripts/night-review.mjs`, `tests/night-review.test.mjs`.
+- Có thay đổi ngoài báo cáo/tài liệu: có.
+- Cờ: Không.
+- Log đối soát: `E:\Hermes Night\hermes-night3\runs\night-20261111-053140\runner.log:31`, `F02-a1`, codex exit 0.
+
+Đối chiếu trước/sau: Trước [HEAD=`0f4f0e47535af29cf0504f2d7342d26253ffa157`; nhánh=`night-20261111`; git stash list=`(trống)`]; Sau [HEAD=`0f4f0e47535af29cf0504f2d7342d26253ffa157`; nhánh=`night-20261111`; git stash list=`(trống)`]. Xác nhận HEAD, nhánh và git stash list không đổi.
