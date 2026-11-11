@@ -1,11 +1,13 @@
 import {assertDiskSpace,storagePolicy,putImmutableMedia} from './storage-policy.mjs';
 import {spawn} from 'node:child_process';
 import {randomUUID,createHash} from 'node:crypto';
-import {mkdir,readFile,writeFile,realpath,stat} from 'node:fs/promises';
+import {mkdir,readFile,writeFile,realpath,stat,readdir} from 'node:fs/promises';
 import {join,dirname,isAbsolute,relative} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {z} from 'zod';
 import {validateMedia,toolchain} from './media.mjs';
+import {analyzeLocalStructure,checkedBytes} from './reference-structure.mjs';
+import {youtubeCapability,downloadYoutubeReference,shortsUrl} from './reference-youtube.mjs';
 
 const here=dirname(fileURLToPath(import.meta.url));
 const lock=JSON.parse(await readFile(join(here,'../integrations-lock.json'),'utf8'));
@@ -18,18 +20,20 @@ export const referenceInput=source.extend({projectId:id,assetId:id,name:z.string
 export const composeInput=z.object({projectId:id,variantId:id,ratio:z.enum(['9:16','16:9','1:1','4:3','3:4']),clips:z.array(source.extend({duration:z.number().positive().max(120)})).min(1).max(30)}).superRefine((v,c)=>{if(v.clips.reduce((n,x)=>n+x.bytes.length,0)>60*1024*1024)c.addIssue({code:'custom',message:'Tổng nguồn dựng tối đa 60 MB.'});});
 
 // No shell, no caller-provided argv; kill the local subprocess tree on timeout.
-export function runJson(command,args,{input,timeout=60000,cwd,format='json',maxBytes=4*1024*1024}={}){
+export function runJson(command,args,{input,timeout=60000,cwd,format='json',maxBytes=4*1024*1024,fileBudget}={}){
  maxBytes=Math.min(4*1024*1024,Math.max(1,maxBytes));
  return new Promise((resolve,reject)=>{let stdout='',stderr='',done=false;const child=spawn(command,args,{cwd,windowsHide:true,shell:false,detached:process.platform!=='win32',stdio:['pipe','pipe','pipe'],env:{...process.env,PYTHONIOENCODING:'utf-8'}});
   function stop(){if(process.platform==='win32')spawn('taskkill',['/pid',String(child.pid),'/t','/f'],{windowsHide:true,stdio:'ignore'}).on('error',()=>{child.kill();});else try{process.kill(-child.pid,'SIGKILL');}catch{} }
-  function finish(error,value){if(done)return;done=true;clearTimeout(timer);error?reject(error):resolve(value);}
+  function finish(error,value){if(done)return;done=true;clearTimeout(timer);clearInterval(watcher);error?reject(error):resolve(value);}
   const timer=setTimeout(()=>{stop();finish(Error('Tác vụ quá thời gian; đã dừng tiến trình local. Kết quả trước vẫn được giữ.'));},timeout);
+  let checking=false;
+  const watcher=fileBudget?setInterval(async()=>{if(checking||done)return;checking=true;try{let total=0;for(const name of await readdir(fileBudget.directory)){const file=await stat(join(fileBudget.directory,name));total+=file.size;if(file.size>25*1024**2||total>fileBudget.maxBytes)throw Error('Tải về vượt giới hạn dung lượng; đã dừng công cụ.');}}catch(error){stop();finish(error);}finally{checking=false;}},100):undefined;
   child.stdout.setEncoding('utf8');
   child.stderr.setEncoding('utf8');
   child.stdout.on('data',b=>{stdout+=b;if(Buffer.byteLength(stdout,'utf8')>maxBytes){stop();finish(Error('Kết quả vượt giới hạn đọc.'));}});
   child.stderr.on('data',b=>{stderr=(stderr+b).slice(-2000);});
   child.on('error',()=>finish(Error('Không mở được công cụ. Kiểm tra đường dẫn Python/Agent Reach.')));
-  child.on('close',code=>{if(done)return;if(format==='text')return code===0?finish(null,stdout):finish(Error('Không đọc được trợ giúp CLI local.'));let data;try{data=JSON.parse(stdout.trim());}catch{return finish(Error(`Công cụ không trả JSON hợp lệ (exit ${code}). Kiểm tra cài đặt local.`));}if(!data||typeof data!=='object'||Array.isArray(data))return finish(Error('Công cụ không trả đối tượng JSON hợp lệ. Kiểm tra cài đặt local.'));if(code!==0||data.ok!==true)return finish(Error(data.error?.hint||data.error?.message||data.error||'Công cụ báo lỗi; chưa có kết quả xác minh.'));finish(null,data);});
+  child.on('close',code=>{if(done)return;if(format==='text')return code===0?finish(null,stdout):finish(Error('Công cụ CLI local báo lỗi; chưa có kết quả xác minh.'));let data;try{data=JSON.parse(stdout.trim());}catch{return finish(Error(`Công cụ không trả JSON hợp lệ (exit ${code}). Kiểm tra cài đặt local.`));}if(!data||typeof data!=='object'||Array.isArray(data))return finish(Error('Công cụ không trả đối tượng JSON hợp lệ. Kiểm tra cài đặt local.'));if(code!==0||(format!=='raw-json'&&data.ok!==true))return finish(Error(data.error?.hint||data.error?.message||data.error||'Công cụ báo lỗi; chưa có kết quả xác minh.'));finish(null,data);});
   child.stdin.on('error',()=>{});child.stdin.end(input?JSON.stringify(input):undefined);
  });
 }
@@ -38,10 +42,10 @@ export class Integrations {
  constructor(store,root,run=runJson){this.store=store;this.root=root;this.run=run;this.busy=false;this.pending=[];this.current=null;this.stopped=false;const jobs=this.jobs();if(jobs.some(j=>['queued','running'].includes(j.state)))this.store.set('integration-jobs',jobs.map(j=>['queued','running'].includes(j.state)?{...j,state:'interrupted',finishedAt:Date.now(),error:'Ứng dụng đã dừng giữa tác vụ. Không tự chạy lại; file cũ được giữ.'}:j));}
  config(){return this.store.get('integrations',null);}
  jobs(){return this.store.get('integration-jobs',[]);}
- status(){return {config:this.config(),health:this.store.get('integration-health',null),autoSourceCheck:this.autoSourceCheck(),jobs:this.jobs().map(({frames,...j})=>({...j,frameCount:frames?.length??0})),busy:this.busy,lock};}
+ status(){return {config:this.config(),health:this.store.get('integration-health',null),youtube:this.store.get('reference-youtube-capability',null),autoSourceCheck:this.autoSourceCheck(),jobs:this.jobs().map(({frames,...j})=>({...j,...(j.kind==='reference-structure'?{result:{...j.result,frames:undefined}}:{}),frameCount:frames?.length??j.result?.frames?.length??0})),busy:this.busy,lock};}
  autoSourceCheck(){return this.store.get('auto-source-check',null)??(this.store.get('integration-health',null)?.reach?.ready===true);}
  saveSourceCheckPreference(input){const value=z.object({enabled:z.boolean()}).strict().parse(input);this.store.set('auto-source-check',value.enabled);return this.status();}
- saveConfig(input){if(this.busy)throw Error('Chờ tác vụ hiện tại xong trước khi đổi cấu hình.');const value=integrationConfig.parse(input);this.store.set('integrations',value);this.store.set('integration-health',null);return true;}
+ saveConfig(input){if(this.busy)throw Error('Chờ tác vụ hiện tại xong trước khi đổi cấu hình.');const value=integrationConfig.parse(input);this.store.set('integrations',value);this.store.set('integration-health',null);this.store.set('reference-youtube-capability',null);return true;}
  async montage(operation,extra={}) {
   const c=this.config();
   if(!c)throw Error('Cài và cấu hình hai công cụ trước.');
@@ -125,6 +129,37 @@ export class Integrations {
  update(job){const jobs=this.jobs(),i=jobs.findIndex(x=>x.id===job.id);if(i<0){if(jobs.length>=100)throw Error('Đã chạm 100 tác vụ tích hợp local; sao lưu trước khi mở rộng.');jobs.unshift(job);}else jobs[i]=job;this.store.set('integration-jobs',jobs);return job;}
  async task(kind,projectId,request,fn,queuedJob){if(this.busy)throw Error('Một tác vụ tích hợp đang chạy; chờ kết quả trước.');this.busy=true;let job=queuedJob;try{assertDiskSpace(this.root,128*1024**2,storagePolicy(this.store));job=this.update({...queuedJob,id:queuedJob?.id??randomUUID(),kind,projectId,request,state:'running',createdAt:queuedJob?.createdAt??Date.now(),usageUsd:kind==='research'?null:0});const dir=join(this.root,'integrations',job.id);await mkdir(dir,{recursive:true});const result=await fn(dir,job);return this.update({...this.job(job.id),...result,state:this.stopped?'interrupted':'done',finishedAt:Date.now()});}catch(e){if(job)this.update({...this.job(job.id),state:'failed',finishedAt:Date.now(),error:e.message});throw e;}finally{this.busy=false;this.drain();}}
  async research(input){const d=researchInput.parse(input),c=this.config();if(!c)throw Error('Chưa có cấu hình local.');return this.task('research',d.projectId,d,async dir=>{const args=[d.channel,'search',d.query,'--limit','5','--timeout','45'];if(d.channel!=='web')args.push('--backend','public-web');const r=await this.reach(args,{timeout:60000});const path=join(dir,'research.json');await writeFile(path,JSON.stringify({collectedAt:Date.now(),query:d.query,channel:d.channel,result:r,scope:'public-web',interpretation:'unreviewed'},null,2));return {path,result:r,scope:'public-web',interpretation:'unreviewed'};});}
+ async analyzeStructure(input){
+  const d=referenceInput.parse(input);
+  return this.task('reference-structure',d.projectId,{assetId:d.assetId,name:d.name,sha256:d.sha256},async dir=>{
+   const path=join(dir,'source.mp4');await this.writeSource(d,path);
+   return analyzeLocalStructure(dir,path,d.sha256);
+  });
+ }
+ async checkYoutube(){
+  if(this.busy)throw Error('Một tác vụ tích hợp đang chạy; chờ kết quả trước.');this.busy=true;
+  try{const capability=await youtubeCapability(this.run,this.config(),this.invokeReach.bind(this));this.store.set('reference-youtube-capability',capability);return capability;}
+  finally{this.busy=false;this.drain();}
+ }
+ async analyzeYoutube(input){
+  const d=z.object({projectId:id,url:z.string().max(2048)}).strict().parse(input),url=shortsUrl(d.url);
+  return this.task('reference-structure',d.projectId,{name:url,sourceUrl:url},async dir=>{
+   // Recheck local capabilities at execution time; saved status alone is not proof.
+   const capability=await youtubeCapability(this.run,this.config(),this.invokeReach.bind(this));
+   this.store.set('reference-youtube-capability',capability);
+   const downloaded=await downloadYoutubeReference({run:this.run,reach:this.reach.bind(this),capability,url,directory:dir});
+   const result=await analyzeLocalStructure(dir,downloaded.path,downloaded.sha256);
+   return {...result,sourceUrl:url,subtitles:downloaded.subtitles};
+  });
+ }
+ async structurePreview(idValue){
+  const job=this.job(idValue);
+  if(job.kind!=='reference-structure'||job.state!=='done')throw Error('Chưa có phân tích cấu trúc để xem.');
+  const dir=join(this.root,'integrations',job.id);
+  const structure=JSON.parse((await checkedBytes(dir,job.path,job.structureSha256,256*1024)).toString('utf8'));
+  const bytes=await checkedBytes(dir,structure.contactSheetPath,structure.contactSheetSha256,5*1024**2);
+  return {jobId:job.id,structure,bytes:new Uint8Array(bytes),type:'image/jpeg',sourceUrl:job.sourceUrl??null};
+ }
  async analyze(input){const d=referenceInput.parse(input);return this.task('reference',d.projectId,{assetId:d.assetId,name:d.name,sha256:d.sha256},async dir=>{await toolchain();const path=join(dir,'source.mp4');await this.writeSource(d,path);const r=await this.montage('analyze',{source:path,outputDir:dir});const frames=await Promise.all(r.result.frames.map(async frame=>{const framePath=await this.confinedPath(dir,frame.path);const file=await stat(framePath);if(!file.isFile()||file.size===0||file.size>5*1024*1024)throw Error('Khung hình rỗng hoặc vượt giới hạn.');
  const frameBytes=await readFile(framePath);
  if(frameBytes.length<3||frameBytes[0]!==0xff||frameBytes[1]!==0xd8||frameBytes[2]!==0xff)throw Error('Khung hình không phải JPEG hợp lệ.');
