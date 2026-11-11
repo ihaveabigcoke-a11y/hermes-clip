@@ -1,18 +1,70 @@
-import test from 'node:test';
+import test, {after} from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,rm,readFile} from 'node:fs/promises';
-import {join} from 'node:path';
+import {mkdir,mkdtemp,rm,readFile} from 'node:fs/promises';
+import {dirname,join,resolve} from 'node:path';
 import {tmpdir} from 'node:os';
+import {fileURLToPath,pathToFileURL} from 'node:url';
 import {request as httpRequest} from 'node:http';
 import {createHash} from 'node:crypto';
 import {DatabaseSync} from 'node:sqlite';
-import {startLocalServer,sessionCookie} from '../local/server.mjs';
-import {emptyProduct} from '../local-dist/server/lib/lab/domain.mjs';
+import {startLocalServer as startBuiltLocalServer,sessionCookie} from '../local/server.mjs';
+import {buildLocalServer} from '../../scripts/build-local-server.mjs';
 import {Store} from '../src/store.mjs';
 import {Worker} from '../src/worker.mjs';
 import {assertSender} from '../src/contracts.mjs';
 import {MuseAdapter} from '../src/muse.mjs';
 import {initializeMuseConnection,MUSE_START_URL} from '../src/defaults.mjs';
+
+// Compile current API source before importing it. Keep artifacts under the repo
+// for node_modules resolution; no prebuilt server or external loader is needed.
+const outputs=fileURLToPath(new URL('../../outputs/',import.meta.url));
+await mkdir(outputs,{recursive:true});
+const buildRoot=await mkdtemp(join(outputs,'local-api-test-'));
+assert.equal(dirname(buildRoot),resolve(outputs));
+after(()=>rm(buildRoot,{recursive:true,force:true}));
+let routesPath;
+try {({routesPath}=await buildLocalServer(buildRoot));}
+catch(error){await rm(buildRoot,{recursive:true,force:true});throw error;}
+const compiledUrl=name=>pathToFileURL(join(buildRoot,'server/lib/lab',name)).href;
+const {emptyProduct}=await import(compiledUrl('domain.mjs'));
+const {viralFormulas,viralFormulaRecordId,workspaceFormulas,formulasForProduct}=await import(compiledUrl('viral-formulas.mjs'));
+const startLocalServer=options=>startBuiltLocalServer({...options,routesPath});
+
+test('fresh local API build packages the exact formula seed without a prebuilt server',async()=>{
+  const source=await readFile(new URL('../../lib/lab/viral-formulas.seed.json',import.meta.url));
+  assert.deepEqual(await readFile(new URL(compiledUrl('viral-formulas.seed.json'))),source);
+  assert.equal(viralFormulas.length,6);
+  assert.ok(formulasForProduct(['night_glow']).some(formula=>formula.id==='problem-vs-result-cta'));
+});
+
+test('bundled formula seed and immutable workspace versions survive local fixture restart', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'product-lab-formulas-'));
+  let server;
+  const request = async (method, json) => {
+    const response = await fetch(server.origin+'/api/lab', {method, headers: {
+      Cookie: sessionCookie+'='+server.session, Origin: server.origin, 'Content-Type': 'application/json',
+    }, ...(json ? {body: JSON.stringify(json)} : {})});
+    return {status: response.status, ...await response.json()};
+  };
+  try {
+    server = await startLocalServer({root, seedPath: join(root, 'missing-seed.json')});
+    assert.equal((await request('GET')).records.length, 0);
+    assert.equal(workspaceFormulas([]).length, 6);
+    const formula = {...viralFormulas[0], version: 2, name: 'Local formula fixture'};
+    const payload = {kind: 'viral_formula', id: 'ignored', revision: 0, data: formula};
+    const created = await request('POST', payload);
+    assert.equal(created.status, 200);
+    assert.equal(created.record.id, viralFormulaRecordId(formula));
+    assert.equal((await request('POST', payload)).status, 409);
+    const records = (await request('GET')).records;
+    await server.close();
+    server = await startLocalServer({root, seedPath: join(root, 'missing-seed.json')});
+    const restored = (await request('GET')).records;
+    assert.deepEqual(restored, records);
+    assert.equal(workspaceFormulas(restored).find(row => row.id === formula.id).name, formula.name);
+    assert.equal(viralFormulas[0].version, 1);
+  } finally {await server?.close(); await rm(root, {recursive: true, force: true});}
+});
 
 test('WebP upload reads signature at byte offsets when RIFF size contains UTF-8 byte sequences',async()=>{
   const root=await mkdtemp(join(tmpdir(),'product-lab-webp-'));

@@ -2,6 +2,101 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {schemas,emptyProduct,unitMargin,productGate,metricAdvice,makeBriefs,classifyComment,formatMoney} from '../lib/lab/domain.ts';
 import {productStage} from '../lib/lab/product-stage.ts';
+import {readFileSync} from 'node:fs';
+import {
+  parseViralFormulaSeed, viralFormulaSeed, viralFormulas, referenceVideos, referenceVideoSchema,
+  validateFormula, formulasForProduct, formulaVersions, workspaceFormulas, viralFormulaRecordId,
+  referencesForFormula, formatBeatTime, formulaTaxonomy,
+} from '../lib/lab/viral-formulas.ts';
+
+const formula = viralFormulas.find(row => row.id === 'problem-vs-result-cta');
+const formulaRecord = data => ({id: viralFormulaRecordId(data), kind: 'viral_formula', data});
+test('formula seed preserves the supplied taxonomy and all 12 references with explicit time origins', () => {
+  const input = JSON.parse(readFileSync(new URL('../ops/night/input/formula-seed.json', import.meta.url), 'utf8'));
+  const source = JSON.parse(readFileSync(new URL('../lib/lab/viral-formulas.seed.json', import.meta.url), 'utf8'));
+  assert.deepEqual(source, input);
+  assert.deepEqual(source.taxonomy, formulaTaxonomy);
+  assert.deepEqual(parseViralFormulaSeed(source), viralFormulaSeed);
+  assert.equal(viralFormulas.length, 6);
+  assert.equal(referenceVideos.length, 12);
+  for (const row of viralFormulas) {
+    assert.equal(validateFormula(row).success, true);
+    assert.equal(row.version, input.version);
+    assert.equal(row.updatedAt, input.createdAt);
+    assert.ok(row.beats.every(beat => beat.fromSec < beat.toSec));
+  }
+  const cta = formula.beats.at(-1);
+  assert.equal(cta.timeOrigin, 'end');
+  assert.equal(cta.fromSec, -3);
+  assert.equal(cta.toSec, 0);
+  assert.equal(formatBeatTime(cta), '3–0 giây trước khi hết video');
+  assert.equal(formatBeatTime(formula.beats[0]), '0–4 giây từ đầu video');
+  assert.deepEqual(referencesForFormula(viralFormulas.find(row => row.id === 'pov-share-bait')).map(row => row.id), ['V1', 'V10']);
+  assert.ok(Object.isFrozen(formula.beats[0]));
+  assert.throws(() => {formula.beats[0].label = 'mutated';}, TypeError);
+});
+test('formula validation rejects reversed/mixed times, wrong taxonomy and broken seed links', () => {
+  const beat = formula.beats[0];
+  for (const patch of [
+    {fromSec: 4, toSec: 4}, {fromSec: 5, toSec: 4}, {fromSec: -1}, {toSec: Infinity},
+    {timeOrigin: 'end', fromSec: -3, toSec: 0}, {role: 'other'}, {kind: 'other'},
+    {role: 'cta'},
+  ]) assert.equal(validateFormula({...formula, beats: [{...beat, ...patch}]}).success, false);
+  assert.equal(validateFormula({...formula, beats: [{...formula.beats.at(-1), toSec: 1}]}).success, false);
+  for (const patch of [{hookType: 'invented'}, {fitProductTraits: ['invented']}, {version: 0}, {version: 1.5}, {updatedAt: 'yesterday'}, {labelVariants: {invented: ['text']}}])
+    assert.equal(validateFormula({...formula, ...patch}).success, false);
+  const original = JSON.parse(readFileSync(new URL('../lib/lab/viral-formulas.seed.json', import.meta.url), 'utf8'));
+  for (const change of [
+    seed => {seed.formulas[0].beats[3].fromEndSec = 0;},
+    seed => {seed.formulas[0].beats[3].fromSec = 1;},
+    seed => {seed.formulas[0].references.push('missing');},
+    seed => {seed.references[0].formulaId = 'missing';},
+    seed => {seed.references.push(seed.references[0]);},
+    seed => {seed.formulas.push(seed.formulas[0]);},
+    seed => {seed.taxonomy.roles.reverse();},
+  ]) {const source = structuredClone(original); change(source); assert.throws(() => parseViralFormulaSeed(source));}
+});
+test('night glow traits suggest problem-vs-result-cta without invented fit for unknown traits', () => {
+  assert.deepEqual(formulasForProduct(['night_glow']).map(row => row.id), ['problem-vs-result-cta']);
+  assert.equal(formulasForProduct(['night_glow', 'visual_payoff_one_frame', 'pet'])[0].id, formula.id);
+  assert.deepEqual(formulasForProduct([]), []);
+  assert.deepEqual(formulasForProduct(['unclassified']), []);
+  const traits = Object.freeze(['night_glow', 'night_glow']);
+  assert.deepEqual(formulasForProduct(traits), formulasForProduct(['night_glow']));
+});
+test('formula/reference defaults preserve unknown values and legacy product records', () => {
+  const oldFormula = {...formula}; delete oldFormula.version; delete oldFormula.updatedAt;
+  delete oldFormula.durationSec; delete oldFormula.cuts;
+  const parsed = schemas.viral_formula.parse(oldFormula);
+  assert.equal(parsed.version, 1);
+  assert.equal(parsed.updatedAt, null);
+  assert.equal(parsed.durationSec, null);
+  assert.equal(parsed.cuts, null);
+  const unknown = referenceVideoSchema.parse({id: 'new', product: 'Unknown reference'});
+  for (const key of ['durationSec', 'cuts', 'formulaId', 'hookText', 'ctaText']) assert.equal(unknown[key], null);
+  assert.equal(referenceVideoSchema.parse({...unknown, cuts: 0}).cuts, 0);
+  assert.equal(referenceVideoSchema.safeParse({...unknown, cuts: -1}).success, false);
+  assert.equal(referenceVideoSchema.safeParse({...unknown, durationSec: 0}).success, false);
+  assert.equal(schemas.product.safeParse({...emptyProduct, name: 'Old product'}).success, true);
+});
+test('workspace overlays formula pairs and selects latest versions without mutating seed or records', () => {
+  const overlay = {...formula, name: 'Workspace v1'};
+  const next = {...formula, name: 'Workspace v2', version: 2};
+  const added = {...formula, id: 'new-formula', name: 'New formula'};
+  const records = [formulaRecord(next), formulaRecord(overlay), formulaRecord(added),
+    {id: 'product', kind: 'product', data: next}, {id: 'bad', kind: 'viral_formula', data: {}},
+    {id: 'forged', kind: 'viral_formula', data: {...next, version: 99}}];
+  const before = structuredClone(records);
+  const versions = formulaVersions(records).filter(row => row.id === formula.id);
+  assert.deepEqual(versions.map(row => row.version), [2, 1]);
+  assert.equal(versions[1].name, 'Workspace v1');
+  assert.equal(workspaceFormulas(records).find(row => row.id === formula.id).name, 'Workspace v2');
+  assert.deepEqual(workspaceFormulas([...records].reverse()), workspaceFormulas(records));
+  assert.equal(workspaceFormulas(records).length, viralFormulas.length + 1);
+  assert.equal(formulasForProduct(['night_glow'], workspaceFormulas(records)).find(row => row.id === formula.id).version, 2);
+  assert.deepEqual(records, before);
+  assert.notEqual(formula.name, overlay.name);
+});
 const product={id:'p1',kind:'product',revision:1,updatedAt:0,data:{...emptyProduct,name:'Đèn thử',price:30,cost:12,shipping:4,fees:2,buffer:3,proofNotes:'Đã thử công tắc và ánh sáng với sample.'}};
 const ex={id:'e1',kind:'experiment',revision:1,updatedAt:0,data:{productId:'p1'}};
 

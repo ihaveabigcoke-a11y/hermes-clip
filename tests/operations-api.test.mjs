@@ -5,12 +5,42 @@ import * as lab from '../app/api/lab/route.ts';
 import * as production from '../app/api/production/route.ts';
 import {emptyProduct} from '../lib/lab/domain.ts';
 import {researchProductId} from '../lib/lab/operations.ts';
+import {viralFormulas, viralFormulaRecordId} from '../lib/lab/viral-formulas.ts';
 
 async function save(kind, id, data, revision = 0, who = 'ops-owner', action = 'save') {
   const request = new Request('https://qa.invalid/api/lab', {method: 'POST', headers: {'Content-Type': 'application/json', Origin: 'https://qa.invalid', 'oai-authenticated-user-id': who, 'oai-authenticated-user-email': who+'@example.invalid'}, body: JSON.stringify({kind, id, data, revision, action})});
   const response = await call(lab.POST, request);
   return {status: response.status, ...await response.json()};
 }
+
+test('formula API appends immutable versions with canonical IDs and owner isolation', async () => {
+  const formula = {...viralFormulas[0], name: 'User formula', version: 2};
+  const saved = await save('viral_formula', 'ignored', formula);
+  assert.equal(saved.status, 200);
+  assert.equal(saved.record.id, viralFormulaRecordId(formula));
+  assert.equal(saved.record.revision, 1);
+  assert.equal(saved.record.data.name, formula.name);
+  assert.ok(Number.isFinite(Date.parse(saved.record.data.updatedAt)));
+  assert.equal((await save('viral_formula', 'another-id', {...formula, name: 'Retry overwrite'})).status, 409);
+  assert.equal((await save('viral_formula', saved.record.id, {...formula, name: 'Edit in place'}, 1)).status, 409);
+  const newer = await save('viral_formula', 'ignored', {...formula, version: 3, name: 'New version'});
+  assert.equal(newer.status, 200);
+  assert.notEqual(newer.record.id, saved.record.id);
+  const foreign = await save('viral_formula', 'ignored', {...formula, name: 'Other workspace'}, 0, 'formula-other');
+  assert.equal(foreign.status, 200);
+  const read = async who => {
+    const request = new Request('https://qa.invalid/api/lab', {headers: {'oai-authenticated-user-id': who, 'oai-authenticated-user-email': who+'@example.invalid'}});
+    return (await (await call(lab.GET, request)).json()).records.filter(row => row.kind === 'viral_formula');
+  };
+  const own = await read('ops-owner');
+  assert.deepEqual(own.find(row => row.id === saved.record.id), saved.record);
+  assert.ok(own.some(row => row.id === newer.record.id));
+  assert.deepEqual(await read('formula-other'), [foreign.record]);
+  assert.equal((await save('viral_formula', 'ignored', {...formula, version: 4, beats: [{...formula.beats[0], toSec: 0}]})).status, 422);
+  assert.equal((await save('viral_formula', 'ignored', {...formula, version: 4, hookType: 'not-taxonomy'})).status, 422);
+  const race = await Promise.all([save('viral_formula', 'race1', {...formula, version: 4}), save('viral_formula', 'race2', {...formula, version: 4})]);
+  assert.deepEqual(race.map(row => row.status).sort(), [200, 409]);
+});
 
 test('research API preserves independent currencies on create and later edits', async () => {
   const candidate = {id: 'mixed_currency', name: 'Supplier quote', supplierUrl: 'https://supplier.example/quote', evidenceNotes: 'Exact SKU quote', cost: 36.5, costCurrency: 'CNY', shipping: null, shippingCurrency: null, price: 19.99, currency: 'USD'};

@@ -12,6 +12,7 @@ import {
 } from "@/lib/lab/server";
 import { kinds, productGate, type Kind } from "@/lib/lab/domain";
 import { researchProductId } from "@/lib/lab/operations";
+import { viralFormulaRecordId } from "@/lib/lab/viral-formulas";
 export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   try {
@@ -58,6 +59,7 @@ export async function POST(request: Request) {
         "content_plan",
         "social_metric",
         "landing_page",
+        "viral_formula",
       ].includes(b.kind)
     )
       throw new ApiError(400, "Loại bản ghi không được hỗ trợ.");
@@ -65,6 +67,14 @@ export async function POST(request: Request) {
     let d = parsed(kind, b.data);
     let id = b.id;
     const revision = b.revision ?? 0;
+    if (kind === "viral_formula") {
+      // Append-only versions. Canonical IDs + save's CAS prevent concurrent
+      // requests or retries from overwriting an existing formula version.
+      if (revision !== 0)
+        throw new ApiError(409, "Giữ phiên bản đã lưu. Tăng version để lưu công thức thành bản mới.");
+      id = viralFormulaRecordId({id: d.id, version: d.version});
+      d.updatedAt = new Date().toISOString();
+    }
     if (kind === "settings") id = "workspace";
     if (kind === "product" && d.researchOrigin) {
       const {batchId, candidateId} = d.researchOrigin;

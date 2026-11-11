@@ -1,5 +1,11 @@
 # Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
 
+## Cập nhật source đêm T05 — thư viện công thức video
+
+Clone `night-20261111` đã có seed source 6 công thức/12 video tham khảo với taxonomy cố định, Zod validation, gợi ý theo traits và khối chỉ đọc **Công thức video** trong Nghiên cứu. API lưu `viral_formula` thành record phiên bản bất biến trong workspace; seed không ghi đè dữ liệu người dùng. CTA dùng mốc từ cuối rõ ràng. Test offline/API/desktop fixture và build riêng đã qua; chưa triển khai bản cài, chưa phân tích MP4/OCR/Muse thật hay tự áp công thức vào kịch bản. Xem [checkpoint và hợp đồng T05](../VIRAL-FORMULAS.md) cho quy ước, bằng chứng và lộ trình cập nhật sau này.
+
+Sửa hồi quy runner ngày 12/11: test HTTP local tự biên dịch API và JSON seed từ source bằng bộ biên dịch dùng chung với build, không còn import server từ `local-dist` cũ. `npm run test:desktop` thường qua 180 test, 1 skip OpenMontage; ca chặn import server build sẵn qua 10/10. Domain 103/103, API 11/11, typecheck và build riêng đạt. Chi tiết giới hạn tái hiện lỗi và log trong checkpoint T05.
+
 ## Cập nhật source đêm T03 — bước tiến độ của sản phẩm
 
 Pipeline Tổng quan đã dùng hàm thuần theo `production`, plan đã đăng và `social_metric` nối đúng sản phẩm; giữ tương thích experiment/creative/metric cũ. URL supplier và ghi chú Muse chưa kiểm không tự tăng bậc. Fixture và snapshot chỉ đọc cho Treat Trader → Đo nhu cầu, ChomChom/Ruffwear → Nội dung. Source chưa triển khai vào bản cài; xem [checkpoint T03](T03-PRODUCT-STAGE.md) cho quy tắc, kiểm tra và giới hạn.

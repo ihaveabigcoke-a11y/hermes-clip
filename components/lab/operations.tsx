@@ -11,6 +11,7 @@ import InstagramPanel from './instagram-panel';
 import InstagramOverview from './instagram-overview';
 import ResearchCandidates from './research-candidates';
 import ResearchLauncher from './research-launcher';
+import ViralFormulas from './viral-formulas';
 import {instagramProductSummary} from '@/lib/lab/instagram-summary';
 
 type Props = {
@@ -254,6 +255,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
     {view==='social'&&chosen&&<div><Button tone="ghost" onClick={()=>select('')}><ArrowLeft size={16}/>Tất cả sản phẩm</Button></div>}
     <header className="operations-heading"><div><h1>{titles[view]}</h1><p>{view === "research" ? "So sánh 10 ứng viên có nguồn, chọn 3 sản phẩm để thử." : view==='social'?'Theo dõi nội dung và kết quả theo sản phẩm.':chosen?.data.name}</p></div>{view === "research" && <Button disabled={disabled} onClick={batchForm}>Tạo đợt nghiên cứu</Button>}</header>
     {view==='research'&&<ResearchLauncher disabled={disabled||demo} onOpen={id=>{select(id);reload();}}/>}
+    {view === 'research' && <ViralFormulas records={records}/>}
     {choices.length > 0 && view!=='social' && <div className="field operations-selector"><label htmlFor="operations-selection">{view === "research" ? "Đợt nghiên cứu" : "Sản phẩm"}</label><select id="operations-selection" value={chosen?.id ?? ""} disabled={busy} onChange={event => select(event.target.value)}>{choices.map(record => <option key={record.id} value={record.id}>{record.data.name}</option>)}</select></div>}
     {chosen && view !== 'research' && <div className="operations-toolbar">
       <Button disabled={disabled || demo || !desktopBridge()} onClick={() => openMuseTask(view === 'social' ? 'content' : 'landing')}>Soạn nội dung bằng Muse</Button>
