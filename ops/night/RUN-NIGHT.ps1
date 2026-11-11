@@ -16,7 +16,7 @@ param(
   [string]$Branch = ("night-" + (Get-Date -Format "yyyyMMdd")),
   [int]$TaskTimeoutMin = 120,
   [int]$CheckTimeoutMin = 30,
-  [string]$CodexArgs = "--sandbox workspace-write",
+  [string]$CodexArgs = "--sandbox danger-full-access",
   [string]$CodexModel = "",
   [switch]$NoLastMessageFlag,
   [switch]$SkipInstall,
