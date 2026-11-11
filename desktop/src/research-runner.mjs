@@ -70,7 +70,7 @@ export class ResearchRunner{
           const remaining=10-record.data.candidates.length;
           const prompt=museTaskPrompt('research',{query:row.query,market:'United States',locale:'en-US',remainingSlots:remaining,desiredCount:remaining,
             existing:record.data.candidates.map(c=>({name:c.name,url:c.supplierUrl})),
-            priority:'Tìm đủ sản phẩm khác nhau để đạt 10, mỗi sản phẩm cần ảnh trực tiếp và bảng số liệu có nguồn. Cần ít nhất một chỉ số quan sát được mỗi sản phẩm. Không bịa để đủ số lượng. Ưu tiên nguồn Trung Quốc và nhu cầu khách Mỹ. Giá vốn đúng bậc MOQ; ship chưa rõ giữ null. Nếu không đủ bằng chứng, nói rõ thiếu gì.'});
+            priority:'Ưu tiên kết quả thấy trong một khung hình (visual payoff), hợp Problem → Vs → Result → CTA: phát sáng ban đêm, thú cưng, chạy bộ hoặc đạp xe trong tình huống cụ thể. Hàng nhẹ, không thương hiệu; tránh phụ thuộc size/đời xe, cồng kềnh và claim y tế/an toàn chưa chứng minh. Mục tiêu giá vốn + ship Mỹ ≤ 20 USD; cần báo giá đúng SKU/MOQ, thiếu thì null, không đoán hay quy đổi. Tối đa 10 ứng viên, mỗi ứng viên có listing riêng và ảnh nguồn; không dùng chung showroom hoặc gán số liệu một bài review cho nhiều sản phẩm. Điền verdict, lý do, matchType, rủi ro AI/vận chuyển. Số cạnh tranh chỉ lấy từ trang đã quan sát, có nguồn, ngày và kỳ đo; chưa biết để null. Tách quan sát, suy luận và chưa biết; không bịa để đủ số lượng. Tối đa 3 lượt, người dùng chọn tối đa 3 sản phẩm.'});
           const parentId=step?row.requestIds[step-1]:null;
           result=await this.chat.send({requestId,profileId:row.profileId,projectId:row.batchId,prompt,parentId});
         }

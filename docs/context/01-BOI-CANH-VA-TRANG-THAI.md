@@ -1,5 +1,9 @@
 # Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
 
+## Cập nhật source đêm T02 — quyết định và chất lượng nghiên cứu
+
+Clone `night-20261111` đã thêm trường quyết định/đối chiếu SKU, cảnh kết quả, rủi ro AI/vận chuyển và cạnh tranh quan sát cho candidate. Prompt/brief ưu tiên Problem → Vs → Result → CTA, listing riêng và mục tiêu vốn + ship Mỹ ≤ 20 USD có báo giá. Bộ kiểm thuần gắn cảnh báo nguồn chung/số liệu cấp trang khi merge và hiển thị, giữ dữ liệu cũ, lựa chọn và receipt. Đây là thay đổi source chưa triển khai vào bản cài. Xem [checkpoint T02](T02-RESEARCH-QUALITY.md) cho hợp đồng, kết quả fixture và giới hạn kiểm chứng.
+
 ## Cập nhật source đêm T01 — tiền tệ nghiên cứu
 
 Checkout riêng `C:/HermesNight/hermes-clip`, nhánh `night-20261111`, đã bổ sung CNY và tiền tệ riêng cho giá vốn/ship của ứng viên; không quy đổi tỷ giá. Đây là thay đổi source, chưa áp dụng vào bản cài đang chạy. Các ghi chú snapshot về việc research chưa hỗ trợ CNY mô tả phiên bản trước T01. Xem [checkpoint T01](T01-RESEARCH-CURRENCIES.md) để biết hợp đồng dữ liệu, kết quả kiểm tra và giới hạn tạo hồ sơ sản phẩm.

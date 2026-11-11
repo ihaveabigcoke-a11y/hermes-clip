@@ -12,6 +12,8 @@ const optionalLink = z.union([z.literal(""), sourceLink]).default("");
 const amount = z.number().finite().min(0).max(1e9).nullable().default(null);
 const count = z.number().int().min(0).max(1e12);
 export const candidateCurrencySchema = z.enum(["USD", "VND", "GBP", "EUR", "CNY"]);
+const nullableText = (max: number) => z.string().trim().max(max).nullable().default(null);
+const logisticsFlag = z.boolean().nullable().default(null);
 
 export const candidateSchema = z.object({
   id: identifier,
@@ -29,12 +31,37 @@ export const candidateSchema = z.object({
   // Missing/null overrides inherit the shared currency used by legacy batches.
   costCurrency: candidateCurrencySchema.nullable().optional(),
   shippingCurrency: candidateCurrencySchema.nullable().optional(),
+  verdict: z.enum(["try", "hold", "reject"]).nullable().default(null),
+  verdictReason: nullableText(1200),
+  matchType: z.enum(["exact_sku", "similar", "unknown"]).nullable().default(null),
+  visualPayoff: nullableText(1200),
+  aiFidelityRisks: z.array(z.string().trim().min(1).max(500)).max(12).default([]),
+  logisticsFlags: z.object({
+    battery: logisticsFlag, liquid: logisticsFlag, fragile: logisticsFlag,
+    sizeFit: logisticsFlag, vehicleFit: logisticsFlag, bulky: logisticsFlag, brandRisk: logisticsFlag,
+  }).nullable().default(null),
+  competition: z.object({
+    activeAdsObserved: count.nullable().default(null),
+    similarReels30d: count.nullable().default(null),
+    observedAt: z.string().datetime({offset: true}).nullable().default(null),
+    sourceUrl: sourceLink.nullable().default(null),
+    note: nullableText(1200),
+  }).superRefine((value, ctx) => {
+    if (value.activeAdsObserved !== null || value.similarReels30d !== null) {
+      for (const field of ["sourceUrl", "observedAt"] as const) {
+        if (!value[field]) ctx.addIssue({code: "custom", path: [field], message: "Số quan sát cần nguồn và thời điểm đọc."});
+      }
+    }
+  }).nullable().default(null),
+  qualityWarnings: z.array(z.enum(["shared_supplier_url"])).max(1).default([]),
   imageUrl: optionalLink,
   imageSourceUrl: optionalLink,
   marketEvidence: z.array(z.object({
     label: z.string().trim().min(1).max(100), value: z.number().finite().min(0).max(1e12),
     unit: z.string().trim().min(1).max(40), market: text(100), period: text(100),
     sourceUrl: sourceLink, observedAt: z.string().datetime(),
+    // Derived locally across the whole batch; absent in legacy records.
+    pageLevel: z.boolean().optional(),
   })).max(8).default([]),
   minimumOrder: z.number().int().positive().max(1e9).nullable().default(null),
   targetCustomer: text(500),

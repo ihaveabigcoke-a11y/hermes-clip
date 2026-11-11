@@ -5,6 +5,7 @@ import {candidateSchema, candidateCurrency, landedCost, researchBatchSchema, soc
 import {formatMoney} from '../lib/lab/domain.ts';
 import {mergeMuseResearch, parseMuseResponse, museTaskPrompt} from '../lib/lab/muse-workflows.ts';
 import {instagramProductSummary} from '../lib/lab/instagram-summary.ts';
+import {annotateResearchQuality, sharedSourceWarning, pageLevelEvidenceWarning} from '../lib/lab/research-quality.ts';
 
 test('Muse research imports provenance once and retains manual selection and unknown prices', () => {
   const batch = researchBatchSchema.parse({name: 'Pet products', candidates: [candidate('existing')], selectedIds: ['existing']});
@@ -35,6 +36,105 @@ test('Muse structured drafts accept fenced JSON and preserve commercial fields o
 });
 
 const candidate = id => candidateSchema.parse({id, name: 'Sourced product', supplierUrl: 'https://supplier.example/product', evidenceNotes: 'Listing reviewed'});
+
+test('research decision fields parse and survive Muse merge with null distinct from observed zero', () => {
+  const legacy = candidate('legacy_decision');
+  for (const key of ['verdict','verdictReason','matchType','visualPayoff','logisticsFlags','competition']) assert.equal(legacy[key], null, key);
+  assert.deepEqual(legacy.aiFidelityRisks, []);
+  assert.deepEqual(legacy.qualityWarnings, []);
+  const fields = {
+    verdict: 'hold', verdictReason: 'Observed glow; shipping quote unknown.', matchType: 'similar',
+    visualPayoff: 'A green glowing leash on a night walk.',
+    aiFidelityRisks: ['Small clasp geometry', 'Transparent strap material'],
+    logisticsFlags: {battery: true, liquid: false, fragile: null, sizeFit: false, vehicleFit: false, bulky: false, brandRisk: null},
+    competition: {activeAdsObserved: 0, similarReels30d: null, observedAt: '2026-11-11T10:00:00Z', sourceUrl: 'https://example.com/ads', note: 'Web observation, US filter; Reels unavailable.'},
+  };
+  const parsed = candidateSchema.parse({...legacy,...fields});
+  for (const [key,value] of Object.entries(fields)) assert.deepEqual(parsed[key],value);
+  for (const verdict of ['try','hold','reject',null]) assert.equal(candidateSchema.parse({...parsed,verdict}).verdict,verdict);
+  for (const matchType of ['exact_sku','similar','unknown',null]) assert.equal(candidateSchema.parse({...parsed,matchType}).matchType,matchType);
+  const {id,...input} = parsed;
+  const chat = {requestId:'decisions',profileId:'fixture',providerUrl:null,response:JSON.stringify({summary:'Review',candidates:[input]})};
+  const merged = mergeMuseResearch(researchBatchSchema.parse({name:'Decisions'}),chat);
+  for (const [key,value] of Object.entries(fields)) assert.deepEqual(merged.candidates[0][key],value);
+  assert.equal(mergeMuseResearch(merged,chat),merged);
+  assert.deepEqual(candidateSchema.parse({...legacy,competition:{}}).competition,{activeAdsObserved:null,similarReels30d:null,observedAt:null,sourceUrl:null,note:null});
+  assert.ok(Object.values(candidateSchema.parse({...legacy,logisticsFlags:{}}).logisticsFlags).every(value=>value===null));
+  for (const patch of [{verdict:'approved'},{matchType:'same'},{logisticsFlags:{battery:'unknown'}},{competition:{activeAdsObserved:1}},{competition:{...fields.competition,similarReels30d:-1}},{competition:{...fields.competition,activeAdsObserved:1.5}}]) {
+    assert.equal(candidateSchema.safeParse({...legacy,...patch}).success,false,JSON.stringify(patch));
+  }
+});
+
+test('1745 snapshot flags ten shared listings, the 20000/4.9 metrics on three products and all exact repeats', () => {
+  const saved = JSON.parse(readFileSync(new URL('../data/research/2026-11-11/candidates-1745.json',import.meta.url),'utf8')).record.data;
+  const before = structuredClone(saved);
+  // Exercise raw legacy records as the renderer sees them, without a migration or parse.
+  const annotated = annotateResearchQuality(saved.candidates);
+  assert.equal(annotated.length,10);
+  assert.equal(sharedSourceWarning,'Dùng chung trang nguồn');
+  assert.equal(pageLevelEvidenceWarning,'Số liệu cấp trang · không dùng để so');
+  assert.equal(annotated.filter(c=>c.qualityWarnings?.includes('shared_supplier_url')).length,10);
+  const flagged = annotated.flatMap((c,index)=>c.marketEvidence.filter(m=>m.pageLevel).map(m=>({index,value:m.value,unit:m.unit,sourceUrl:m.sourceUrl})));
+  assert.deepEqual(flagged.map(({index,value})=>[index,value]),[[0,20000],[0,4.9],[1,20000],[1,4.9],[1,83],[1,1.5],[3,20000],[3,4.9],[3,83],[3,1.5]]);
+  const atlasMetrics = flagged.filter(m=>m.sourceUrl==='https://www.atlas770.com/reviews/best-pet-deshedding-brush-rake/');
+  assert.deepEqual(atlasMetrics.map(({index,value})=>[index,value]),[[0,20000],[0,4.9],[1,20000],[1,4.9],[3,20000],[3,4.9]]);
+  assert.deepEqual(atlasMetrics.map(m=>m.unit),['sản phẩm trở lên','/ 5','sản phẩm trở lên','/ 5','sản phẩm trở lên','/ 5']);
+  for (const [i,c] of annotated.entries()) {
+    for (const [key,value] of Object.entries(saved.candidates[i])) {
+      if(key==='marketEvidence') value.forEach((m,j)=>{for(const [field,raw] of Object.entries(m))assert.deepEqual(c.marketEvidence[j][field],raw);});
+      else assert.deepEqual(c[key],value);
+    }
+    assert.equal(c.cost,null); assert.equal(c.shipping,null);
+  }
+  assert.deepEqual(saved,before);
+  assert.equal(annotateResearchQuality(annotated),annotated);
+  assert.deepEqual(researchBatchSchema.parse({...saved,candidates:annotated}).candidates.map(c=>c.marketEvidence),annotated.map(c=>c.marketEvidence));
+});
+
+test('quality checks distinguish names, SKU query parameters, metric units and sources without self-duplicates', () => {
+  const metric = {label:'Reviews',value:0,unit:'reviews',market:'US',period:'30d',sourceUrl:'https://example.com/review',observedAt:'2026-11-11T00:00:00Z'};
+  const base = {...candidate('first'),name:'Night Leash',supplierUrl:'https://example.com/item?sku=1',marketEvidence:[metric,metric]};
+  assert.equal(annotateResearchQuality([base])[0],base);
+  const sameName = {...base,id:'same',name:'  NIGHT   LEASH  ',marketEvidence:[]};
+  assert.equal(annotateResearchQuality([base,sameName])[0],base);
+  const differentSku = {...base,id:'sku2',name:'Night Collar',supplierUrl:'https://example.com/item?sku=2',marketEvidence:[{...metric,unit:'units'},{...metric,sourceUrl:'https://example.com/other'}]};
+  const independent = [base,differentSku];
+  assert.equal(annotateResearchQuality(independent),independent);
+  const reused = {...differentSku,supplierUrl:'https://example.com/item/?sku=1#photo',marketEvidence:[{...metric,sourceUrl:metric.sourceUrl+'/#detail',period:'Cumulative'}]};
+  const annotated = annotateResearchQuality([base,reused]);
+  assert.ok(annotated.every(c=>c.qualityWarnings.includes('shared_supplier_url')));
+  assert.ok(annotated.every(c=>c.marketEvidence.every(m=>m.pageLevel)));
+  const corrected = annotateResearchQuality([annotated[0],differentSku]);
+  assert.ok(corrected.every(c=>!c.qualityWarnings.length));
+  assert.ok(corrected.every(c=>c.marketEvidence.every(m=>!m.pageLevel)));
+  assert.ok(annotated[0].marketEvidence.every(m=>m.pageLevel));
+});
+
+test('merge detects cross-receipt duplicates, annotates old receipt replays once and preserves selection', () => {
+  const source = JSON.parse(readFileSync(new URL('../data/research/2026-11-11/candidates-1745.json',import.meta.url),'utf8')).record.data;
+  const rows = [source.candidates[0],source.candidates[1]];
+  const makeChat = (requestId,row) => ({requestId,profileId:'fixture',providerUrl:null,response:JSON.stringify({summary:'Saved source',candidates:[row]})});
+  const first = mergeMuseResearch(researchBatchSchema.parse({name:'Cross receipt'}),makeChat('first',rows[0]));
+  first.selectedIds = [first.candidates[0].id];
+  const chat = makeChat('second',rows[1]);
+  const merged = mergeMuseResearch(first,chat);
+  assert.ok(merged.candidates.every(c=>c.qualityWarnings.includes('shared_supplier_url')));
+  assert.equal(merged.candidates.flatMap(c=>c.marketEvidence.filter(m=>m.pageLevel)).length,4);
+  assert.deepEqual(merged.selectedIds,first.selectedIds);
+  assert.equal(mergeMuseResearch(merged,chat),merged);
+  const legacy = {...merged,candidates:merged.candidates.map(({qualityWarnings,...c})=>({...c,marketEvidence:c.marketEvidence.map(({pageLevel,...m})=>m)}))};
+  const replay = mergeMuseResearch(legacy,chat);
+  assert.deepEqual(replay,merged);
+  assert.equal(mergeMuseResearch(replay,chat),replay);
+});
+
+test('research prompt fits the video formula, distinct listings and quoted 20 USD target within the T01 budget', () => {
+  const prompt = museTaskPrompt('research',{});
+  // Baseline measured on T01 before T02: same function/context, including JSON suffix.
+  assert.ok(prompt.length <= Math.floor(3314 * 1.4),`Prompt ${prompt.length} exceeds 40% growth from 3314`);
+  for (const requirement of [/one-frame visual payoff/,/Problem → Vs → Result → CTA/,/cost \+ shipping to the US <= 20 USD/,/own distinct product listing URL/,/no shared showroom pages/,/Never reuse one review\/article\/page metric across products/,/observed facts, inferences and unknowns/,/verdictReason/,/matchType/,/aiFidelityRisks/,/activeAdsObserved/,/similarReels30d/,/Meta Ad Library API/,/null, not zero/]) assert.match(prompt,requirement);
+  assert.doesNotMatch(prompt,/shared showroom URL is allowed/);
+});
 
 test('research accepts CNY and independent cost/shipping currencies without changing amounts', () => {
   for (const currency of ['USD', 'VND', 'GBP', 'EUR', 'CNY']) {

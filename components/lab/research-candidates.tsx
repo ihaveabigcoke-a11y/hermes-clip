@@ -3,6 +3,7 @@ import {useState} from 'react';
 import {ExternalLink,Pencil,ImageOff} from 'lucide-react';
 import {type LabRecord,formatMoney} from '@/lib/lab/domain';
 import {type ResearchBatch,type Candidate,researchProductId,candidateCurrency} from '@/lib/lab/operations';
+import {annotateResearchQuality,sharedSourceWarning,pageLevelEvidenceWarning} from '@/lib/lab/research-quality';
 import {Badge,Button,Empty,Modal} from './primitives';
 type Props={record:LabRecord;records:LabRecord[];disabled:boolean;onEdit:(candidate:Candidate)=>void;onSelect:(candidate:Candidate)=>void;onPromote:(candidate:Candidate)=>void};
 function ProductPhoto({candidate}:{candidate:Candidate}){
@@ -10,12 +11,16 @@ function ProductPhoto({candidate}:{candidate:Candidate}){
   return candidate.imageUrl&&!failed?<img className="research-product-photo" src={candidate.imageUrl} referrerPolicy="no-referrer" loading="lazy" alt={candidate.name} onError={()=>setFailed(true)}/>:<span className="research-photo-empty"><ImageOff size={21}/><small>{failed?'Ảnh nguồn không tải được':'Chưa có ảnh nguồn'}</small></span>;
 }
 const metricNumber=(value:number)=>new Intl.NumberFormat('vi-VN',{maximumFractionDigits:2}).format(value);
+const verdictLabel=(value:Candidate['verdict'])=>value?({try:'Nên thử',hold:'Cần xác minh',reject:'Không phù hợp'}[value]):'Chưa đánh giá';
+const matchLabel=(value:Candidate['matchType'])=>value?({exact_sku:'Đúng SKU',similar:'Sản phẩm tương tự',unknown:'Chưa rõ đối chiếu'}[value]):'Chưa rõ đối chiếu';
+const logisticsLabels={battery:'Pin',liquid:'Chất lỏng',fragile:'Dễ vỡ',sizeFit:'Phụ thuộc kích cỡ',vehicleFit:'Phụ thuộc đời xe',bulky:'Cồng kềnh',brandRisk:'Rủi ro thương hiệu'} as const;
 function EvidenceTable({candidate}:{candidate:Candidate}){
  const metrics=candidate.marketEvidence??[];
- return metrics.length?<div className="operations-table-scroll" role="region" aria-label="Số liệu thị trường và nguồn" tabIndex={0}><table className="operations-comparison research-evidence-table"><caption>Số liệu Muse đọc từ nguồn · cần đối chiếu trước quyết định thương mại</caption><thead><tr><th scope="col">Chỉ số</th><th scope="col">Giá trị</th><th scope="col">Phạm vi / kỳ đo</th><th scope="col">Nguồn / ngày đọc</th></tr></thead><tbody>{metrics.map((m,i)=><tr key={i}><th scope="row">{m.label}</th><td className="numeric">{metricNumber(m.value)} {m.unit}</td><td>{m.market||'Chưa rõ thị trường'}<small>{m.period||'Chưa rõ kỳ đo'}</small></td><td><a href={m.sourceUrl} target="_blank" rel="noreferrer">{new URL(m.sourceUrl).hostname}<ExternalLink size={13}/></a><small>{new Date(m.observedAt).toLocaleDateString('vi-VN')}</small></td></tr>)}</tbody></table></div>:<p className="info-panel">Chưa có số liệu thị trường có nguồn cho sản phẩm này. Giá bán giả định không phải bằng chứng về nhu cầu.</p>;
+ return metrics.length?<div className="operations-table-scroll" role="region" aria-label="Số liệu thị trường và nguồn" tabIndex={0}><table className="operations-comparison research-evidence-table"><caption>Số liệu Muse đọc từ nguồn · cần đối chiếu trước quyết định thương mại</caption><thead><tr><th scope="col">Chỉ số</th><th scope="col">Giá trị</th><th scope="col">Phạm vi / kỳ đo</th><th scope="col">Nguồn / ngày đọc</th></tr></thead><tbody>{metrics.map((m,i)=><tr key={i}><th scope="row">{m.label}{m.pageLevel&&<small>{pageLevelEvidenceWarning}</small>}</th><td className="numeric">{metricNumber(m.value)} {m.unit}</td><td>{m.market||'Chưa rõ thị trường'}<small>{m.period||'Chưa rõ kỳ đo'}</small></td><td><a href={m.sourceUrl} target="_blank" rel="noreferrer">{new URL(m.sourceUrl).hostname}<ExternalLink size={13}/></a><small>{new Date(m.observedAt).toLocaleDateString('vi-VN')}</small></td></tr>)}</tbody></table></div>:<p className="info-panel">Chưa có số liệu thị trường có nguồn cho sản phẩm này. Giá bán giả định không phải bằng chứng về nhu cầu.</p>;
 }
 export default function ResearchCandidates({record,records,disabled,onEdit,onSelect,onPromote}:Props){
-  const batch=record.data as ResearchBatch;
+  const savedBatch=record.data as ResearchBatch;
+  const batch={...savedBatch,candidates:annotateResearchQuality(savedBatch.candidates)};
   const [detailId,setDetailId]=useState('');
   const [selectedOnly,setSelectedOnly]=useState(false);
   const detail=batch.candidates.find(c=>c.id===detailId);
@@ -33,10 +38,10 @@ export default function ResearchCandidates({record,records,disabled,onEdit,onSel
         <thead><tr><th scope="col">Chọn</th><th scope="col">Sản phẩm / ảnh nguồn</th><th scope="col">Giá vốn / MOQ</th><th scope="col">Giá bán giả định</th><th scope="col">Tín hiệu thị trường</th><th scope="col">Tiềm năng / khách hàng</th><th scope="col">Chi tiết</th></tr></thead>
         <tbody>{candidates.map(candidate=>{const checked=batch.selectedIds.includes(candidate.id);return <tr key={candidate.id} className={checked?'is-selected':''}>
           <td><input type="checkbox" aria-label={'Chọn '+candidate.name} checked={checked} disabled={disabled||!checked&&selected.length>=3} onChange={()=>onSelect(candidate)}/></td>
-          <th scope="row"><div className="research-product-cell"><button type="button" className="research-photo-button" onClick={()=>setDetailId(candidate.id)} aria-label={'Xem ảnh và số liệu '+candidate.name}><ProductPhoto key={candidate.imageUrl||candidate.id} candidate={candidate}/></button><div><button className="comparison-name" type="button" onClick={()=>setDetailId(candidate.id)}>{candidate.name}</button><small>{candidate.supplierCountry||'Chưa xác minh quốc gia'}</small><a href={candidate.supplierUrl} target="_blank" rel="noreferrer">{new URL(candidate.supplierUrl).hostname} <ExternalLink size={13}/></a></div></div></th>
+          <th scope="row"><div className="research-product-cell"><button type="button" className="research-photo-button" onClick={()=>setDetailId(candidate.id)} aria-label={'Xem ảnh và số liệu '+candidate.name}><ProductPhoto key={candidate.imageUrl||candidate.id} candidate={candidate}/></button><div><button className="comparison-name" type="button" onClick={()=>setDetailId(candidate.id)}>{candidate.name}</button><small>{candidate.supplierCountry||'Chưa xác minh quốc gia'}</small><a href={candidate.supplierUrl} target="_blank" rel="noreferrer">{new URL(candidate.supplierUrl).hostname} <ExternalLink size={13}/></a>{candidate.qualityWarnings?.includes('shared_supplier_url')&&<small>{sharedSourceWarning}</small>}</div></div></th>
           <td className="numeric">{price(candidate,'cost')}<small>MOQ: {candidate.minimumOrder??'Chưa biết'}</small><small>Ship: {price(candidate,'shipping')}</small></td><td className="numeric">{price(candidate,'price')}<small>Chưa tính lợi nhuận</small></td>
-          <td>{candidate.marketEvidence?.length?candidate.marketEvidence.slice(0,2).map((m,i)=><div className="research-signal" key={i}><span className="numeric">{metricNumber(m.value)} {m.unit}</span><small>{m.label}</small><a href={m.sourceUrl} target="_blank" rel="noreferrer">Nguồn <ExternalLink size={12}/></a></div>):<span className="muted">Chưa có số liệu</span>}</td>
-          <td><p className="comparison-excerpt">{candidate.targetCustomer||'Chưa phân tích khách hàng'}</p><button type="button" className="comparison-name" onClick={()=>setDetailId(candidate.id)}>Xem phân tích</button></td>
+          <td>{candidate.marketEvidence?.length?candidate.marketEvidence.slice(0,2).map((m,i)=><div className="research-signal" key={i}><span className="numeric">{metricNumber(m.value)} {m.unit}</span><small>{m.label}</small>{m.pageLevel&&<small>{pageLevelEvidenceWarning}</small>}<a href={m.sourceUrl} target="_blank" rel="noreferrer">Nguồn <ExternalLink size={12}/></a></div>):<span className="muted">Chưa có số liệu</span>}</td>
+          <td><small>{verdictLabel(candidate.verdict)} · {matchLabel(candidate.matchType)}</small><p className="comparison-excerpt">{candidate.targetCustomer||'Chưa phân tích khách hàng'}</p><button type="button" className="comparison-name" onClick={()=>setDetailId(candidate.id)}>Xem phân tích</button></td>
           <td><Button tone="neutral" onClick={()=>setDetailId(candidate.id)} aria-label={'Xem nguồn và điều kiện '+candidate.name}>Xem</Button></td>
         </tr>;})}</tbody>
       </table>
@@ -44,10 +49,19 @@ export default function ResearchCandidates({record,records,disabled,onEdit,onSel
     <p className="instagram-data-note">Giá vốn có thể yêu cầu mua nhiều sản phẩm. Mở chi tiết để xem số lượng tối thiểu và điều kiện nguồn hàng. Chưa xác nhận phí giao tới Mỹ hoặc lợi nhuận.</p>
     <Modal open={!!detail} title={detail?.name??''} description="Nguồn hàng, giả thuyết nội dung và điều cần xác minh" onClose={()=>setDetailId('')}>
       {detail&&<div className="modal-body research-candidate-detail"><Badge>{batch.selectedIds.includes(detail.id)?'Đã chọn để thử':'Ứng viên · chờ chọn'}</Badge>
+        {detail.qualityWarnings?.includes('shared_supplier_url')&&<p className="info-panel">{sharedSourceWarning}</p>}
+        <h3>Đề xuất và mức đối chiếu</h3><p>{verdictLabel(detail.verdict)} · {matchLabel(detail.matchType)}</p><p>{detail.verdictReason||'Chưa có lý do đề xuất.'}</p>
         <div className="research-detail-lead"><ProductPhoto key={detail.imageUrl||detail.id} candidate={detail}/><div><h3>Khách hàng tiềm năng</h3><p>{detail.targetCustomer||'Chưa xác định từ nguồn.'}</p><h3>Đánh giá tiềm năng</h3><p>{detail.marketAssessment||'Chưa đủ số liệu để đánh giá thị trường Mỹ.'}</p>{detail.imageSourceUrl&&<a href={detail.imageSourceUrl} target="_blank" rel="noreferrer">Nguồn ảnh <ExternalLink size={14}/></a>}</div></div>
         <EvidenceTable candidate={detail}/>
         <dl className="preview-facts"><div><dt>Giá vốn tham khảo</dt><dd>{price(detail,'cost')}</dd></div><div><dt>Phí giao hàng</dt><dd>{price(detail,'shipping')}</dd></div><div><dt>Giá bán giả định</dt><dd>{price(detail,'price')}</dd></div></dl>
         <h3>Ý tưởng video thử</h3><p>{detail.contentAngle||'Chưa có ý tưởng.'}</p>
+        <h3>Khung hình kết quả</h3><p>{detail.visualPayoff||'Chưa xác định cảnh kết quả quay được.'}</p>
+        <h3>Chi tiết AI dễ làm sai</h3><p>{detail.aiFidelityRisks?.length?detail.aiFidelityRisks.join(' · '):'Chưa đánh giá.'}</p>
+        <h3>Vận chuyển và độ phù hợp</h3><dl className="preview-facts">{Object.entries(logisticsLabels).map(([key,label])=>{const flag=detail.logisticsFlags?.[key as keyof typeof logisticsLabels];return <div key={key}><dt>{label}</dt><dd>{flag==null?'Chưa rõ':flag?'Có rủi ro':'Không ghi nhận'}</dd></div>;})}</dl>
+        <h3>Cạnh tranh quan sát trên web</h3><dl className="preview-facts"><div><dt>Quảng cáo đang chạy đã thấy</dt><dd>{detail.competition?.activeAdsObserved==null?'Chưa biết':metricNumber(detail.competition.activeAdsObserved)}</dd></div><div><dt>Reels tương tự trong 30 ngày</dt><dd>{detail.competition?.similarReels30d==null?'Chưa biết':metricNumber(detail.competition.similarReels30d)}</dd></div></dl>
+        <p>{detail.competition?.observedAt?'Ngày quan sát: '+new Date(detail.competition.observedAt).toLocaleString('vi-VN'):'Chưa rõ ngày quan sát.'}</p>
+        {detail.competition?.sourceUrl&&<a href={detail.competition.sourceUrl} target="_blank" rel="noreferrer">Nguồn cạnh tranh <ExternalLink size={14}/></a>}
+        <p>{detail.competition?.note||'Chưa có ghi chú phạm vi quan sát.'}</p>
         <details><summary>Ghi chú chi tiết tại nguồn</summary><p className="muse-chat-text">{detail.evidenceNotes}</p></details><a href={detail.supplierUrl} target="_blank" rel="noreferrer">Mở nguồn hàng <ExternalLink size={14}/></a>
         {detail.evidenceUrl&&<a href={detail.evidenceUrl} target="_blank" rel="noreferrer">Mở nguồn bổ sung <ExternalLink size={14}/></a>}
         <h3>Điều cần kiểm chứng</h3><p className="muse-chat-text">{detail.risks||'Chưa có ghi chú.'}</p>
