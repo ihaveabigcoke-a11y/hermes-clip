@@ -256,6 +256,10 @@ export function productCurrency(product: Record<string, any>, field: "price" | "
 export function productHasMixedCurrencies(product: Record<string, any>) {
   return (["cost", "shipping"] as const).some(field => productCurrency(product, field) !== productCurrency(product, "price"));
 }
+export function productFeeCurrencyHint(product: Record<string, any>): string | null {
+  if (!productHasMixedCurrencies(product) || (product.fees === 0 && product.buffer === 0)) return null;
+  return `Phí và dự phòng tính theo ${productCurrency(product, "price")}`;
+}
 export function productMarginLabel(product: Record<string, any>) {
   if (productHasMixedCurrencies(product)) return "Khác tiền tệ · chưa tính biên";
   const margin = unitMargin(product);

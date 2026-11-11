@@ -10,8 +10,17 @@ const clean = value => String(value ?? '').replace(/&#(?:x([\da-f]+)|(\d+));/gi,
 }).replace(/&(nbsp|amp|lt|gt|quot|yen|euro|pound);/gi, (_, key) => ({nbsp:' ', amp:'&', lt:'<', gt:'>', quot:'"', yen:'¥', euro:'€', pound:'£'}[key.toLowerCase()]));
 const plain = value => clean(value).replace(/<[^>]*>/g, ' ').replace(/[ \t]+/g, ' ').trim();
 const short = value => value ? plain(value).slice(0, 500) || null : null;
-export function accessBlocked(value) {
- return /captcha|verify (?:that )?you are human|sign in to continue|log in to continue|login required|authentication required|登录后查看|请登录|验证码|\b(?:HTTP(?:\/\d(?:\.\d)?)?|status(?: code)?)\s*[:=]?\s*(?:403|429)\b|\b403\s+forbidden|too many requests/i.test(String(value));
+export function accessBlocked(value, {isPage = true} = {}) {
+ const raw = String(value);
+ // Generic denial wording can also occur in a product description. Inspect
+ // only the title and the first 2 KiB of page text, excluding non-content HTML.
+ const content = raw.replace(/<!--[\s\S]*?-->/g, '').replace(/<(script|style|template)\b[^>]*>[\s\S]*?<\/\1>/gi, '');
+ if (/captcha|verify (?:that )?you are human|sign in to continue|log in to continue|login required|authentication required|登录后查看|请登录|验证码|\b(?:HTTP(?:\/\d(?:\.\d)?)?|status(?: code)?)\s*[:=]?\s*(?:403|429)\b|\b403\s+forbidden|too many requests/i.test(plain(content))) return true;
+ // A tool/file error with generic denial wording is not evidence of a blocked page.
+ if (!isPage) return false;
+ const title = plain(content.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i)?.[1]);
+ const visible = plain(content.replace(/<head\b[^>]*>[\s\S]*?<\/head>/gi, '')).replace(/\s+/g, ' ').trim();
+ return /\baccess\s+(?:denied|forbidden)\b|访问受限/i.test(title + '\n' + boundedText(visible, 2 * 1024));
 }
 const currencySymbols = {CNY:['¥','CN¥'], USD:['US$','$'], VND:['₫'], EUR:['€'], GBP:['£']};
 function sourceCurrency(symbol, sourceUrl) {
@@ -106,7 +115,7 @@ export function extractListing(raw, {fetchedAt, rawPath, sourceUrl}) {
  const html = boundedText(raw);
  const text = plain(html.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, '')
   .replace(/<\/(?:p|div|li|h[1-6])>|<br\s*\/?>/gi, '\n'));
- const blocked = accessBlocked(text);
+ const blocked = accessBlocked(html);
  const title = short(html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i)?.[1]
   ?? html.match(/^(?:Title:\s*|#\s+)(.+)$/im)?.[1]);
  const priceText = short(text.match(/(?:CN¥|US\$|¥|\$|₫|€|£)\s*\d[\d.,]*(?:\s*[-–~]\s*(?:CN¥|US\$|¥|\$|₫|€|£)?\s*\d[\d.,]*)?|\d[\d.,]*(?:\s*(?:₫|€|£)?\s*[-–~]\s*\d[\d.,]*)?\s*(?:₫|€|£)/)?.[0]);

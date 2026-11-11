@@ -6,11 +6,13 @@ Checkpoint source ngày 12/11/2026, clone `C:/HermesNight/hermes-clip`, nhánh `
 
 ## Vị trí trong luồng đăng
 
+**Fail closed chỉ áp dụng khi chọn Bắt buộc bật nhãn AI (`required`).** Mặc định **không gắn nhãn AI** (`off`), kể cả khi thiếu `aiLabel` hoặc `aiLabel=null`; không chặn Share vì thiếu công tắc nhãn.
+
 1. `InstagramPublisher.enqueue` trong `desktop/src/instagram.mjs` lấy snapshot qua `InstagramWorkspace.snapshot`: tài khoản, revision, video/checksum, caption và cấu hình nhãn.
 2. `InstagramBrowsers` trong `desktop/src/instagram-browser.mjs` quản lý cửa sổ/profile; không phải nơi điền nội dung hay bấm nhãn. T09 không sửa file này.
 3. `InstagramAdapter.prepare` trong `desktop/src/instagram-adapter.mjs` đọc danh sách bài trước lượt đăng → Create/Post → chọn video qua input trong dialog → xử lý thông báo Reel/crop → Next đến màn caption → điền và so khớp caption.
 4. **Ngay tại màn caption có nút Share, sau chọn video và trước Share:** gọi `ensureInstagramAiLabel`. Với `off` (mặc định), hàm trả `skipped` ngay, không đụng DOM. Với `required`, hàm tìm, bật và đọc lại trạng thái công tắc, có thể mở Advanced settings trong cùng dialog, và chỉ trả kết quả chuẩn bị khi xác nhận được nhãn.
-5. `InstagramAdapter.publish` kiểm lại nhãn ở chế độ chỉ đọc trước callback `beforeShare`, rồi kiểm lại sau callback kiểm tra snapshot/tài khoản và ghi checkpoint `submitting`, ngay trước **một** lệnh `.click()` Share hiện có. Nếu trạng thái bị đổi lúc chờ callback, dừng, không bật lại rồi tự thử Share.
+5. Khi chọn **Bắt buộc bật nhãn AI** (`required`), `InstagramAdapter.publish` kiểm lại nhãn ở chế độ chỉ đọc trước callback `beforeShare`, rồi kiểm lại sau callback kiểm tra snapshot/tài khoản và ghi checkpoint `submitting`, ngay trước **một** lệnh `.click()` Share hiện có. Nếu trạng thái bị đổi lúc chờ callback, dừng, không bật lại rồi tự thử Share. Với `off`, bỏ qua kiểm nhãn; các gate tài khoản/nội dung vẫn chạy.
 6. Receipt, permalink, chống trùng fingerprint, snapshot tài khoản/video/caption và đối soát kết quả sau Share giữ cơ chế cũ. Kiểm nhãn không phải bằng chứng bài đã đăng hoặc bằng chứng Meta lưu nhãn phía server.
 
 ## Cấu hình và dữ liệu cũ
@@ -23,7 +25,7 @@ Checkpoint source ngày 12/11/2026, clone `C:/HermesNight/hermes-clip`, nhánh `
 
 ## Selector và chiến lược fail closed
 
-Mã nằm trong `desktop/src/instagram-ai-label.mjs`:
+Mã nằm trong `desktop/src/instagram-ai-label.mjs`. Các bước tìm công tắc và dừng dưới đây chỉ áp dụng cho `required`:
 
 - Giới hạn trong đúng **một dialog đang hiển thị** (`getByRole('dialog').filter({visible: true})`) có đúng một button tên `Share` hoặc `Chia sẻ`.
 - Tìm `getByRole('switch', {name})` hoặc `getByRole('checkbox', {name})`; tên đầy đủ khớp, không phân biệt hoa/thường: `Label as made with AI`, `Made with AI`, `Label as AI-generated`, `Gắn nhãn là được tạo bằng AI`, `Gắn nhãn là do AI tạo`, `Được tạo bằng AI`.
@@ -32,11 +34,11 @@ Mã nằm trong `desktop/src/instagram-ai-label.mjs`:
 - Công tắc đã bật thì không click. Công tắc tắt thì chỉ click một lần trong prepare; đọc lại có giới hạn thời gian, không click lần hai nếu chưa xác nhận. Trước Share chỉ đọc, không tự sửa.
 - Không thấy, nhiều kết quả, công tắc ẩn/disabled, trạng thái chưa rõ, click không đổi trạng thái, bị tháo khỏi DOM, lỗi locator hoặc thay đổi trước Share đều chặn. Chữ AI nằm cạnh một switch không có accessible name liên kết cũng chặn, không đoán bằng ancestor chung.
 
-Các tên/role này là giả thuyết adapter có kiểm bằng fixture, **không phải DOM trích từ Instagram thật**. Instagram có thể đổi tên, ngôn ngữ, layout hoặc chỉ hỗ trợ nhãn ở một số giao diện/tài khoản. Khi không khớp, phải dừng để kiểm thủ công; không thêm fallback “cứ đăng”.
+Các tên/role này là giả thuyết adapter có kiểm bằng fixture, **không phải DOM trích từ Instagram thật**. Instagram có thể đổi tên, ngôn ngữ, layout hoặc chỉ hỗ trợ nhãn ở một số giao diện/tài khoản. Khi đã chọn `required` mà không khớp, phải dừng để kiểm thủ công; không thêm fallback “cứ đăng”.
 
 ## Trạng thái bị chặn và giới hạn phục hồi
 
-Lỗi nhãn có mã `INSTAGRAM_AI_LABEL_REQUIRED`. Publisher lưu `state=needs_attention`, `attentionReason=ai_label`, `aiLabelCheck={mode,status:'blocked',reason,checkedAt}`, thông báo **“Cần đối soát/thao tác tay”** và history. `submittingAt=null` cho biết gate này dừng trước lệnh Share, kể cả khi callback vừa ghi checkpoint submitting. Trường hợp thật sự đã bấm Share mà kết quả không rõ vẫn giữ timestamp và đối soát như trước.
+Với `required`, lỗi xác nhận nhãn có mã `INSTAGRAM_AI_LABEL_REQUIRED`. Publisher lưu `state=needs_attention`, `attentionReason=ai_label`, `aiLabelCheck={mode,status:'blocked',reason,checkedAt}`, thông báo **“Cần đối soát/thao tác tay”** và history. `submittingAt=null` cho biết gate này dừng trước lệnh Share, kể cả khi callback vừa ghi checkpoint submitting. Trường hợp thật sự đã bấm Share mà kết quả không rõ vẫn giữ timestamp và đối soát như trước.
 
 Thành công chuẩn bị lưu `aiLabelCheck.status=confirmed` và nguồn `composer_toggle`; `off` lưu `skipped`. Đây chỉ là quan sát UI tại thời điểm kiểm. Job chặn giữ snapshot và chống trùng, không tự retry khi poll/restart, không cho nút Thử lại, và không chạy bộ tìm bài đăng với mốc thời gian giả. UI cho mở trình duyệt để kiểm. Bản nháp chỉ còn nếu Instagram/browser vẫn giữ nó; không hứa phục hồi draft sau restart.
 

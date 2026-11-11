@@ -1,5 +1,9 @@
 # Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
 
+## Cập nhật source đêm T26 — sửa ghi chú review T14/T13/T03/T09
+
+Clone `night-20261111` nhận lại trang chặn “Access Denied”, “Access Forbidden”, “访问受限” trong title hoặc 2 KiB chữ đầu trang; cụm từ ở cuối mô tả và lỗi đọc file cục bộ không tự thành trang bị chặn. Form sản phẩm giải thích tiền tệ phí/dự phòng khi trộn tiền và có khoản chưa biết/khác 0; không đổi phép tính. Tiến độ ưu tiên `researchOrigin` để nhận diện ghi chú Muse dù sửa chữ, giữ tiền tố cũ làm fallback: chỉ sửa ghi chú của sản phẩm research vẫn bậc 0, thêm bằng chứng `proofUrl` hoặc xác nhận mẫu mới lên bậc 1 khi chưa có nội dung/đo nhu cầu. Không thêm schema hay migration. Hai tài liệu nhãn AI giới hạn fail closed ở lựa chọn **Bắt buộc bật nhãn AI**; mặc định vẫn không gắn nhãn, không sửa code nhãn. Xem [checkpoint và kiểm tra T26](../../ops/night/out/T26.md); chưa triển khai bản cài hoặc kiểm dịch vụ thật. Phần T03 cũ mô tả sửa ghi chú là đủ tăng bậc đã được thay bằng quy tắc nguồn gốc này.
+
 ## Cập nhật source đêm T24 — kiểm máy móc commit đêm
 
 Clone `night-20261111` có `scripts/night-review.mjs` để runner xuất bảng theo từng commit T/F: trạng thái từ báo cáo tại commit, revert, log đúng SHA/lượt chạy và các cờ diff. Script chỉ đọc Git, chỉ ghi file output; vẫn cần review nội dung theo skill trước khi áp vào app chính. Test Git fixture đã được thêm vào `npm test`; không thay đổi app hoặc bản cài. Xem [cách chạy và giới hạn](../NIGHT-REVIEW.md), [checkpoint T24](../../ops/night/out/T24.md).

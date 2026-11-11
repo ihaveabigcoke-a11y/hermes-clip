@@ -21,7 +21,7 @@ import {
   DialogDescription,
   DialogClose,
 } from "@/components/ui/dialog";
-import { schemas, validationMessage, type Kind } from "@/lib/lab/domain";
+import { schemas, validationMessage, productFeeCurrencyHint, type Kind } from "@/lib/lab/domain";
 import { probeFile } from "@/lib/lab/client-media";
 
 export function Button({
@@ -403,6 +403,7 @@ export function RecordForm({
   const [uploadName, setUploadName] = useState("");
   const abort = useRef<AbortController | null>(null);
   const form = useRef<HTMLFormElement>(null);
+  const feeCurrencyHint = kind === "product" ? productFeeCurrencyHint(values) : null;
   useEffect(() => () => abort.current?.abort(), []);
   function change(name: string, value: any) {
     setValues((v) => ({ ...v, [name]: value }));
@@ -674,6 +675,7 @@ export function RecordForm({
             </div>
           ))}
         </div>
+        {feeCurrencyHint && <p role="status">{feeCurrencyHint}</p>}
         {extra?.(values, change, errors)}
         {kind === "creative" && values.mediaUrl && (
           <div className="video-review">

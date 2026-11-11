@@ -4,11 +4,13 @@ Checkpoint source: `C:/HermesNight/hermes-clip`, nhánh `night-20261111`, checko
 
 ## Đã hoàn thành
 
+**Fail closed chỉ áp dụng khi chọn Bắt buộc bật nhãn AI (`required`).** Mặc định **không gắn nhãn AI** (`off`), kể cả khi thiếu `aiLabel` hoặc `aiLabel=null`; không chặn Share vì thiếu công tắc nhãn.
+
 - `content_plan.aiLabel` optional/null, enum `required | off`. **Cập nhật 12/11/2026 (commit `9a5a3e6`, quyết định của người dùng): mặc định hiệu lực là `off`** khi đóng snapshot, bao gồm Muse và dữ liệu cũ; chỉ `required` tường minh mới bật nhãn và chặn trước Share. Form mặc định “Không gắn nhãn AI (mặc định)”; preview ghi rõ chế độ, không khẳng định nhãn cho bài lịch sử.
 - `InstagramWorkspace` cố định cấu hình vào snapshot và đối chiếu lại trước khi đăng cùng revision/tài khoản/video/caption. Không đổi fingerprint chống trùng hoặc số lần Share.
-- `InstagramAdapter.prepare` bật nhãn sau khi chọn video/Next/điền caption, tại màn có Share. Module `instagram-ai-label.mjs` tìm công tắc theo accessible role/name, mở Advanced settings có tên khớp khi cần, click tối đa một lần, đọc native checked hoặc aria-checked để xác nhận.
-- `publish` kiểm ở chế độ chỉ đọc trước callback kiểm tài khoản/workspace và ngay sau callback, trước lệnh Share duy nhất. Thiếu/mơ hồ/disabled/unknown/không đổi trạng thái/thay đổi trước Share đều dừng. `off` không tương tác với nhãn, giữ đường đăng cũ.
-- Lỗi nhãn lưu `needs_attention`, `attentionReason=ai_label`, reason/timestamp kiểm, history tiếng Việt “Cần đối soát/thao tác tay”, `submittingAt=null` vì chưa gọi Share. Job giữ snapshot, khóa gửi lại qua enqueue/retry/restart; không dò bài đã đăng cho lượt chưa gửi. UI mở trình duyệt để kiểm. Chưa thêm thao tác giải phóng/tiếp tục job chặn; không sửa DB để vượt gate.
+- Chỉ với `required`, `InstagramAdapter.prepare` bật nhãn sau khi chọn video/Next/điền caption, tại màn có Share. Module `instagram-ai-label.mjs` tìm công tắc theo accessible role/name, mở Advanced settings có tên khớp khi cần, click tối đa một lần, đọc native checked hoặc aria-checked để xác nhận. Mặc định `off` trả `skipped`, không tìm hay bật/tắt công tắc.
+- Chỉ với `required`, `publish` kiểm ở chế độ chỉ đọc trước callback kiểm tài khoản/workspace và ngay sau callback, trước lệnh Share duy nhất. Thiếu/mơ hồ/disabled/unknown/không đổi trạng thái/thay đổi trước Share đều dừng. `off` không tương tác với nhãn, giữ đường đăng cũ.
+- Lỗi xác nhận nhãn ở chế độ `required` lưu `needs_attention`, `attentionReason=ai_label`, reason/timestamp kiểm, history tiếng Việt “Cần đối soát/thao tác tay”, `submittingAt=null` vì chưa gọi Share. Job giữ snapshot, khóa gửi lại qua enqueue/retry/restart; không dò bài đã đăng cho lượt chưa gửi. UI mở trình duyệt để kiểm. Chưa thêm thao tác giải phóng/tiếp tục job chặn; không sửa DB để vượt gate.
 - [INSTAGRAM-AI-LABEL.md](../INSTAGRAM-AI-LABEL.md) ghi vị trí chèn trong luồng, selector/giới hạn, cách chạy offline và hướng dẫn người dùng kiểm draft sáng mai, không bấm Share hoặc nút đăng tự động của Hermes.
 
 ## Kiểm tra mới
@@ -35,6 +37,6 @@ DOM fixture là HTML tĩnh trên Chrome headless mới, TEMP/TMP và APPDATA/LOC
 
 ## Bước tiếp
 
-1. Người dùng theo mục kiểm sáng mai trong tài liệu, chỉ tạo draft và kiểm toggle trước Share; không dùng nút Đăng của Hermes làm dry-run.
+1. Nếu định dùng **Bắt buộc bật nhãn AI**, người dùng theo mục kiểm sáng mai trong tài liệu, chỉ tạo draft và kiểm toggle trước Share; không dùng nút Đăng của Hermes làm dry-run. Mặc định không cần kiểm công tắc nhãn.
 2. Đối chiếu DOM tối thiểu đã loại dữ liệu cá nhân; nếu selector khác, bổ sung fixture rồi sửa adapter, giữ fail closed.
 3. Chỉ lên kế hoạch nghiệm thu đăng thật sau khi có quyền tài khoản/nội dung riêng; không suy quyền từ task T09.

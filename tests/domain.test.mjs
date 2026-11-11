@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {schemas,emptyProduct,unitMargin,productGate,metricAdvice,makeBriefs,classifyComment,formatMoney,productFromCandidate,productCurrency,productFinancials,productMarginLabel} from '../lib/lab/domain.ts';
+import {schemas,emptyProduct,unitMargin,productGate,metricAdvice,makeBriefs,classifyComment,formatMoney,productFromCandidate,productCurrency,productFinancials,productMarginLabel,productFeeCurrencyHint} from '../lib/lab/domain.ts';
 import {candidateSchema} from '../lib/lab/operations.ts';
 import {productStage} from '../lib/lab/product-stage.ts';
 import {readFileSync} from 'node:fs';
@@ -100,6 +100,28 @@ test('workspace overlays formula pairs and selects latest versions without mutat
 });
 const product={id:'p1',kind:'product',revision:1,updatedAt:0,data:{...emptyProduct,name:'Đèn thử',price:30,cost:12,shipping:4,fees:2,buffer:3,proofNotes:'Đã thử công tắc và ánh sáng với sample.'}};
 const ex={id:'e1',kind:'experiment',revision:1,updatedAt:0,data:{productId:'p1'}};
+
+test('fee currency hint covers mixed cost/shipping with unknown or nonzero fees and buffer without changing amounts', () => {
+  for (const currency of ['USD', 'VND', 'GBP', 'EUR', 'CNY']) {
+    const other = currency === 'CNY' ? 'USD' : 'CNY';
+    for (const field of ['costCurrency', 'shippingCurrency']) {
+      for (const [fees, buffer] of [[2, 0], [0, 3], [2, 3], [null, 0], [0, null], [null, null], [undefined, undefined]]) {
+        const data = {...product.data, currency, [field]: other, fees, buffer};
+        const before = structuredClone(data);
+        assert.equal(productFeeCurrencyHint(data), `Phí và dự phòng tính theo ${currency}`);
+        assert.equal(unitMargin(data), null);
+        assert.deepEqual(data, before);
+      }
+      assert.equal(productFeeCurrencyHint({...product.data, currency, [field]: other, fees: 0, buffer: 0}), null);
+    }
+    for (const overrides of [{}, {costCurrency: null, shippingCurrency: null}, {costCurrency: currency, shippingCurrency: currency}]) {
+      for (const fees of [0, 2, null]) {
+        assert.equal(productFeeCurrencyHint({...product.data, currency, fees, ...overrides}), null);
+      }
+    }
+  }
+  assert.equal(productFeeCurrencyHint({}), null);
+});
 
 test('promotion preserves each amount and its currency without converting or relabelling supplier cost', () => {
   const candidate = candidateSchema.parse({id:'mixed', name:'Supplier quote', supplierUrl:'https://example.test/item', evidenceNotes:'Exact SKU quote', risks:'Shipping estimate', cost:36.5, costCurrency:'CNY', shipping:4.25, shippingCurrency:'USD', price:19.99, currency:'USD'});
@@ -262,7 +284,23 @@ test('unverified Muse promotion notes do not count as proof; recorded verificati
   });
   assert.equal(productStage(p, []), 0);
   assert.equal(productStage({...p, data: {...p.data, sampleVerified: true}}, []), 1);
-  assert.equal(productStage({...p, data: {...p.data, proofNotes: 'Sample received and checked.'}}, []), 1);
+  assert.equal(productStage({...p, data: {...p.data, proofNotes: 'Sample received and checked.'}}, []), 0);
+  assert.equal(productStage({...p, data: {...p.data, proofUrl: 'https://supplier.example/sample-proof'}}, []), 1);
+});
+
+test('promoted Muse provenance survives parsing and edited notes; legacy prefixes and user proof stay distinct', () => {
+  const candidate = candidateSchema.parse({id: 'muse', name: 'Fixture quote', supplierUrl: 'https://supplier.example/quote', evidenceNotes: 'An unverified Muse suggestion.'});
+  const promoted = schemas.product.parse(productFromCandidate('batch', {market: 'United States', locale: 'en-US'}, candidate));
+  assert.deepEqual(promoted.researchOrigin, {batchId: 'batch', candidateId: 'muse'});
+  assert.equal(productStage(stageProduct('promoted', promoted), []), 0);
+  const edited = schemas.product.parse({...promoted, proofNotes: 'Reworded suggestion without the old prefix.'});
+  const before = structuredClone(edited);
+  assert.equal(productStage(stageProduct('edited', edited), []), 0);
+  assert.deepEqual(edited, before);
+  for (const researchOrigin of [undefined, null]) {
+    assert.equal(productStage(stageProduct('legacy', {researchOrigin, proofNotes: '  Muse đề xuất · cần kiểm tra nguồn\nOld suggestion'}), []), 0);
+    assert.equal(productStage(stageProduct('manual', {researchOrigin, proofNotes: 'User recorded a supplier quote for this SKU.'}), []), 1);
+  }
 });
 
 test('published plans advance to demand without requiring production or metrics', () => {

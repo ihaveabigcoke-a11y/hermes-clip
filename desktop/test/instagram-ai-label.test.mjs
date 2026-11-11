@@ -1,6 +1,6 @@
 import test, {before, after} from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdir, mkdtemp, writeFile, rm} from 'node:fs/promises';
+import {mkdir, mkdtemp, readFile, writeFile, rm} from 'node:fs/promises';
 import {join, dirname, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {Store} from '../src/store.mjs';
@@ -73,6 +73,15 @@ test('missing/null configuration defaults to off; only explicit required enables
   for (const value of [undefined, null]) assert.equal((await ensureInstagramAiLabel({}, value)).status, 'skipped');
   for (const value of ['', false, 0, 'optional']) assert.throws(() => instagramAiLabelMode(value), blocked('invalid_config'));
   assert.equal((await check({}, 'off')).status, 'skipped'); // no DOM access at all
+});
+
+test('AI label documentation states the off default and limits fail closed to explicit required', async () => {
+  for (const path of ['../../docs/INSTAGRAM-AI-LABEL.md', '../../docs/context/T09-INSTAGRAM-AI-LABEL.md']) {
+    const text = await readFile(new URL(path, import.meta.url), 'utf8');
+    assert.match(text, /Mặc định \*\*không gắn nhãn AI\*\* \(`off`\), kể cả khi thiếu `aiLabel` hoặc `aiLabel=null`/);
+    assert.match(text, /Fail closed chỉ áp dụng khi chọn Bắt buộc bật nhãn AI \(`required`\)/);
+    assert.match(text, /không chặn Share vì thiếu công tắc nhãn/);
+  }
 });
 
 test('DOM switch turns on once and an already-on switch is never toggled off', async t => {

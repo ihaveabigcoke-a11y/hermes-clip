@@ -27,8 +27,8 @@ await build({configFile:false, root, publicDir:false, logLevel:'error', plugins:
     rollupOptions:{output:{entryFileNames:'entry.mjs'}}}});
 const {Dialog, RecordForm, currencyFields, schemas, emptyProduct} = await import(pathToFileURL(join(scratch, 'bundle/entry.mjs')));
 
-const render = initial => renderToStaticMarkup(React.createElement(Dialog, {}, React.createElement(RecordForm, {
-  kind:'product', initial, fields:currencyFields, onSave:async()=>{}, onCancel(){}, onDirty(){},
+const render = (initial, kind = 'product') => renderToStaticMarkup(React.createElement(Dialog, {}, React.createElement(RecordForm, {
+  kind, initial, fields:currencyFields, onSave:async()=>{}, onCancel(){}, onDirty(){},
 })));
 function selected(html, field) {
   const select = html.match(new RegExp(`<select[^>]*id="field-${field}"[^>]*>([\\s\\S]*?)</select>`));
@@ -60,4 +60,21 @@ test('legacy and null override controls show inheritance, accept null and retain
   const product = schemas.product.parse({...emptyProduct, name:'Quote', costCurrency:null, shippingCurrency:null});
   assert.equal(product.costCurrency, null);
   assert.equal(product.shippingCurrency, null);
+});
+
+test('product form explains the shared fee currency only when mixed units and unknown/nonzero fees need it', () => {
+  for (const currency of ['USD', 'CNY']) {
+    const other = currency === 'USD' ? 'CNY' : 'USD';
+    for (const field of ['costCurrency', 'shippingCurrency']) {
+      const data = {...emptyProduct, currency, [field]: other};
+      for (const amounts of [{fees: null, buffer: null}, {fees: 2, buffer: 0}, {fees: 0, buffer: 3}]) {
+        const html = render({...data, ...amounts});
+        assert.ok(html.includes(`<p role="status">Phí và dự phòng tính theo ${currency}</p>`));
+        assert.equal(selected(html, field), other);
+      }
+      assert.doesNotMatch(render({...data, fees: 0, buffer: 0}), /Phí và dự phòng tính theo/);
+      assert.doesNotMatch(render(data, 'settings'), /Phí và dự phòng tính theo/);
+    }
+  }
+  assert.doesNotMatch(render(emptyProduct), /Phí và dự phòng tính theo/);
 });

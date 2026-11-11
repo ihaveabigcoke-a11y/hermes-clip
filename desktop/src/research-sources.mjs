@@ -4,7 +4,7 @@ import {z} from 'zod';
 import {accessBlocked,boundedText,extractListing,listingWarnings,pageText,publicUrl,youtubeObservation,webObservation} from './listing-check.mjs';
 
 export const sourceCheckInput=z.object({batchId:z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/)}).strict();
-const failedStatus=error=>error.unavailable?'unavailable':accessBlocked(error.message)?'blocked':'failed';
+const failedStatus=error=>error.unavailable?'unavailable':accessBlocked(error.message,{isPage:false})?'blocked':'failed';
 const queryFor=candidate=>candidate.name.replace(/[\r\n\0]/g,' ').replace(/^[\s-]+/,'').slice(0,120)||'product';
 
 /** A durable integration job, with an in-memory callback only for this app session.

@@ -17,6 +17,7 @@ const listing=raw=>extractListing(raw,{fetchedAt:at,rawPath:'fixture.txt',source
 const response=async(_cmd,args)=>args.includes('read')?{ok:true,result:{html:page}}:{ok:true,items:[]};
 const relatedPage=await readFile(new URL('./fixtures/listing-related.html',import.meta.url),'utf8');
 const showroomPage=await readFile(new URL('./fixtures/listing-showroom.html',import.meta.url),'utf8');
+const deniedPage=await readFile(new URL('./fixtures/listing-akamai-denied.html',import.meta.url),'utf8');
 async function fixture(fn,run=response,count=1){
  const root=await mkdtemp(join(tmpdir(),'hermes-sources-')),store=new Store(join(root,'state.sqlite'));
  const integrations=new Integrations(store,root,run);
@@ -43,6 +44,29 @@ test('1688 and AliExpress page heuristics preserve currency, MOQ, title and ship
  assert.equal(listing('<title>Blocked</title> HTTP 403 CAPTCHA').status,'blocked');
  assert.equal(listing('<title>Model 403</title>¥403').status,'ok');
  assert.equal(listing('').status,'failed');
+});
+test('Akamai Access Denied without an HTTP code is blocked and yields no listing claims',()=>{
+ const check=listing(deniedPage);
+ assert.doesNotMatch(deniedPage,/403|429/);
+ assert.equal(check.status,'blocked');assert.equal(check.title,'Access Denied');
+ for(const key of ['priceText','currencyDetected','moqText','shippingText','productCountOnPage'])assert.equal(check[key],null);
+ assert.match(listingWarnings(candidate(),check)[0],/bị chặn/);
+});
+test('generic denial wording is limited to the title and first 2 KiB of visible text',()=>{
+ for(const message of ['Access Denied','Access Forbidden','访问受限']){
+  assert.equal(listing(`<title>Supplier</title><h1>${message}</h1>`).status,'blocked');
+  assert.equal(listing(`<head><title>${'Catalog '.repeat(300)}${message}</title></head><body>Product</body>`).status,'blocked');
+  const longListing=page.replace('</body>',`<p>${'Adjustable leash with a durable clip. '.repeat(80)}</p><p>Troubleshooting: the companion app may display ${message}.</p></body>`);
+  const check=listing(longListing);
+  assert.equal(check.status,'ok');assert.equal(check.priceText,'¥ 12.50');assert.equal(check.moqText,'Min. order: 20 pieces');
+  // Large markup does not consume the visible-text budget; UTF-8 text does.
+  assert.equal(listing(`<div data-description="${'x'.repeat(3000)}">${message}</div>`).status,'blocked');
+  assert.equal(listing(`<p>${'产'.repeat(690)}</p><p>${message}</p>`).status,'ok');
+ }
+});
+test('non-content HTML denial text does not mark a readable listing as blocked',()=>{
+ const hidden='<meta content="Access Denied"><script>const note="Access Denied CAPTCHA";</script><style>/* access forbidden */</style><template>访问受限</template><!-- Access Denied -->';
+ assert.equal(listing(page.replace('</head>',hidden+'</head>')).status,'ok');
 });
 test('12 product cards flag possible showroom and price/MOQ discrepancies leave Muse untouched',()=>{
  const source=candidate(),original=structuredClone(source);

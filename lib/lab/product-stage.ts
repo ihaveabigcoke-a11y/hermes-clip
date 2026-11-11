@@ -40,8 +40,11 @@ export function productStage(
   const proofUrl =
     typeof product.data.proofUrl === "string" ? product.data.proofUrl.trim() : "";
   // Promotion copies unverified Muse research into proofNotes. It is not sample/quote proof.
+  // Use stored provenance first; legacy products may have only the old prefix.
+  const hasResearchNotes = product.data.researchOrigin != null ||
+    notes.startsWith("Muse đề xuất · cần kiểm tra nguồn");
   const hasProofNotes =
-    notes && !notes.startsWith("Muse đề xuất · cần kiểm tra nguồn");
+    notes && !hasResearchNotes;
   if (product.data.sampleVerified === true || proofUrl || hasProofNotes) return 1;
   return 0;
 }
