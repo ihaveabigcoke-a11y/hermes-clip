@@ -2,7 +2,7 @@
 
 # Tự review đêm
 
-Phạm vi: `origin/main..HEAD`; SHA đã chốt: `0e1571627d75b29cf918ea5c14cc683b08a973a1..0f4f0e47535af29cf0504f2d7342d26253ffa157`.
+Phạm vi: `origin/main..HEAD`; SHA đã chốt: `0e1571627d75b29cf918ea5c14cc683b08a973a1..8f4b1e677ac5d76d710dc451ed6e3ac40ea98fe0`.
 Mỗi dòng là một commit; báo cáo được đọc tại commit đó. Cờ là dấu hiệu cần đọc diff, không phải kết luận chất lượng. Không kiểm GUI, Muse, Instagram hoặc tiêu chí nghiệp vụ.
 Log chỉ được gắn khi có mã task và SHA commit; dùng lượt cuối trước dòng hoàn tất. Không suy trạng thái từ log khác lượt hoặc chỉ từ thời gian.
 
@@ -43,6 +43,7 @@ Log chỉ được gắn khi có mã task và SHA commit; dùng lượt cuối t
 | T20 | `5af01f7f270c` | done | Không | `ops/night/out/reports/T20.md` |
 | F01 | `731c0604c9a9` | done | Không | `ops/night/out/reports/F01.md` |
 | F02 | `0f4f0e47535a` | done | Không | `ops/night/out/reports/F02.md` |
+| F03 | `8f4b1e677ac5` | done | Dòng test bị xóa: 4; tests/domain.test.mjs (4)<br>Mặc định 0 ngoài test: lib/lab/package.ts:29 | `ops/night/out/reports/F03.md` |
 
 ## T01 · 709280ebd343
 
@@ -461,4 +462,16 @@ Log chỉ được gắn khi có mã task và SHA commit; dùng lượt cuối t
 - Cờ: Không.
 - Log đối soát: `E:\Hermes Night\hermes-night3\runs\night-20261111-053140\runner.log:31`, `F02-a1`, codex exit 0.
 
-Đối chiếu trước/sau: Trước [HEAD=`0f4f0e47535af29cf0504f2d7342d26253ffa157`; nhánh=`night-20261111`; git stash list=`(trống)`]; Sau [HEAD=`0f4f0e47535af29cf0504f2d7342d26253ffa157`; nhánh=`night-20261111`; git stash list=`(trống)`]. Xác nhận HEAD, nhánh và git stash list không đổi.
+## F03 · 8f4b1e677ac5
+
+- Commit: night F03: Fix tong quan dem kiem mau.
+- Trạng thái máy đọc: **done**.
+- Báo cáo: `8f4b1e677ac5d76d710dc451ed6e3ac40ea98fe0:ops/night/out/reports/F03.md`.
+- Spec cần review nội dung: `ops/night/fix/&lt;vòng&gt;/F03-*.md`.
+- File có thay đổi: `components/lab/app.tsx`, `lib/lab/domain.ts`, `lib/lab/package.ts`, `lib/lab/product-stage.ts`, `ops/night/out/F03-landing-warning.png`, `ops/night/out/F03-legacy-badge.png`, `ops/night/out/F03-overview-failed_product.png`, `ops/night/out/F03-overview-legacy_product.png`, `ops/night/out/F03-products-1366x768.png`, `ops/night/out/F03-products-1920x1080.png`, `ops/night/out/F03-sample-check.png`, `ops/night/out/F03-ui.json`, `ops/night/out/F03.md`, `ops/night/out/reports/F03-a1.md`, `ops/night/out/reports/F03.md`, `scripts/check-product-next-step-ui.mjs`, `tests/domain.test.mjs`, `tests/production.test.mjs`.
+- Có thay đổi ngoài báo cáo/tài liệu: có.
+- Cờ: Dòng test bị xóa: 4; tests/domain.test.mjs (4).
+- Cờ: Mặc định 0 ngoài test: lib/lab/package.ts:29.
+- Log đối soát: `E:\Hermes Night\hermes-night3\runs\night-20261111-054335\runner.log:22`, `F03-a1`, codex exit 0.
+
+Đối chiếu trước/sau: Trước [HEAD=`8f4b1e677ac5d76d710dc451ed6e3ac40ea98fe0`; nhánh=`night-20261111`; git stash list=`(trống)`]; Sau [HEAD=`8f4b1e677ac5d76d710dc451ed6e3ac40ea98fe0`; nhánh=`night-20261111`; git stash list=`(trống)`]. Xác nhận HEAD, nhánh và git stash list không đổi.
