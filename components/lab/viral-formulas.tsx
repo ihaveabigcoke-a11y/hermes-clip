@@ -4,7 +4,7 @@ import type { LabRecord } from "@/lib/lab/domain";
 import ReferenceVideoPanel from './reference-video';
 import type { ReferenceVideoDraft } from '@/lib/lab/viral-reference';
 import {
-  formatBeatTime, referencesForFormula, viralFormulaSeed, workspaceFormulas,
+  formatBeatTime, referencesForFormula, viralFormulaSeed, workspaceFormulas, type ViralFormula,
 } from "@/lib/lab/viral-formulas";
 
 const roleLabels = {hook: "Mở đầu", body: "Nội dung", cta: "Kêu gọi hành động"};
@@ -21,11 +21,11 @@ const traitLabels = {
 };
 const positionLabels = {"top-center": "phía trên, chính giữa", center: "chính giữa", "bottom-center": "phía dưới, chính giữa"};
 
-export default function ViralFormulas({records,disabled,onSaveDraft}: {records: LabRecord[]; disabled?: boolean; onSaveDraft?: (draft:ReferenceVideoDraft, revision:number)=>Promise<unknown>}) {
+export default function ViralFormulas({records,disabled,onSaveDraft,onSaveFormula}: {records: LabRecord[]; disabled?: boolean; onSaveDraft?: (draft:ReferenceVideoDraft, revision:number)=>Promise<unknown>; onSaveFormula?: (formula:ViralFormula)=>Promise<unknown>}) {
   const formulas = workspaceFormulas(records);
   return <details className="info-panel">
     <summary><strong>Công thức video</strong> · {formulas.length} công thức</summary>
-    {onSaveDraft&&<ReferenceVideoPanel records={records} disabled={disabled} onSaveDraft={onSaveDraft}/>}
+    {onSaveDraft&&<ReferenceVideoPanel records={records} disabled={disabled} onSaveDraft={onSaveDraft} onSaveFormula={onSaveFormula}/>}
     <p>{viralFormulaSeed.source}</p>
     <p>Đang xem phiên bản mới nhất. Mốc cảnh là gợi ý; CTA tính từ cuối video có thể chồng lên cảnh kết quả. Chưa có bằng chứng về hiệu quả bán hàng.</p>
     {formulas.map(formula => {

@@ -12,6 +12,7 @@ import {Worker} from '../src/worker.mjs';
 import {assertSender} from '../src/contracts.mjs';
 import {MuseAdapter} from '../src/muse.mjs';
 import {initializeMuseConnection,MUSE_START_URL} from '../src/defaults.mjs';
+import {analysisResponse,structureFor} from '../../tests/fixtures/formula-analysis.mjs';
 
 const {buildRoot,moduleUrl}=await getTestBuild();
 assert.equal(dirname(buildRoot),resolve(outputs));
@@ -21,6 +22,28 @@ const {researchProductId}=await import(compiledUrl('operations.mjs'));
 const {viralFormulas,viralFormulaRecordId,workspaceFormulas,formulasForProduct}=await import(compiledUrl('viral-formulas.mjs'));
 const {formulaStoryboard}=await import(compiledUrl('formula-storyboard.mjs'));
 const {draftReferenceVideo}=await import(compiledUrl('viral-reference.mjs'));
+const {parseFormulaAnalysis}=await import(compiledUrl('formula-analysis.mjs'));
+
+test('caption, editable filename, dense metadata and parsed analysis survive isolated local SQLite restart',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'t21-local-analysis-'));let server;
+  const request=async payload=>{
+    const response=await fetch(server.origin+'/api/lab',{method:payload?'POST':'GET',headers:{Cookie:sessionCookie+'='+server.session,Origin:server.origin,'Content-Type':'application/json'},...(payload?{body:JSON.stringify(payload)}:{})});
+    return {status:response.status,...await response.json()};
+  };
+  try{
+    server=await startLocalServer({root,seedPath:join(root,'no-seed.json')});
+    const structure=structureFor(),caption='Comment LED for the link',fileName='Original LED.mp4';
+    const analysis=parseFormulaAnalysis(JSON.stringify({...analysisResponse(),ctaSource:'caption',cutCount:999}),structure,{caption,fileName});
+    const draft={...draftReferenceVideo({id:'t21_persist',product:'Synthetic fixture',structure}),caption,fileName,analysis};
+    const payload={kind:'reference_video_draft',id:'ignored',revision:0,data:draft};
+    const saved=await request(payload);assert.equal(saved.status,200);assert.deepEqual(saved.record.data,draft);
+    await server.close();server=await startLocalServer({root,seedPath:join(root,'no-seed.json')});
+    assert.deepEqual((await request()).records,[saved.record]);
+    assert.equal((await request(payload)).status,409);
+    const invalid=await request({...payload,revision:1,data:{...draft,caption:'No keyword'}});assert.equal(invalid.status,422);
+    assert.deepEqual((await request()).records,[saved.record]);
+  }finally{await server?.close();await rm(root,{recursive:true,force:true});}
+});
 
 test('reference video draft round-trips through source-built local API and restart independently of formulas',async()=>{
   const root=await mkdtemp(join(tmpdir(),'t12-local-reference-'));

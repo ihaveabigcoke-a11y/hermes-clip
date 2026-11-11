@@ -154,6 +154,10 @@ export class Integrations {
   for(const frame of structure.frames)await checkedBytes(dir,frame.path,frame.sha256,5*1024*1024);
   await verifyJpeg(dir,structure.contactSheetPath);
   const bytes=await checkedBytes(dir,structure.contactSheetPath,structure.contactSheetSha256,5*1024*1024);
+  for(const sheet of structure.contactSheets?.dense??[]) {
+   await verifyJpeg(dir,sheet.path,sheet);
+   await checkedBytes(dir,sheet.path,sheet.sha256,5*1024*1024);
+  }
   return {jobId:job.id,projectId:job.projectId,name:job.request.name,sourceSha256:job.sourceSha256,sourceUrl:job.sourceUrl??null,subtitles:job.subtitles??[],structure,contactSheet:{bytes:new Uint8Array(bytes),type:'image/jpeg'}};
  }
  async youtubeStatus(){

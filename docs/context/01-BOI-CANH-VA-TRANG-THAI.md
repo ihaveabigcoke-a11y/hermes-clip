@@ -1,5 +1,9 @@
 # Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
 
+## Cập nhật source đêm T21 — phân tích công thức từ video mẫu, chưa gọi Muse
+
+Clone `night-20261111` đã bổ sung sheet 4 fps (11 cột, 200 px/ô, tối đa 120 frame/tấm), caption/tên file optional và bộ prompt/parse/match/đề xuất thuần theo taxonomy T05. UI cho tự gửi sheet, dán JSON, xem beat/CTA/nguồn/cảnh báo rồi lưu tham chiếu qua CAS; chỉ bấm tạo phiên bản mới mới ghi công thức append-only. Giữ dữ liệu cũ, checksum/confinement/JPEG và hợp đồng tác vụ T12. Domain 152/152, API 18/18, desktop 255 đạt/1 skip OpenMontage; typecheck, build riêng và UI offline 1366/1080 đạt. FFmpeg tổng hợp 6 giây có 24 frame dày, 31 giây chia 120+4, đếm từ ảnh giải mã. Chưa triển khai bản cài hoặc phân tích video người dùng/Muse/Instagram thật. Prompt dài có trích đoạn được đánh dấu; caption đầy đủ vẫn lưu để đối chiếu. Xem [checkpoint, giới hạn và cách chạy T21](../../ops/night/out/T21.md).
+
 ## Cập nhật source đêm T23 — tự kiểm sản phẩm từ dữ liệu đã lưu
 
 Clone `night-20261111` đã đưa quy tắc của skill `hermes-product-check` vào form/bảng Nghiên cứu: giá bán lẻ Mỹ có nguồn, cờ IP/ghi chú, listing gộp, giả thuyết ×3–4, gợi ý Thử/Giữ/Loại, câu hỏi supplier và link tự kiểm. Gợi ý không thay quyết định người dùng; thiếu giữ null, không quy đổi tiền. Trần launcher được lưu optional trong đợt mới; đợt cũ dùng 20 USD. Prompt 3.625 → 3.945 ký tự (+8,83%). Domain 144/144, API 17/17, desktop 249 đạt/1 skip OpenMontage, typecheck và build riêng đạt. UI fixture offline có ảnh 1366/1080; chưa triển khai bản cài hoặc kiểm Muse/Instagram/nguồn bán lẻ thật. Xem [checkpoint, quy tắc listing và cách chạy T23](../../ops/night/out/T23.md).

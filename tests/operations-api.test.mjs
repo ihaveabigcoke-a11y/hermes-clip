@@ -2,6 +2,7 @@ import {importApiModule} from '../desktop/test/helpers/local-server.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {call} from './runtime-fixture.mjs';
+import {analysisResponse,structureFor,analysisReferences} from './fixtures/formula-analysis.mjs';
 const lab=await importApiModule('app/api/lab/route.ts');
 const production=await importApiModule('app/api/production/route.ts');
 const {emptyProduct,productFromCandidate,unitMargin,productMarginLabel}=await importApiModule('lib/lab/domain.ts');
@@ -9,12 +10,35 @@ const {researchProductId}=await importApiModule('lib/lab/operations.ts');
 const {viralFormulas, viralFormulaRecordId}=await importApiModule('lib/lab/viral-formulas.ts');
 const {draftReferenceVideo, referenceDraftRecordId}=await importApiModule('lib/lab/viral-reference.ts');
 const {saveResearchSelection}=await importApiModule('lib/lab/research-selection.ts');
+const {parseFormulaAnalysis,proposeFormulaChanges}=await importApiModule('lib/lab/formula-analysis.ts');
 
 async function save(kind, id, data, revision = 0, who = 'ops-owner', action = 'save') {
   const request = new Request('https://qa.invalid/api/lab', {method: 'POST', headers: {'Content-Type': 'application/json', Origin: 'https://qa.invalid', 'oai-authenticated-user-id': who, 'oai-authenticated-user-email': who+'@example.invalid'}, body: JSON.stringify({kind, id, data, revision, action})});
   const response = await call(lab.POST, request);
   return {status: response.status, ...await response.json()};
 }
+
+test('formula analysis context/observations round-trip through draft CAS and explicit formula append; legacy fields stay optional',async()=>{
+  const who='analysis-owner',structure=structureFor(),caption='Comment LED for the link',fileName='LED.mp4';
+  const analysis=parseFormulaAnalysis(JSON.stringify({...analysisResponse(),ctaSource:'caption',cutCount:999}),structure,{caption,fileName});
+  const draft={...draftReferenceVideo({id:'analysis_api',product:'Fixture',structure}),caption,fileName,analysis};
+  const saved=await save('reference_video_draft','ignored',draft,0,who);
+  assert.equal(saved.status,200);assert.deepEqual(saved.record.data.analysis,analysis);assert.equal(saved.record.data.caption,caption);assert.equal(saved.record.data.fileName,fileName);
+  assert.deepEqual(saved.record.data.structure.contactSheets,structure.contactSheets);
+  const updated=await save('reference_video_draft','ignored',{...draft,fileName:'Comment LED original.mp4'},1,who);
+  assert.equal(updated.status,200);assert.equal((await save('reference_video_draft','ignored',draft,1,who)).status,409);
+  for(const patch of [{caption:'x'.repeat(2201)},{caption:'No keyword'},{analysis:{...analysis,cutCount:999}},{analysis:{...analysis,extra:true}}])
+    assert.equal((await save('reference_video_draft','ignored',{...draft,...patch},2,who)).status,422);
+  const legacy=await save('reference_video_draft','ignored',{id:'legacy_analysis',product:'Old'},0,who);
+  assert.equal(legacy.status,200);assert.equal(legacy.record.data.caption,undefined);assert.equal(legacy.record.data.analysis,undefined);
+  const read=async()=>(await (await call(lab.GET,new Request('https://qa.invalid/api/lab',{headers:{'oai-authenticated-user-id':who,'oai-authenticated-user-email':who+'@example.invalid'}}))).json()).records;
+  const before=await read();assert.deepEqual(before.find(r=>r.id===saved.record.id),updated.record);assert.equal(before.filter(r=>r.kind==='viral_formula').length,0);
+  const proposal=proposeFormulaChanges([analysisReferences[9],{...analysisReferences[9],id:'R2'}],viralFormulas)[0];
+  assert.equal(proposal.change,'new');assert.equal((await read()).filter(r=>r.kind==='viral_formula').length,0);
+  const appended=await save('viral_formula','ignored',proposal.formula,0,who);assert.equal(appended.status,200);
+  assert.equal((await save('viral_formula','ignored',proposal.formula,0,who)).status,409);
+  assert.deepEqual((await read()).find(r=>r.id===saved.record.id),updated.record);
+});
 
 test('candidate retail/IP and user ceiling survive API saves, validation and CAS with local receipt intact',async()=>{
   const at='2026-11-12T00:00:00Z';

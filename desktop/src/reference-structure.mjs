@@ -24,12 +24,13 @@ export async function checkedBytes(directory, path, checksum, maxBytes) {
   if (sha256(bytes) !== checksum) throw Error('File đã đổi sau khi kiểm tra checksum.');
   return bytes;
 }
-export async function verifyJpeg(directory, path) {
+export async function verifyJpeg(directory, path, grid = {columns: 1, rows: 1}) {
   const resolved = await confinedFile(directory, path), file = await stat(resolved);
   if (!file.isFile() || !file.size || file.size > 5 * 1024 ** 2) throw Error('JPEG rỗng hoặc vượt giới hạn.');
   const bytes = await readFile(resolved);
   if (bytes[0] !== 0xff || bytes[1] !== 0xd8 || bytes[2] !== 0xff) throw Error('File không phải JPEG hợp lệ.');
-  const report = await validateMedia(resolved, {mediaType: 'image', ratio: '1:1'});
+  const report = await validateMedia(resolved, {mediaType: 'image', ratio: `${grid.columns * (grid.frameWidth ?? 1)}:${grid.rows * (grid.frameHeight ?? 1)}`});
+  if (report.metadata.width > 2400 || report.metadata.height > 4400) throw Error('JPEG vượt giới hạn kích thước.');
   return {path: resolved, sha256: report.sha256};
 }
 export function sceneCuts(stderr, duration) {
@@ -77,9 +78,27 @@ export async function analyzeLocalStructure(directory, sourcePath, sourceSha256)
   await run('ffmpeg', ['-hide_banner', '-v', 'error', '-nostdin', '-n', '-framerate', '1', '-i', pattern,
     '-vf', `tile=${edge}x${edge}`, '-frames:v', '1', '-q:v', '3', contactSheetPath]);
   const contact = await verifyJpeg(directory, contactSheetPath);
+  // Each dense page has at most 120 sampled frames, plus blank trailing cells.
+  // Keep the existing confinement/decoder/5 MiB policy for every page. Dense
+  // portraits retain 200px of content width; extreme aspect ratios fit a bounded cell.
+  const dense = [], denseCount = Math.ceil(durationSec * 4);
+  const frameWidth = 200, frameHeight = Math.min(400, Math.max(2, Math.round(200 * rh / rw / 2) * 2));
+  for (let start = 0; start < denseCount; start += 120) {
+    const count = Math.min(120, denseCount - start), columns = 11, rows = Math.ceil(count / columns);
+    const path = join(directory, `contact-dense-${String(dense.length + 1).padStart(2, '0')}.jpg`);
+    const rendered = await run('ffmpeg', ['-hide_banner', '-v', 'info', '-nostdin', '-xerror', '-n', ...input, '-map', '0:v:0', '-an',
+      '-vf', `setpts=PTS-STARTPTS,fps=fps=4:start_time=0:round=up,trim=start_frame=${start}:end_frame=${start + count},scale=${frameWidth}:${frameHeight}:force_original_aspect_ratio=decrease,pad=${frameWidth}:${frameHeight}:(ow-iw)/2:(oh-ih)/2,setsar=1,showinfo,tile=${columns}x${rows}`,
+      '-frames:v', '1', '-q:v', '3', path]);
+    const frameCount = [...rendered.stderr.matchAll(/\bn:\s*\d+\s+pts:/g)].length;
+    if (frameCount !== count) throw Error('Số khung hình sheet dày không khớp thời lượng nguồn.');
+    dense.push({...await verifyJpeg(directory, path, {columns, rows, frameWidth, frameHeight}), fromSec: start / 4,
+      toSec: Math.min(durationSec, (start + frameCount) / 4), secondsPerFrame: .25, columns, rows, frameCount, frameWidth, frameHeight});
+  }
   const version = (await run('ffmpeg', ['-version'])).stdout.split(/\r?\n/)[0];
   const structure = {durationSec, width, height, displayWidth, displayHeight, aspectRatio: `${rw / divisor}:${rh / divisor}`,
     cuts, cutCount: cuts.length, contactSheetPath: contact.path, contactSheetSha256: contact.sha256, frames,
+    contactSheets: {sparse: {...contact, fromSec: 0, toSec: durationSec, secondsPerFrame: referenceLimits.interval,
+      columns: edge, rows: edge, frameCount: frames.length}, dense},
     sourceSha256, sceneThreshold: 0.3, sampleIntervalSec: referenceLimits.interval, gridColumns: edge, ffmpegVersion: version};
   const path = join(directory, 'structure.json'), bytes = Buffer.from(JSON.stringify(structure, null, 2));
   await checkedBytes(directory, source, sourceSha256, referenceLimits.bytes);

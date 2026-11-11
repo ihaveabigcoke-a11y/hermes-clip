@@ -59,6 +59,45 @@ test('short video keeps a frame at zero; no cuts remains observed zero',{skip:mi
   assert.equal(structure.cutCount,0);assert.deepEqual(structure.cuts,[]);assert.equal(structure.frames.length,1);assert.equal(structure.frames[0].t,0);
 }));
 
+test('dense sheets sample 4 fps into real JPEG cells and split after 120 frames with verified receipts',{skip:missingTools},()=>fixture(async(dir,store)=>{
+  for(const duration of [6,31]){
+    const source=await video(join(dir,`dense-${duration}.mp4`),duration),integrations=new Integrations(store,dir);
+    const job=await integrations.analyzeStructure({projectId:'dense',assetId:'a',name:'dense.mp4',...source});
+    const result=await integrations.structure({id:job.id,projectId:'dense'}),s=result.structure;
+    assert.equal(s.contactSheets.sparse.path,s.contactSheetPath);assert.equal(s.contactSheets.sparse.secondsPerFrame,.8);
+    assert.equal(s.contactSheets.dense.length,duration===6?1:2);
+    let frames=0,decodedFrames=0,previous=0;
+    for(const sheet of s.contactSheets.dense){
+      assert.equal(sheet.fromSec,previous);previous=sheet.toSec;
+      assert.equal(sheet.secondsPerFrame,.25);assert.equal(sheet.columns,11);assert.equal(sheet.frameWidth,200);
+      assert.ok(sheet.frameCount<=120);assert.equal(sheet.rows,Math.ceil(sheet.frameCount/11));
+      const bytes=await readFile(sheet.path);assert.deepEqual([...bytes.subarray(0,3)],[255,216,255]);assert.ok(bytes.length<=5*1024**2);
+      assert.equal(sha256(bytes),sheet.sha256);await verifyJpeg(join(dir,'integrations',job.id),sheet.path,sheet);
+      const {stdout}=await execute('ffprobe',['-v','error','-show_streams','-of','json',sheet.path],{windowsHide:true});
+      const image=JSON.parse(stdout).streams[0];assert.equal(image.codec_name,'mjpeg');assert.equal(image.width,2200);assert.equal(image.height,sheet.rows*sheet.frameHeight);
+      // Count nonblack cell centres in the decoded synthetic red/white/blue
+      // image, independent of the metadata emitted by the analyzer.
+      const pixels=await execute('ffmpeg',['-v','error','-i',sheet.path,'-vf',`scale=11:${sheet.rows}:flags=neighbor`,'-pix_fmt','rgb24','-f','rawvideo','-'],{windowsHide:true,encoding:'buffer'});
+      let cells=0;for(let i=0;i<pixels.stdout.length;i+=3)if(Math.max(...pixels.stdout.subarray(i,i+3))>80)cells++;
+      assert.equal(cells,sheet.frameCount);decodedFrames+=cells;frames+=sheet.frameCount;
+    }
+    assert.equal(previous,duration);assert.ok(Math.abs(frames-duration*4)<=2);assert.equal(decodedFrames,frames);
+    const restarted=new Integrations(store,dir);assert.deepEqual((await restarted.structure({id:job.id,projectId:'dense'})).structure,s);
+    const last=s.contactSheets.dense.at(-1),original=await readFile(last.path);
+    await writeFile(last.path,'not JPEG');await assert.rejects(()=>restarted.structure({id:job.id,projectId:'dense'}),/JPEG/);
+    await writeFile(last.path,original);
+    const outside=join(dir,'outside.jpg');await writeFile(outside,original);
+    s.contactSheets.dense.at(-1).path=outside;
+    const modified=Buffer.from(JSON.stringify(s));await writeFile(job.path,modified);restarted.update({...job,structureSha256:sha256(modified)});
+    await assert.rejects(()=>restarted.structure({id:job.id,projectId:'dense'}),/ngoài tác vụ/);
+  }
+}));
+
+test('dense JPEG limits still reject oversized files before decode',()=>fixture(async dir=>{
+  const path=join(dir,'oversized.jpg');await writeFile(path,Buffer.alloc(5*1024**2+1));
+  await assert.rejects(()=>verifyJpeg(dir,path,{columns:11,rows:11,frameWidth:200,frameHeight:356}),/vượt giới hạn/);
+}));
+
 test('duration, size, checksums and task lock fail without successful receipts',{skip:missingTools},()=>fixture(async(dir,store)=>{
   const i=new Integrations(store,dir),input={projectId:'p',assetId:'a',name:'fixture.mp4',bytes:new Uint8Array([1]),sha256:'0'.repeat(64)};
   await assert.rejects(()=>i.analyzeStructure(input),/checksum/);assert.equal(i.jobs()[0].state,'failed');assert.equal(i.busy,false);

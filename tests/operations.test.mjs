@@ -12,6 +12,121 @@ import {draftReferenceVideo, referenceVideoDraftSchema, videoStructureSchema, re
 import {formulaTaxonomy, formulaProductTraits, viralFormulas, referenceVideoSchema} from '../lib/lab/viral-formulas.ts';
 import {researchCoverage,hasIndividualListing,landedCostBadge,researchRisks,buildResearchQuery,defaultResearchCriteria,defaultResearchExclusions} from '../lib/lab/research-view.ts';
 import {planResearchSelection,saveResearchSelection} from '../lib/lab/research-selection.ts';
+import {formulaAnalysisPrompt,parseFormulaAnalysis,matchFormula,proposeFormulaChanges} from '../lib/lab/formula-analysis.ts';
+import {analysisReferences,analysisResponse,structureFor} from './fixtures/formula-analysis.mjs';
+
+test('analysis prompt shares taxonomy and caps all evidence at 4000 characters with dense timing and provenance rules',()=>{
+  const structure=structureFor(),prompt=formulaAnalysisPrompt({structure,caption:'Comment LED',fileName:'LED.mp4',formulas:viralFormulas});
+  for(const value of [...Object.values(formulaTaxonomy).flat(),...formulaProductTraits])assert.ok(prompt.includes('"'+value+'"'));
+  for(const term of ['ctaSource','effectsBeyondProduct','JSON object only','k × secondsPerFrame','fromSec','4 fps','First-person','POV','No audio transcript','verbatim','null'])assert.ok(prompt.includes(term),term);
+  assert.ok(prompt.includes('Comment LED'));assert.ok(prompt.includes('fixture/dense-01.jpg'));assert.ok(prompt.length<=4000);
+  const huge={...structure,cuts:Array.from({length:10000},(_,i)=>i/100),frames:Array.from({length:225},(_,i)=>({t:i*.8,path:'x'.repeat(2000)})),contactSheetPath:'x'.repeat(2000),
+    contactSheets:{...structure.contactSheets,dense:Array.from({length:6},()=>({...structure.contactSheets.dense[0],path:'x'.repeat(2000)}))}};
+  const long=formulaAnalysisPrompt({structure:huge,caption:'"'.repeat(2200),fileName:'x'.repeat(1000),formulas:Array.from({length:100},()=>viralFormulas[0])});
+  assert.ok(long.length<=4000);assert.match(long,/truncated/);
+  for(const value of [...Object.values(formulaTaxonomy).flat(),...formulaProductTraits])assert.ok(long.includes('"'+value+'"'));
+  const pages=Array.from({length:6},(_,i)=>({...structure.contactSheets.dense[0],path:'x'.repeat(2000),fromSec:i*30,toSec:(i+1)*30}));
+  const multipage=formulaAnalysisPrompt({structure:{...structure,durationSec:180,contactSheets:{...structure.contactSheets,dense:pages}},caption:'x'.repeat(2200),fileName:'x'.repeat(1000),formulas:viralFormulas});
+  assert.ok(multipage.length<=4000);assert.ok(multipage.includes('[[0,30],[30,60],[60,90],[90,120],[120,150],[150,180]]'));
+});
+
+test('analysis JSON and fences preserve verbatim text, nulls and measured numbers; incorrect measurements produce warnings',()=>{
+  const structure=structureFor(),response=analysisResponse();
+  response.hookText='  The problem😕  ';response.cutCount=999;response.durationSec=999;
+  const json=JSON.stringify(response),parsed=parseFormulaAnalysis(json,structure);
+  assert.deepEqual(parseFormulaAnalysis('```json\n'+json+'\n```',structure),parsed);
+  assert.deepEqual(parseFormulaAnalysis('```\n'+json+'\n```',structure),parsed);
+  assert.equal(parsed.hookText,response.hookText);assert.equal(parsed.cutCount,structure.cutCount);assert.equal(parsed.durationSec,structure.durationSec);
+  assert.ok(parsed.warnings.some(w=>w.includes('Số lần cắt')));assert.ok(parsed.warnings.some(w=>w.includes('Thời lượng')));
+  assert.equal(parsed.visualPayoff,null);assert.equal(parsed.effectsBeyondProduct,null);
+  const noText=parseFormulaAnalysis(JSON.stringify({...response,hookText:null,ctaText:null,ctaKeyword:null,ctaType:null,ctaSource:'none'}),structure);
+  assert.equal(noText.hookText,null);assert.equal(noText.ctaType,null);assert.equal(noText.ctaSource,'none');
+});
+
+test('analysis strict schemas reject invalid enums, extra fields, reversed/outside beats and prose envelopes',()=>{
+  const response=analysisResponse(),structure=structureFor();
+  const bad=[{hookType:'other'},{ctaType:'none_visible'},{ctaSource:'audio'},{productTraits:['made_up']},{unexpected:true},
+    {beats:[{...response.beats[0],fromSec:2,toSec:1}]},{beats:[{...response.beats[0],fromSec:-1}]},
+    {beats:[{...response.beats[0],toSec:structure.durationSec+.5001}]},{beats:[{...response.beats[0],kind:'unbox'}]},
+    {beats:[{...response.beats[0],role:'opening'}]},{beats:[{...response.beats[0],extra:'invented'}]}];
+  for(const patch of bad)assert.throws(()=>parseFormulaAnalysis(JSON.stringify({...response,...patch}),structure),/^Error: Phản hồi chưa đúng cấu trúc…/);
+  for(const text of ['no JSON','[]','Here is the JSON '+JSON.stringify(response)])assert.throws(()=>parseFormulaAnalysis(text,structure),/Phản hồi chưa đúng cấu trúc/);
+  const overlapping={...response,beats:[{...response.beats[0],fromSec:0,toSec:3},{...response.beats[1],fromSec:2,toSec:structure.durationSec+.5}]};
+  assert.equal(parseFormulaAnalysis(JSON.stringify(overlapping),structure).beats.at(-1).toSec,structure.durationSec+.5);
+});
+
+test('caption and filename CTA keywords are checked case-insensitively; first-person story warns without guessing audio',()=>{
+  const structure=structureFor(),response={...analysisResponse(),ctaKeyword:'LED'};
+  for(const ctaSource of ['caption','filename']){
+    const text=JSON.stringify({...response,ctaSource});
+    const ok=parseFormulaAnalysis(text,structure,{caption:'Comment led for the link',fileName:'Comment lEd.mp4'});
+    assert.equal(ok.ctaSource,ctaSource);
+    for(const context of [{},{caption:'No link',fileName:'other.mp4'}]){
+      const bad=parseFormulaAnalysis(text,structure,context);assert.equal(bad.ctaSource,null);assert.ok(bad.warnings.some(w=>w.includes('Không xác minh')));
+    }
+    assert.equal(parseFormulaAnalysis(JSON.stringify({...response,ctaSource,ctaKeyword:null}),structure,{caption:'LED',fileName:'LED.mp4'}).ctaSource,null);
+  }
+  const firstPerson=analysisReferences[11],parsed=parseFormulaAnalysis(JSON.stringify(analysisResponse(firstPerson)),structureFor(firstPerson));
+  assert.ok(parsed.warnings.some(w=>w.includes('POV')));assert.ok(parsed.warnings.some(w=>w.includes('transcript')));
+});
+
+test('V1–V12 semantic fixtures match hook + beat sequence independent of labels/timing and latest input order',()=>{
+  assert.equal(analysisReferences.length,12);
+  for(const reference of analysisReferences){
+    const result=matchFormula(reference,viralFormulas);
+    assert.equal(result.confidence,reference.id==='V10'?'partial':'exact',reference.id);
+  }
+  const reference=analysisReferences[4];
+  assert.equal(matchFormula(reference,viralFormulas).formulaId,'problem-vs-result-cta');
+  const jitter={...reference,beats:reference.beats.map(b=>({...b,fromSec:b.fromSec+.1,toSec:b.toSec+.2,label:'Changed'}))};
+  assert.deepEqual(matchFormula(jitter,[...viralFormulas].reverse()),matchFormula(reference,viralFormulas));
+  assert.equal(matchFormula({...reference,beats:[...reference.beats].reverse()},viralFormulas).confidence,'partial');
+  assert.equal(matchFormula({...reference,hookType:null},viralFormulas).confidence,'none');
+  const version={...viralFormulas.find(f=>f.id==='problem-vs-result-cta'),version:2,hookType:'authority_check'};
+  assert.equal(matchFormula(reference,[...viralFormulas,version]).confidence,'partial');
+});
+
+test('one unmatched video is candidate; two distinct sources are new, deterministically and without applying anything',()=>{
+  const one=analysisReferences[9],two={...one,id:'R2'},before=JSON.stringify({one,formulas:viralFormulas});
+  const candidate=proposeFormulaChanges([one],viralFormulas);
+  assert.equal(candidate.length,1);assert.equal(candidate[0].change,'candidate');assert.equal(candidate[0].formula,null);assert.ok(candidate[0].reasons.includes('cần thêm 1 ví dụ'));
+  const proposed=proposeFormulaChanges([one,two],viralFormulas);
+  assert.equal(proposed[0].change,'new');assert.equal(proposed[0].formula.version,1);assert.deepEqual(proposed[0].formula.references,['R2','V10']);
+  assert.deepEqual(proposeFormulaChanges([two,one],[...viralFormulas].reverse()),proposed);
+  assert.equal(proposeFormulaChanges([one,one],viralFormulas)[0].change,'candidate');
+  assert.equal(proposeFormulaChanges([{...one,sourceSha256:'a'.repeat(64)},{...two,sourceSha256:'a'.repeat(64)}],viralFormulas)[0].change,'candidate');
+  assert.equal(JSON.stringify({one,formulas:viralFormulas}),before);
+  assert.deepEqual(proposeFormulaChanges([{...one,hookType:null}],viralFormulas),[]);
+  assert.equal(matchFormula(one,[...viralFormulas,proposed[0].formula]).confidence,'exact');
+  const unknown=proposeFormulaChanges([{...one,durationSec:null,cutCount:null},two],viralFormulas)[0].formula;
+  assert.equal(unknown.durationSec,null);assert.equal(unknown.cuts,null);
+});
+
+test('matched references propose label and CTA variants as append-only previews, using latest version and verified CTA source',()=>{
+  const reference={...analysisReferences[4],ctaText:'DM LED for details',ctaType:'send_keyword_dm'},original=viralFormulas.find(f=>f.id==='problem-vs-result-cta');
+  const latest={...original,version:4},before=JSON.stringify(latest);
+  const proposals=proposeFormulaChanges([reference],[...viralFormulas,latest]);
+  assert.deepEqual(proposals.map(p=>p.change),['add-label-variant','add-cta-pattern']);
+  for(const proposal of proposals){assert.equal(proposal.formula.version,5);assert.equal(proposal.formula.id,original.id);}
+  const cta=proposals.find(p=>p.change==='add-cta-pattern').formula;
+  assert.ok(cta.ctaPatterns.includes('DM {WORD} for details'));assert.equal(JSON.stringify(latest),before);
+  assert.ok(!proposeFormulaChanges([{...reference,ctaSource:null}],[latest]).some(p=>p.change==='add-cta-pattern'));
+  assert.ok(!proposeFormulaChanges([reference],[cta]).some(p=>p.change==='add-cta-pattern'));
+  assert.ok(!proposeFormulaChanges([reference],[proposals[0].formula]).some(p=>p.change==='add-label-variant'));
+});
+
+test('draft stores optional context and strict analysis alongside legacy beats; mismatched measured values cannot be saved',()=>{
+  const structure=structureFor(),analysis=parseFormulaAnalysis(JSON.stringify(analysisResponse()),structure);
+  const draft=draftReferenceVideo({id:'json_draft',product:'Sample',structure});
+  const current=referenceVideoDraftSchema.parse({...draft,caption:'Comment LED',fileName:'LED.mp4',analysis});
+  assert.deepEqual(current.analysis,analysis);assert.equal(current.caption,'Comment LED');assert.ok(current.structure.contactSheets);
+  for(const patch of [{caption:'x'.repeat(2201)},{analysis:{...analysis,cutCount:0}},{analysis:{...analysis,durationSec:1}},
+    {analysis:{...analysis,ctaSource:'caption'},caption:'Missing keyword'}])assert.equal(referenceVideoDraftSchema.safeParse({...current,...patch}).success,false);
+  const legacy=referenceVideoDraftSchema.parse({id:'old',product:'Legacy'});
+  assert.equal(legacy.analysis,undefined);assert.equal(legacy.caption,undefined);assert.equal(legacy.fileName,undefined);
+  const sparseOnly=parseFormulaAnalysis(JSON.stringify(analysisResponse()),{...structure,contactSheets:undefined});
+  assert.ok(sparseOnly.warnings.some(w=>w.includes('Chưa có sheet dày')));
+});
 
 test('content plan AI label preserves legacy records and accepts only optional/null, required or off',()=>{
   const data={name:'Muse concept',productId:'product',caption:'AI-generated concept'};

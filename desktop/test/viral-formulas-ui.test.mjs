@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {importModule} from './helpers/local-server.mjs';
 import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
+import {analysisReferences,analysisResponse,structureFor} from '../../tests/fixtures/formula-analysis.mjs';
 
 // Actual React source rendered offline. No browser, network, desktop IPC or
 // real workspace is involved. Match the existing source component test setup.
@@ -11,8 +12,37 @@ const {viralFormulas, viralFormulaRecordId} = await importModule('lib/lab/viral-
 const {FormulaDraftPanel} = await importModule('components/lab/production-intelligence.tsx');
 const {newProduction} = await importModule('lib/lab/production.ts');
 const {ReferenceDraftPreview} = await importModule('components/lab/reference-video.tsx');
+const {FormulaAnalysisPreview,FormulaChangeProposals,ReferenceAnalysisInput}=await importModule('components/lab/reference-video.tsx');
+const {parseFormulaAnalysis,proposeFormulaChanges}=await importModule('lib/lab/formula-analysis.ts');
 const {draftReferenceVideo} = await importModule('lib/lab/viral-reference.ts');
 const render = records => renderToStaticMarkup(React.createElement(ViralFormulas, {records}));
+
+test('offline JSON analysis preview exposes beats, CTA provenance, matches and warnings as escaped text',()=>{
+  const structure=structureFor(),analysis=parseFormulaAnalysis(JSON.stringify({...analysisResponse(),hookText:'<script>fake</script>',ctaSource:'caption'}),structure,{caption:'Missing keyword'});
+  const html=renderToStaticMarkup(React.createElement(FormulaAnalysisPreview,{analysis,formulas:viralFormulas}));
+  for(const text of ['<table class="lab-table">','Thời gian (giây)','Loại beat','Nguồn CTA: Chưa xác minh','Khớp đủ','Không xác minh','&lt;script&gt;fake&lt;/script&gt;'])assert.ok(html.includes(text),text);
+  assert.match(html,/10.73–14.30/);assert.doesNotMatch(html,/10.725000000000001/);
+  assert.doesNotMatch(html,/<script>/);assert.match(html,/Chưa có transcript/);
+});
+
+test('manual prompt input lists every sparse/dense path and no render invokes copy, parser, provider or persistence',()=>{
+  let actions=0;
+  const structure=structureFor(),html=renderToStaticMarkup(React.createElement(ReferenceAnalysisInput,{structure,caption:'Comment LED',fileName:'LED.mp4',jsonText:'{}',disabled:false,formulas:viralFormulas,
+    onJson:()=>actions++,onParse:()=>actions++,onCopy:()=>actions++}));
+  for(const text of ['Sao chép prompt phân tích','Dán kết quả JSON','Đọc kết quả JSON',structure.contactSheetPath,structure.contactSheets.dense[0].path])assert.ok(html.includes(text),text);
+  assert.equal(actions,0);
+  const legacy=renderToStaticMarkup(React.createElement(ReferenceAnalysisInput,{structure:{...structure,contactSheets:undefined},caption:'',fileName:'',jsonText:'',disabled:true,formulas:viralFormulas,onJson:()=>actions++,onParse:()=>actions++,onCopy:()=>actions++}));
+  assert.match(legacy,/chưa có sheet dày/);assert.match(legacy,/<button[^>]*\sdisabled=""/);
+});
+
+test('formula proposals expose exact new version preview and candidate is disabled; rendering never saves',()=>{
+  let saves=0;
+  const renderChanges=changes=>renderToStaticMarkup(React.createElement(FormulaChangeProposals,{changes,disabled:false,onCreate:()=>saves++}));
+  const one=analysisReferences[9],candidate=renderChanges(proposeFormulaChanges([one],viralFormulas));
+  assert.match(candidate,/Ứng viên công thức/);assert.match(candidate,/cần thêm 1 ví dụ/);assert.match(candidate,/<button[^>]*\sdisabled=""/);
+  const html=renderChanges(proposeFormulaChanges([one,{...one,id:'R2'}],viralFormulas));
+  assert.match(html,/Xem phiên bản sẽ lưu · v1/);assert.match(html,/Tạo phiên bản công thức mới/);assert.doesNotMatch(html,/<button[^>]*\sdisabled=""/);assert.equal(saves,0);
+});
 
 test('formula library exposes analysis only with a save handler and renders a separate draft with bounded preview',()=>{
   const draft=draftReferenceVideo({id:'sample',product:'<script>sample</script>',structure:{durationSec:6,width:90,height:160,aspectRatio:'9:16',cuts:[2,4],cutCount:2,contactSheetPath:'private/local/sheet.jpg',frames:[{t:0,path:'private/local/0.jpg'}]}});
