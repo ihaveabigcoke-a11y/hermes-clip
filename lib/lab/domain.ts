@@ -3,7 +3,6 @@ import { productionSchema } from "./production.ts";
 import { codexRunSchema } from "./codex-exchange.ts";
 import { operationSchemas } from "./operations.ts";
 import { viralFormulaSchema } from "./viral-formulas.ts";
-import { referenceVideoDraftSchema } from "./viral-reference.ts";
 export const kinds = [
   "product",
   "experiment",
@@ -23,7 +22,6 @@ export const kinds = [
   "social_metric",
   "landing_page",
   "viral_formula",
-  "reference_video_draft",
 ] as const;
 export type Kind = (typeof kinds)[number];
 export type LabRecord = {
@@ -53,7 +51,6 @@ const link = z
 export const schemas = {
   ...operationSchemas,
   viral_formula: viralFormulaSchema,
-  reference_video_draft: referenceVideoDraftSchema,
   codex_run: codexRunSchema,
   production: productionSchema,
   assistant_run: z.object({configId:z.string().optional(),day:z.string(),state:z.enum(["pending","done"]),fingerprint:z.string().max(5000),rows:z.array(z.record(z.unknown())).nullable()}),
