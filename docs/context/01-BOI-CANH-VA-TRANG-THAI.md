@@ -1,5 +1,9 @@
 # Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
 
+## Cập nhật source đêm T08 — sửa UI nhỏ
+
+Clone `night-20261111` đã chặn lưu prompt rỗng, mở rộng tên cảnh hai dòng, đưa Duyệt/Từ chối lên đầu preview, ẩn lời mời mẫu khi có sản phẩm, thu gọn màn Sản phẩm và tăng sidebar 232 px. Giữ Người mẫu vì chế độ dùng tham chiếu person + product; thẻ dùng tiến độ T03, giữ null và từng tiền tệ. Domain 135/135, API 15/15, desktop 218 đạt/1 skip OpenMontage, typecheck và build output riêng đạt. UI offline qua 12 nhóm kiểm tra với ảnh 1920/1536/1366/800/390 px; chưa triển khai hoặc kiểm bản cài/dịch vụ thật. Xem [checkpoint T08](T08-SMALL-UI.md) và `ops/night/out/T08-*`.
+
 ## Cập nhật source đêm T07 — Instagram theo tài khoản × nội dung
 
 Clone `night-20261111` đã thêm Vào profile/Bấm link, mở rộng sản phẩm thành bảng tài khoản × content_plan, CTA T06 có liên kết và bản đo mới nhất. Giữ null/0 riêng và chống trùng permalink trước khi chia tài khoản. Mặc định ẩn archived/QA, có công tắc hiện lại và mở chi tiết sản phẩm lưu trữ. Thao tác lưu trữ có xác nhận đã tồn tại ở Sản phẩm, được kiểm bằng fixture; không lưu trữ dữ liệu người dùng trong đêm. Domain 132/132, API 15/15, desktop 218 đạt/1 skip OpenMontage, typecheck và `local:build` output riêng đạt. UI fixture offline qua mở rộng/lọc/lưu trữ ở 1920/1366/800/390 px; chưa triển khai hoặc kiểm Instagram thật. Xem [checkpoint T07](T07-INSTAGRAM-OVERVIEW.md) và `ops/night/out/T07-*`.

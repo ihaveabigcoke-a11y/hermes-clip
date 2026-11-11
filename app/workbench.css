@@ -169,7 +169,7 @@ fieldset.desk-form-content { border:0; margin:0; min-width:0; }
 .desk-queue { position:relative; }.desk-queue>.desk-pane-heading { gap:12px; }.desk-queue>.desk-pane-heading>span { white-space:nowrap; }.desk-queue>.desk-pane-heading .search-box { width:auto; flex:1; min-width:0; height:34px; }.desk-queue>.desk-pane-heading .search-box input { font-size:var(--lab-text-meta); min-width:0; }.desk-queue>.desk-pane-heading .search-box svg { width:14px; }
 .queue-import { position:absolute; right:16px; top:62px; z-index:1; }.queue-import .lab-button { min-height:28px; height:28px; padding:4px 7px; font-size:var(--lab-text-meta); }
 .desk-queue-tools { padding:4px 17px 11px; }.desk-queue-tools>div:last-child { grid-template-columns:minmax(130px,1fr) minmax(105px,1fr); padding-right:100px; }.desk-queue-tools select { font-size:var(--lab-text-meta); min-height:30px; }
-.desk-bulk { padding:7px 16px; font-size:var(--lab-text-meta); background:transparent; border-bottom:0; }.desk-job-list { padding:0 10px; }.desk-job { padding:12px 8px; gap:9px; align-items:center; border-radius:10px; min-height:92px; }.job-check { flex-direction:row; align-items:center; gap:7px; font-size:var(--lab-text-meta); margin:0; }.job-main { gap:12px; align-items:center; }.job-thumbnail { width:58px; height:58px; border-radius:9px; }.job-copy { gap:4px; flex:1; }.job-copy>strong { font-size:var(--lab-text-meta); line-height:1.45; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }.job-copy .job-prompt { font-size:var(--lab-text-meta); -webkit-line-clamp:1; }.job-copy small { font-size:var(--lab-text-meta); }.job-copy .badge { padding:0; background:none; font-size:var(--lab-text-meta); }.desk-job .row-menu-trigger { width:27px; height:30px; min-height:30px; }
+.desk-bulk { padding:7px 16px; font-size:var(--lab-text-meta); background:transparent; border-bottom:0; }.desk-job-list { padding:0 10px; }.desk-job { padding:12px 8px; gap:9px; align-items:center; border-radius:10px; min-height:92px; }.job-check { flex-direction:row; align-items:center; gap:7px; font-size:var(--lab-text-meta); margin:0; }.job-main { gap:12px; align-items:center; }.job-thumbnail { width:58px; height:58px; border-radius:9px; }.job-copy { gap:4px; flex:1; }.job-copy>strong { font-size:var(--lab-text-meta); line-height:1.45; white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }.job-copy .job-prompt { font-size:var(--lab-text-meta); -webkit-line-clamp:1; }.job-copy small { font-size:var(--lab-text-meta); }.job-copy .badge { padding:0; background:none; font-size:var(--lab-text-meta); }.desk-job .row-menu-trigger { width:27px; height:30px; min-height:30px; }
 .desk-preview { overflow:clip; }.desk-preview-scroll { overflow:auto; min-height:0; flex:1; }.desk-player { margin:0 17px 14px; border-radius:12px; }.desk-player:has(video),.desk-player:has(img) { aspect-ratio:auto; }.desk-player video,.desk-player img { height:auto; max-height:52dvh; width:100%; object-fit:contain; }.desk-preview-content { padding:0 18px 18px; gap:13px; }.preview-title h3 { font-size:var(--lab-text-body); }.preview-facts>div { font-size:var(--lab-text-meta); }.preview-prompt { position:relative; }.preview-prompt summary { font-size:var(--lab-text-meta); padding-right:32px; font-weight:550; }.preview-prompt p { background:var(--lab-background); padding:12px; margin-top:10px; border:1px solid var(--lab-border); border-radius:9px; font-size:var(--lab-text-meta); line-height:1.7; }.copy-prompt { position:absolute; top:5px; right:0; padding:5px; width:28px; height:28px; min-height:28px; }
 .preview-footer { flex-shrink:0; padding:12px 14px; border-top:1px solid var(--lab-border); background:var(--lab-surface); }.preview-actions { flex-wrap:nowrap; gap:7px; }.preview-actions .lab-button { flex:1; padding:6px; font-size:var(--lab-text-meta); min-height:39px; height:auto; white-space:normal; border-radius:9px; }
 .production-log { border:1px solid var(--lab-border); border-radius:10px; padding:0 13px; font-size:var(--lab-text-meta); }.production-log summary { padding:8px 0; }.production-log[open] { max-height:190px; overflow:auto; }
@@ -336,8 +336,8 @@ input::placeholder,textarea::placeholder { opacity:1; }
 }
 .workbench-navigation .project-context-line { flex-basis: 100%; }
 @media (min-width: 621px) {
-  .workbench-shell .sidebar { position: fixed; inset: 0 auto 0 0; display: flex; flex-direction: column; width: 180px; padding: 20px 10px 12px; }
-  .workbench-shell .main-shell { margin-left: 180px; }
+  .workbench-shell .sidebar { position: fixed; inset: 0 auto 0 0; display: flex; flex-direction: column; width: 232px; padding: 20px 10px 12px; }
+  .workbench-shell .main-shell { margin-left: 232px; }
   .workbench-shell .brand { justify-content: flex-start; padding: 0 6px 22px; font-size: 16px; }
   .workbench-shell .brand > span:last-child { display: inline; }
   .workbench-shell .brand-mark { width: 30px; height: 32px; flex-shrink: 0; }
@@ -484,3 +484,18 @@ input::placeholder,textarea::placeholder { opacity:1; }
 @media(max-width:620px) { .research-start-row { flex-direction:column;align-items:stretch; }.research-detail-lead { grid-template-columns:1fr; }.research-data-coverage { gap:12px; } }
 @media(max-width:1000px) { .instagram-product-metrics dl { grid-template-columns:repeat(3,minmax(0,1fr)); } .research-selection-bar { align-items:flex-start; flex-direction:column; } }
 @media(max-width:620px) { .instagram-overview-summary { gap:12px 18px; } .instagram-overview-summary > span:last-child { margin-left:0; flex-basis:100%; } .instagram-overview-toolbar .field { flex:1 1 100%; } .instagram-product-metrics dl { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+/* Compact T08 details use the existing palette and type scale. */
+.product-grid > .product-card > .product-art { width: 100%; aspect-ratio: 2.4; max-height: 160px; }
+.product-card-body > .product-card-summary { min-height: 0; color: var(--lab-muted); font-size: var(--lab-text-meta); overflow-wrap: anywhere; }
+.product-info { justify-content: space-between; flex-wrap: wrap; }
+.product-info > .lab-button { flex-shrink: 0; }
+.workbench-shell .workspace-mode > .lab-button.neutral { padding: 7px 10px; color: var(--lab-ink); background: var(--lab-surface); border: 1px solid var(--lab-border); }
+.workbench-shell .workspace-mode > .lab-button.neutral:hover { background: var(--lab-raised); }
+.desk-preview > .preview-footer { position: static; border-top: 0; border-bottom: 1px solid var(--lab-border); }
+@media (min-width: 1250px) and (max-width: 1600px) {
+  .desk-job { gap: 6px; padding-inline: 6px; }
+  .desk-job .job-check { flex-direction: column; gap: 4px; }
+  .desk-job .job-thumbnail { width: 36px; height: 44px; }
+  .desk-job .job-main { gap: 8px; }
+}

@@ -70,6 +70,7 @@ import MuseChatPanel from "./muse-chat";
 import { creativeDuration } from "@/lib/lab/production";
 import { desktopBridge } from "@/lib/lab/desktop-client";
 import { demoRecords } from "@/lib/lab/demo";
+import {productCardDetails, showWorkspaceBanner} from "@/lib/lab/ui-state";
 import { productStage } from "@/lib/lab/product-stage";
 import {
   type LabRecord,
@@ -904,6 +905,7 @@ export default function LabApp() {
   }
   function productCard(p: LabRecord) {
     const margin = unitMargin(p.data);
+    const details = productCardDetails(p, records);
     return (
       <article className="product-card" key={p.id}>
         {productVisual(p)}
@@ -935,6 +937,7 @@ export default function LabApp() {
             {p.data.problem ||
               "Ghi vấn đề khách hàng để bắt đầu đánh giá sản phẩm."}
           </p>
+          <p className="product-card-summary">{details.costLabel} · {details.accountCount} tài khoản · {stageNames[details.stage]}</p>
           <div className="product-finance">
             <div>
               <span>Giá dự kiến</span>
@@ -1417,18 +1420,26 @@ export default function LabApp() {
       </>
     );
   }
+  function workspaceNotice(productScreen = false) {
+    const visible = showWorkspaceBanner(records, demo, loading);
+    if (!productScreen && !visible) return null;
+    const storage = demo ? "Dữ liệu mẫu để xem thử." : desktopBridge() ? "Dữ liệu của bạn · lưu trên máy này." : "Dữ liệu của bạn · lưu riêng trên máy chủ.";
+    return <div className={productScreen ? "info-strip product-info" : "workspace-mode"}>
+      <div className="mode-label">
+        {demo ? <Sparkles size={15}/> : <ShieldCheck size={15}/>}
+        <span>{productScreen ? `${visible ? storage + " " : ""}Nguồn hàng, bằng chứng và chi phí theo sản phẩm.` : storage}</span>
+      </div>
+      {visible && <Button tone="neutral" onClick={() => switchMode(!demo)}>
+        {demo ? "Dùng dữ liệu của bạn" : "Khám phá bản mẫu"}<ArrowRight size={14}/>
+      </Button>}
+    </div>;
+  }
   function productsView() {
     const rows = filtered(allProducts),
       paged = pageRows(rows);
     return (
       <>
-        <div className="info-strip">
-          <ShieldCheck size={18} />
-          <span>
-            Hồ sơ sản phẩm giữ chung nguồn hàng, bằng chứng và bài toán lợi
-            nhuận.
-          </span>
-        </div>
+        {workspaceNotice(true)}
         {toolbar()}
         {rows.length ? (
           <>
@@ -2184,10 +2195,10 @@ export default function LabApp() {
         <main id="lab-main" tabIndex={-1}>
           <div className="page-heading" hidden={["research", "social", "landing", "accounts", "queue", "chat", "library"].includes(view)}>
             <div>
-              <div className="page-eyebrow">
+              {view !== "products" && <div className="page-eyebrow">
                 HERMES CLIP <span>/</span>{" "}
                 {demo ? "KHÔNG GIAN MẪU" : "KHÔNG GIAN RIÊNG TƯ"}
-              </div>
+              </div>}
               <h1>{view === "overview" ? "Bàn thử nghiệm" : label}</h1>
               <p>
                 {view === "overview"
@@ -2226,22 +2237,7 @@ export default function LabApp() {
               ) : null}
             </div>
           </div>
-          <div className="workspace-mode" hidden={!demo && ["accounts", "queue", "chat", "library"].includes(view)}>
-            <div className="mode-label">
-              <span className={demo ? "sample-spark" : "real-lock"}>
-                {demo ? <Sparkles size={15} /> : <ShieldCheck size={15} />}
-              </span>
-              <span>
-                {demo
-                  ? "Dữ liệu mẫu để xem thử các bước trong app."
-                  : desktopBridge() ? "Dữ liệu của bạn · lưu trên máy này." : "Dữ liệu của bạn · lưu riêng trên máy chủ."}
-              </span>
-            </div>
-            <button onClick={() => switchMode(!demo)}>
-              {demo ? "Dùng dữ liệu của bạn" : "Khám phá bản mẫu"}
-              <ArrowRight size={14} />
-            </button>
-          </div>
+          {view !== "products" && workspaceNotice()}
           {offline && (
             <div className="persistent-error" role="status">
               <Info size={18} />

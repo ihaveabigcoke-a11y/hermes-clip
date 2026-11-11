@@ -64,7 +64,7 @@
 .queue-row-title { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 44px; text-align: left; background: transparent; border: 0; border-radius: 6px; padding: 4px 0; color: var(--lab-ink); }
 .queue-row-title > svg { flex-shrink: 0; color: var(--lab-muted); }
 .queue-row-title > span { display: grid; min-width: 0; gap: 4px; }
-.queue-row-title strong { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; font-size: var(--lab-text-body); font-weight: 500; line-height: 1.55; }
+.queue-row-title strong { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; overflow: hidden; overflow-wrap: anywhere; font-size: var(--lab-text-body); font-weight: 500; line-height: 1.55; }
 .queue-row-title small { color: var(--lab-muted); font-size: var(--lab-text-meta); font-weight: 400; line-height: 1.55; overflow-wrap: anywhere; }
 .queue-row-profile { font-size: var(--lab-text-meta); color: var(--lab-muted); overflow-wrap: anywhere; }
 .queue-row > .badge { justify-self: start; }
