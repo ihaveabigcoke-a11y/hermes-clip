@@ -170,7 +170,7 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
               {!account && <option value="">Chọn tài khoản</option>}{activeAccounts.map(account => <option key={account.id} value={account.id}>{account.data.name}{live.status?.profiles.find(profile => profile.id === account.id)?.handle ? ' · @' + live.status.profiles.find(profile => profile.id === account.id)!.handle : ''}</option>)}
             </select></label>
             <div><h3>{published ? 'Chú thích đã đăng' : 'Chú thích sẽ đăng'}</h3><p className="muse-chat-text instagram-caption">{fixedSnapshot?.caption ?? (plan.data.caption || 'Thêm chú thích trong Sửa nội dung.')}</p></div>
-            {!published && <small>Nhãn AI: {(fixedSnapshot ? fixedSnapshot.aiLabel : plan.data.aiLabel) === 'off' ? 'Không kiểm tra' : 'Bắt buộc bật trước Share'}</small>}
+            {!published && <small>Nhãn AI: {(fixedSnapshot ? fixedSnapshot.aiLabel : plan.data.aiLabel) === 'required' ? 'Bắt buộc bật trước Share' : 'Không gắn nhãn'}</small>}
             {chosenMedia && <small>{chosenMedia.scene.ratio} · {chosenMedia.take.metadata.duration}s · {reviewLabels[chosenMedia.take.review]}</small>}
             {!published && !pending && <><p>Video và chú thích bên trên sẽ được đăng lên tài khoản đã chọn.</p>
               <Button disabled={!canPublish} onClick={publish}><Play size={16}/>{profile?.session === 'signed_in' ? 'Đăng video' : 'Đăng sau khi đăng nhập'}</Button></>}

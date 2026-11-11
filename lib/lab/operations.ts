@@ -125,7 +125,7 @@ export const contentPlanSchema = z.object({
   script: text(6000),
   caption: text(2200),
   // Missing/null keeps old records readable; the publishing snapshot resolves
-  // it to required for the Muse workflow, including legacy videos.
+  // it to off (user default). Only explicit "required" turns on the label check.
   aiLabel: z.enum(["required", "off"]).nullable().optional(),
   plannedDate: z.union([z.literal(""), z.string().date()]).default(""),
   status: z.enum(["draft", "planned", "published_manual", "published_browser"]).default("draft"),

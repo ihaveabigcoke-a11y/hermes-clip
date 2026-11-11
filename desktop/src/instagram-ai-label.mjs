@@ -4,8 +4,10 @@ const labelName = /^(Label as made with AI|Made with AI|Label as AI-generated|G�
 const advancedName = /^(Advanced settings|Cài đặt nâng cao)$/i;
 const shareName = /^Share$|^Chia sẻ$/i;
 
+// User decision 12/11/2026: missing/null means off. Only an explicit
+// 'required' enables the fail-closed AI-label check before Share.
 export function instagramAiLabelMode(value) {
-  if (value == null) return 'required';
+  if (value == null) return 'off';
   if (value === 'required' || value === 'off') return value;
   throw new InstagramAiLabelError('invalid_config');
 }

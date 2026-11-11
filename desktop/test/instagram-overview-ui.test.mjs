@@ -82,19 +82,19 @@ test('empty content retains comparison note; stored strings render as text',()=>
   assert.match(empty,/Chưa có bài đăng/);assert.match(empty,/So sánh hook chỉ có ý nghĩa/);
 });
 
-test('content preview shows required AI label for legacy/null plans and explicit off without claiming historical labels',()=>{
+test('content preview shows no AI label by default for legacy/null/off plans and required only when explicit',()=>{
   const {product}=instagramOverviewFixture();
   const plan={id:'ai_preview',kind:'content_plan',revision:1,updatedAt:Date.now(),data:{productId:product.id,name:'AI label draft',status:'draft',caption:'English concept'}};
   const props={view:'social',records:[product,plan],demo:true,offline:false,persist:async()=>{throw Error('Read-only render');},notify(){},reload(){}};
   globalThis.location={href:'http://fixture.invalid/?view=social&ops_id='+product.id+'&ig_tab=content'};
-  for(const aiLabel of [undefined,null,'required']){
+  for(const aiLabel of [undefined,null,'off']){
     plan.data.aiLabel=aiLabel;
     const text=render(OperationsPanel,props);
-    assert.match(text,/Nhãn AI: Bắt buộc bật trước Share/);
+    assert.match(text,/Nhãn AI: Không gắn nhãn/);
     assert.match(text,/English concept/);
   }
-  plan.data.aiLabel='off';
-  assert.match(render(OperationsPanel,props),/Nhãn AI: Không kiểm tra/);
+  plan.data.aiLabel='required';
+  assert.match(render(OperationsPanel,props),/Nhãn AI: Bắt buộc bật trước Share/);
   plan.data.status='published_manual';
   assert.doesNotMatch(render(OperationsPanel,props),/Nhãn AI:/);
 });

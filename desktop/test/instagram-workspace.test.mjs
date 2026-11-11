@@ -66,20 +66,20 @@ test('Metrics synchronize one cumulative record with nullable values and refuse 
  records[1].data.archived=true;assert.deepEqual(await workspace.metricPlans(),[]);
 });
 
-test('AI label defaults safely for old plans, freezes explicit off and detects configuration changes', async t=>{
+test('AI label defaults to off for old plans, freezes explicit required and detects configuration changes', async t=>{
   const {workspace,records,input}=await fixture(t);
   const legacy=await workspace.snapshot(input);
-  assert.equal(legacy.aiLabel,'required');
+  assert.equal(legacy.aiLabel,'off');
   records[3].data.aiLabel=null;
-  assert.equal((await workspace.snapshot(input)).aiLabel,'required');
+  assert.equal((await workspace.snapshot(input)).aiLabel,'off');
   const {aiLabel,...oldSnapshot}=legacy;
-  assert.equal((await workspace.revalidate(oldSnapshot)).aiLabel,'required');
-  records[3].data.aiLabel='off';
-  await assert.rejects(workspace.revalidate(legacy),/đã thay đổi/);
-  const off=await workspace.snapshot(input); assert.equal(off.aiLabel,'off');
-  assert.equal((await workspace.revalidate(off)).aiLabel,'off');
+  assert.equal((await workspace.revalidate(oldSnapshot)).aiLabel,'off');
   records[3].data.aiLabel='required';
-  await assert.rejects(workspace.revalidate(off),/đã thay đổi/);
+  await assert.rejects(workspace.revalidate(legacy),/đã thay đổi/);
+  const required=await workspace.snapshot(input); assert.equal(required.aiLabel,'required');
+  assert.equal((await workspace.revalidate(required)).aiLabel,'required');
+  records[3].data.aiLabel='off';
+  await assert.rejects(workspace.revalidate(required),/đã thay đổi/);
   records[3].data.aiLabel='invalid';
   await assert.rejects(workspace.snapshot(input),error=>error.code==='INSTAGRAM_AI_LABEL_REQUIRED');
 });

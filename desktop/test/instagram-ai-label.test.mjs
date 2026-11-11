@@ -66,9 +66,11 @@ const blocked = (reason) => error => {
   return true;
 };
 
-test('missing/null configuration requires AI label; only explicit off bypasses it', async () => {
-  for (const value of [undefined, null, 'required']) assert.equal(instagramAiLabelMode(value), 'required');
-  assert.equal(instagramAiLabelMode('off'), 'off');
+test('missing/null configuration defaults to off; only explicit required enables the AI label', async () => {
+  for (const value of [undefined, null, 'off']) assert.equal(instagramAiLabelMode(value), 'off');
+  assert.equal(instagramAiLabelMode('required'), 'required');
+  // Call directly: the check() helper defaults an undefined mode to 'required'.
+  for (const value of [undefined, null]) assert.equal((await ensureInstagramAiLabel({}, value)).status, 'skipped');
   for (const value of ['', false, 0, 'optional']) assert.throws(() => instagramAiLabelMode(value), blocked('invalid_config'));
   assert.equal((await check({}, 'off')).status, 'skipped'); // no DOM access at all
 });
@@ -145,7 +147,8 @@ async function publisherFixture(t, page, aiLabel) {
   return {publisher, job, request, workspace, adapter, store};
 }
 
-for (const mode of ['required', undefined, null]) test(`publisher with ${mode} uses real adapter DOM preparation, labels and shares once`, async t => {
+test('publisher with required uses real adapter DOM preparation, labels and shares once', async t => {
+  const mode = 'required';
   const page = await fixture(t, toggle('aria-checked="false"'), {draft: true});
   const {publisher, job, request} = await publisherFixture(t, page, mode);
   await publisher.run(job.id);
@@ -198,9 +201,18 @@ test('adapter direct publish cannot skip prepare to share with an unchecked AI s
   assert.deepEqual(await page.evaluate(() => [window.toggles, window.shares]), [0, 0]);
 });
 
-test('publisher explicit off preserves publication without a label control', async t => {
+for (const mode of ['off', undefined, null]) test(`publisher with ${mode} (default off) publishes without a label control`, async t => {
   const page = await fixture(t, '', {draft: true});
-  const {publisher, job} = await publisherFixture(t, page, 'off');
+  const {publisher, job} = await publisherFixture(t, page, mode);
+  await publisher.run(job.id);
+  assert.equal(publisher.job(job.id).state, 'published');
+  assert.equal(publisher.job(job.id).aiLabelCheck.status, 'skipped');
+  assert.deepEqual(await page.evaluate(() => [window.toggles, window.shares]), [0, 1]);
+});
+
+test('publisher with default off never touches an AI switch that is present', async t => {
+  const page = await fixture(t, toggle('aria-checked="false"'), {draft: true});
+  const {publisher, job} = await publisherFixture(t, page, undefined);
   await publisher.run(job.id);
   assert.equal(publisher.job(job.id).state, 'published');
   assert.equal(publisher.job(job.id).aiLabelCheck.status, 'skipped');
