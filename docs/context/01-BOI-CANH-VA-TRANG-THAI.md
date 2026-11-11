@@ -1,5 +1,9 @@
 # Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
 
+## Cập nhật source đêm T03 — bước tiến độ của sản phẩm
+
+Pipeline Tổng quan đã dùng hàm thuần theo `production`, plan đã đăng và `social_metric` nối đúng sản phẩm; giữ tương thích experiment/creative/metric cũ. URL supplier và ghi chú Muse chưa kiểm không tự tăng bậc. Fixture và snapshot chỉ đọc cho Treat Trader → Đo nhu cầu, ChomChom/Ruffwear → Nội dung. Source chưa triển khai vào bản cài; xem [checkpoint T03](T03-PRODUCT-STAGE.md) cho quy tắc, kiểm tra và giới hạn.
+
 ## Cập nhật source đêm T11 — kiểm nguồn Agent Reach
 
 Đã nối hàng đợi kiểm listing/tín hiệu YouTube/web sau khi lưu research Muse, giữ nguyên số liệu Muse, thêm nút kiểm lại và trạng thái/cờ trong bảng/chi tiết. Test dùng runner giả, build trong output riêng; chưa triển khai bản cài. Clone đêm thiếu checkout/venv Agent Reach nên chưa xác minh CLI đọc của revision ghim; runtime chỉ gọi đọc khi help local xác nhận, thiếu thì ghi `blocked`. Xem [checkpoint T11](T11-AGENT-REACH-RESEARCH.md) cho hợp đồng, bằng chứng, blocker và lệnh thử sáng mai.

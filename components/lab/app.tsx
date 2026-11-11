@@ -69,6 +69,7 @@ import MuseChatPanel from "./muse-chat";
 import { creativeDuration } from "@/lib/lab/production";
 import { desktopBridge } from "@/lib/lab/desktop-client";
 import { demoRecords } from "@/lib/lab/demo";
+import { productStage } from "@/lib/lab/product-stage";
 import {
   type LabRecord,
   type Kind,
@@ -881,24 +882,9 @@ export default function LabApp() {
       </div>
     );
   }
-  function stage(p: LabRecord) {
-    const es = experiments.filter((e) => e.data.productId === p.id);
-    if (
-      es.some(
-        (e) =>
-          e.data.status === "running" ||
-          metrics.some((m) => m.data.experimentId === e.id),
-      )
-    )
-      return 3;
-    if (creatives.some((c) => c.data.productId === p.id)) return 2;
-    if (p.data.supplierUrl || p.data.sampleVerified || p.data.proofNotes)
-      return 1;
-    return 0;
-  }
   const pipeline = stageNames.map((name, i) => ({
     name,
-    items: products.filter((p) => stage(p) === i),
+    items: products.filter((p) => productStage(p, records) === i),
   }));
   function productVisual(p: LabRecord, cls = "") {
     const reference = records.filter(record => record.kind === 'production' && record.data.productId === p.id).flatMap(record => record.data.references ?? []).find(ref => ref.role === 'product');
