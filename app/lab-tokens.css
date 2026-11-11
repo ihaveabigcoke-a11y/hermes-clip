@@ -1,0 +1,38 @@
+/* Hermes Clip color tokens. Keep synchronized with DESIGN.md. */
+:root {
+  color-scheme: dark;
+  --lab-primary: #d4ff3a;
+  --lab-background: #0c0d11;
+  --lab-surface: #161820;
+  --lab-ink: #f3f4f6;
+  --lab-muted: #b3b5c2;
+  --lab-sidebar: #121317;
+  --lab-border: #727888;
+  --lab-success: #6ee7b7;
+  --lab-warning: #f5cb77;
+  --lab-danger: #fda4af;
+  --lab-accent: #262d19;
+  --lab-raised: #232634;
+  --lab-on-primary: #121317;
+  --lab-success-soft: #142f28;
+  --lab-warning-soft: #332b19;
+  --lab-danger-soft: #371e28;
+  --lab-scroll-thumb: #727888;
+  --lab-scroll-hover: #b3b5c2;
+  --lab-secondary: #e2ff80;
+  --lab-secondary-soft: #262d19;
+  --lab-primary-text: #d4ff3a;
+  --lab-focus: #d4ff3a;
+  --lab-subtle-border: #2b2e3b;
+  --lab-rounded-sm: 6px;
+  --lab-rounded-md: 8px;
+  --lab-rounded-lg: 12px;
+  --lab-spacing-page: 16px;
+  --lab-spacing-gap: 12px;
+  --lab-text-screen: 24px;
+  --lab-text-section: 18px;
+  --lab-text-control: 14px;
+  --lab-text-body: 15px;
+  --lab-text-meta: 13px;
+  --lab-leading-body: 1.55;
+}

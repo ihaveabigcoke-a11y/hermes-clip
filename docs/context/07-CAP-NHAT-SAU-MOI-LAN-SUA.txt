@@ -1,0 +1,28 @@
+QUY TRÌNH CHATGPT WEB ↔ CODEX TRÊN WINDOWS
+
+1. Tôi trao đổi vấn đề/ý tưởng trong ChatGPT Project Hermes Clip.
+2. ChatGPT dựa vào bối cảnh, ảnh và source snapshot để gợi ý; chỉ rõ bằng chứng hoặc giả thuyết.
+3. Khi tôi chọn hướng, ChatGPT viết prompt theo 05-MAU-PROMPT-CHO-CODEX.txt.
+4. Tôi dán prompt vào Codex, dùng cấu hình Astra Ultra tôi chọn. Chỉ một agent. Codex đọc source mới nhất, triển khai và kiểm tra trên Windows.
+5. Codex trả báo cáo ngắn dưới đây. Tôi mang về ChatGPT, kèm file source đã sửa/ảnh mới khi cần.
+6. ChatGPT cập nhật trạng thái; không tiếp tục viện dẫn source cũ như thể còn đúng. Những phần chưa có cập nhật giữ nguyên mức chứng minh cũ.
+
+MẪU BÁO CÁO CODEX TRẢ VỀ
+
+Ngày/giờ và múi giờ:
+Thư mục source thực sự đã sửa:
+Mục tiêu của đợt:
+Hành vi trước → sau:
+Danh sách file thay đổi và nhiệm vụ của từng file:
+Dữ liệu/phiên/quota đã được giữ như thế nào:
+Kiểm tra chạy thật, kèm bằng chứng hoặc file đính kèm:
+Kiểm tra bằng fixture/giả lập, nêu rõ phạm vi:
+Phần chưa kiểm chứng và blocker:
+Quyết định mới của người dùng, nếu có:
+Cách mở app và thao tác lần tiếp theo:
+Checkpoint/rollback:
+Tài liệu hoặc kết luận cũ cần thay thế:
+
+Chỉ nêu kết quả đã thực hiện. Không ghi “đã test thật” cho mock; không đưa key/cookie/phiên browser vào báo cáo. Nếu chỉ gửi đường dẫn C:/... mà không đính kèm nội dung thì ChatGPT web không thể mở file đó trên máy tôi.
+
+Khi có nhiều đợt sửa, tạo lại snapshot gọn từ source hiện hành. Bỏ file Project đã lỗi thời sau khi có bản mới tương ứng; đừng tích lũy nhiều file cùng tên/trạng thái mâu thuẫn rồi yêu cầu ChatGPT tự đoán bản nào đúng.

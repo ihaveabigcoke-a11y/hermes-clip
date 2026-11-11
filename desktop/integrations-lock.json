@@ -1,0 +1,12 @@
+{
+  "agentReach": {
+    "repository": "https://github.com/Panniantong/Agent-Reach.git",
+    "commit": "422478ae0264d2236bf7ebd1c3b11a69aaafa4a3",
+    "license": "MIT"
+  },
+  "openMontage": {
+    "repository": "https://github.com/calesthio/OpenMontage.git",
+    "commit": "d21f5d4eaa08422b09c7091757a05affcbabb35b",
+    "license": "AGPL-3.0"
+  }
+}

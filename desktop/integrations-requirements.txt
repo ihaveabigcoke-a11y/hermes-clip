@@ -1,0 +1,9 @@
+# Tested lightweight OpenMontage primitives; no model weights or generation SDKs.
+# Agent Reach is installed separately from the pinned Git checkout, never PyPI.
+pydantic==2.14.3
+jsonschema==4.26.0
+PyYAML==6.0.3
+python-dotenv==1.2.4
+Pillow==13.0.0
+numpy==2.5.4
+requests==2.34.2

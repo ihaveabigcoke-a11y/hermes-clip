@@ -1,0 +1,165 @@
+/* Shared Vietnamese type hierarchy. Font families and visual theme are owned by globals.css. */
+body {
+  font-size: var(--lab-text-body);
+  font-weight: 400;
+  line-height: var(--lab-leading-body);
+}
+h1, h2, h3, h4 { line-height: 1.5; font-weight: 600; overflow-wrap: anywhere; }
+main strong, main b, .lab-modal strong, .lab-modal b { font-weight: 500; }
+main h1 strong, main h2 strong, main h3 strong { font-weight: 600; }
+h1, .workbench-shell .page-heading h1, .operations-heading h1,
+.desktop-console > .production-heading h2, .workspace-library h1 { font-size: var(--lab-text-screen); }
+h2, h3, .panel-heading h2, .modal-heading h2, .production-heading h2,
+.desk-pane-heading, .muse-conversations h2, .muse-conversation h2, .muse-media h2,
+.preview-title h3, .library-order h3 { font-size: var(--lab-text-section); font-weight: 600; }
+
+p, .workbench-shell .page-heading p, .job-copy .job-prompt, .preview-prompt p,
+.muse-chat-text, .muse-result-card p, .muse-result-card li,
+.empty-state p, .info-panel, .notice, .field-error, .inline-error {
+  font-size: var(--lab-text-body);
+  font-weight: 400;
+  line-height: var(--lab-leading-body);
+  overflow-wrap: anywhere;
+}
+small, time, .badge, .lab-shell .badge, .meta, .muted,
+.workbench-shell .breadcrumbs, .workbench-shell .sync-label,
+.workbench-shell .app-footer, .project-context-line, .preview-facts,
+.preview-facts > div, .preview-facts strong, .job-copy small,
+.desk-form-actions small, .desk-preview-content > small,
+.workspace-media-grid .media-card small, .muse-thread small, .muse-thread span,
+.muse-media-item small, .worker-activity summary, .worker-activity summary strong,
+.account-stats small, .account-stats > div > span,
+.pagination, .workbench-shell .workspace-mode, .desk-bulk,
+.desk-field label > span, .desk-reference legend > span {
+  font-size: var(--lab-text-meta);
+  font-weight: 400;
+  line-height: 1.5;
+}
+.worker-activity ol { font-size: var(--lab-text-meta); line-height: 1.55; }
+.badge, .lab-shell .badge { height: auto; min-height: 26px; padding: 3px 8px; white-space: normal; }
+
+button, .lab-button, .lab-shell .lab-button, .lab-modal .lab-button,
+.lab-shell .text-link, .pipeline-item, a.lab-button, .workbench-menu [role="menuitem"],
+.workbench-shell .sidebar nav a, .business-navigation summary, .sidebar-help,
+.production-tabs .lab-button, .media-mode-tabs button, .segmented button,
+.desk-form-actions .lab-button, .preview-actions .lab-button,
+.projectbar-actions .lab-button, .desk-mobile-nav .lab-button,
+.account-actions .lab-button, .muse-conversation > header .lab-button,
+.creation-tabs a,
+.workbench-shell .workspace-mode button,
+.queue-focus button, .creation-mode button, .ratio-picker button {
+  font-size: var(--lab-text-control);
+  font-weight: 500;
+  line-height: 1.5;
+}
+.lab-button, .lab-shell .lab-button, a.lab-button, .production-tabs .lab-button,
+.projectbar-actions .lab-button, .preview-actions .lab-button,
+.desk-form-actions .lab-button, .backup-line .lab-button, .lab-modal .lab-button {
+  height: auto;
+  min-height: 40px;
+  padding: 8px 12px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+.account-actions .lab-button { font-size: var(--lab-text-control); min-height: 40px; }
+.lab-button svg, .sidebar nav a svg { flex-shrink: 0; }
+.row-menu-trigger { width: 36px; min-width: 36px; min-height: 36px; padding: 8px; }
+.workbench-shell .sidebar nav a { min-height: 44px; }
+.workbench-shell .sidebar nav a span { min-width: 0; line-height: 1.5; }
+.workbench-shell .sidebar nav a.active { font-weight: 500; }
+.production-tabs, .preview-actions, .form-actions, .button-row { flex-wrap: wrap; }
+.production-tabs { overflow: visible; }
+
+label, .field > label, .field > span, .form-field label, .desk-field label,
+.desk-reference legend, .creation-mode legend, .field, .preview-prompt summary,
+.muse-result-card h4, .account-identity strong, .muse-quota strong,
+.job-copy > strong, .media-card strong, .workspace-media-grid .media-card strong,
+.muse-thread strong, .reference-drop strong, .reference-drop > span,
+.reference-drop > strong, .desk-advanced summary {
+  font-size: var(--lab-text-control);
+  font-weight: 500;
+  line-height: 1.5;
+}
+.job-copy > strong, .media-card strong, .workspace-media-grid .media-card strong,
+.muse-thread strong { font-size: var(--lab-text-body); }
+.muse-studio .field, .muse-chat-panel .field,
+.desk-ref-grid label, .job-check { font-size: var(--lab-text-control); font-weight: 500; }
+.muse-studio select, .muse-chat-panel select { font-size: var(--lab-text-body); }
+.reference-drop > span { font-size: var(--lab-text-meta); font-weight: 400; }
+.reference-drop { height: auto; min-height: 110px; padding: 14px 10px; }
+.desk-ref-grid label { min-width: 0; }
+.desk-ref-grid span { overflow-wrap: anywhere; }
+
+input, textarea, select, .field input, .field textarea, .field select,
+.field input:not([type="checkbox"]),
+.desk-field input, .desk-field textarea, .desk-field select,
+.desk-queue-tools select, .project-tools select, .production-projectbar > select,
+.take-selector select, .search-box input, .muse-composer textarea,
+.desk-queue > .desk-pane-heading .search-box input,
+.filter-control select, .experiment-select select, .results-toolbar select {
+  font-size: var(--lab-text-body);
+  font-weight: 400;
+  line-height: var(--lab-leading-body);
+}
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+select, .field input:not([type="checkbox"]), .desk-field input, .desk-field select,
+.desk-queue-tools select, .project-tools select, .production-projectbar > select {
+  min-height: 42px;
+  height: auto;
+  padding-block: 9px;
+  max-width: 100%;
+  min-width: 0;
+}
+textarea, .desk-field textarea, .muse-composer textarea { padding: 12px; }
+::placeholder { font-weight: 400; }
+.field input::placeholder, .field textarea::placeholder { font-size: inherit; }
+.search-box { min-height: 42px; height: auto; }
+.search-box input { width: 100%; min-width: 0; }
+.search-box > svg { flex-shrink: 0; }
+.ratio-picker { gap: 6px; }
+.ratio-picker button { padding: 8px 4px; min-height: 52px; height: auto; flex-wrap: wrap; }
+.ratio-picker i { flex-shrink: 0; }
+.creation-mode > div { flex-wrap: wrap; }
+.creation-mode button { min-width: 0; white-space: normal; min-height: 42px; }
+
+/* Content must fit native window bounds, including Windows display scaling. */
+.main-shell, .workbench-shell main, .production-workbench, .production-desk,
+.desk-pane, .production-projectbar, .workbench-navigation, .projectbar-actions,
+.muse-studio > *, .catalog-detail > *, .modal-body { min-width: 0; }
+.workbench-shell main { width: 100%; }
+.production-projectbar > select { flex-shrink: 1; }
+.desk-pane-heading { min-height: 56px; height: auto; padding-block: 12px; }
+.preview-footer { flex-wrap: wrap; }
+.preview-footer .preview-actions { width: 100%; }
+.preview-footer .lab-button { flex: 1 1 auto; min-width: 0; }
+.muse-composer-tools { flex-wrap: wrap; }
+.muse-composer-tools .segmented { flex-wrap: wrap; }
+.muse-composer-tools .segmented button, .muse-composer .segmented button {
+  min-height: 40px;
+  font-size: var(--lab-text-control);
+  font-weight: 500;
+}
+.workbench-shell .topbar { height: auto; min-height: 48px; }
+.modal-heading { align-items: flex-start; }
+.modal-heading > div { min-width: 0; }
+.modal-heading h2 { padding-block: 2px; }
+.modal-heading > button { flex-shrink: 0; }
+.form-actions { align-items: center; }
+.form-actions > * { max-width: 100%; }
+.account-actions { flex-wrap: wrap; }
+.desk-job-list, .desk-preview-scroll, .desk-form-content { scrollbar-gutter: stable; }
+.desk-queue > .pagination, .desk-queue > .desk-pane-heading,
+.desk-queue-tools, .desk-queue > .desk-bulk, .queue-focus { flex-shrink: 0; }
+@media (min-width: 1100px) and (min-height: 600px) {
+  .desk-pane { min-height: 560px; }
+}
+@media (max-width: 620px) {
+  .projectbar-actions { flex-wrap: wrap; }
+  .production-projectbar > select { max-width: 100%; }
+  .desk-two-fields { gap: 10px; }
+  .workbench-navigation { overflow: visible; }
+  .queue-focus { flex-wrap: wrap; }
+  .desk-queue > .desk-pane-heading > .search-box { min-width: 0; width: 100%; }
+  .catalog-toolbar .field { min-width: 0; }
+}

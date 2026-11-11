@@ -1,0 +1,153 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync,mkdtempSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {execFileSync} from 'node:child_process';
+import {call} from './runtime-fixture.mjs';
+import * as lab from '../app/api/lab/route.ts';
+import * as production from '../app/api/production/route.ts';
+import * as upload from '../app/api/assets/route.ts';
+import * as asset from '../app/api/assets/[id]/route.ts';
+import {emptyProduct} from '../lib/lab/domain.ts';
+const req=(path,owner,payload,origin='https://qa.invalid')=>new Request('https://qa.invalid'+path,{method:payload?'POST':'GET',headers:{'oai-authenticated-user-id':owner,'oai-authenticated-user-email':owner+'@example.invalid',...(payload?{'Content-Type':'application/json',Origin:origin}:{})},...(payload?{body:JSON.stringify(payload)}:{})});
+async function json(handler,path,owner,payload,origin){const r=await call(handler,req(path,owner,payload,origin));return {status:r.status,data:await r.json()};}
+test('real routes against isolated SQLite/R2: scope, CAS, replay, atomic import, take checks and trace',async()=>{
+  const owner='qa-a',other='qa-b';let command=0;
+  const post=(record,action,input,revision=record?.revision??0,commandId='command_'+(++command),who=owner)=>json(production.POST,'/api/production',who,{id:record?.id??'production_qa',revision,commandId,action,input});
+  const anon=await call(lab.GET,new Request('https://qa.invalid/api/lab'));assert.equal(anon.status,401);
+  const productData={...emptyProduct,name:'QA product',price:35,cost:10,shipping:5,fees:2,buffer:2,sampleVerified:true,proofNotes:'Isolated QA sample'};
+  assert.equal((await json(lab.POST,'/api/lab',owner,{id:'product_qa',kind:'product',revision:0,data:productData})).status,200);
+  let r=await post(null,'create',{name:'Production QA',productId:'product_qa',locale:'en-US',creativeId:''});assert.equal(r.status,200);let project=r.data.record;
+  const foreign=await post(project,'pause',{paused:true},project.revision,'foreign',other);assert.equal(foreign.status,409);
+  const csrf=await json(production.POST,'/api/production',owner,{id:project.id,revision:project.revision,commandId:'csrf',action:'pause',input:{paused:true}},'https://other.invalid');assert.equal(csrf.status,403);
+  const scene={id:'scene_qa',name:'Body',role:'body',mediaType:'video',prompt:'Test real route',ratio:'9:16',duration:5,referenceIds:[]};
+  r=await post(project,'import',{rows:[scene,{...scene,id:'scene_bad',referenceIds:['foreign_ref']}]});assert.equal(r.status,422);
+  let list=await json(lab.GET,'/api/lab',owner);assert.equal(list.data.records.find(x=>x.id===project.id).data.scenes.length,0);
+  r=await post(project,'scene',scene);assert.equal(r.status,200);project=r.data.record;
+  r=await post(project,'storyboard',{sceneId:scene.id});project=r.data.record;
+  const before=project;
+  r=await post(project,'prepare',{sceneId:scene.id},project.revision,'stable_attempt');assert.equal(r.status,200);project=r.data.record;
+  const replay=await post(before,'prepare',{sceneId:scene.id},before.revision,'stable_attempt');assert.equal(replay.status,200);assert.equal(replay.data.deduplicated,true);assert.equal(replay.data.record.data.scenes[0].attempts.length,1);
+  assert.equal((await post(before,'pause',{paused:true})).status,409);
+  const dir=mkdtempSync(join(tmpdir(),'lab-api-'));
+  try{
+    const file=join(dir,'source.mp4');execFileSync('ffmpeg',['-v','error','-f','lavfi','-i','color=c=blue:s=90x160:r=24:d=5','-c:v','libx264','-pix_fmt','yuv420p',file]);
+    async function sendFile(bytes,name){const form=new FormData();form.set('file',new File([bytes],name,{type:'video/mp4'}));const rq=new Request('https://qa.invalid/api/assets',{method:'POST',headers:{'oai-authenticated-user-id':owner,'oai-authenticated-user-email':'qa@example.invalid'},body:form});const res=await call(upload.POST,rq);return {status:res.status,data:await res.json()};}
+    assert.equal((await sendFile(new TextEncoder().encode('not an image'),'bad.png')).status,422);
+    assert.equal((await sendFile(readFileSync(file).subarray(0,50),'broken.mp4')).status,422);
+    const uploaded=await sendFile(readFileSync(file),'real.mp4');assert.equal(uploaded.status,200);assert.equal(uploaded.data.metadata.width,90);assert.equal(uploaded.data.sha256.length,64);
+    let denied=await call(asset.GET,req('/api/assets/'+uploaded.data.id,other),{params:Promise.resolve({id:uploaded.data.id})});assert.equal(denied.status,404);
+    let owned=await call(asset.GET,req('/api/assets/'+uploaded.data.id,owner),{params:Promise.resolve({id:uploaded.data.id})});assert.equal(owned.status,200);assert.deepEqual(Buffer.from(await owned.arrayBuffer()),readFileSync(file));
+    r=await post(project,'attach',{sceneId:scene.id,attemptId:null,assetId:uploaded.data.id,take:{metadata:{width:1,height:1}}});assert.equal(r.status,200);project=r.data.record;
+    const take=project.data.scenes[0].takes[0];assert.equal(take.metadata.width,90);
+    r=await post(project,'review',{sceneId:scene.id,takeId:take.id,review:'approved',notes:'Reviewed'});assert.equal(r.status,200);project=r.data.record;
+    r=await post(project,'body',{name:'Body',items:[{sceneId:scene.id,takeId:take.id}]},project.revision,'body_qa');assert.equal(r.status,200);project=r.data.record;
+    r=await post(project,'variant',{name:'US',bodyId:'body_qa',hook:null,cta:null,locale:'en-US',caption:''},project.revision,'variant_qa');assert.equal(r.status,200);project=r.data.record;
+    r=await post(project,'export',{variantId:'variant_qa',filename:'source.zip',assetId:null,kind:'package'});assert.equal(r.status,200);project=r.data.record;
+    r=await post(project,'export',{variantId:'variant_qa',filename:'fake.mp4',assetId:null,kind:'render'});assert.equal(r.status,422);
+    r=await post(project,'retry',{sceneId:scene.id});assert.equal(r.status,200);project=r.data.record;assert.equal(project.data.scenes[0].takes.length,1);
+    list=await json(lab.GET,'/api/lab',owner);assert.equal(list.data.records.find(x=>x.id===project.id).data.variants[0].bodyId,'body_qa');
+    const foreignList=await json(lab.GET,'/api/lab',other);assert.equal(foreignList.data.records.length,0);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+test('internal review and export work before sample while ownership, media and commercial gates remain enforced', async () => {
+  const owner = 'internal-owner';
+  const productId = 'internal_product';
+  const productData = {...emptyProduct, name:'Internal product', price:0, cost:10, sampleVerified:false};
+  const savedProduct = await json(lab.POST, '/api/lab', owner, {id:productId, kind:'product', revision:0, data:productData});
+  assert.equal(savedProduct.status, 200);
+  let project;
+  let command = 0;
+  async function post(action, input, commandId = 'internal_command_' + (++command)) {
+    const response = await json(production.POST, '/api/production', owner, {
+      id:'internal_project', revision:project?.revision ?? 0, commandId, action, input,
+    });
+    if (response.status === 200) project = response.data.record;
+    return response;
+  }
+  assert.equal((await post('create', {name:'Internal QA', productId, locale:'en-US'})).status, 200);
+  const scene = {id:'internal_scene', name:'Body', role:'body', mediaType:'video', prompt:'Internal product demo', ratio:'9:16', duration:5, referenceIds:[]};
+  assert.equal((await post('scene', scene)).status, 200);
+
+  const directory = mkdtempSync(join(tmpdir(), 'internal-export-api-'));
+  try {
+    const file = join(directory, 'source.mp4');
+    execFileSync('ffmpeg', ['-v','error','-f','lavfi','-i','color=c=blue:s=90x160:r=24:d=5','-c:v','libx264','-pix_fmt','yuv420p',file]);
+    const bytes = readFileSync(file);
+    async function uploadClip(who) {
+      const form = new FormData();
+      form.set('file', new File([bytes], 'internal-source.mp4', {type:'video/mp4'}));
+      const response = await call(upload.POST, new Request('https://qa.invalid/api/assets', {
+        method:'POST',
+        headers:{'oai-authenticated-user-id':who, 'oai-authenticated-user-email':who + '@example.invalid'},
+        body:form,
+      }));
+      assert.equal(response.status, 200);
+      return response.json();
+    }
+    const ownedAsset = await uploadClip(owner);
+    const foreignAsset = await uploadClip('internal-other-owner');
+    assert.equal((await post('attach', {sceneId:scene.id, assetId:foreignAsset.id, attemptId:null})).status, 422);
+    assert.equal((await post('attach', {sceneId:scene.id, assetId:ownedAsset.id, attemptId:null})).status, 200);
+    const takeId = project.data.scenes[0].takes[0].id;
+    const review = {sceneId:scene.id, takeId, review:'approved', notes:'Viewed for internal testing'};
+    assert.equal((await post('review', review)).status, 422);
+    assert.equal((await post('storyboard', {sceneId:scene.id})).status, 200);
+    assert.equal((await post('review', review)).status, 200);
+    assert.equal((await post('body', {name:'Internal body', items:[{sceneId:scene.id, takeId}]}, 'internal_body')).status, 200);
+    assert.equal((await post('variant', {name:'Internal US', bodyId:'internal_body', hook:null, cta:null, locale:'en-US', caption:''}, 'internal_variant')).status, 200);
+    const exportRequest = {variantId:'internal_variant', filename:'internal-source.zip', assetId:null, kind:'package'};
+    assert.equal((await post('export', exportRequest, 'internal_export')).status, 200);
+    assert.equal((await post('export', exportRequest, 'internal_export')).data.deduplicated, true);
+    assert.equal(project.data.exports.length, 1);
+    assert.equal((await post('export', {variantId:'internal_variant', filename:'internal.mp4', assetId:ownedAsset.id, kind:'render'})).status, 200);
+    assert.equal((await post('export', {variantId:'internal_variant', filename:'foreign.mp4', assetId:foreignAsset.id, kind:'render'})).status, 422);
+
+    const badMediaScenes = [
+      {...scene, id:'wrong_ratio_scene', ratio:'16:9'},
+      {...scene, id:'wrong_duration_scene', duration:10},
+    ];
+    for (const invalidScene of badMediaScenes) {
+      assert.equal((await post('scene', invalidScene)).status, 200);
+      assert.equal((await post('storyboard', {sceneId:invalidScene.id})).status, 200);
+      assert.equal((await post('attach', {sceneId:invalidScene.id, assetId:ownedAsset.id, attemptId:null})).status, 200);
+      const invalidTake = project.data.scenes.find(item => item.id === invalidScene.id).takes[0];
+      assert.equal((await post('review', {sceneId:invalidScene.id, takeId:invalidTake.id, review:'approved', notes:''})).status, 422);
+    }
+    assert.equal((await post('scene', {...scene, prompt:'Updated internal product demo'})).status, 200);
+    assert.equal((await post('storyboard', {sceneId:scene.id})).status, 200);
+    assert.equal((await post('review', review)).status, 422);
+    assert.equal((await post('export', exportRequest)).status, 422);
+    assert.equal(project.data.scenes[0].takes.length, 1);
+
+    const experiment = await json(lab.POST, '/api/lab', owner, {
+      id:'internal_experiment', kind:'experiment', revision:0,
+      data:{name:'Commercial experiment', productId, market:'United States', hypothesis:'Compare product content performance', status:'running'},
+    });
+    assert.equal(experiment.status, 422);
+    const list = await json(lab.GET, '/api/lab', owner);
+    const product = list.data.records.find(record => record.id === productId);
+    assert.equal(product.revision, 1);
+    assert.equal(product.data.sampleVerified, false);
+    assert.equal(product.data.proofNotes, '');
+    assert.equal(product.data.price, 0);
+    assert.equal(product.data.cost, 10);
+  } finally {
+    rmSync(directory, {recursive:true, force:true});
+  }
+});
+
+test('worker receipt route derives metadata from owned asset and replay adds no second take',async()=>{
+ const who='worker-owner',productData={...emptyProduct,name:'Worker product',price:30,cost:5,shipping:2,fees:1,buffer:1,sampleVerified:true,proofNotes:'Fixture'};
+ await json(lab.POST,'/api/lab',who,{id:'worker_product',kind:'product',revision:0,data:productData});let n=0,project=null;const post=async(action,input,key)=>{const r=await json(production.POST,'/api/production',who,{id:'worker_project',revision:project?.revision??0,commandId:key||'w_'+(++n),action,input});if(r.status===200)project=r.data.record;return r;};await post('create',{name:'Worker',productId:'worker_product',locale:'en-US'});await post('scene',{id:'worker_scene',name:'Scene',prompt:'Test scene'});await post('storyboard',{sceneId:'worker_scene'});
+ const dir=mkdtempSync(join(tmpdir(),'worker-api-'));try{const file=join(dir,'v.mp4');execFileSync('ffmpeg',['-v','error','-f','lavfi','-i','color=c=green:s=90x160:r=24:d=5','-c:v','libx264','-pix_fmt','yuv420p',file]);const data=new FormData();data.set('file',new File([readFileSync(file)],'worker.mp4'));const u=await call(upload.POST,new Request('https://qa.invalid/api/assets',{method:'POST',headers:{'oai-authenticated-user-id':who,'oai-authenticated-user-email':who+'@example.invalid'},body:data}));const a=await u.json();const receipt={sceneId:'worker_scene',sceneRevision:1,productRevision:1,jobId:'local_1',providerId:'result_1',assetId:a.id,take:{metadata:{width:1,height:1}}};let r=await post('worker_result',receipt,'desktop_local_1');assert.equal(r.status,200);assert.equal(project.data.scenes[0].takes[0].metadata.width,90);assert.equal(project.data.scenes[0].takes[0].review,'pending');r=await post('worker_result',receipt,'desktop_local_1');assert.equal(r.status,200);assert.equal(project.data.scenes[0].takes.length,1);assert.equal((await post('worker_result',receipt,'identical_worker_replay')).status,200);assert.equal(project.data.scenes[0].takes.length,1);
+ const replacementData=new FormData();replacementData.set('file',new File([readFileSync(file)],'other-owned.mp4'));
+ const replacementResponse=await call(upload.POST,new Request('https://qa.invalid/api/assets',{method:'POST',headers:{'oai-authenticated-user-id':who,'oai-authenticated-user-email':who+'@example.invalid'},body:replacementData}));assert.equal(replacementResponse.status,200);const replacementAsset=await replacementResponse.json();
+ assert.equal((await post('worker_result',{...receipt,assetId:replacementAsset.id,providerId:'different_result'},'conflicting_worker_replay')).status,422);
+ assert.equal((await post('worker_result',{...receipt,providerId:'different_result'},'conflicting_provider_replay')).status,422);
+ assert.equal(project.data.scenes[0].takes.length,1);assert.equal(project.data.scenes[0].takes[0].assetId,a.id);
+ const workerSnapshot=JSON.parse(project.data.scenes[0].takes[0].snapshot);assert.equal(workerSnapshot.prompt,'Test scene');assert.equal(workerSnapshot.ratio,'9:16');assert.equal(workerSnapshot.duration,5);assert.equal(workerSnapshot.action,'');assert.equal(workerSnapshot.camera,'');assert.equal(workerSnapshot.voice,'');
+ assert.equal((await post('worker_result',{...receipt,sceneRevision:99})).status,422);assert.equal((await post('worker_result',{...receipt,assetId:'foreign_file'})).status,422);}finally{rmSync(dir,{recursive:true,force:true});}
+});

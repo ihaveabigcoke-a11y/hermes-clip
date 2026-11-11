@@ -1,0 +1,5 @@
+import {randomBytes} from 'node:crypto';
+import {Server} from 'proxy-chain';
+// Authenticated SOCKS5 is bridged to a randomly authenticated loopback-only HTTP proxy.
+// Upstream credentials never enter renderer state, command arguments or logs.
+export async function localProxy(config){const u=new URL(config.server);if(u.protocol==='socks5:')u.protocol='socks5h:';u.username=config.username||'';u.password=config.password||'';const user=randomBytes(16).toString('hex'),password=randomBytes(24).toString('hex');const server=new Server({host:'127.0.0.1',port:0,verbose:false,prepareRequestFunction:({username,password:provided})=>({requestAuthentication:username!==user||provided!==password,upstreamProxyUrl:u.href,ignoreUpstreamProxyCertificate:false})});server.on('requestFailed',()=>{});try{await server.listen();return {proxy:{server:`http://127.0.0.1:${server.port}`,username:user,password},close:async()=>{await server.close(true);}};}catch{await server.close(true).catch(()=>{});throw Error('Không khởi động được cầu nối proxy trên máy.');}}

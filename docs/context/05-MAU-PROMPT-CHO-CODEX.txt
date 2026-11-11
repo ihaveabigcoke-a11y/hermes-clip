@@ -1,0 +1,31 @@
+MẪU DO CHATGPT ĐIỀN TRƯỚC KHI TÔI DÁN VÀO CODEX ASTRA ULTRA
+
+Mục tiêu của lần sửa: [một kết quả rõ, quan sát được].
+Vấn đề hiện tại: [thao tác cụ thể, hành vi hiện tại, vì sao gây khó].
+Bằng chứng: [file source/ảnh/log đã đọc và thời điểm; ghi rõ phần mới là giả thuyết].
+
+Chỉ dùng một agent Codex duy nhất. Không spawn sub-agent, không phân vai hoặc tạo orchestrator. Thực hiện tuần tự trên source đang chạy, tự sửa lỗi và kiểm tra trong phạm vi này.
+
+Đọc source, AGENTS.md và các hướng dẫn áp dụng trước khi sửa. Xác định lại thư mục app thực sự dùng. Snapshot ChatGPT đã biết nằm tại C:/Users/ADMIN/Downloads/Product-Lab-Local/Product-Lab-Local; workspace checkpoint là C:/Users/ADMIN/Documents/ChatGPT/ECOM BẰNG VIDEO AI. Kiểm tra đường dẫn hiện tại, không giả định nó vẫn đúng chỉ vì prompt nói vậy.
+
+Phạm vi cần thực hiện:
+1. [hành vi trước → sau].
+2. [hành vi trước → sau].
+3. [điều kiện lỗi/empty/loading/recovery liên quan].
+
+File/luồng cần đọc trước: [các đường dẫn lấy từ source đã đọc; chỉ là điểm bắt đầu, Codex tự xác minh phụ thuộc].
+Ngoài phạm vi: [các thay đổi không cần cho mục tiêu này].
+
+Giữ dữ liệu đang hoạt động, SQLite, phiên đăng nhập, proxy, media gốc, phiên bản, file xuất và receipt tác vụ. Không gộp trạng thái hoặc thay workflow kinh doanh chỉ để test dễ pass. Giữ theme/font/layout trừ phần được yêu cầu cụ thể. Không tự tăng tài khoản, reset quota, đăng công khai, bật checkout hay gọi dịch vụ phát sinh chi phí ngoài phạm vi đã được duyệt.
+
+Tự quyết chi tiết kỹ thuật thông thường và sửa lỗi phát sinh do thay đổi của mình. Nếu môi trường thiếu tài khoản/quyền/GUI hoặc quyết định kinh doanh, ghi rõ blocker và tiếp tục phần độc lập. Không retry vô hạn; không đánh dấu thành công từ mock, URL hoặc phiên đăng nhập.
+
+Tiêu chí nghiệm thu:
+- [kịch bản thao tác và kết quả mong đợi].
+- [dữ liệu trước/sau hoặc tính idempotent cần giữ].
+- [cửa sổ rộng/nhỏ, tiếng Việt, bàn phím nếu có UI].
+- [lỗi, restart hoặc đối soát nếu liên quan worker].
+
+Chạy kiểm tra phù hợp, mở app và kiểm phần đã sửa nếu môi trường cho phép. Tách rõ test giả lập và bằng chứng chạy thật. Với bước cần Muse, tuân thủ tối đa 3 lượt/profile/đợt và không tự gửi lại tác vụ có kết quả chưa rõ. Không hạ tiêu chuẩn test hoặc đụng dữ liệu thật chỉ để có ảnh nghiệm thu.
+
+Lưu checkpoint trước/sau với source thay đổi, cách khôi phục, kết quả kiểm tra và việc chưa xong. Báo cáo cuối gồm: đã sửa gì, bằng chứng, test đạt/lỗi, phần chưa kiểm chứng, cách mở app và bước tiếp theo. Xuất thêm bản tóm tắt ngắn để tôi đưa lại cho ChatGPT cập nhật bối cảnh.

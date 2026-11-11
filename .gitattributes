@@ -1,0 +1,3 @@
+# Preserve the installed Windows source, launcher encodings and line endings.
+# Git can still show text diffs; only automatic newline conversion is disabled.
+* -text

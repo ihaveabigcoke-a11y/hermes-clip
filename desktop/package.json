@@ -1,0 +1,54 @@
+{
+  "name": "product-lab-desktop",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "main": "src/main.mjs",
+  "description": "Hermes Clip · tạo ảnh và video với Muse",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.mjs",
+    "browser:install": "playwright install chromium",
+    "dist:win": "electron-builder --win nsis --x64",
+    "start:hosted": "electron . --hosted",
+    "local:build": "node ../scripts/build-local.mjs",
+    "test:local": "node --test test/local.test.mjs"
+  },
+  "dependencies": {
+    "playwright": "1.64.1",
+    "zod": "3.25.76",
+    "proxy-chain": "3.0.1"
+  },
+  "devDependencies": {
+    "electron": "45.2.2",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "com.productlab.chiduc",
+    "productName": "Hermes Clip",
+    "asar": false,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/**/*",
+      "package.json",
+      "node_modules/**/*",
+      "integrations-lock.json",
+      "SETUP-INTEGRATIONS.ps1",
+      "integrations-requirements.txt",
+      "local/**/*",
+      "local-dist/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
