@@ -1,5 +1,9 @@
 # Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
 
+## Cập nhật source đêm T12 — phân tích video mẫu và tham chiếu nháp
+
+Clone `night-20261111` đã có luồng FFmpeg local từ MP4 Thư viện/file chọn: duration, resolution/tỷ lệ, cuts ngưỡng 0,3, frame mỗi 0,8 giây, contact sheet JPEG và `structure.json` có confinement/checksum. Khối Công thức video cho xem/điền chữ rồi lưu `reference_video_draft` riêng qua API có CAS, chưa sửa công thức chính. Prompt Muse chỉ tạo chuỗi theo taxonomy. YouTube có capability gate/help và adapter tải/subtitles, nhưng clone thiếu Agent Reach/yt-dlp nên nút hiện chưa hỗ trợ; chỉ kiểm argv bằng fake runner, không gọi mạng. Domain 121/121, API 14/14, desktop 212 đạt/1 skip OpenMontage, typecheck và build output riêng đạt. Chưa triển khai bản cài hoặc kiểm GUI/file/dịch vụ thật. Xem [checkpoint T12](T12-REFERENCE-VIDEO.md) cho hợp đồng, bằng chứng, blocker và cách chạy tiếp.
+
 ## Cập nhật source đêm T06 — kịch bản công thức và hai mở đầu A/B
 
 Clone `night-20261111` đã nối thư viện T05 (gồm phiên bản công thức người dùng lưu) vào **Tạo nội dung → Mẫu prompt**. Sinh cảnh nháp tiếng Anh 9:16 tổng 10–18 giây, overlay một dòng và CTA keyword; lưu hai hook dùng chung body/CTA, không tự duyệt hoặc gửi Muse. Overlay/CTA optional; giữ revision, snapshot và chặn xuất khi chưa chọn đủ take đã duyệt. Thêm cảnh báo hook thiếu chữ, testimonial và hiệu ứng ngoài invariants/allowedClaims. Domain 117/117, API 13/13, desktop 197 đạt/1 skip OpenMontage, TypeScript và build output riêng đạt. Chưa triển khai bản cài/kiểm GUI hay dịch vụ thật; chưa tự render overlay. Xem [checkpoint T06](T06-FORMULA-STORYBOARD.md) cho hợp đồng, test, giới hạn và cách chạy tiếp. Ghi chú T05 “chưa tự áp công thức vào kịch bản” mô tả trạng thái trước T06.

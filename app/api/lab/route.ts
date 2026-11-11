@@ -13,6 +13,7 @@ import {
 import { kinds, productGate, type Kind } from "@/lib/lab/domain";
 import { researchProductId } from "@/lib/lab/operations";
 import { viralFormulaRecordId } from "@/lib/lab/viral-formulas";
+import { referenceDraftRecordId } from "@/lib/lab/viral-reference";
 export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   try {
@@ -60,6 +61,7 @@ export async function POST(request: Request) {
         "social_metric",
         "landing_page",
         "viral_formula",
+        "reference_video_draft",
       ].includes(b.kind)
     )
       throw new ApiError(400, "Loại bản ghi không được hỗ trợ.");
@@ -67,6 +69,7 @@ export async function POST(request: Request) {
     let d = parsed(kind, b.data);
     let id = b.id;
     const revision = b.revision ?? 0;
+    if (kind === "reference_video_draft") id = referenceDraftRecordId({id:d.id});
     if (kind === "viral_formula") {
       // Append-only versions. Canonical IDs + save's CAS prevent concurrent
       // requests or retries from overwriting an existing formula version.

@@ -6,12 +6,31 @@ import * as production from '../app/api/production/route.ts';
 import {emptyProduct,productFromCandidate,unitMargin,productMarginLabel} from '../lib/lab/domain.ts';
 import {researchProductId} from '../lib/lab/operations.ts';
 import {viralFormulas, viralFormulaRecordId} from '../lib/lab/viral-formulas.ts';
+import {draftReferenceVideo, referenceDraftRecordId} from '../lib/lab/viral-reference.ts';
 
 async function save(kind, id, data, revision = 0, who = 'ops-owner', action = 'save') {
   const request = new Request('https://qa.invalid/api/lab', {method: 'POST', headers: {'Content-Type': 'application/json', Origin: 'https://qa.invalid', 'oai-authenticated-user-id': who, 'oai-authenticated-user-email': who+'@example.invalid'}, body: JSON.stringify({kind, id, data, revision, action})});
   const response = await call(lab.POST, request);
   return {status: response.status, ...await response.json()};
 }
+
+test('reference draft API validates taxonomy, preserves unknowns, isolates owners and enforces CAS without changing formulas', async()=>{
+  const draft=draftReferenceVideo({id:'sample',product:'Fixture',structure:{durationSec:6,cuts:[2,4],cutCount:2,contactSheetPath:'fixture/sheet.jpg',frames:[{t:0,path:'fixture/frame.jpg'}]}});
+  const read=async who=>(await (await call(lab.GET,new Request('https://qa.invalid/api/lab',{headers:{'oai-authenticated-user-id':who,'oai-authenticated-user-email':who+'@example.invalid'}}))).json()).records;
+  const before=(await read('reference-owner')).filter(r=>r.kind==='viral_formula');
+  const first=await save('reference_video_draft','ignored',draft,0,'reference-owner');
+  assert.equal(first.status,200);assert.equal(first.record.id,referenceDraftRecordId(draft));assert.deepEqual(first.record.data,draft);
+  const edited=await save('reference_video_draft','ignored',{...draft,hookText:'Observed English text'},1,'reference-owner');
+  assert.equal(edited.status,200);assert.equal(edited.record.revision,2);assert.equal(edited.record.data.hookType,null);
+  assert.equal((await save('reference_video_draft','ignored',draft,1,'reference-owner')).status,409);
+  assert.deepEqual((await read('reference-owner')).find(r=>r.id===first.record.id),edited.record);
+  assert.deepEqual((await read('reference-owner')).filter(r=>r.kind==='viral_formula'),before);
+  assert.ok(!(await read('reference-other')).some(r=>r.id===first.record.id));
+  assert.equal((await save('reference_video_draft','ignored',draft,0,'reference-other')).status,200);
+  for(const patch of [{status:'approved'},{hookType:'made_up'},{ctaType:'checkout'},{durationSec:5},{productTraits:['made_up']}])assert.equal((await save('reference_video_draft','ignored',{...draft,...patch},2,'reference-owner')).status,422);
+  const legacy=await save('reference_video_draft','ignored',{id:'legacy',product:'Old reference'},0,'reference-owner');
+  assert.equal(legacy.status,200);assert.equal(legacy.record.data.durationSec,null);assert.equal(legacy.record.data.cuts,null);assert.equal(legacy.record.data.structure,null);
+});
 
 test('formula API appends immutable versions with canonical IDs and owner isolation', async () => {
   const formula = {...viralFormulas[0], name: 'User formula', version: 2};

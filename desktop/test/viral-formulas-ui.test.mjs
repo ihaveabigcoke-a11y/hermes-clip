@@ -29,7 +29,21 @@ const {default: ViralFormulas} = await import('../../components/lab/viral-formul
 const {viralFormulas, viralFormulaRecordId} = await import('../../lib/lab/viral-formulas.ts');
 const {FormulaDraftPanel} = await import('../../components/lab/production-intelligence.tsx');
 const {newProduction} = await import('../../lib/lab/production.ts');
+const {ReferenceDraftPreview} = await import('../../components/lab/reference-video.tsx');
+const {draftReferenceVideo} = await import('../../lib/lab/viral-reference.ts');
 const render = records => renderToStaticMarkup(React.createElement(ViralFormulas, {records}));
+
+test('formula library exposes analysis only with a save handler and renders a separate draft with bounded preview',()=>{
+  const draft=draftReferenceVideo({id:'sample',product:'<script>sample</script>',structure:{durationSec:6,width:90,height:160,aspectRatio:'9:16',cuts:[2,4],cutCount:2,contactSheetPath:'private/local/sheet.jpg',frames:[{t:0,path:'private/local/0.jpg'}]}});
+  let saves=0;
+  const html=renderToStaticMarkup(React.createElement(ViralFormulas,{records:[{id:'reference_video_draft_sample',kind:'reference_video_draft',data:draft}],disabled:true,onSaveDraft:async()=>{saves++;}}));
+  assert.match(html,/Phân tích video mẫu/);assert.match(html,/<button[^>]*disabled/);assert.match(html,/Tham chiếu nháp đã lưu · 1/);
+  assert.match(html,/&lt;script&gt;sample&lt;\/script&gt;/);assert.doesNotMatch(html,/<script>/);assert.doesNotMatch(html,/private\/local/);
+  assert.match(html,/6 giây · 2 lần cắt/);assert.match(html,/90 × 160 · 9:16/);assert.match(html,/Chưa có nhãn chữ/);
+  assert.equal(saves,0);
+  const preview=renderToStaticMarkup(React.createElement(ReferenceDraftPreview,{draft,contactUrl:'blob:verified-fixture'}));
+  assert.match(preview,/<img[^>]*src="blob:verified-fixture"/);assert.match(preview,/max-width:100%/);
+});
 test('formula composer includes saved versions, keyword entry and draft-only controls without provider calls',()=>{
   const custom={...viralFormulas[0],version:3,name:'Saved English formula'};
   const extra={...custom,id:'user_formula',name:'User formula'};

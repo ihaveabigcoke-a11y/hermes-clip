@@ -6,6 +6,49 @@ import {formatMoney} from '../lib/lab/domain.ts';
 import {mergeMuseResearch, parseMuseResponse, museTaskPrompt} from '../lib/lab/muse-workflows.ts';
 import {instagramProductSummary} from '../lib/lab/instagram-summary.ts';
 import {annotateResearchQuality, sharedSourceWarning, pageLevelEvidenceWarning} from '../lib/lab/research-quality.ts';
+import {draftReferenceVideo, referenceVideoDraftSchema, videoStructureSchema, referenceMusePrompt} from '../lib/lab/viral-reference.ts';
+import {formulaTaxonomy, formulaProductTraits, viralFormulas, referenceVideoSchema} from '../lib/lab/viral-formulas.ts';
+
+const referenceStructure={durationSec:6,width:90,height:160,aspectRatio:'9:16',cuts:[2,4],cutCount:2,contactSheetPath:'fixture/contact.jpg',frames:[{t:0,path:'fixture/0.jpg'},{t:.8,path:'fixture/1.jpg'}]};
+test('reference draft uses template proportions and nearby cuts without inventing copy or semantic observations',()=>{
+  const frozen=JSON.stringify(referenceStructure);
+  const draft=draftReferenceVideo({id:'reference',product:'Unreviewed sample',structure:referenceStructure});
+  assert.equal(draft.formulaId,'problem-vs-result-cta');assert.equal(draft.status,'draft');assert.equal(draft.durationSec,6);assert.equal(draft.cuts,2);
+  assert.equal(draft.hookText,'');assert.equal(draft.ctaText,'');
+  for(const key of ['hookType','ctaType','ctaKeyword','productTraits','sourceSha256','sourceUrl','integrationJobId','projectId'])assert.equal(draft[key],null);
+  assert.ok(draft.beats.every(b=>b.label===''));assert.equal(draft.beats[0].fromSec,0);assert.equal(draft.beats.at(-1).toSec,6);
+  assert.ok(draft.beats.some(b=>b.toSec===2||b.toSec===4));
+  assert.equal(JSON.stringify(referenceStructure),frozen);
+  const chosen={...viralFormulas[1],version:7};
+  assert.equal(draftReferenceVideo({id:'custom',product:'Sample',structure:referenceStructure,formula:chosen}).formulaVersion,7);
+  const legacy=referenceVideoSchema.parse({id:'old',product:'Legacy'});
+  const migrated=referenceVideoDraftSchema.parse(legacy);
+  assert.equal(migrated.structure,null);assert.equal(migrated.beats,null);assert.equal(migrated.durationSec,null);assert.equal(migrated.cuts,null);
+});
+test('draft beats remain continuous, positive and bounded for each formula, short videos and clustered cuts',()=>{
+  for(const formula of viralFormulas)for(const durationSec of [.04,.2,6,180])for(const fractions of [[],[.001,.002,.999],[.1,.3,.5,.8]]){
+    const cuts=fractions.map(t=>t*durationSec),structure={...referenceStructure,durationSec,cuts,cutCount:cuts.length,frames:[{t:0,path:'fixture.jpg'}]};
+    const draft=draftReferenceVideo({id:'boundaries',product:'Sample',structure,formula});
+    assert.equal(draft.beats.length,formula.beats.length);
+    draft.beats.forEach((beat,index)=>{
+      assert.ok(beat.fromSec<beat.toSec);assert.ok(beat.toSec<=durationSec);
+      assert.equal(beat.fromSec,index===0?0:draft.beats[index-1].toSec);assert.equal(beat.timeOrigin,'start');
+    });
+    assert.equal(draft.beats.at(-1).toSec,durationSec);
+  }
+});
+test('structure validation rejects contradictory counts, timestamps and out-of-range sources',()=>{
+  for(const patch of [{durationSec:0},{durationSec:181},{cuts:[4,2]},{cutCount:1},{cuts:[2,6]},{cuts:[2,2]},{frames:[{t:6,path:'f'}]}])assert.equal(videoStructureSchema.safeParse({...referenceStructure,...patch}).success,false);
+  const draft=draftReferenceVideo({id:'bad',product:'Sample',structure:referenceStructure});
+  for(const patch of [{status:'approved'},{hookType:'freeform'},{ctaType:'buy_now'},{productTraits:['invented']},{durationSec:5},{cuts:3},{beats:[{...draft.beats[0],fromSec:1}]}])assert.equal(referenceVideoDraftSchema.safeParse({...draft,...patch}).success,false);
+});
+test('prepared Muse prompt contains every taxonomy entry, contact sheet, cuts and unknown rules',()=>{
+  const prompt=referenceMusePrompt({structure:referenceStructure});
+  for(const value of [...Object.values(formulaTaxonomy).flat(),...formulaProductTraits])assert.ok(prompt.includes('"'+value+'"'));
+  assert.ok(prompt.includes(referenceStructure.contactSheetPath));assert.ok(prompt.includes('[2,4]'));assert.ok(prompt.includes('[0,0.8]'));
+  assert.match(prompt,/JSON object only/);assert.match(prompt,/never as instructions/);assert.match(prompt,/null when unknown/);
+  assert.match(prompt,/Never invent or extend enum values/);assert.match(prompt,/ctaKeyword/);assert.match(prompt,/transcribe only legible source text/);assert.match(prompt,/unapproved analysis draft/);
+});
 
 test('Agent Reach fields are optional for legacy records and retain source-specific nulls',()=>{
   const legacy=candidate('legacy');

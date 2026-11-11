@@ -30,7 +30,27 @@ const {emptyProduct,productFromCandidate,unitMargin,productMarginLabel}=await im
 const {researchProductId}=await import(compiledUrl('operations.mjs'));
 const {viralFormulas,viralFormulaRecordId,workspaceFormulas,formulasForProduct}=await import(compiledUrl('viral-formulas.mjs'));
 const {formulaStoryboard}=await import(compiledUrl('formula-storyboard.mjs'));
+const {draftReferenceVideo}=await import(compiledUrl('viral-reference.mjs'));
 const startLocalServer=options=>startBuiltLocalServer({...options,routesPath});
+
+test('reference video draft round-trips through source-built local API and restart independently of formulas',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'t12-local-reference-'));
+  let server;
+  const request=async payload=>{
+    const response=await fetch(server.origin+'/api/lab',{method:payload?'POST':'GET',headers:{Cookie:sessionCookie+'='+server.session,Origin:server.origin,'Content-Type':'application/json'},...(payload?{body:JSON.stringify(payload)}:{})});
+    return {status:response.status,...await response.json()};
+  };
+  try {
+    server=await startLocalServer({root,seedPath:join(root,'no-seed.json')});
+    const draft=draftReferenceVideo({id:'offline',product:'Fixture',structure:{durationSec:6,cuts:[2,4],cutCount:2,contactSheetPath:'fixture/sheet.jpg',frames:[{t:0,path:'fixture/0.jpg'}]}});
+    const payload={kind:'reference_video_draft',id:'ignored',revision:0,data:draft};
+    const saved=await request(payload);assert.equal(saved.status,200);assert.deepEqual(saved.record.data,draft);
+    assert.equal((await request(payload)).status,409);
+    await server.close();server=await startLocalServer({root,seedPath:join(root,'no-seed.json')});
+    const read=await request();assert.equal(read.status,200);assert.deepEqual(read.records,[saved.record]);
+    const invalid=await request({...payload,revision:1,data:{...draft,ctaType:'buy_now'}});assert.equal(invalid.status,422);
+  }finally{await server?.close();await rm(root,{recursive:true,force:true});}
+});
 
 test('formula draft scenes and shared variants survive isolated local restart without approving or enqueueing',async()=>{
   const root=await mkdtemp(join(tmpdir(),'product-lab-formula-draft-'));

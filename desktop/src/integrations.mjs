@@ -6,6 +6,9 @@ import {join,dirname,isAbsolute,relative} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {z} from 'zod';
 import {validateMedia,toolchain} from './media.mjs';
+import {analyzeLocalStructure,checkedBytes,verifyJpeg} from './reference-structure.mjs';
+import {shortsUrl,youtubeCapability,downloadYoutubeReference} from './reference-youtube.mjs';
+import {runReferenceCommand} from './reference-process.mjs';
 
 const here=dirname(fileURLToPath(import.meta.url));
 const lock=JSON.parse(await readFile(join(here,'../integrations-lock.json'),'utf8'));
@@ -35,7 +38,7 @@ export function runJson(command,args,{input,timeout=60000,cwd,format='json',maxB
 }
 
 export class Integrations {
- constructor(store,root,run=runJson){this.store=store;this.root=root;this.run=run;this.busy=false;this.pending=[];this.current=null;this.stopped=false;const jobs=this.jobs();if(jobs.some(j=>['queued','running'].includes(j.state)))this.store.set('integration-jobs',jobs.map(j=>['queued','running'].includes(j.state)?{...j,state:'interrupted',finishedAt:Date.now(),error:'Ứng dụng đã dừng giữa tác vụ. Không tự chạy lại; file cũ được giữ.'}:j));}
+ constructor(store,root,run=runJson,referenceRun=runReferenceCommand){this.store=store;this.root=root;this.run=run;this.referenceRun=referenceRun;this.busy=false;this.pending=[];this.current=null;this.stopped=false;const jobs=this.jobs();if(jobs.some(j=>['queued','running'].includes(j.state)))this.store.set('integration-jobs',jobs.map(j=>['queued','running'].includes(j.state)?{...j,state:'interrupted',finishedAt:Date.now(),error:'Ứng dụng đã dừng giữa tác vụ. Không tự chạy lại; file cũ được giữ.'}:j));}
  config(){return this.store.get('integrations',null);}
  jobs(){return this.store.get('integration-jobs',[]);}
  status(){return {config:this.config(),health:this.store.get('integration-health',null),autoSourceCheck:this.autoSourceCheck(),jobs:this.jobs().map(({frames,...j})=>({...j,frameCount:frames?.length??0})),busy:this.busy,lock};}
@@ -131,6 +134,41 @@ export class Integrations {
  await validateMedia(framePath,{mediaType:'image',ratio:`${r.result.source.width}:${r.result.source.height}`});
  return {...frame,path:framePath};}));await writeFile(join(dir,'reference-analysis.json'),JSON.stringify(r.result,null,2));return {path:join(dir,'reference-analysis.json'),result:{...r.result,frames:undefined},frames};});}
  async compose(input){const d=composeInput.parse(input);return this.task('compose',d.projectId,{variantId:d.variantId,ratio:d.ratio,sources:d.clips.map(({bytes,...c})=>c)},async dir=>{await toolchain();const clips=[];for(const [i,c] of d.clips.entries()){const path=join(dir,`${i}.mp4`);await this.writeSource(c,path);await validateMedia(path,{mediaType:'video',ratio:d.ratio,duration:c.duration});clips.push({path,duration:c.duration});}const [rw,rh]=d.ratio.split(':').map(Number),width=d.ratio==='9:16'?720:d.ratio==='16:9'?1280:960,height=Math.round(width*rh/rw/2)*2;const r=await this.montage('compose',{outputDir:dir,size:[width,height],clips});const outputPath=await this.confinedPath(dir,join(dir,'output.mp4')),report=await validateMedia(outputPath,{mediaType:'video',ratio:d.ratio,duration:clips.reduce((n,c)=>n+c.duration,0)});return {path:outputPath,result:r.result,output:{path:outputPath,name:`openmontage_${jobSafe(d.variantId)}.mp4`,type:'video/mp4',...report}};});}
+ async analyzeStructure(input){
+  const d=referenceInput.parse(input);
+  return this.task('reference-structure',d.projectId,{assetId:d.assetId,name:d.name,sha256:d.sha256},async dir=>{
+   const path=join(dir,'source.mp4');await this.writeSource(d,path);
+   return this.structureResult(dir,path,d.sha256);
+  });
+ }
+ async structureResult(dir,path,checksum){
+  const {result,...receipt}=await analyzeLocalStructure(dir,path,checksum);
+  return {...receipt,sourceSha256:checksum,result:{durationSec:result.durationSec,cutCount:result.cutCount,width:result.width,height:result.height,aspectRatio:result.aspectRatio}};
+ }
+ async structure(input){
+  const d=z.object({id,projectId:id}).parse(input),job=this.job(d.id);
+  if(job.kind!=='reference-structure'||job.state!=='done'||job.projectId!==d.projectId)throw Error('Chưa có phân tích video của dự án này.');
+  const dir=join(this.root,'integrations',job.id);
+  const structure=JSON.parse((await checkedBytes(dir,job.path,job.structureSha256,1024*1024)).toString('utf8'));
+  // Receipts never expose arbitrary disk paths as readable IPC arguments.
+  for(const frame of structure.frames)await checkedBytes(dir,frame.path,frame.sha256,5*1024*1024);
+  await verifyJpeg(dir,structure.contactSheetPath);
+  const bytes=await checkedBytes(dir,structure.contactSheetPath,structure.contactSheetSha256,5*1024*1024);
+  return {jobId:job.id,projectId:job.projectId,name:job.request.name,sourceSha256:job.sourceSha256,sourceUrl:job.sourceUrl??null,subtitles:job.subtitles??[],structure,contactSheet:{bytes:new Uint8Array(bytes),type:'image/jpeg'}};
+ }
+ async youtubeStatus(){
+  if(this.busy)throw Error('Một tác vụ tích hợp đang chạy; chờ kết quả trước.');this.busy=true;
+  try{const capability=await youtubeCapability(this.referenceRun,this.config(),this.invokeReach.bind(this));return {supported:capability.supported,error:capability.error};}
+  finally{this.busy=false;this.drain();}
+ }
+ async analyzeYoutube(input){
+  const d=z.object({projectId:id,url:z.string().max(2048).transform(shortsUrl)}).parse(input);
+  return this.task('reference-structure',d.projectId,{name:'YouTube Shorts',sourceUrl:d.url},async dir=>{
+   const capability=await youtubeCapability(this.referenceRun,this.config(),this.invokeReach.bind(this));
+   const downloaded=await downloadYoutubeReference({run:this.referenceRun,reach:this.reach.bind(this),capability,url:d.url,directory:dir});
+   return {...await this.structureResult(dir,downloaded.path,downloaded.sha256),sourceUrl:downloaded.sourceUrl,subtitles:downloaded.subtitles};
+  });
+ }
  async writeSource(value,path){if(createHash('sha256').update(value.bytes).digest('hex')!==value.sha256)throw Error('Nguồn sai checksum; chưa gọi công cụ.');await putImmutableMedia({root:this.root,path,bytes:value.bytes,candidates:this.store.jobs().filter(j=>j.output?.sha256===value.sha256).map(j=>j.output.path),policy:storagePolicy(this.store)});}
  job(idValue){const j=this.jobs().find(j=>j.id===id.parse(idValue));if(!j)throw Error('Không tìm thấy tác vụ tích hợp.');return j;}
  async frames(idValue){const j=this.job(idValue);if(j.kind!=='reference'||j.state!=='done')throw Error('Chưa có khung hình để xem.');return Promise.all(j.frames.map(async f=>{const p=await realpath(f.path),root=await realpath(join(this.root,'integrations',j.id));if(relative(root,p).startsWith('..')||isAbsolute(relative(root,p)))throw Error('Khung hình nằm ngoài tác vụ.');if((await stat(p)).size>5*1024*1024)throw Error('Khung hình quá lớn.');return {timestamp:f.timestamp_seconds,path:p,bytes:new Uint8Array(await readFile(p)),type:'image/jpeg'};}));}
