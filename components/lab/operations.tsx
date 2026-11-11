@@ -168,13 +168,14 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
     if (!chosen) return;
     const id = plan?.id ?? newId();
     show({title: plan ? "Sửa kế hoạch nội dung" : "Thêm kế hoạch nội dung", kind: "content_plan",
-      initial: plan?.data ?? {name: "", productId: chosen.id, accountId: accounts.find(account => !account.data.archived)?.id ?? "", productionId: "", hook: "", script: "", caption: "", plannedDate: "", status: "draft", postUrl: "", notes: "", ...draft},
+      initial: plan ? {...plan.data, aiLabel: plan.data.aiLabel ?? 'required'} : {name: "", productId: chosen.id, accountId: accounts.find(account => !account.data.archived)?.id ?? "", productionId: "", hook: "", script: "", caption: "", plannedDate: "", status: "draft", postUrl: "", notes: "", aiLabel: 'required', ...draft},
       fields: [{name: "name", label: "Tên nội dung"},
         {name: "accountId", label: "Tài khoản", type: "select", options: [{value: "", label: "Gắn tài khoản sau"}, ...options(accounts.filter(account => !account.data.archived))]},
         {name: "productionId", label: "Dự án video", type: "select", options: [{value: "", label: "Chưa gắn dự án"}, ...options(records.filter(record => record.kind === "production" && record.data.productId === chosen.id))]},
         {name: "plannedDate", label: "Ngày dự kiến", placeholder: "YYYY-MM-DD", help: "Lưu lịch dự kiến trong app."},
         {name: "hook", label: "Mở đầu bằng tiếng Anh", type: "textarea", full: true}, {name: "script", label: "Khung kịch bản tiếng Anh", type: "textarea", full: true},
         {name: "caption", label: "Chú thích tiếng Anh", type: "textarea", full: true},
+        {name: "aiLabel", label: "Nhãn AI khi đăng", type: "select", options: [{value: "required", label: "Bắt buộc bật nhãn AI"}, {value: "off", label: "Không kiểm tra nhãn AI"}], help: "Nội dung Muse mặc định bắt buộc. Chỉ tắt khi nội dung không cần nhãn; chú thích không thay thế nhãn Instagram.", full: true},
         ...(plan?.data.status === 'published_browser' ? [] : [{name: "status", label: "Trạng thái", type: "select" as const, options: [{value: "draft", label: "Nháp"}, {value: "planned", label: "Đã lên kế hoạch"}, {value: "published_manual", label: "Đã đăng · ghi nhận thủ công"}]}]),
         {name: "postUrl", label: "URL bài Instagram", type: "url"}, {name: "notes", label: "Ghi chú", type: "textarea", full: true}],
       save: value => save("content_plan", id, value, plan?.revision ?? 0)});

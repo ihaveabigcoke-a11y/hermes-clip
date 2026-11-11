@@ -104,7 +104,9 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
       {job.state === 'waiting_login' && <Button disabled={busy || demo} onClick={() => act('instagramOpen', {id: job.snapshot.accountId})}>Đăng nhập để tiếp tục</Button>}
       {['queued', 'waiting_login'].includes(job.state) && <Button tone="neutral" disabled={busy || demo} onClick={() => act('instagramCancel', {id: job.id})}>Hủy lượt đăng</Button>}
       {job.state === 'failed' && <Button tone="neutral" disabled={busy || demo} onClick={() => act('instagramRetry', {id: job.id})}>Thử lại lượt đăng</Button>}
-      {job.state === 'needs_attention' && <Button disabled={busy || demo} onClick={() => act('instagramReconcile', {id: job.id})}>Kiểm tra kết quả</Button>}
+      {job.state === 'needs_attention' && (job.attentionReason === 'ai_label'
+        ? <Button disabled={busy || demo} onClick={() => act('instagramOpen', {id: job.snapshot.accountId})}>Mở trình duyệt kiểm tra nhãn AI</Button>
+        : <Button disabled={busy || demo} onClick={() => act('instagramReconcile', {id: job.id})}>Kiểm tra kết quả</Button>)}
       {job.state === 'published' && job.syncError && <Button tone="neutral" disabled={busy || demo} onClick={() => act('instagramReconcile', {id: job.id})}>Đồng bộ bài đã đăng</Button>}
       {job.postUrl && <a className="lab-button neutral" href={job.postUrl} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Xem trên Instagram</a>}
     </div>;
@@ -168,6 +170,7 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
               {!account && <option value="">Chọn tài khoản</option>}{activeAccounts.map(account => <option key={account.id} value={account.id}>{account.data.name}{live.status?.profiles.find(profile => profile.id === account.id)?.handle ? ' · @' + live.status.profiles.find(profile => profile.id === account.id)!.handle : ''}</option>)}
             </select></label>
             <div><h3>{published ? 'Chú thích đã đăng' : 'Chú thích sẽ đăng'}</h3><p className="muse-chat-text instagram-caption">{fixedSnapshot?.caption ?? (plan.data.caption || 'Thêm chú thích trong Sửa nội dung.')}</p></div>
+            {!published && <small>Nhãn AI: {(fixedSnapshot ? fixedSnapshot.aiLabel : plan.data.aiLabel) === 'off' ? 'Không kiểm tra' : 'Bắt buộc bật trước Share'}</small>}
             {chosenMedia && <small>{chosenMedia.scene.ratio} · {chosenMedia.take.metadata.duration}s · {reviewLabels[chosenMedia.take.review]}</small>}
             {!published && !pending && <><p>Video và chú thích bên trên sẽ được đăng lên tài khoản đã chọn.</p>
               <Button disabled={!canPublish} onClick={publish}><Play size={16}/>{profile?.session === 'signed_in' ? 'Đăng video' : 'Đăng sau khi đăng nhập'}</Button></>}

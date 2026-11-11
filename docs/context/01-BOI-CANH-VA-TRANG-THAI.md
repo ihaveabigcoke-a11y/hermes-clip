@@ -1,5 +1,9 @@
 # Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
 
+## Cập nhật source đêm T09 — nhãn AI trước Share
+
+Clone `night-20261111` đã thêm `content_plan.aiLabel` optional/null, mặc định hiệu lực `required`, lưu snapshot và kiểm thay đổi cấu hình. Adapter bật nhãn ở màn caption sau chọn video, đọc lại trước Share; thiếu/không xác nhận được nhãn thì giữ `needs_attention` với “Cần đối soát/thao tác tay”, không gửi lại. `off` giữ hành vi đăng cũ. Domain 136/136, API 16/16, desktop 242 đạt/1 skip OpenMontage, typecheck và build output riêng đạt. DOM fixture dùng HTML tĩnh, chặn mạng, không có tài khoản/file video thật. **CHƯA kiểm trên Instagram thật**, chưa triển khai bản cài; job chặn chưa có luồng tự tiếp tục. Xem [checkpoint T09](T09-INSTAGRAM-AI-LABEL.md) và [selector/cách kiểm draft sáng mai, không Share](../INSTAGRAM-AI-LABEL.md).
+
 ## Cập nhật source đêm T08 — sửa UI nhỏ
 
 Clone `night-20261111` đã chặn lưu prompt rỗng, mở rộng tên cảnh hai dòng, đưa Duyệt/Từ chối lên đầu preview, ẩn lời mời mẫu khi có sản phẩm, thu gọn màn Sản phẩm và tăng sidebar 232 px. Giữ Người mẫu vì chế độ dùng tham chiếu person + product; thẻ dùng tiến độ T03, giữ null và từng tiền tệ. Domain 135/135, API 15/15, desktop 218 đạt/1 skip OpenMontage, typecheck và build output riêng đạt. UI offline qua 12 nhóm kiểm tra với ảnh 1920/1536/1366/800/390 px; chưa triển khai hoặc kiểm bản cài/dịch vụ thật. Xem [checkpoint T08](T08-SMALL-UI.md) và `ops/night/out/T08-*`.

@@ -129,6 +129,19 @@ test('content draft without Instagram saves and replays while scheduling and for
   assert.equal((await save('content_plan', 'account_free', {...data, caption:'Updated draft'}, 1)).status, 200);
   assert.equal((await save('content_plan', 'account_free', data, 1)).status, 409);
 });
+
+test('content AI label round-trips optional/null and explicit modes through the API with revision checks', async () => {
+  await save('product', 'ai_label_product', {...emptyProduct, name:'AI label fixture'});
+  let revision=0;
+  for(const aiLabel of [undefined,null,'required','off']){
+    const data={name:'AI label draft',productId:'ai_label_product',caption:'English caption',...(aiLabel===undefined?{}:{aiLabel})};
+    const result=await save('content_plan','ai_label_plan',data,revision);
+    assert.equal(result.status,200); assert.equal(result.record.data.aiLabel,aiLabel);
+    revision=result.record.revision;
+  }
+  assert.equal((await save('content_plan','ai_label_plan',{name:'AI label draft',productId:'ai_label_product',aiLabel:false},revision)).status,422);
+  assert.equal((await save('content_plan','ai_label_plan',{name:'AI label draft',productId:'ai_label_product',aiLabel:'required'},revision-1)).status,409);
+});
 test('research selection and product promotion preserve provenance, ownership, CAS and retries', async () => {
   const candidates = Array.from({length: 4}, (_, index) => ({id: 'candidate'+index, name: 'Product '+index, supplierUrl: 'https://example.com/item/'+index, evidenceNotes: 'Read supplied source'}));
   let response = await save('research_batch', 'batch', {name: 'Sourced shortlist', candidates});

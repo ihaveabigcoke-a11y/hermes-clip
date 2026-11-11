@@ -9,7 +9,8 @@ export type InstagramProfile = {
 };
 export type InstagramJob = {
   id: string; state: string; createdAt: number; updatedAt: number; handle: string; postUrl: string; error: string; syncError: string;
-  snapshot: {planId: string; accountId: string; productId: string; assetId: string; caption: string; name: string};
+  snapshot: {planId: string; accountId: string; productId: string; assetId: string; caption: string; name: string; aiLabel?: 'required' | 'off' | null};
+  attentionReason?: 'ai_label' | null;
   history: {at: number; state: string; note: string}[];
 };
 export type InstagramMetricState = {planId:string;state:string;failures:number;lastAttemptAt:number|null;lastSuccessAt:number|null;nextAttemptAt:number|null;error:string};

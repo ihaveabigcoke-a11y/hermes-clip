@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {candidateSchema, candidateCurrency, landedCost, researchBatchSchema, socialMetricSchema, landingPageSchema, landingHtml, socialTotals} from '../lib/lab/operations.ts';
+import {candidateSchema, candidateCurrency, landedCost, researchBatchSchema, socialMetricSchema, landingPageSchema, landingHtml, socialTotals, contentPlanSchema} from '../lib/lab/operations.ts';
 import {formatMoney} from '../lib/lab/domain.ts';
 import {mergeMuseResearch, parseMuseResponse, museTaskPrompt} from '../lib/lab/muse-workflows.ts';
 import {instagramProductSummary,instagramAccountContentRows,visibleInstagramProducts} from '../lib/lab/instagram-summary.ts';
@@ -11,6 +11,13 @@ import {draftReferenceVideo, referenceVideoDraftSchema, videoStructureSchema, re
 import {formulaTaxonomy, formulaProductTraits, viralFormulas, referenceVideoSchema} from '../lib/lab/viral-formulas.ts';
 import {researchCoverage,hasIndividualListing,landedCostBadge,researchRisks,buildResearchQuery,defaultResearchCriteria,defaultResearchExclusions} from '../lib/lab/research-view.ts';
 import {planResearchSelection,saveResearchSelection} from '../lib/lab/research-selection.ts';
+
+test('content plan AI label preserves legacy records and accepts only optional/null, required or off',()=>{
+  const data={name:'Muse concept',productId:'product',caption:'AI-generated concept'};
+  assert.equal(contentPlanSchema.parse(data).aiLabel,undefined);
+  for(const aiLabel of [null,'required','off'])assert.equal(contentPlanSchema.parse({...data,aiLabel}).aiLabel,aiLabel);
+  for(const aiLabel of [false,0,'','optional'])assert.equal(contentPlanSchema.safeParse({...data,aiLabel}).success,false);
+});
 
 test('research coverage counts explicit zero but never missing costs, showroom or duplicate page metrics',()=>{
   const metric={label:'Reviews',value:20,unit:'reviews',market:'US',period:'At read time',sourceUrl:'https://example.test/review',observedAt:'2026-11-12T00:00:00Z'};

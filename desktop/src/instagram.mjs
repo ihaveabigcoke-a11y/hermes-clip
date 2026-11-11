@@ -188,8 +188,10 @@ export class InstagramPublisher {
     } catch (error) {
       const current = this.job(jobId);
       if (current.state !== 'cancelled' && current.state !== 'published') {
-        const uncertain = current.state === 'submitting' || current.state === 'needs_attention';
+        const aiLabelBlocked = error.code === 'INSTAGRAM_AI_LABEL_REQUIRED';
+        const uncertain = aiLabelBlocked || current.state === 'submitting' || current.state === 'needs_attention';
         this.update(jobId, {state: uncertain ? 'needs_attention' : 'failed',
+          ...(aiLabelBlocked ? {attentionReason: 'ai_label', aiLabelCheck: error.aiLabelCheck, submittingAt: null} : {}),
           error: /locator\.|page\.|browserType\.|Timeout/.test(error.message)
             ? 'Instagram chưa hoàn tất bước hiện tại. Mở trình duyệt để kiểm tra rồi dùng thao tác phù hợp trong app.' : error.message});
         if (page && !page.isClosed()) {
@@ -213,6 +215,9 @@ export class InstagramPublisher {
     const job = this.job(id.parse(jobId));
     if (job.state === 'published') {await this.workspace.syncPublished(job); this.update(jobId, {syncError: ''}); return this.publicJob(this.job(jobId));}
     if (job.state !== 'needs_attention') throw Error('Lượt này chưa cần đối soát sau khi chia sẻ.');
+    if (job.attentionReason === 'ai_label' && job.submittingAt == null) {
+      throw Error('Lượt này đã dừng trước Share vì nhãn AI. Cần đối soát/thao tác tay trên bản nháp; không có bài đã gửi để tự đối soát.');
+    }
     const accountId = job.snapshot.accountId;
     if (this.browsers.busy.has(accountId) || this.checks.has(accountId)) throw Error('Chờ thao tác của hồ sơ kết thúc.');
     this.browsers.busy.add(accountId);
