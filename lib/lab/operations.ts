@@ -11,6 +11,7 @@ export const sourceLink = z.string().trim().max(2048).refine(value => {
 const optionalLink = z.union([z.literal(""), sourceLink]).default("");
 const amount = z.number().finite().min(0).max(1e9).nullable().default(null);
 const count = z.number().int().min(0).max(1e12);
+export const candidateCurrencySchema = z.enum(["USD", "VND", "GBP", "EUR", "CNY"]);
 
 export const candidateSchema = z.object({
   id: identifier,
@@ -24,7 +25,10 @@ export const candidateSchema = z.object({
   cost: amount,
   shipping: amount,
   price: amount,
-  currency: z.enum(["USD", "VND", "GBP", "EUR"]).default("USD"),
+  currency: candidateCurrencySchema.default("USD"),
+  // Missing/null overrides inherit the shared currency used by legacy batches.
+  costCurrency: candidateCurrencySchema.nullable().optional(),
+  shippingCurrency: candidateCurrencySchema.nullable().optional(),
   imageUrl: optionalLink,
   imageSourceUrl: optionalLink,
   marketEvidence: z.array(z.object({
@@ -125,6 +129,24 @@ export const operationSchemas = {
 };
 export type ResearchBatch = z.infer<typeof researchBatchSchema>;
 export type Candidate = z.infer<typeof candidateSchema>;
+
+export function candidateCurrency(candidate: Pick<Candidate, "currency" | "costCurrency" | "shippingCurrency">, field: "cost" | "shipping" | "price") {
+  if (field === "cost") return candidate.costCurrency ?? candidate.currency;
+  if (field === "shipping") return candidate.shippingCurrency ?? candidate.currency;
+  return candidate.currency;
+}
+
+type LandedCost =
+  | {amount: number; currency: Candidate["currency"]; reason: null}
+  | {amount: null; currency: null; reason: "khác tiền tệ" | "thiếu ship" | "thiếu giá vốn"};
+
+export function landedCost(candidate: Pick<Candidate, "cost" | "shipping" | "currency" | "costCurrency" | "shippingCurrency">): LandedCost {
+  if (candidate.shipping == null) return {amount: null, currency: null, reason: "thiếu ship"};
+  if (candidate.cost == null) return {amount: null, currency: null, reason: "thiếu giá vốn"};
+  const currency = candidateCurrency(candidate, "cost");
+  if (currency !== candidateCurrency(candidate, "shipping")) return {amount: null, currency: null, reason: "khác tiền tệ"};
+  return {amount: candidate.cost + candidate.shipping, currency, reason: null};
+}
 
 export function researchProductId(batchId: string, candidateId: string) {
   // Both IDs are generated once and reused for retries and duplicate clicks.

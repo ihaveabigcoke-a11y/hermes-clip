@@ -1,5 +1,9 @@
 # Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
 
+## Cập nhật source đêm T01 — tiền tệ nghiên cứu
+
+Checkout riêng `C:/HermesNight/hermes-clip`, nhánh `night-20261111`, đã bổ sung CNY và tiền tệ riêng cho giá vốn/ship của ứng viên; không quy đổi tỷ giá. Đây là thay đổi source, chưa áp dụng vào bản cài đang chạy. Các ghi chú snapshot về việc research chưa hỗ trợ CNY mô tả phiên bản trước T01. Xem [checkpoint T01](T01-RESEARCH-CURRENCIES.md) để biết hợp đồng dữ liệu, kết quả kiểm tra và giới hạn tạo hồ sơ sản phẩm.
+
 ## Vai trò ChatGPT và Codex
 
 Người dùng muốn ChatGPT web hiểu sản phẩm để góp ý về workflow, UX, tính khả thi và thứ tự triển khai. Đầu ra cần chuyển được thành prompt cụ thể cho **Codex Astra Ultra** làm trên source Windows. ChatGPT không tự coi việc trao đổi ý tưởng là yêu cầu sửa code, mua công cụ, tăng tài khoản hoặc đăng nội dung.

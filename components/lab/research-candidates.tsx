@@ -2,7 +2,7 @@
 import {useState} from 'react';
 import {ExternalLink,Pencil,ImageOff} from 'lucide-react';
 import {type LabRecord,formatMoney} from '@/lib/lab/domain';
-import {type ResearchBatch,type Candidate,researchProductId} from '@/lib/lab/operations';
+import {type ResearchBatch,type Candidate,researchProductId,candidateCurrency} from '@/lib/lab/operations';
 import {Badge,Button,Empty,Modal} from './primitives';
 type Props={record:LabRecord;records:LabRecord[];disabled:boolean;onEdit:(candidate:Candidate)=>void;onSelect:(candidate:Candidate)=>void;onPromote:(candidate:Candidate)=>void};
 function ProductPhoto({candidate}:{candidate:Candidate}){
@@ -22,7 +22,7 @@ export default function ResearchCandidates({record,records,disabled,onEdit,onSel
   const selected=batch.candidates.filter(c=>batch.selectedIds.includes(c.id));
   const candidates=selectedOnly?selected:batch.candidates;
   const productFor=(c:Candidate)=>records.find(r=>r.id===researchProductId(record.id,c.id));
-  const price=(candidate:Candidate,key:'cost'|'price'|'shipping')=>candidate[key]===null?'Chưa biết':formatMoney(candidate[key]!,candidate.currency);
+  const price=(candidate:Candidate,key:'cost'|'price'|'shipping')=>candidate[key]==null?'Chưa biết':formatMoney(candidate[key]!,candidateCurrency(candidate,key));
   return <section className="research-comparison" aria-label="So sánh ứng viên sản phẩm">
     <div className="research-data-coverage" aria-label="Độ đầy đủ của nghiên cứu"><span><strong>{batch.candidates.length}</strong> ứng viên</span><span><strong>{batch.candidates.filter(c=>c.imageUrl).length}/{batch.candidates.length}</strong> có link ảnh nguồn</span><span><strong>{batch.candidates.filter(c=>c.marketEvidence?.length).length}/{batch.candidates.length}</strong> có chỉ số kèm nguồn</span><small>Số liệu Muse thu thập · không phải dự báo doanh thu</small></div>
     <div className="research-selection-bar"><div><strong>Chọn 3 sản phẩm để thử</strong><p>{selected.length?selected.map(c=>c.name).join(' · '):'Chưa chọn sản phẩm. Xem nguồn và điều kiện trước khi chọn.'}</p></div>

@@ -12,6 +12,17 @@ async function save(kind, id, data, revision = 0, who = 'ops-owner', action = 's
   return {status: response.status, ...await response.json()};
 }
 
+test('research API preserves independent currencies on create and later edits', async () => {
+  const candidate = {id: 'mixed_currency', name: 'Supplier quote', supplierUrl: 'https://supplier.example/quote', evidenceNotes: 'Exact SKU quote', cost: 36.5, costCurrency: 'CNY', shipping: null, shippingCurrency: null, price: 19.99, currency: 'USD'};
+  const created = await save('research_batch', 'currency_batch', {name: 'Currency fixture', candidates: [candidate]});
+  assert.equal(created.status, 200);
+  for (const [key, value] of Object.entries(candidate)) assert.deepEqual(created.record.data.candidates[0][key], value);
+  const data = {...created.record.data, candidates: [{...created.record.data.candidates[0], shipping: 4.25, shippingCurrency: 'GBP'}]};
+  const updated = await save('research_batch', 'currency_batch', data, created.record.revision);
+  assert.equal(updated.status, 200);
+  assert.deepEqual(updated.record.data, data);
+});
+
 test('content draft without Instagram saves and replays while scheduling and foreign accounts are rejected', async () => {
   await save('product', 'draft_product', {...emptyProduct, name:'Account-free product'});
   const data = {name:'Internal caption', productId:'draft_product', accountId:'', caption:'English caption'};

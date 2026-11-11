@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {candidateSchema, researchBatchSchema, socialMetricSchema, landingPageSchema, landingHtml, socialTotals} from '../lib/lab/operations.ts';
+import {candidateSchema, candidateCurrency, landedCost, researchBatchSchema, socialMetricSchema, landingPageSchema, landingHtml, socialTotals} from '../lib/lab/operations.ts';
+import {formatMoney} from '../lib/lab/domain.ts';
 import {mergeMuseResearch, parseMuseResponse, museTaskPrompt} from '../lib/lab/muse-workflows.ts';
 import {instagramProductSummary} from '../lib/lab/instagram-summary.ts';
 
@@ -34,6 +35,98 @@ test('Muse structured drafts accept fenced JSON and preserve commercial fields o
 });
 
 const candidate = id => candidateSchema.parse({id, name: 'Sourced product', supplierUrl: 'https://supplier.example/product', evidenceNotes: 'Listing reviewed'});
+
+test('research accepts CNY and independent cost/shipping currencies without changing amounts', () => {
+  for (const currency of ['USD', 'VND', 'GBP', 'EUR', 'CNY']) {
+    const input = {...candidate('currencies'), cost: 36.5, shipping: 4.25, price: 19.99, currency};
+    assert.deepEqual(candidateSchema.parse(input), input);
+  }
+  const input = {...candidate('mixed'), cost: 36.5, costCurrency: 'CNY', shipping: 4.25, shippingCurrency: 'GBP', price: 19.99, currency: 'USD'};
+  assert.deepEqual(candidateSchema.parse(input), input);
+  for (const field of ['currency', 'costCurrency', 'shippingCurrency']) {
+    assert.equal(candidateSchema.safeParse({...input, [field]: 'JPY'}).success, false, field);
+  }
+});
+
+test('legacy research snapshots parse every batch and preserve all stored fields', () => {
+  const read = name => JSON.parse(readFileSync(new URL('../data/research/2026-11-11/' + name, import.meta.url), 'utf8'));
+  const all = read('all-batches.json');
+  assert.equal(all.batches.length, 5);
+  const records = [...all.batches, read('candidates-1745.json').record, read('candidates-earlier.json').record];
+  assert.equal(records.reduce((total, record) => total + record.data.candidates.length, 0), 43);
+  for (const record of records) {
+    const before = structuredClone(record.data);
+    const parsed = researchBatchSchema.parse(record.data);
+    for (const [key, value] of Object.entries(before)) {
+      if (key !== 'candidates') assert.deepEqual(parsed[key], value, `${record.id}.${key}`);
+    }
+    assert.equal(parsed.candidates.length, before.candidates.length);
+    parsed.candidates.forEach((row, index) => {
+      for (const [key, value] of Object.entries(before.candidates[index])) {
+        assert.deepEqual(row[key], value, `${record.id}.${row.id}.${key}`);
+      }
+      assert.equal(row.costCurrency, undefined);
+      assert.equal(row.shippingCurrency, undefined);
+      for (const field of ['cost', 'shipping', 'price']) assert.equal(candidateCurrency(row, field), row.currency);
+    });
+    assert.deepEqual(record.data, before);
+  }
+});
+
+test('landed cost adds only known same-currency amounts and does not mutate the candidate', () => {
+  const input = {...candidate('landed'), cost: 36.5, shipping: 4.25, price: 19.99, costCurrency: 'CNY', shippingCurrency: 'CNY'};
+  const before = structuredClone(input);
+  assert.deepEqual(landedCost(input), {amount: 40.75, currency: 'CNY', reason: null});
+  assert.deepEqual(input, before);
+  assert.deepEqual(landedCost({...input, shippingCurrency: 'USD'}), {amount: null, currency: null, reason: 'khác tiền tệ'});
+  assert.deepEqual(landedCost({...input, shipping: null}), {amount: null, currency: null, reason: 'thiếu ship'});
+  assert.deepEqual(landedCost({...input, cost: null}), {amount: null, currency: null, reason: 'thiếu giá vốn'});
+  assert.deepEqual(landedCost({...input, cost: null, shipping: null}), {amount: null, currency: null, reason: 'thiếu ship'});
+  assert.deepEqual(landedCost({...input, cost: 0, shipping: 0}), {amount: 0, currency: 'CNY', reason: null});
+  const legacy = {...candidate('legacy'), cost: 12, shipping: 0, currency: 'EUR'};
+  assert.deepEqual(landedCost(legacy), {amount: 12, currency: 'EUR', reason: null});
+  assert.deepEqual(landedCost({...legacy, costCurrency: null, shippingCurrency: null}), {amount: 12, currency: 'EUR', reason: null});
+  assert.deepEqual(landedCost({...legacy, costCurrency: 'CNY'}), {amount: null, currency: null, reason: 'khác tiền tệ'});
+});
+
+test('research money display resolves cost, shipping and price currencies independently with legacy fallback', () => {
+  const input = {...candidate('display'), cost: 36.5, shipping: 4.25, price: 19.99, costCurrency: 'CNY', shippingCurrency: 'GBP'};
+  const display = field => formatMoney(input[field], candidateCurrency(input, field));
+  assert.equal(display('cost'), formatMoney(36.5, 'CNY'));
+  assert.equal(display('shipping'), formatMoney(4.25, 'GBP'));
+  assert.equal(display('price'), formatMoney(19.99, 'USD'));
+  assert.notEqual(display('cost'), formatMoney(36.5, 'USD'));
+  for (const field of ['cost', 'shipping', 'price']) {
+    assert.equal(candidateCurrency({...candidate('old'), currency: 'VND'}, field), 'VND');
+  }
+});
+
+test('Muse research preserves mixed currencies through parsing, merge and receipt replay', () => {
+  const input = {name: 'Supplier quote', supplierUrl: 'https://supplier.example/quote', evidenceNotes: 'Exact SKU quote', cost: 36.5, costCurrency: 'CNY', shipping: 4.25, shippingCurrency: 'USD', price: 19.99, currency: 'USD'};
+  const response = JSON.stringify({summary: 'Independent source currencies', candidates: [input]});
+  const parsed = parseMuseResponse('research', response).candidates[0];
+  for (const [key, value] of Object.entries(input)) assert.deepEqual(parsed[key], value);
+  const batch = researchBatchSchema.parse({name: 'Mixed currencies'});
+  const chat = {requestId: 'mixed_currency', profileId: 'fixture', providerUrl: null, response};
+  const merged = mergeMuseResearch(batch, chat);
+  assert.equal(merged.candidates.length, 1);
+  for (const key of ['cost', 'shipping', 'price', 'currency', 'costCurrency', 'shippingCurrency']) assert.equal(merged.candidates[0][key], input[key]);
+  assert.deepEqual(landedCost(merged.candidates[0]), {amount: null, currency: null, reason: 'khác tiền tệ'});
+  assert.equal(mergeMuseResearch(merged, chat), merged);
+  assert.equal(batch.candidates.length, 0);
+});
+
+test('research prompt requires source currencies per amount without a hard-coded USD example or conversion', () => {
+  const prompt = museTaskPrompt('research', {market: 'United States'});
+  assert.ok(!/"currency"\s*:\s*"USD"/.test(prompt));
+  assert.match(prompt, /"costCurrency":SUPPLIER_COST_CURRENCY_CODE_OR_NULL/);
+  assert.match(prompt, /"shippingCurrency":SHIPPING_CURRENCY_CODE_OR_NULL/);
+  assert.match(prompt, /costCurrency must match the exact supplier listing\/quote/);
+  assert.match(prompt, /shippingCurrency must match the shipping quote/);
+  assert.match(prompt, /currency denotes the selling-price hypothesis/);
+  assert.match(prompt, /USD, VND, GBP, EUR and CNY/);
+  assert.match(prompt, /Never convert currencies or add amounts in different currencies/);
+});
 
 test('showroom products sharing one source survive import and legacy receipt recovery without duplicates', () => {
   const chat = {requestId:'showroom',profileId:'p',providerUrl:null,response:JSON.stringify({summary:'Shared showroom',candidates:Array.from({length:10},(_,i)=>({name:'Product '+i,supplierUrl:'https://supplier.example/showroom',evidenceNotes:'Distinct product '+i}))})};
