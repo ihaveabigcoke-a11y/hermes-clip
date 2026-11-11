@@ -1,5 +1,9 @@
 # Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
 
+## Cập nhật source đêm T16 — comment từ khóa CTA từ dữ liệu dán tay
+
+Clone `night-20261111` đã thêm **Dán comment** trong chi tiết bài đã đăng: chọn có/không username, xem trước, lưu bản đo `manual_paste` có thời điểm/nguồn/từ khóa và lịch sử riêng, không ghi đè Insights. Counter khớp từ đứng riêng, bỏ dấu câu/emoji, không phân biệt hoa thường; thiếu username ở comment khớp giữ số người duy nhất là null. Bảng T07 có comment từ khóa và tỷ lệ trên views mới nhất, không cộng trùng lượt dán, giữ CTA snapshot khi cấu hình đổi; chưa đo/thiếu views/zero denominator hiển thị —. CTA kế hoạch optional, fallback sang biến thể T06; classifier hỗ trợ hỏi giá/ship/link/CTA cho sản phẩm chung. Domain 183/183, API 22/22, desktop 276 đạt + 1 skip OpenMontage, typecheck/build output riêng đạt. UI offline đã kiểm lưu/tải lại, mất phản hồi và retry cùng ID, 1366/1920; chưa triển khai bản cài, chưa đọc comment hoặc gọi Instagram thật. Các đoạn T07/T10 bên dưới ghi chưa có bộ đếm mô tả trạng thái trước T16. Xem [checkpoint, giới hạn và cách chạy T16](../../ops/night/out/T16.md).
+
 ## Cập nhật source đêm T27 — take nháp và bảng Nghiên cứu
 
 Clone `night-20261111` đã rà mọi chỗ đọc `takeId` trong lib/components/app/desktop. Bản nháp A/B có trạng thái **Chờ chọn take** ở kiểm trước xuất, nhóm cảnh/biến thể, guidance, hàng đợi và tổng quan Instagram; không chọn ngầm video đã duyệt. Domain/API tiếp tục từ chối xuất/ghép khi còn pin null, trước khi tải media; không đổi schema lưu trữ. Bảng Nghiên cứu giữ cột chọn/tên/quyết định/thao tác trong vùng nhìn với sidebar 232 px: 1366×768 còn cuộn cột phụ, 1920×1080 không cuộn ngang. Domain 166/166, API 19/19, desktop 274 đạt/1 skip OpenMontage, typecheck/build riêng đạt. UI fixture offline đã chụp trước/sau và kiểm nút xuất/ghép bị khóa; chưa triển khai bản cài hoặc kiểm dịch vụ thật. Xem [checkpoint, audit và ảnh T27](../../ops/night/out/T27.md).

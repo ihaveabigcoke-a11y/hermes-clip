@@ -65,6 +65,7 @@ export function instagramProductSummary(records:Row[],productId:string,jobs:Job[
 }
 
 function savedCtaKeyword(records:Row[],post:Post):string|null {
+  if (typeof post.plan.data.ctaKeyword === 'string' && post.plan.data.ctaKeyword.trim()) return post.plan.data.ctaKeyword.trim().toUpperCase();
   const projects=records.filter(r=>r.kind==='production'&&r.data.productId===post.plan.data.productId
     &&(post.plan.data.productionId?r.id===post.plan.data.productionId:r.data.contentPlanId===post.plan.id));
   if(projects.length!==1)return null;
@@ -84,11 +85,32 @@ function savedCtaKeyword(records:Row[],post:Post):string|null {
   return keywords.length>0&&keywords[0]&&keywords.every((keyword:string|null)=>keyword===keywords[0])?keywords[0]:null;
 }
 
+export function keywordCommentMeasurements(records:Row[],planIds:string[],accountId:string|null,url:string) {
+  const key=postKey(url);
+  return records.filter(row=>row.kind==='keyword_comment_measurement'&&row.data.source==='manual_paste'
+    &&planIds.includes(row.data.planId)&&row.data.accountId===accountId&&!!key&&postKey(row.data.sourceUrl)===key
+    &&Number.isFinite(Date.parse(row.data.observedAt)))
+    .sort((a,b)=>newerMetric(b,a)||b.id.localeCompare(a.id));
+}
+
+export function keywordCommentViewRate(matched:number|null,views:number|null):number|null {
+  return matched!==null&&Number.isFinite(matched)&&matched>=0&&views!==null&&Number.isFinite(views)&&views>0 ? matched/views : null;
+}
+
 /** One row per public post, ordered by account × content; aliases never add another row. */
 export function instagramAccountContentRows(records:Row[],productId:string,jobs:Job[]=[]){
-  return instagramProductSummary(records,productId,jobs).posts.map(post=>({...post,
-    account:records.find(r=>r.kind==='social_account'&&r.id===post.accountId&&r.data.productId===productId)??null,
-    ctaKeyword:savedCtaKeyword(records,post),
-  })).sort((a,b)=>(a.account?.data.name??a.accountId??'').localeCompare(b.account?.data.name??b.accountId??'','vi')
+  return instagramProductSummary(records,productId,jobs).posts.map(post=>{
+    const keywordMeasurements=keywordCommentMeasurements(records,post.planIds,post.accountId,post.url);
+    const keywordMeasurement=keywordMeasurements[0]??null;
+    const plannedCtaKeyword=savedCtaKeyword(records,post);
+    const keywordComments=keywordMeasurement?.data.matched??null;
+    return {...post,
+      account:records.find(r=>r.kind==='social_account'&&r.id===post.accountId&&r.data.productId===productId)??null,
+      // Keep the measured keyword visible even after a content/variant edit.
+      ctaKeyword:keywordMeasurement?.data.keyword??plannedCtaKeyword,plannedCtaKeyword,
+      keywordMeasurements,keywordMeasurement,keywordComments,
+      keywordCommentRate:keywordCommentViewRate(keywordComments,post.metric?.data.views??null),
+    };
+  }).sort((a,b)=>(a.account?.data.name??a.accountId??'').localeCompare(b.account?.data.name??b.accountId??'','vi')
     ||(a.accountId??'').localeCompare(b.accountId??'')||String(a.plan.data.name??a.plan.id).localeCompare(String(b.plan.data.name??b.plan.id),'vi'));
 }

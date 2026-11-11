@@ -59,6 +59,7 @@ export async function POST(request: Request) {
         "social_account",
         "content_plan",
         "social_metric",
+        "keyword_comment_measurement",
         "landing_page",
         "viral_formula",
         "reference_video_draft",
@@ -110,8 +111,20 @@ export async function POST(request: Request) {
       const previous = await getRecord(uid, id);
       if (previous && (previous.data.accountId !== d.accountId || previous.data.postUrl !== d.postUrl)) {
         const metric = await getRecord(uid, `social_metric_${id}`);
-        if (metric) throw new ApiError(422, "Bài đã có số liệu. Tạo nội dung mới để giữ đúng nguồn đo.");
+        const comments = await database().prepare("SELECT id FROM lab_records WHERE owner_id=? AND kind='keyword_comment_measurement' AND json_extract(data,'$.planId')=? LIMIT 1").bind(uid, id).first();
+        if (metric || comments) throw new ApiError(422, "Bài đã có số liệu. Tạo nội dung mới để giữ đúng nguồn đo.");
       }
+    }
+    if (kind === "keyword_comment_measurement") {
+      if (revision !== 0) throw new ApiError(409, "Giữ bản đo đã lưu. Dán comment để tạo bản đo mới.");
+      const plan = await getRecord(uid, d.planId);
+      if (plan?.kind !== 'content_plan' || !['published_manual', 'published_browser'].includes(plan.data.status))
+        throw new ApiError(422, "Ghi nhận bài đã đăng và URL trước khi dán comment.");
+      const account = await getRecord(uid, d.accountId);
+      if (d.accountId !== plan.data.accountId || d.sourceUrl !== plan.data.postUrl || account?.kind !== 'social_account' || account.data.productId !== plan.data.productId)
+        throw new ApiError(422, "Nguồn comment không khớp bài đăng hoặc tài khoản.");
+      // Source is a manual observation made now, independent of Insights.
+      d.observedAt = new Date().toISOString();
     }
     if (kind === "social_metric") {
       const plan = await getRecord(uid, d.planId);

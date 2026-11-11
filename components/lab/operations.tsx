@@ -180,6 +180,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
         {name: "plannedDate", label: "Ngày dự kiến", placeholder: "YYYY-MM-DD", help: "Lưu lịch dự kiến trong app."},
         {name: "hook", label: "Mở đầu bằng tiếng Anh", type: "textarea", full: true}, {name: "script", label: "Khung kịch bản tiếng Anh", type: "textarea", full: true},
         {name: "caption", label: "Chú thích tiếng Anh", type: "textarea", full: true},
+        {name: "ctaKeyword", label: "Từ khóa CTA", placeholder: "LED / RUN / HELP", help: "Một từ tiếng Anh. Để trống để dùng từ khóa từ biến thể video đã gắn."},
         {name: "aiLabel", label: "Nhãn AI khi đăng", type: "select", options: [{value: "off", label: "Không gắn nhãn AI (mặc định)"}, {value: "required", label: "Bắt buộc bật nhãn AI"}], help: "Mặc định không bật nhãn AI. Chọn Bắt buộc để script bật nhãn và dừng trước Share nếu không xác nhận được.", full: true},
         ...(plan?.data.status === 'published_browser' ? [] : [{name: "status", label: "Trạng thái", type: "select" as const, options: [{value: "draft", label: "Nháp"}, {value: "planned", label: "Đã lên kế hoạch"}, {value: "published_manual", label: "Đã đăng · ghi nhận thủ công"}]}]),
         {name: "postUrl", label: "URL bài Instagram", type: "url"}, {name: "notes", label: "Ghi chú", type: "textarea", full: true}],
@@ -249,6 +250,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
     if (!chosen) return <InstagramOverview products={products} records={records} demo={demo} onOpen={select}/>;
     return <InstagramPanel key={chosen.id} product={chosen} accounts={accounts} plans={plans} records={records}
       demo={demo} disabled={disabled} onAccount={accountForm} onPlan={planForm}
+      onSaveComments={(id,data)=>save('keyword_comment_measurement',id,data)}
       onCreateProduction={plan => act(() => createProduction(plan))} notify={notify}/>;
   }
 

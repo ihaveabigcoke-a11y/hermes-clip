@@ -1,0 +1,39 @@
+{
+  "fixtureOnly": true,
+  "networkRequestsSent": 0,
+  "viewportChecks": [
+    {
+      "view": "table",
+      "width": 1920,
+      "noPageOverflow": true
+    },
+    {
+      "view": "table",
+      "width": 1366,
+      "noPageOverflow": true
+    },
+    {
+      "view": "detail",
+      "width": 1920,
+      "noPageOverflow": true
+    },
+    {
+      "view": "detail",
+      "width": 1366,
+      "noPageOverflow": true
+    }
+  ],
+  "requests": 4,
+  "measurements": 3,
+  "checks": [
+    "username parsing and duplicate users",
+    "invalid keyword and empty paste disabled",
+    "persist and reload history",
+    "3/100 view rate",
+    "zero match",
+    "anonymous unique count stays null",
+    "uncertain save retries same ID and reload reconciles",
+    "Insights unchanged"
+  ],
+  "consoleErrors": []
+}

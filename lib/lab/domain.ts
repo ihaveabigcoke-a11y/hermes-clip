@@ -5,6 +5,8 @@ import { operationSchemas, candidateCurrencySchema, type Candidate, type Researc
 import { viralFormulaSchema } from "./viral-formulas.ts";
 import { referenceVideoDraftSchema } from "./viral-reference.ts";
 import { sampleCheckSchema } from "./sample-check.ts";
+import { countKeywordComments } from './keyword-comments.ts';
+export { countKeywordComments } from './keyword-comments.ts';
 export const kinds = [
   "product",
   "experiment",
@@ -22,6 +24,7 @@ export const kinds = [
   "social_account",
   "content_plan",
   "social_metric",
+  "keyword_comment_measurement",
   "landing_page",
   "viral_formula",
   "reference_video_draft",
@@ -321,15 +324,17 @@ export function metricAdvice(m: Record<string, any> | undefined, target = 100) {
     text: "Đã chạm mốc quan sát nhưng chưa có lead. Rà tệp, giá, ship và độ tin cậy.",
   };
 }
-export function classifyComment(s: string) {
+export function classifyComment(s: string, ctaKeyword?: string | null) {
   const t = s.toLowerCase();
   const labels: string[] = [];
   if (/price|how much|bao nhiêu|giá/.test(t)) labels.push("Hỏi giá");
   if (/ship|deliver|giao|vận chuyển/.test(t)) labels.push("Hỏi giao hàng");
-  if (/work|curly|dùng được|phù hợp|tóc xoăn/.test(t))
+  if (/\bwork\b|\bworks\b|\bfit\b|\bcompatible\b|dùng được|phù hợp/.test(t))
     labels.push("Độ phù hợp");
+  if (/\blink\b|\bwhere (?:can i )?(?:buy|order)\b|đường dẫn|mua ở đâu/.test(t)) labels.push("Hỏi link");
   if (/\bai\b|fake|scam|lừa|giả/.test(t)) labels.push("Nghi ngờ / niềm tin");
-  if (/^(glass|link|need|wow|omg)[\s!.❤❤️🔥]*$/i.test(t.trim()))
+  if ((ctaKeyword ? countKeywordComments([s], ctaKeyword).matched > 0 : ['LED', 'RUN', 'HELP'].some(keyword => countKeywordComments([s], keyword).matched > 0))
+      || /^(glass|link|need|wow|omg)[\s!.❤❤️🔥]*$/i.test(t.trim()))
     labels.push("Từ khóa / tò mò");
   return labels.length ? labels : ["Chưa rõ"];
 }

@@ -229,6 +229,15 @@ test('missing/insufficient evidence is not a product failure',()=>{assert.equal(
 test('returns and unprofitable cohorts block a positive suggestion',()=>{assert.equal(metricAdvice(metric).label,'Rà soát hoàn trả');assert.equal(metricAdvice({...metric,returned:0,totalCosts:130}).label,'Kiểm tra kinh tế');});
 test('briefs have six stable IDs, no synthetic testimonials and no rendered media',()=>{const a=makeBriefs(product,ex),b=makeBriefs(product,ex);assert.equal(a.length,6);assert.equal(new Set(a.map(x=>x.id)).size,6);assert.deepEqual(a.map(x=>x.id),b.map(x=>x.id));assert.ok(a.every(x=>x.data.source==='template'&&x.data.mediaUrl===''&&x.data.approvedAt===null));});
 test('comment labels are multi-label, keyword intent is kept distinct',()=>{assert.deepEqual(classifyComment('Glass'),['Từ khóa / tò mò']);assert.deepEqual(classifyComment('How much and do you ship to US?'),['Hỏi giá','Hỏi giao hàng']);assert.ok(classifyComment('Is this AI?').includes('Nghi ngờ / niềm tin'));});
+test('comment intent supports generic products, links and explicit CTA while keeping the one-argument contract',()=>{
+  for(const word of ['LED!','RUN 🙏','help'])assert.ok(classifyComment(word).includes('Từ khóa / tò mò'));
+  assert.deepEqual(classifyComment('ledger'),['Chưa rõ']);
+  assert.deepEqual(classifyComment('How much? Link please. Ship to US? LED!','LED'),['Hỏi giá','Hỏi giao hàng','Hỏi link','Từ khóa / tò mò']);
+  assert.deepEqual(classifyComment('Where can I buy?'),['Hỏi link']);
+  assert.ok(classifyComment('Does this fit my desk?').includes('Độ phù hợp'));
+  assert.ok(classifyComment('desk!','DESK').includes('Từ khóa / tò mò'));
+  assert.deepEqual(classifyComment('LED','RUN'),['Chưa rõ']);
+});
 test('Vietnamese money is currency-specific',()=>{assert.ok(formatMoney(49,'USD').includes('US$'));assert.ok(formatMoney(49000,'VND').includes('₫'));});
 
 const stageRecord = (kind, id, data = {}) => ({id, kind, revision: 1, updatedAt: 0, data});

@@ -18,6 +18,55 @@ async function save(kind, id, data, revision = 0, who = 'ops-owner', action = 's
   return {status: response.status, ...await response.json()};
 }
 
+test('manual comment measurements round-trip separately, recompute counts and preserve Insights and every previous paste',async()=>{
+  const who='comment-measure-owner';
+  const read=async(owner=who)=>(await (await call(lab.GET,new Request('https://qa.invalid/api/lab',{headers:{'oai-authenticated-user-id':owner,'oai-authenticated-user-email':owner+'@example.invalid'}}))).json()).records;
+  const persist=async(kind,id,data,revision=0)=>{const result=await save(kind,id,data,revision,who);assert.equal(result.status,200,JSON.stringify(result));return result.record;};
+  await persist('product','comment_product',{...emptyProduct,name:'Comment fixture'});
+  await persist('social_account','comment_account',{name:'Account fixture',productId:'comment_product'});
+  const plan=await persist('content_plan','comment_post',{name:'Published fixture',productId:'comment_product',accountId:'comment_account',status:'published_manual',postUrl:'https://www.instagram.com/reel/comment_fixture/',ctaKeyword:'led'});
+  assert.equal(plan.data.ctaKeyword,'LED');
+  const insight=await persist('social_metric','ignored',{planId:plan.id,observedAt:'2026-11-12T00:00:00Z',views:null,likes:0,comments:500,shares:null,saves:null,profileVisits:null,linkClicks:null,source:'instagram_browser',accountId:plan.data.accountId,handle:'fixture',sourceUrl:plan.data.postUrl});
+  const input={planId:plan.id,accountId:plan.data.accountId,sourceUrl:plan.data.postUrl,source:'manual_paste',observedAt:'2000-01-01T00:00:00Z',keyword:'led',inputFormat:'username',rawText:'Alice LED 🙏\n@alice led!\nBob ledger\nBob HELP',matched:999,total:999,matchedUniqueUsers:999,views:777,comments:888};
+  const start=Date.now();
+  const first=await persist('keyword_comment_measurement','paste_one',input);
+  assert.ok(Date.parse(first.data.observedAt)>=start);assert.ok(Date.parse(first.data.observedAt)<=Date.now());
+  assert.equal(first.data.source,'manual_paste');assert.equal(first.data.total,4);assert.equal(first.data.matched,2);assert.equal(first.data.matchedUniqueUsers,1);
+  assert.equal(first.data.views,undefined);assert.equal(first.data.comments,undefined);assert.deepEqual(first.data.examples,['LED 🙏','led!']);
+  const second=await persist('keyword_comment_measurement','paste_two',{...input,inputFormat:'text',rawText:'ledger'});
+  assert.equal(second.data.matched,0);assert.equal(second.data.matchedUniqueUsers,0);
+  assert.equal((await save('keyword_comment_measurement',first.id,input,0,who)).status,409);
+  assert.equal((await save('keyword_comment_measurement',first.id,input,1,who)).status,409);
+  assert.equal((await save('keyword_comment_measurement','foreign_paste',input,0,'comment-other')).status,422);
+  for(const patch of [{planId:'missing'},{accountId:'missing'},{sourceUrl:'https://instagram.com/reel/other/'},{source:'instagram_browser'},{rawText:'  '},{keyword:'LED RUN'}])
+    assert.equal((await save('keyword_comment_measurement','invalid_paste',{...input,...patch},0,who)).status,422);
+  const rows=await read();assert.deepEqual(rows.find(r=>r.id===insight.id),insight);
+  assert.deepEqual(rows.find(r=>r.id===first.id),first);assert.deepEqual(rows.find(r=>r.id===second.id),second);
+  assert.equal(rows.filter(r=>r.kind==='keyword_comment_measurement').length,2);
+  assert.equal((await read('comment-other')).some(r=>r.id===first.id),false);
+  const updated=await persist('social_metric',insight.id,{...insight.data,views:1000,observedAt:'2026-11-12T02:00:00Z'},insight.revision);
+  assert.equal(updated.data.comments,500);assert.deepEqual((await read()).find(r=>r.id===first.id),first);
+  const planEdit=await persist('content_plan',plan.id,{...plan.data,ctaKeyword:'RUN'},plan.revision);
+  assert.equal(planEdit.data.ctaKeyword,'RUN');assert.equal((await read()).find(r=>r.id===first.id).data.keyword,'LED');
+});
+
+test('manual paste refuses drafts and prevents reassigning a measured post even before Insights exist',async()=>{
+  const who='comment-source-owner';
+  await save('product','paste_product',{...emptyProduct,name:'Source fixture'},0,who);
+  await save('social_account','paste_account',{name:'Account fixture',productId:'paste_product'},0,who);
+  await save('social_account','paste_account_two',{name:'Second fixture',productId:'paste_product'},0,who);
+  const data={name:'Draft fixture',productId:'paste_product',accountId:'paste_account',postUrl:'https://instagram.com/p/paste_source/'};
+  const draft=await save('content_plan','paste_plan',data,0,who);assert.equal(draft.status,200);
+  const input={planId:'paste_plan',accountId:'paste_account',sourceUrl:data.postUrl,source:'manual_paste',observedAt:new Date().toISOString(),keyword:'LED',rawText:'LED'};
+  assert.equal((await save('keyword_comment_measurement','draft_paste',input,0,who)).status,422);
+  const published=await save('content_plan','paste_plan',{...draft.record.data,status:'published_manual'},draft.record.revision,who);assert.equal(published.status,200);
+  const race=await Promise.all([save('keyword_comment_measurement','same_paste',input,0,who),save('keyword_comment_measurement','same_paste',input,0,who)]);
+  assert.deepEqual(race.map(r=>r.status).sort(),[200,409]);
+  assert.equal(race.find(r=>r.status===200).record.data.matchedUniqueUsers,null);
+  for(const patch of [{postUrl:'https://instagram.com/p/changed/'},{accountId:'paste_account_two'}])
+    assert.equal((await save('content_plan','paste_plan',{...published.record.data,...patch},published.record.revision,who)).status,422);
+});
+
 test('product sample checklist survives API save/read/CAS; legacy product remains readable',async()=>{
   const who='sample-check-owner';
   const created=await save('product','sample_check_product',{...emptyProduct,name:'Sample fixture'},0,who);

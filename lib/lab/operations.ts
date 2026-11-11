@@ -1,4 +1,8 @@
 import { z } from "zod";
+import { ctaKeywordSchema } from './production.ts';
+import { countKeywordComments, parseCommentPaste } from './keyword-comments.ts';
+
+export const commentKeywordSchema = z.string().trim().toUpperCase().pipe(ctaKeywordSchema);
 
 const identifier = z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/);
 const text = (max = 2000) => z.string().trim().max(max).default("");
@@ -139,6 +143,7 @@ export const contentPlanSchema = z.object({
   hook: text(600),
   script: text(6000),
   caption: text(2200),
+  ctaKeyword: z.preprocess(value => value === '' ? null : value, commentKeywordSchema.nullable().optional()),
   // Missing/null keeps old records readable; the publishing snapshot resolves
   // it to off (user default). Only explicit "required" turns on the label check.
   aiLabel: z.enum(["required", "off"]).nullable().optional(),
@@ -181,6 +186,16 @@ export const socialMetricSchema = z.object({
   sourceUrl: sourceLink,
   notes: text(),
 });
+export const keywordCommentMeasurementSchema = z.object({
+  planId: identifier,
+  accountId: identifier,
+  sourceUrl: sourceLink,
+  source: z.literal('manual_paste'),
+  observedAt: z.string().datetime({offset: true}),
+  keyword: commentKeywordSchema,
+  inputFormat: z.enum(['text', 'username']).default('text'),
+  rawText: z.string().trim().min(1, 'Dán ít nhất một comment để lưu bản đo.').max(100000),
+}).transform(value => ({...value, ...countKeywordComments(parseCommentPaste(value.rawText, value.inputFormat), value.keyword)}));
 export const landingPageSchema = z.object({
   productId: identifier,
   headline: z.string().trim().min(2).max(160),
@@ -196,6 +211,7 @@ export const operationSchemas = {
   social_account: socialAccountSchema,
   content_plan: contentPlanSchema,
   social_metric: socialMetricSchema,
+  keyword_comment_measurement: keywordCommentMeasurementSchema,
   landing_page: landingPageSchema,
 };
 export type ResearchBatch = z.infer<typeof researchBatchSchema>;

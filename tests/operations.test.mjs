@@ -14,6 +14,85 @@ import {researchCoverage,hasIndividualListing,landedCostBadge,researchRisks,buil
 import {planResearchSelection,saveResearchSelection} from '../lib/lab/research-selection.ts';
 import {formulaAnalysisPrompt,parseFormulaAnalysis,matchFormula,proposeFormulaChanges} from '../lib/lab/formula-analysis.ts';
 import {analysisReferences,analysisResponse,structureFor} from './fixtures/formula-analysis.mjs';
+import {countKeywordComments,parseCommentPaste} from '../lib/lab/keyword-comments.ts';
+import {keywordCommentMeasurementSchema} from '../lib/lab/operations.ts';
+import {keywordCommentViewRate} from '../lib/lab/instagram-summary.ts';
+
+test('keyword comments match entire words, ignoring case/punctuation/emoji without joining word parts',()=>{
+  const positive=['LED','led!','LED 🙏','Please, LeD.','🔥LED🔥','ＬＥＤ','(LED) LED','🏃‍♂️LED','❤️LED❤️','LED1️⃣','#️⃣LED'];
+  const negative=['ledger','sled','LEDs','LED123','123LED','le🙏d','l.e.d','đènLED','LEDđèn'];
+  const result=countKeywordComments([...positive,...negative],'led');
+  assert.equal(result.total,20);assert.equal(result.matched,11);assert.equal(result.matchedUniqueUsers,null);
+  assert.deepEqual(result.examples,positive.slice(0,5));
+  assert.deepEqual(countKeywordComments(['ledger'],'LED'),{total:1,matched:0,matchedUniqueUsers:0,examples:[]});
+  assert.equal(countKeywordComments(['LED'],'🙏').matched,0);
+  assert.equal(countKeywordComments(['RUN!','runner','runway'],'RUN').matched,1);
+  assert.equal(countKeywordComments(['helpful','HELP 🙏'],'HELP').matched,1);
+  assert.equal(countKeywordComments(['cafe\u0301!','caféine'],'café').matched,1);
+});
+
+test('unique matching usernames are case-insensitive; anonymous matches keep unique users unknown',()=>{
+  const comments=[{username:'Alice',text:'LED'},{username:'@alice',text:'led!'},
+    {username:'bob',text:'LED LED'},{username:null,text:'How much?'}];
+  const original=structuredClone(comments);
+  assert.deepEqual(countKeywordComments(comments,'LED'),{total:4,matched:3,matchedUniqueUsers:2,examples:['LED','led!','LED LED']});
+  assert.deepEqual(comments,original);
+  assert.equal(countKeywordComments([...comments,{text:'LED'}],'LED').matchedUniqueUsers,null);
+  assert.deepEqual(countKeywordComments(['','  ','\n'],'LED'),{total:0,matched:0,matchedUniqueUsers:0,examples:[]});
+});
+
+test('paste format is explicit, supports CRLF, @handles and empty lines, and does not count usernames as CTA',()=>{
+  const raw='alice LED!\r\n@ALICE led 🙏\r\n\r\nled_user hello\nbob: LED\rLED';
+  assert.deepEqual(parseCommentPaste('Please LED'),[{username:null,text:'Please LED'}]);
+  assert.equal(countKeywordComments(parseCommentPaste(raw,'username'),'LED').matched,4);
+  assert.equal(countKeywordComments(parseCommentPaste(raw,'username'),'LED').matchedUniqueUsers,null);
+  assert.deepEqual(parseCommentPaste('@alice LED\r\nbob: ledger','username'),[{username:'alice',text:'LED'},{username:'bob',text:'ledger'}]);
+  assert.equal(countKeywordComments(parseCommentPaste('LED hello','username'),'LED').matched,0);
+  assert.equal(countKeywordComments(parseCommentPaste('LED hello','text'),'LED').matched,1);
+});
+
+test('measurement schema derives counts, limits pasted data and keeps old plans compatible',()=>{
+  const input={planId:'p',accountId:'a',sourceUrl:'https://instagram.com/p/a/',source:'manual_paste',observedAt:'2026-11-12T01:00:00Z',keyword:' led ',rawText:'alice LED\nbob ledger',inputFormat:'username',matched:999,matchedUniqueUsers:999};
+  const parsed=keywordCommentMeasurementSchema.parse(input);
+  assert.equal(parsed.keyword,'LED');assert.equal(parsed.matched,1);assert.equal(parsed.matchedUniqueUsers,1);assert.equal(parsed.total,2);
+  assert.deepEqual(keywordCommentMeasurementSchema.parse(parsed),parsed);
+  for(const patch of [{rawText:''},{rawText:' \r\n '},{rawText:'a'.repeat(100001)},{keyword:'LED RUN'},{keyword:'🙏'},{source:'instagram_browser'},{inputFormat:'guess'},{observedAt:'bad'}])
+    assert.equal(keywordCommentMeasurementSchema.safeParse({...input,...patch}).success,false);
+  const old={name:'Old plan',productId:'p'};
+  assert.equal(contentPlanSchema.parse(old).ctaKeyword,undefined);
+  assert.equal(contentPlanSchema.parse({...old,ctaKeyword:null}).ctaKeyword,null);
+  assert.equal(contentPlanSchema.parse({...old,ctaKeyword:''}).ctaKeyword,null);
+  assert.equal(contentPlanSchema.parse({...old,ctaKeyword:' help '}).ctaKeyword,'HELP');
+});
+
+test('keyword table takes latest matching source across aliases without adding counts or altering Insights',()=>{
+  const {records,product,at}=instagramOverviewFixture();
+  const plan=records.find(r=>r.id==='plan_1_1');
+  const add=(id,patch={})=>records.push({id,kind:'keyword_comment_measurement',updatedAt:at,revision:1,data:keywordCommentMeasurementSchema.parse({
+    planId:plan.id,accountId:plan.data.accountId,sourceUrl:plan.data.postUrl,source:'manual_paste',observedAt:new Date(at+1000).toISOString(),keyword:'LED',inputFormat:'username',rawText:'alice LED\nbob LED',...patch})});
+  const row=()=>instagramAccountContentRows(records,product.id).find(r=>r.planIds.includes(plan.id));
+  const before=structuredClone(records.filter(r=>r.kind==='social_metric'));
+  assert.equal(row().keywordComments,null);assert.equal(row().keywordCommentRate,null);
+  add('first');assert.equal(row().keywordComments,2);assert.equal(row().keywordCommentRate,.02);
+  records.push({...plan,id:'alias'});
+  add('latest',{planId:'alias',rawText:'alice LED',observedAt:new Date(at+2000).toISOString()});
+  for(const patch of [{accountId:'account_2'},{sourceUrl:'https://instagram.com/p/foreign/'},{planId:'foreign'}])add('wrong_'+records.length,{...patch,observedAt:new Date(at+3000).toISOString(),rawText:'a LED\nb LED\nc LED'});
+  assert.equal(row().keywordComments,1);assert.equal(row().keywordMeasurements.length,2);assert.equal(row().keywordMeasurement.id,'latest');
+  assert.equal(instagramAccountContentRows(records,product.id).length,6);
+  assert.deepEqual(records.filter(r=>r.kind==='social_metric'),before);
+  plan.data.ctaKeyword='RUN';assert.equal(row().plannedCtaKeyword,'RUN');assert.equal(row().ctaKeyword,'LED');
+  add('zero',{rawText:'alice ledger',observedAt:new Date(at+4000).toISOString()});
+  assert.equal(row().keywordComments,0);assert.equal(row().keywordCommentRate,0);
+  records.find(r=>r.id==='metric_'+plan.id).data.views=null;assert.equal(row().keywordCommentRate,null);
+  records.find(r=>r.id==='metric_'+plan.id).data.views=0;assert.equal(row().keywordCommentRate,null);
+});
+
+test('keyword/view rate distinguishes missing, zero denominator and an observed zero count',()=>{
+  assert.equal(keywordCommentViewRate(null,100),null);assert.equal(keywordCommentViewRate(0,null),null);
+  assert.equal(keywordCommentViewRate(0,0),null);assert.equal(keywordCommentViewRate(1,0),null);
+  assert.equal(keywordCommentViewRate(0,100),0);assert.equal(keywordCommentViewRate(5,200),.025);
+  assert.equal(keywordCommentViewRate(1,NaN),null);assert.equal(keywordCommentViewRate(-1,100),null);
+});
 
 test('analysis prompt shares taxonomy and caps all evidence at 4000 characters with dense timing and provenance rules',()=>{
   const structure=structureFor(),prompt=formulaAnalysisPrompt({structure,caption:'Comment LED',fileName:'LED.mp4',formulas:viralFormulas});

@@ -82,6 +82,36 @@ test('empty content retains comparison note; stored strings render as text',()=>
   assert.match(empty,/Chưa có bài đăng/);assert.match(empty,/So sánh hook chỉ có ý nghĩa/);
 });
 
+test('keyword table separates measured zero from missing data and shows manual provenance and approximate view rate',()=>{
+  const {records,product}=instagramOverviewFixture();
+  const plan=records.find(r=>r.id==='plan_1_1'),metric=records.find(r=>r.id==='metric_'+plan.id);
+  const measurement={id:'keyword_fixture',kind:'keyword_comment_measurement',revision:1,updatedAt:Date.now(),data:{planId:plan.id,accountId:plan.data.accountId,sourceUrl:plan.data.postUrl,source:'manual_paste',observedAt:'2026-11-12T02:00:00Z',keyword:'LED',rawText:'alice LED',inputFormat:'username',total:1,matched:1,matchedUniqueUsers:1,examples:['LED']}};
+  records.push(measurement);metric.data.approximate=['views'];
+  const html=render(InstagramContentTable,{records,productId:product.id});
+  for(const label of ['Comment từ khóa','Tỷ lệ comment từ khóa / lượt xem','Dán tay','không cộng các lần dán'])assert.ok(html.includes(label));
+  assert.match(html,/<td>1<small>Dán tay/);assert.match(html,/<td>≈ 1%<\/td>/);
+  assert.match(html,/<td>—<\/td><td>—<\/td>/);
+  measurement.data.matched=0;
+  assert.match(render(InstagramContentTable,{records,productId:product.id}),/<td>0<small>Dán tay/);
+  metric.data.views=0;
+  assert.match(render(InstagramContentTable,{records,productId:product.id}),/<\/small><\/td><td>—<\/td>/);
+});
+
+test('published detail offers manual comment input and history while drafts do not',()=>{
+  const {records,product}=instagramOverviewFixture();
+  const plan=records.find(r=>r.id==='plan_1_1');
+  const props={view:'social',records,demo:true,offline:false,persist:async()=>{throw Error('Read-only render');},notify(){},reload(){}};
+  globalThis.location={href:'http://fixture.invalid/?view=social&ops_id='+product.id+'&ig_tab=content'};
+  const html=render(OperationsPanel,props);
+  for(const label of ['Dán comment','Định dạng comment','Chỉ nội dung comment','Username rồi đến comment','Lưu bản đo comment','Chưa có bản đo comment từ khóa'])assert.ok(html.includes(label),label);
+  assert.match(html,/placeholder="LED \/ RUN \/ HELP" value="LED"/);
+  records.push({id:'paste',kind:'keyword_comment_measurement',revision:1,updatedAt:Date.now(),data:{planId:plan.id,accountId:plan.data.accountId,sourceUrl:plan.data.postUrl,source:'manual_paste',observedAt:'2026-11-12T02:00:00Z',keyword:'LED',rawText:'<script>LED</script>',total:1,matched:1,matchedUniqueUsers:null}});
+  const saved=render(OperationsPanel,props);
+  assert.match(saved,/Nguồn: dán tay/);assert.match(saved,/thiếu username ở comment khớp/);assert.match(saved,/&lt;script&gt;LED&lt;\/script&gt;/);assert.doesNotMatch(saved,/<script>/);
+  plan.data.status='draft';
+  assert.doesNotMatch(render(OperationsPanel,props),/Lưu bản đo comment/);
+});
+
 test('content preview shows no AI label by default for legacy/null/off plans and required only when explicit',()=>{
   const {product}=instagramOverviewFixture();
   const plan={id:'ai_preview',kind:'content_plan',revision:1,updatedAt:Date.now(),data:{productId:product.id,name:'AI label draft',status:'draft',caption:'English concept'}};

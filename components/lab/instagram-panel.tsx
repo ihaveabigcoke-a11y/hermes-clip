@@ -14,11 +14,14 @@ import {Badge, Button, Empty, Modal, Pagination, RecordForm} from './primitives'
 import {MediaPlayer} from './media-preview';
 import InstagramMetrics from './instagram-metrics';
 import {ProductMetrics,InstagramContentTable} from './instagram-overview';
+import InstagramKeywordComments from './instagram-keyword-comments';
+import {instagramAccountContentRows} from '@/lib/lab/instagram-summary';
 
 type Props = {
   product: LabRecord; accounts: LabRecord[]; plans: LabRecord[]; records: LabRecord[]; demo: boolean; disabled: boolean;
   onAccount: (account?: LabRecord) => void; onPlan: (plan?: LabRecord) => void;
   onCreateProduction: (plan: LabRecord) => void;
+  onSaveComments: (id:string,data:Record<string,any>) => Promise<LabRecord>;
   notify: (text: string, tone?: string) => void;
 };
 const pendingStates = ['queued', 'waiting_login', 'preparing', 'uploading', 'submitting', 'needs_attention'];
@@ -36,7 +39,7 @@ function jobTone(job?: InstagramJob) {
   return 'neutral';
 }
 
-export default function InstagramPanel({product, accounts, plans, records, demo, disabled, onAccount, onPlan, onCreateProduction, notify}: Props) {
+export default function InstagramPanel({product, accounts, plans, records, demo, disabled, onAccount, onPlan, onCreateProduction, onSaveComments, notify}: Props) {
   const live = useInstagramStatus(!demo);
   const organization = useDesktopPreference<MediaOrganization>('mediaOrganization', {});
   type Tab='overview'|'content'|'accounts'|'history';
@@ -69,6 +72,7 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
   const account = activeAccounts.find(account => account.id === accountId) ?? (!accountId ? activeAccounts[0] : undefined);
   const profile = live.status?.profiles.find(profile => profile.id === account?.id);
   const published = plan && (['published_browser', 'published_manual'].includes(plan.data.status) || latest?.state === 'published');
+  const commentPost = plan && instagramAccountContentRows(records,product.id,live.status?.jobs).find(post=>post.planIds.includes(plan.id));
   const pending = latest && pendingStates.includes(latest.state);
   const canPublish = !!plan && !!chosenMedia && !!account && !!plan.data.caption?.trim() && chosenMedia.take.review !== 'rejected'
     && !pending && !published && !disabled && !busy && !demo && !!live.status;
@@ -184,6 +188,8 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
           foreground={!!profile?.open&&!profile.background}
           onRefresh={()=>act('instagramRefreshMetrics',{planId:plan.id},'Đã cập nhật số liệu từ Instagram.')}
           onLogin={account?()=>act('instagramOpen',{id:account.id}):undefined}/>}
+        {published && commentPost && <InstagramKeywordComments key={plan.id} plan={plan} keyword={commentPost.plannedCtaKeyword??commentPost.ctaKeyword}
+          measurements={commentPost.keywordMeasurements} disabled={disabled||busy||!['published_manual','published_browser'].includes(plan.data.status)} onSave={onSaveComments}/>}
       </section>
     </div>}
     {tab === 'history' && <div className="instagram-history">{jobs.slice((historyCurrentPage - 1) * 8, historyCurrentPage * 8).map(job => <article className="production-card production-card-body" key={job.id}>
