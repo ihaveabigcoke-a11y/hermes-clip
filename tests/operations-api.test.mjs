@@ -7,12 +7,33 @@ import {emptyProduct,productFromCandidate,unitMargin,productMarginLabel} from '.
 import {researchProductId} from '../lib/lab/operations.ts';
 import {viralFormulas, viralFormulaRecordId} from '../lib/lab/viral-formulas.ts';
 import {draftReferenceVideo, referenceDraftRecordId} from '../lib/lab/viral-reference.ts';
+import {saveResearchSelection} from '../lib/lab/research-selection.ts';
 
 async function save(kind, id, data, revision = 0, who = 'ops-owner', action = 'save') {
   const request = new Request('https://qa.invalid/api/lab', {method: 'POST', headers: {'Content-Type': 'application/json', Origin: 'https://qa.invalid', 'oai-authenticated-user-id': who, 'oai-authenticated-user-email': who+'@example.invalid'}, body: JSON.stringify({kind, id, data, revision, action})});
   const response = await call(lab.POST, request);
   return {status: response.status, ...await response.json()};
 }
+
+test('one check creates a profile through promote; repeat, uncheck and recheck retain the edited profile',async()=>{
+  const created=await save('research_batch','one_check',{name:'One check fixture',candidates:[{id:'pick',name:'Product',supplierUrl:'https://example.test/item/pick',evidenceNotes:'Read source',cost:null}],notes:'[Muse keep_receipt]'});
+  assert.equal(created.status,200);
+  const persist=async(kind,id,data,revision,action)=>{const result=await save(kind,id,data,revision,'ops-owner',action);assert.equal(result.status,200,JSON.stringify(result));return result.record;};
+  let batch=await saveResearchSelection(created.record,'pick',true,persist);
+  assert.deepEqual(batch.data.selectedIds,['pick']);assert.equal(batch.revision,2);
+  const getProduct=async()=>{
+    const response=await call(lab.GET,new Request('https://qa.invalid/api/lab',{headers:{'oai-authenticated-user-id':'ops-owner','oai-authenticated-user-email':'ops-owner@example.invalid'}}));
+    return (await response.json()).records.filter(r=>r.id===researchProductId(batch.id,'pick'));
+  };
+  let profiles=await getProduct();assert.equal(profiles.length,1);assert.equal(profiles[0].data.cost,null);
+  const edited=await persist('product',profiles[0].id,{...profiles[0].data,name:'User edited'},profiles[0].revision);
+  batch=await saveResearchSelection(batch,'pick',true,persist);
+  assert.equal(batch.revision,2);assert.deepEqual(await getProduct(),[edited]);
+  batch=await saveResearchSelection(batch,'pick',false,persist);
+  assert.deepEqual(batch.data.selectedIds,[]);assert.deepEqual(await getProduct(),[edited]);
+  batch=await saveResearchSelection(batch,'pick',true,persist);
+  assert.equal(batch.data.notes,'[Muse keep_receipt]');assert.deepEqual(await getProduct(),[edited]);
+});
 
 test('reference draft API validates taxonomy, preserves unknowns, isolates owners and enforces CAS without changing formulas', async()=>{
   const draft=draftReferenceVideo({id:'sample',product:'Fixture',structure:{durationSec:6,cuts:[2,4],cutCount:2,contactSheetPath:'fixture/sheet.jpg',frames:[{t:0,path:'fixture/frame.jpg'}]}});

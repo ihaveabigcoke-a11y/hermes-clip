@@ -21,10 +21,29 @@ registerHooks({resolve(specifier,context,next){
 }});
 const {SourceChip,SourceDetails,ShortsSignal,shouldPollSourceChecks,SOURCE_POLL_MS}=await import('../../components/lab/research-sources.tsx');
 const {default:ResearchCandidates}=await import('../../components/lab/research-candidates.tsx');
+const {default:ResearchLauncher}=await import('../../components/lab/research-launcher.tsx');
 const {candidateSchema,researchBatchSchema}=await import('../../lib/lab/operations.ts');
 const {extractListing,listingWarnings,youtubeObservation}=await import('../src/listing-check.mjs');
 const candidate=candidateSchema.parse({id:'fixture',name:'Night leash',supplierUrl:'https://example.test/item',evidenceNotes:'Muse',cost:5,costCurrency:'CNY',minimumOrder:1});
 const render=(Component,candidate)=>renderToStaticMarkup(React.createElement(Component,{candidate}));
+
+test('compact comparison renders ten rows, decision columns, honest coverage and one detail action per row',()=>{
+ const candidates=Array.from({length:10},(_,i)=>({...candidate,id:'compact'+i,name:'Product '+i,cost:null,supplierUrl:'https://example.test/shared',marketEvidence:[{label:'Page reviews',value:100,unit:'reviews',market:'US',period:'Snapshot',sourceUrl:'https://example.test/review',observedAt:'2026-11-12T00:00:00Z'}]}));
+ const batch={id:'compact',kind:'research_batch',revision:1,data:researchBatchSchema.parse({name:'Fixture',candidates,selectedIds:[]})};
+ const html=renderToStaticMarkup(React.createElement(ResearchCandidates,{record:batch,records:[batch],disabled:false,onEdit(){},onSelect(){}}));
+ assert.equal((html.match(/type="checkbox"/g)||[]).length,10);
+ for(const text of ['Đối chiếu SKU','Giá vốn + ship','Cảnh kết quả','Cờ rủi ro','Thử / giữ / loại','Chất lượng nguồn','Hồ sơ vẫn giữ','Có giá vốn <strong>0/10','Có ship <strong>0/10','Có listing riêng <strong>0/10','Có chỉ số không phải cấp trang <strong>0/10'])assert.ok(html.includes(text),text);
+ assert.equal((html.match(/>Xem<\/button>/g)||[]).length,10);
+ assert.doesNotMatch(html,/Xem phân tích|Chưa tính lợi nhuận|badge success/);
+ assert.match(html,/Dùng chung trang nguồn/);assert.match(html,/Số liệu cấp trang/);
+});
+
+test('launcher renders multiline criteria, structured defaults and a single primary start action',()=>{
+ const html=renderToStaticMarkup(React.createElement(ResearchLauncher,{disabled:false,onOpen(){}}));
+ assert.equal((html.match(/<textarea/g)||[]).length,2);
+ for(const text of ['Giá vốn + ship tối đa (USD)','Ngách hoặc đối tượng','Loại trừ','large lithium batteries','value="20"','Bắt đầu nghiên cứu'])assert.ok(html.includes(text),text);
+ assert.equal((html.match(/lab-button primary/g)||[]).length,1);
+});
 
 test('source chips and Shorts cells distinguish unchecked, blocked, failed and unknown',()=>{
  assert.match(render(SourceChip,candidate),/Nguồn: chưa đọc/);

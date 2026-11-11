@@ -4,9 +4,10 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { z } from "zod";
 import { Plus, Search, Download, Eye, ArrowLeft } from "lucide-react";
 import { Button, Badge, Empty, Modal, RecordForm, ClientError, api, type FieldDef } from "./primitives";
-import { type Kind, type LabRecord, productFromCandidate, formatTime, schemas } from "@/lib/lab/domain";
+import { type Kind, type LabRecord, formatTime, schemas } from "@/lib/lab/domain";
 import { currencyFields } from "./currency-fields";
-import { candidateSchema, researchProductId, landingHtml, landingPageSchema, type Candidate, type ResearchBatch } from "@/lib/lab/operations";
+import { candidateSchema, landingHtml, landingPageSchema, type Candidate, type ResearchBatch } from "@/lib/lab/operations";
+import {saveResearchSelection} from '@/lib/lab/research-selection';
 import { desktopBridge, fetchAssetBytes } from "@/lib/lab/desktop-client";
 import InstagramPanel from './instagram-panel';
 import InstagramOverview from './instagram-overview';
@@ -87,7 +88,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
   }
   function batchForm() {
     const id = newId();
-    show({title: "Tạo đợt nghiên cứu", kind: "research_batch", initial: {name: "", market: "United States", locale: "en-US", candidates: [], selectedIds: [], notes: ""},
+    show({title: "Tạo đợt nhập tay", kind: "research_batch", initial: {name: "", market: "United States", locale: "en-US", candidates: [], selectedIds: [], notes: ""},
       fields: [{name: "name", label: "Tên đợt"}, {name: "market", label: "Thị trường"}, {name: "locale", label: "Ngôn ngữ nội dung"}],
       save: async value => { await save("research_batch", id, value); select(id); }});
   }
@@ -139,10 +140,12 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
     setMuseTask(null);
     setDirty(true);
   }
-  async function promote(candidate: Candidate) {
+  async function selectCandidate(candidate: Candidate, checked: boolean) {
     if (!chosen) return;
-    const batch = chosen.data as ResearchBatch;
-    await save("product", researchProductId(chosen.id, candidate.id), productFromCandidate(chosen.id, batch, candidate), 0, "promote");
+    try {
+      await saveResearchSelection(chosen, candidate.id, checked, persist);
+      notify(checked ? 'Đã chọn và giữ hồ sơ sản phẩm.' : 'Đã bỏ chọn. Hồ sơ vẫn giữ.');
+    } catch (failure) { reload(); throw failure; }
   }
   function accountForm(account?: LabRecord) {
     if (!chosen) return;
@@ -223,16 +226,15 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
   }
 
   function researchView(): ReactNode {
-    if (!chosen) return <Empty title="Chưa có đợt nghiên cứu" text="Tạo đợt, lưu tối đa 10 ứng viên có nguồn và chọn tối đa 3 để thử content." action={<Button onClick={batchForm}>Tạo đợt nghiên cứu</Button>}/>;
+    if (!chosen) return <Empty title="Chưa có đợt nghiên cứu" text="Bấm Bắt đầu nghiên cứu để Muse tìm nguồn, hoặc tạo đợt nhập tay từ nút phía trên."/>;
     const batch = chosen.data as ResearchBatch;
     return <>
       <div className="operations-toolbar"><Badge>{batch.candidates.length}/10 ứng viên</Badge><Badge>{batch.selectedIds.length}/3 đã chọn</Badge>
-        <Button disabled={disabled || batch.candidates.length >= 10} onClick={() => candidateForm()}><Plus size={16}/>Thêm ứng viên</Button>
+        <Button tone="neutral" disabled={disabled || batch.candidates.length >= 10} onClick={() => candidateForm()}><Plus size={16}/>Thêm ứng viên</Button>
         <Button tone="neutral" disabled={disabled || demo || !desktopBridge() || batch.candidates.length >= 10} onClick={() => openMuseTask("research")}><Search size={16}/>{batch.candidates.length>=10?'Đã đủ 10 ứng viên':'Nghiên cứu bằng Muse'}</Button>
       </div>
       <ResearchCandidates key={chosen.id} record={chosen} records={records} disabled={disabled} onEdit={candidateForm}
-        onSelect={candidate=>act(()=>save('research_batch',chosen.id,{...batch,selectedIds:batch.selectedIds.includes(candidate.id)?batch.selectedIds.filter(id=>id!==candidate.id):[...batch.selectedIds,candidate.id]},chosen.revision))}
-        onPromote={candidate=>act(()=>promote(candidate))}/>
+        onSelect={(candidate,checked)=>act(()=>selectCandidate(candidate,checked))}/>
       {batch.notes && <details className="operations-evidence"><summary>Kết quả tìm nguồn đã lưu</summary><pre>{batch.notes}</pre></details>}
     </>;
   }
@@ -246,7 +248,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
   const titles = {research: "Nghiên cứu sản phẩm", social: chosen?chosen.data.name:"Instagram · Tổng quan sản phẩm", landing: "Trang giới thiệu"};
   return <section className="operations-panel">
     {view==='social'&&chosen&&<div><Button tone="ghost" onClick={()=>select('')}><ArrowLeft size={16}/>Tất cả sản phẩm</Button></div>}
-    <header className="operations-heading"><div><h1>{titles[view]}</h1><p>{view === "research" ? "So sánh 10 ứng viên có nguồn, chọn 3 sản phẩm để thử." : view==='social'?'Theo dõi nội dung và kết quả theo sản phẩm.':chosen?.data.name}</p></div>{view === "research" && <Button disabled={disabled} onClick={batchForm}>Tạo đợt nghiên cứu</Button>}</header>
+    <header className="operations-heading"><div><h1>{titles[view]}</h1><p>{view === "research" ? "So sánh 10 ứng viên có nguồn, chọn 3 sản phẩm để thử." : view==='social'?'Theo dõi nội dung và kết quả theo sản phẩm.':chosen?.data.name}</p></div>{view === "research" && <Button tone="neutral" disabled={disabled} onClick={batchForm}>Tạo đợt nhập tay</Button>}</header>
     {view==='research'&&<ResearchLauncher disabled={disabled||demo} onOpen={id=>{select(id);reload();}}/>}
     {view === 'research' && <ViralFormulas records={records} disabled={disabled||demo} onSaveDraft={(draft,revision)=>persist('reference_video_draft','reference_video_draft_'+draft.id,draft,revision)}/>}
     {choices.length > 0 && view!=='social' && <div className="field operations-selector"><label htmlFor="operations-selection">{view === "research" ? "Đợt nghiên cứu" : "Sản phẩm"}</label><select id="operations-selection" value={chosen?.id ?? ""} disabled={busy} onChange={event => select(event.target.value)}>{choices.map(record => <option key={record.id} value={record.id}>{record.data.name}</option>)}</select></div>}

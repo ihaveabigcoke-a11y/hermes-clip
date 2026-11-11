@@ -398,6 +398,7 @@ export default function LabApp() {
       );
     if (demo) {
       const previous = samples.find((r) => r.id === id);
+      if (kind === 'product' && action === 'promote' && previous) return previous;
       if (previous && previous.revision !== revision)
         throw new ClientError("Dữ liệu mẫu đã thay đổi. Mở lại để chỉnh sửa.");
       let d = { ...data };

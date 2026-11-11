@@ -8,6 +8,78 @@ import {instagramProductSummary} from '../lib/lab/instagram-summary.ts';
 import {annotateResearchQuality, sharedSourceWarning, pageLevelEvidenceWarning} from '../lib/lab/research-quality.ts';
 import {draftReferenceVideo, referenceVideoDraftSchema, videoStructureSchema, referenceMusePrompt} from '../lib/lab/viral-reference.ts';
 import {formulaTaxonomy, formulaProductTraits, viralFormulas, referenceVideoSchema} from '../lib/lab/viral-formulas.ts';
+import {researchCoverage,hasIndividualListing,landedCostBadge,researchRisks,buildResearchQuery,defaultResearchCriteria,defaultResearchExclusions} from '../lib/lab/research-view.ts';
+import {planResearchSelection,saveResearchSelection} from '../lib/lab/research-selection.ts';
+
+test('research coverage counts explicit zero but never missing costs, showroom or duplicate page metrics',()=>{
+  const metric={label:'Reviews',value:20,unit:'reviews',market:'US',period:'At read time',sourceUrl:'https://example.test/review',observedAt:'2026-11-12T00:00:00Z'};
+  const rows=Array.from({length:10},(_,i)=>candidateSchema.parse({id:'coverage'+i,name:'Product '+i,supplierUrl:i<2?'https://example.test/showroom':'https://example.test/item/'+i,evidenceNotes:'Fixture',cost:i<2?0:null,shipping:i===0?0:null,matchType:i===0?'exact_sku':'similar',marketEvidence:[{...metric,...(i===9?{value:0,sourceUrl:'https://example.test/review/unique'}:{})}]}));
+  const before=structuredClone(rows);
+  assert.deepEqual(researchCoverage(rows),{total:10,cost:2,shipping:1,exactSku:1,individualListing:8,productMetrics:1});
+  assert.deepEqual(rows,before);
+  assert.deepEqual(researchCoverage([]),{total:0,cost:0,shipping:0,exactSku:0,individualListing:0,productMetrics:0});
+  assert.equal(researchCoverage([{...rows[9],marketEvidence:[{...metric,period:''}]}]).productMetrics,0);
+  assert.equal(researchCoverage([{...rows[9],cost:undefined,shipping:undefined,marketEvidence:undefined}]).cost,0);
+  const check={status:'ok',sourceUrl:rows[9].supplierUrl,productCountReliable:true,productCountOnPage:12};
+  assert.equal(hasIndividualListing({...rows[9],listingCheck:check}),false);
+  assert.equal(hasIndividualListing({...rows[9],supplierUrl:'https://example.test/showroom'}),false);
+  assert.equal(hasIndividualListing({...rows[9],listingCheck:{...check,productCountOnPage:1}}),true);
+});
+
+test('landed cost badge compares only complete USD amounts at the inclusive 20 USD threshold',()=>{
+  const row=candidateSchema.parse({id:'badge',name:'Fixture',supplierUrl:'https://example.test/item/a',evidenceNotes:'Quote',cost:15,shipping:5});
+  assert.equal(landedCostBadge(row).label,'≤ 20 USD');
+  assert.equal(landedCostBadge({...row,cost:0,shipping:0}).label,'≤ 20 USD');
+  assert.equal(landedCostBadge({...row,shipping:5.01}).label,'> 20 USD');
+  for(const patch of [{cost:null},{shipping:null},{cost:undefined},{currency:'CNY'},{costCurrency:'CNY'},{shippingCurrency:'GBP'}]){
+    const badge=landedCostBadge({...row,...patch});assert.equal(badge.label,'Chưa đủ số');assert.equal(badge.tone,'neutral');
+  }
+  assert.equal(landedCostBadge({...row,currency:'CNY'}).amount,20);
+  assert.equal(landedCostBadge({...row,costCurrency:'CNY'}).amount,null);
+  assert.deepEqual(researchRisks(row),['Chưa rõ']);
+  assert.deepEqual(researchRisks({...row,logisticsFlags:{battery:true,liquid:false}}),['Pin','Chưa rõ']);
+});
+
+test('checking twice plans the same product and selection; unchecking retains data and enforces three choices',()=>{
+  const batch=researchBatchSchema.parse({name:'Selection fixture',candidates:Array.from({length:4},(_,i)=>({id:'pick'+i,name:'Product '+i,supplierUrl:'https://example.test/item/'+i,evidenceNotes:'Fixture'})),notes:'[Muse receipt_keep]'});
+  const first=planResearchSelection('batch',batch,'pick0',true),again=planResearchSelection('batch',first.data,'pick0',true);
+  assert.equal(again.data,first.data);assert.equal(again.productId,first.productId);assert.deepEqual(again.data.selectedIds,['pick0']);
+  assert.deepEqual(batch.selectedIds,[]);assert.equal(first.data.notes,batch.notes);
+  const removed=planResearchSelection('batch',again.data,'pick0',false);
+  assert.equal(removed.productId,null);assert.deepEqual(removed.data.selectedIds,[]);assert.equal(removed.data.candidates,batch.candidates);
+  const full={...batch,selectedIds:['pick0','pick1','pick2']};
+  assert.equal(planResearchSelection('batch',full,'pick0',true).data,full);
+  assert.throws(()=>planResearchSelection('batch',full,'pick3',true),/tối đa 3/);
+  assert.throws(()=>planResearchSelection('batch',full,'missing',true),/không còn/);
+});
+
+test('selection stops on CAS conflict and retries promote after an uncertain response without resetting the receipt',async()=>{
+  const record={id:'retry',kind:'research_batch',revision:1,data:researchBatchSchema.parse({name:'Retry fixture',candidates:[{id:'pick',name:'Product',supplierUrl:'https://example.test/item/pick',evidenceNotes:'Fixture'}],notes:'[Muse stable]'})};
+  const calls=[];
+  await assert.rejects(()=>saveResearchSelection(record,'pick',true,async(kind)=>{calls.push(kind);throw Error('CAS');}),/CAS/);
+  assert.deepEqual(calls,['research_batch']);
+  let selected;
+  await assert.rejects(()=>saveResearchSelection(record,'pick',true,async(kind,id,data)=>{
+    if(kind==='product')throw Error('Reply lost');
+    selected={...record,data,revision:2};return selected;
+  }),/chưa xác nhận hồ sơ/);
+  const retried=[];
+  await saveResearchSelection(selected,'pick',true,async(...args)=>{retried.push(args);return {id:args[1],kind:args[0],data:args[2],revision:1};});
+  assert.equal(retried.length,1);assert.equal(retried[0][0],'product');assert.equal(retried[0][1],'research_retry_pick');assert.equal(retried[0][4],'promote');
+  assert.equal(selected.data.notes,'[Muse stable]');
+});
+
+test('structured English criteria keep user budget and exclusions in the runner query without truncation',()=>{
+  const input={criteria:defaultResearchCriteria,maxLandedCost:'20',niche:'night runners',exclusions:defaultResearchExclusions};
+  const query=buildResearchQuery(input);
+  assert.match(query,/Maximum supplier cost \+ shipping to the US: 20 USD/);assert.match(query,/Niche or target audience: night runners/);
+  assert.ok(query.includes(defaultResearchExclusions));assert.ok(query.length<=1500);
+  assert.match(buildResearchQuery({...input,maxLandedCost:'15.50'}),/15.5 USD/);
+  assert.match(museTaskPrompt('research',{query}),/use another explicit USD maximum from the user research query/);
+  for(const maxLandedCost of ['', '0','-1','NaN','Infinity','1000000001'])assert.throws(()=>buildResearchQuery({...input,maxLandedCost}),/lớn hơn 0/);
+  assert.throws(()=>buildResearchQuery({...input,criteria:'x'.repeat(1500)}),/Rút gọn/);
+  assert.throws(()=>buildResearchQuery({...input,criteria:' '}),/Điền tiêu chí/);
+});
 
 const referenceStructure={durationSec:6,width:90,height:160,aspectRatio:'9:16',cuts:[2,4],cutCount:2,contactSheetPath:'fixture/contact.jpg',frames:[{t:0,path:'fixture/0.jpg'},{t:.8,path:'fixture/1.jpg'}]};
 test('reference draft uses template proportions and nearby cuts without inventing copy or semantic observations',()=>{

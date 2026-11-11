@@ -1,5 +1,9 @@
 # Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
 
+## Cập nhật source đêm T04 — bảng so sánh và chọn tạo hồ sơ
+
+Clone `night-20261111` đã thu gọn bảng nghiên cứu với cột SKU, vốn + ship, ngưỡng 20 USD, cảnh kết quả, rủi ro, quyết định và cảnh báo T02. Tick chọn lưu lựa chọn rồi gọi API `promote` chống trùng; bỏ chọn giữ hồ sơ, lỗi giữa chừng có đường đối soát/hoàn tất chọn. Form có textarea và tiêu chí cấu trúc, giữ một nút chính Bắt đầu nghiên cứu. Domain 126/126, API 15/15, desktop 214 đạt/1 skip OpenMontage, typecheck và build output riêng đạt. UI build với fixture offline đo hàng 101–109 px ở 1920×1080; ảnh và báo cáo trong `ops/night/out/T04-*`. Chưa triển khai hoặc kiểm bản cài/dịch vụ thật. Xem [checkpoint T04](T04-RESEARCH-COMPARISON.md) cho quy tắc độ đầy đủ, retry, bằng chứng và cách chạy tiếp.
+
 ## Cập nhật source đêm T12 — phân tích video mẫu và tham chiếu nháp
 
 Clone `night-20261111` đã có luồng FFmpeg local từ MP4 Thư viện/file chọn: duration, resolution/tỷ lệ, cuts ngưỡng 0,3, frame mỗi 0,8 giây, contact sheet JPEG và `structure.json` có confinement/checksum. Khối Công thức video cho xem/điền chữ rồi lưu `reference_video_draft` riêng qua API có CAS, chưa sửa công thức chính. Prompt Muse chỉ tạo chuỗi theo taxonomy. YouTube có capability gate/help và adapter tải/subtitles, nhưng clone thiếu Agent Reach/yt-dlp nên nút hiện chưa hỗ trợ; chỉ kiểm argv bằng fake runner, không gọi mạng. Domain 121/121, API 14/14, desktop 212 đạt/1 skip OpenMontage, typecheck và build output riêng đạt. Chưa triển khai bản cài hoặc kiểm GUI/file/dịch vụ thật. Xem [checkpoint T12](T12-REFERENCE-VIDEO.md) cho hợp đồng, bằng chứng, blocker và cách chạy tiếp.
