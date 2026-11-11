@@ -162,16 +162,16 @@ function Gate([hashtable]$baseline, [string]$tag) {
     foreach ($pat in $ForbiddenPatterns) { if ($f -match $pat) { $reasons += ("forbidden path changed: " + $f) } }
   }
   foreach ($d in (Deps-Changed)) { $reasons += ("dependencies changed: " + $d) }
-  $checks = Run-Checks $tag
+  $checkRes = Run-Checks $tag
   $logs = @()
   foreach ($c in $Checks) {
     $n = $c.Name
-    if ($baseline[$n] -eq 0 -and $checks[$n] -ne 0) {
-      $reasons += ("regression: " + $c.Cmd + " now exits " + $checks[$n])
+    if ($baseline[$n] -eq 0 -and $checkRes[$n] -ne 0) {
+      $reasons += ("regression: " + $c.Cmd + " now exits " + $checkRes[$n])
       $logs += ("### " + $c.Cmd + "`n" + (Tail (Join-Path $RunDir ("check-" + $tag + "-" + $n + ".log")) 80))
     }
   }
-  return @{ Ok = ($reasons.Count -eq 0); NoChange = ($real.Count -eq 0); Reasons = $reasons; FailLogs = ($logs -join "`n`n"); Files = $real; Checks = $checks }
+  return @{ Ok = ($reasons.Count -eq 0); NoChange = ($real.Count -eq 0); Reasons = $reasons; FailLogs = ($logs -join "`n`n"); Files = $real; Checks = $checkRes }
 }
 
 # ---------------------------------------------------------------- keep PC awake while running
