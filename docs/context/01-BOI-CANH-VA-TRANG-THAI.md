@@ -1,5 +1,48 @@
 # Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
 
+## Cập nhật đêm 12/11/2026
+
+Tổng kết T10 cho đêm 11–12/11, giờ Asia/Saigon. Checkout `C:/HermesNight/hermes-clip`, nhánh `night-20261111`, HEAD khi bắt đầu tổng kết là `5f1d4bb`. Đây là clone phát triển; bản cài Windows được nhận diện theo mục Hệ thống hiện hành bên dưới, không mở để đối chiếu và chưa được triển khai các thay đổi đêm. Mục này cùng các checkpoint T01–T14 cập nhật trạng thái source; phần bằng chứng ngày 11/11 bên dưới vẫn là lịch sử của bản cài.
+
+### Các task đã có commit trên nhánh
+
+Đối chiếu `git log 0e15716..HEAD` và danh sách file của từng commit; bảng ghi các commit triển khai còn hiệu lực, không coi tên task trong nhật ký là bằng chứng chức năng đã hoàn tất.
+
+| Task | Commit | Kết quả source và checkpoint |
+| --- | --- | --- |
+| T01 | `709280e` | [CNY và tiền tệ riêng của ứng viên](T01-RESEARCH-CURRENCIES.md); phần form/promote được T13 hoàn thiện. |
+| T02 | `7286960` | [Quyết định, SKU, rủi ro, cảnh kết quả và cảnh báo nguồn](T02-RESEARCH-QUALITY.md). |
+| T03 | `f45e8f6` | [Bước tiến độ sản phẩm theo record có bằng chứng](T03-PRODUCT-STAGE.md). |
+| T04 | `758c8b2` | [Bảng so sánh nghiên cứu, tiêu chí và chọn tạo hồ sơ chống trùng](T04-RESEARCH-COMPARISON.md). |
+| T05 | `593e429` | [Thư viện 6 công thức/12 video tham khảo và phiên bản bất biến](../VIRAL-FORMULAS.md). |
+| T06 | `3a80892` | [Kịch bản nháp theo công thức, hai hook A/B, overlay và CTA](T06-FORMULA-STORYBOARD.md). |
+| T07 | `95c35ad` | [Instagram theo tài khoản × nội dung, CTA, lọc lưu trữ và số liệu](T07-INSTAGRAM-OVERVIEW.md). |
+| T08 | `5dfa6a5` | [Sửa UI nhỏ: lưu nháp, preview, hàng đợi, thẻ sản phẩm và sidebar](T08-SMALL-UI.md). |
+| T09 | `5f1d4bb` | [Bắt buộc kiểm nhãn AI trước Share; dừng nếu chưa xác nhận](T09-INSTAGRAM-AI-LABEL.md); chỉ kiểm fixture. |
+| T11 | `74c88f7` | [Kiểm listing và tham khảo YouTube/web bằng Agent Reach](T11-AGENT-REACH-RESEARCH.md); công cụ/dịch vụ thật chưa được xác minh. |
+| T12 | `c66140b` | [MP4 → contact sheet/cuts → tham chiếu nháp](T12-REFERENCE-VIDEO.md); tải Shorts bị khóa khi thiếu công cụ. |
+| T13 | `deb5620` | [Giữ tiền tệ khi tạo hồ sơ và sửa form](T13-PROMOTE-CURRENCIES.md); khác tiền tệ không tính biên. |
+| T14 | `11a8f94` | [Sửa trạng thái công cụ, nhận diện showroom/giá và polling của T11](T14-SOURCE-STATUS-HEURISTICS.md). |
+
+Lịch sử cần đọc đúng: T12 lần đầu `a83d5b9` đã bị revert bởi `6942d89`; dùng bản triển khai lại `c66140b`. Các commit “report only” T06 `3f2bb10`, T04 `b84917d`, T07 `8207b99`, T08 `f43849c`, T09 `d4c6ee2`, T10 `55e6fa5` chỉ lưu nhật ký của lượt trước. T10 lần này mới cập nhật tài liệu, chưa có commit mới tại thời điểm tổng kết; runner sẽ kiểm và commit. Các commit task pack, cấu hình pnpm và morning report là lịch sử vận hành, không phải thêm chức năng sản phẩm.
+
+### Quyết định mới của người dùng
+
+- Dừng dùng ba sản phẩm thương hiệu cũ: **Treat Trader, ChomChom Roller, Ruffwear Front Range Flex Leash**. Người dùng sẽ **lưu trữ, không xóa**; giữ media, phiên bản, file xuất, lịch sử và receipt. Clone đêm chưa thao tác trên dữ liệu thật.
+- Ngưỡng lựa chọn là **giá vốn + ship tới Mỹ ≤ 20 USD**, cần báo giá/phạm vi đúng SKU. Thiếu số giữ `null`; CNY hoặc hai khoản khác tiền tệ chưa đủ để kết luận đạt ngưỡng USD, không tự quy đổi. **Giá bán x3–x4 là giả thuyết**, chưa chứng minh lợi nhuận hay sức mua.
+- Thử **1 sản phẩm × 3 tài khoản**, nội dung khác nhau; xác định quyền theo từng tài khoản/nội dung. Giới hạn chọn tối đa 3 ứng viên trong app vẫn giữ; kế hoạch này không tự tạo tài khoản hay cho phép đăng hàng loạt.
+- Đo nhu cầu bằng **comment từ khóa, DM, chia sẻ, bấm link**. T07 đã hiển thị CTA và chỉ số đang có, nhưng Bình luận vẫn là tổng bình luận; chưa có bộ đếm comment chứa từ khóa hoặc DM. So sánh hook trong cùng tài khoản và cùng từ khóa CTA; thiếu chỉ số vẫn là thiếu.
+- DM dùng **công cụ chính thức qua API của Meta**. Đây là hướng triển khai đã chọn, chưa có tích hợp DM được nghiệm thu trong đêm này; không suy thành quyền tự gửi tin nhắn.
+- Landing đi **hai bậc**: nhận email/đặt chỗ trước; chỉ mở **pre-order thu tiền sau cho sản phẩm thắng**. Chưa triển khai phễu hai bậc, chưa chốt cổng nhận tiền, điều kiện giao/hoàn tiền hoặc tiêu chí thắng; không tự bật thu tiền.
+
+### Bằng chứng, giới hạn và chạy tiếp
+
+Checkpoint/log T09 ở HEAD ghi `npm test` 136/136, `test:api` 16/16, `test:desktop` 242 đạt/1 skip OpenMontage, typecheck đạt, build UI + 22 module API đạt với output riêng. Đây là kết quả của T09 đã đọc lại khi tổng kết, không phải các suite được chạy lại bởi T10. T04/T07/T08 có ảnh và tương tác UI offline; T09 dùng DOM giả lập; T12 dùng FFmpeg thật với video tổng hợp. Không coi chúng là nghiệm thu trên dữ liệu/file/tài khoản người dùng.
+
+**Chưa kiểm giao diện thật trong Electron, DPI Windows, Muse, Instagram thật, Insights/nhãn AI phía Meta hoặc luồng ba tài khoản.** Clone thiếu Agent Reach/yt-dlp để nghiệm thu nguồn/Shorts; OpenMontage live còn skip do môi trường. T06 chưa render overlay tự động; T12 chưa OCR/gửi Muse/duyệt thành công thức chính; T09 chưa có luồng tiếp tục job bị chặn nhãn. Các giới hạn này còn nguyên dù phần source/fixture đã có commit.
+
+T10 chỉ sửa tài liệu; kiểm diff, liên kết nội bộ, commit và phạm vi file. Không tự commit/push, triển khai bản cài, lưu trữ sản phẩm thật, gỡ Reel hoặc đăng thử. [Tổng kết dễ đọc và cách kiểm sáng mai](../../ops/night/out/CHANGES.md) ghi từng task và ba việc làm tay. `ops/night/out/REPORT.md` hiện là báo cáo runner cũ lúc 00:47 với bảng task trống, không dùng để phủ nhận các commit triển khai sau đó. Runner tiếp tục kiểm tra/commit theo quy trình; nghiệm thu bản cài và dịch vụ thật thực hiện sau, theo đúng quyền người dùng.
+
 ## Cập nhật source đêm T09 — nhãn AI trước Share
 
 Clone `night-20261111` đã thêm `content_plan.aiLabel` optional/null, mặc định hiệu lực `required`, lưu snapshot và kiểm thay đổi cấu hình. Adapter bật nhãn ở màn caption sau chọn video, đọc lại trước Share; thiếu/không xác nhận được nhãn thì giữ `needs_attention` với “Cần đối soát/thao tác tay”, không gửi lại. `off` giữ hành vi đăng cũ. Domain 136/136, API 16/16, desktop 242 đạt/1 skip OpenMontage, typecheck và build output riêng đạt. DOM fixture dùng HTML tĩnh, chặn mạng, không có tài khoản/file video thật. **CHƯA kiểm trên Instagram thật**, chưa triển khai bản cài; job chặn chưa có luồng tự tiếp tục. Xem [checkpoint T09](T09-INSTAGRAM-AI-LABEL.md) và [selector/cách kiểm draft sáng mai, không Share](../INSTAGRAM-AI-LABEL.md).

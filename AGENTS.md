@@ -13,3 +13,9 @@
 - Giữ theme/font/workflow ngoài phạm vi sửa. Tài liệu có trạng thái cũ phải được đọc cùng bản context mới nhất.
 
 Không tự chạy các script cũ có hành động bên ngoài chỉ vì chúng có trong repo. Người dùng đang phát triển desktop Windows; bản source này không biến dịch vụ Muse hoặc Instagram thành API không cần đăng nhập.
+
+## Chạy đêm
+
+- Codex vẫn là **một worker duy nhất**, làm trong clone riêng trên nhánh `night-*`, được runner `ops/night/RUN-NIGHT.ps1` gọi tuần tự từng task. Cấm sub-agent, phân vai và orchestrator tự dựng bên trong Codex; không gọi lại runner từ task.
+- Runner tự chạy kiểm tra và commit sau khi kiểm. Worker không tự commit, push hoặc đổi nhánh; ghi checkpoint, blocker và báo cáo cuối đúng mã task để runner đối chiếu.
+- Giữ mọi quy tắc ở trên và giới hạn riêng của từng task đêm. Xác định bản cài từ context, không mở bản cài hay truy cập AppData/profile/SQLite thật; không gọi dịch vụ ngoài. Đọc đầu vào tại `ops/night/input/`, ghi báo cáo tại `ops/night/out/` theo phạm vi được giao.
