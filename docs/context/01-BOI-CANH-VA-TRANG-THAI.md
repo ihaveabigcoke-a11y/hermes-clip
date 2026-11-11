@@ -1,5 +1,9 @@
 # Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
 
+## Cập nhật source đêm T24 — kiểm máy móc commit đêm
+
+Clone `night-20261111` có `scripts/night-review.mjs` để runner xuất bảng theo từng commit T/F: trạng thái từ báo cáo tại commit, revert, log đúng SHA/lượt chạy và các cờ diff. Script chỉ đọc Git, chỉ ghi file output; vẫn cần review nội dung theo skill trước khi áp vào app chính. Test Git fixture đã được thêm vào `npm test`; không thay đổi app hoặc bản cài. Xem [cách chạy và giới hạn](../NIGHT-REVIEW.md), [checkpoint T24](../../ops/night/out/T24.md).
+
 ## Cập nhật source đêm T22 — gửi contact sheet qua chat Muse
 
 Clone `night-20261111` đã nối nút **Phân tích bằng Muse** vào T21: chọn profile bật, gửi sheet thưa + sheet dày đầu tiên qua adapter upload hiện có, parse phản hồi để người dùng duyệt và chỉ lưu khi bấm. JSON sai có yêu cầu sửa cùng `parentId`; kết quả chưa rõ có đọc lại receipt, không tự gửi lại. Main chỉ nhận mã tác vụ từ renderer, kiểm cấu trúc/checksum/confinement/JPEG-PNG/symlink; chat chữ giữ fingerprint cũ. Lỗi chuẩn bị ảnh không gửi prompt hoặc trừ lượt. Chưa triển khai bản cài, chưa mở Muse/Instagram thật; bằng chứng và kết quả kiểm mới ở [checkpoint T22](../../ops/night/out/T22.md), cách thử một video/một lượt ở [MUSE-ANALYSIS.md](../MUSE-ANALYSIS.md). Phần T21 bên dưới mô tả trạng thái trước khi nối Muse.
