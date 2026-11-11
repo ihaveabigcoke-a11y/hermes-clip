@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { z } from "zod";
 import { Plus, Search, Download, Eye, ArrowLeft } from "lucide-react";
 import { Button, Badge, Empty, Modal, RecordForm, ClientError, api, type FieldDef } from "./primitives";
-import { type Kind, type LabRecord, emptyProduct, formatTime, schemas } from "@/lib/lab/domain";
+import { type Kind, type LabRecord, productFromCandidate, formatTime, schemas } from "@/lib/lab/domain";
+import { currencyFields } from "./currency-fields";
 import { candidateSchema, researchProductId, landingHtml, landingPageSchema, type Candidate, type ResearchBatch } from "@/lib/lab/operations";
 import { desktopBridge, fetchAssetBytes } from "@/lib/lab/desktop-client";
 import InstagramPanel from './instagram-panel';
@@ -33,7 +34,6 @@ type FormSpec = {
 };
 const newId = () => crypto.randomUUID().replaceAll("-", "");
 const options = (records: LabRecord[]) => records.map(record => ({value: record.id, label: record.data.name}));
-const currencyOptions = ["USD", "VND", "GBP", "EUR"].map(value => ({value, label: value}));
 import MuseChatPanel, {type Chat} from './muse-chat';
 import {museTaskPrompt, mergeMuseResearch, parseMuseResponse, type MuseTaskKind} from '@/lib/lab/muse-workflows';
 
@@ -103,7 +103,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
         {name: "cost", label: "Giá vốn dự kiến", type: "number", help: "Để trống nếu chưa biết."},
         {name: "shipping", label: "Phí ship dự kiến", type: "number", help: "Để trống nếu chưa biết."},
         {name: "price", label: "Giá bán giả định", type: "number", help: "Dùng để so sánh ứng viên."},
-        {name: "currency", label: "Tiền tệ", type: "select", options: currencyOptions},
+        ...currencyFields,
         {name: "contentAngle", label: "Hướng thử AI content", type: "textarea", full: true},
         {name: "risks", label: "Điều còn thiếu hoặc cần kiểm chứng", type: "textarea", full: true},
       ],
@@ -142,14 +142,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
   async function promote(candidate: Candidate) {
     if (!chosen) return;
     const batch = chosen.data as ResearchBatch;
-    await save("product", researchProductId(chosen.id, candidate.id), {
-      ...emptyProduct, name: candidate.name, market: batch.market, locale: batch.locale,
-      supplierUrl: candidate.supplierUrl, referenceUrl: candidate.evidenceUrl,
-      price: candidate.price, cost: candidate.cost, shipping: candidate.shipping, currency: candidate.currency,
-      problem: candidate.contentAngle,
-      proofNotes: [candidate.evidenceNotes, candidate.risks].filter(Boolean).join("\n"),
-      researchOrigin: {batchId: chosen.id, candidateId: candidate.id},
-    }, 0, "promote");
+    await save("product", researchProductId(chosen.id, candidate.id), productFromCandidate(chosen.id, batch, candidate), 0, "promote");
   }
   function accountForm(account?: LabRecord) {
     if (!chosen) return;

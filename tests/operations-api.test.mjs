@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {call} from './runtime-fixture.mjs';
 import * as lab from '../app/api/lab/route.ts';
 import * as production from '../app/api/production/route.ts';
-import {emptyProduct} from '../lib/lab/domain.ts';
+import {emptyProduct,productFromCandidate,unitMargin,productMarginLabel} from '../lib/lab/domain.ts';
 import {researchProductId} from '../lib/lab/operations.ts';
 import {viralFormulas, viralFormulaRecordId} from '../lib/lab/viral-formulas.ts';
 
@@ -51,6 +51,30 @@ test('research API preserves independent currencies on create and later edits', 
   const updated = await save('research_batch', 'currency_batch', data, created.record.revision);
   assert.equal(updated.status, 200);
   assert.deepEqual(updated.record.data, data);
+});
+
+test('promotion API round-trips mixed and CNY currencies and preserves them on replay and product edit', async () => {
+  for (const currency of ['USD', 'CNY']) {
+    const batchId = 'promote_currency_' + currency;
+    const candidate = {id:'quote', name:'Supplier quote', supplierUrl:'https://example.test/item', evidenceNotes:'Exact SKU quote', cost:36.5, costCurrency:'CNY', shipping:4.25, shippingCurrency:'USD', price:19.99, currency};
+    const batch = await save('research_batch', batchId, {name:'Currency fixture', candidates:[candidate], selectedIds:['quote']});
+    assert.equal(batch.status, 200);
+    const input = productFromCandidate(batchId, batch.record.data, batch.record.data.candidates[0]);
+    const id = researchProductId(batchId, 'quote');
+    const created = await save('product', id, input, 0, 'ops-owner', 'promote');
+    assert.equal(created.status, 200);
+    assert.deepEqual(created.record.data, input);
+    const replay = await save('product', id, {...input, costCurrency:'USD'}, 0, 'ops-owner', 'promote');
+    assert.equal(replay.status, 200);
+    assert.equal(replay.deduplicated, true);
+    assert.deepEqual(replay.record, created.record);
+    const update = {...created.record.data, fees:0, buffer:0};
+    const edited = await save('product', id, update, created.record.revision);
+    assert.equal(edited.status, 200);
+    assert.deepEqual(edited.record.data, update);
+    assert.equal(unitMargin(edited.record.data), null);
+    assert.equal(productMarginLabel(edited.record.data), 'Khác tiền tệ · chưa tính biên');
+  }
 });
 
 test('content draft without Instagram saves and replays while scheduling and foreign accounts are rejected', async () => {

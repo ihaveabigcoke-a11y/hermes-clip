@@ -62,6 +62,7 @@ import {
   type FieldDef,
 } from "./primitives";
 import { ProductArt } from "./art";
+import { currencyFields } from "./currency-fields";
 import ProductionStudio from "./production";
 import OperationsPanel from "./operations";
 import AssistantSettings from "./assistant-settings";
@@ -82,6 +83,7 @@ import {
   classifyComment,
   formatMoney,
   productFinancials,
+  productMarginLabel,
   formatTime,
 } from "@/lib/lab/domain";
 const businessViews = new Set(["overview", "studio", "experiments", "results", "social", "landing"]);
@@ -140,17 +142,12 @@ const productFields: FieldDef[] = [
   },
   { name: "supplierUrl", label: "Link nguồn hàng", type: "url" },
   { name: "referenceUrl", label: "Link nội dung tham khảo", type: "url" },
-  {
-    name: "currency",
-    label: "Tiền tệ của sản phẩm",
-    type: "select",
-    options: ["USD", "VND", "GBP", "EUR"].map((v) => ({ value: v, label: v })),
-  },
+  ...currencyFields,
   { name: "price", label: "Giá bán dự kiến", type: "number" },
   { name: "cost", label: "Giá vốn / sản phẩm", type: "number" },
   { name: "shipping", label: "Chi phí giao hàng / đơn", type: "number" },
-  { name: "fees", label: "Phí thanh toán và nền tảng / đơn", type: "number" },
-  { name: "buffer", label: "Dự phòng lỗi và hoàn trả / đơn", type: "number" },
+  { name: "fees", label: "Phí thanh toán và nền tảng / đơn", type: "number", help: "Theo tiền tệ chung." },
+  { name: "buffer", label: "Dự phòng lỗi và hoàn trả / đơn", type: "number", help: "Theo tiền tệ chung." },
   {
     name: "proofUrl",
     label: "Link video hoặc bằng chứng đã kiểm",
@@ -945,7 +942,7 @@ export default function LabApp() {
             <div>
               <span>Biên trước acquisition</span>
               <strong className={margin !== null && margin > 0 ? "success-text" : "warning-text"}>
-                {margin === null ? "Chưa đủ dữ liệu" : formatMoney(margin, p.data.currency)}
+                {productMarginLabel(p.data)}
               </strong>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {schemas,emptyProduct,unitMargin,productGate,metricAdvice,makeBriefs,classifyComment,formatMoney} from '../lib/lab/domain.ts';
+import {schemas,emptyProduct,unitMargin,productGate,metricAdvice,makeBriefs,classifyComment,formatMoney,productFromCandidate,productCurrency,productFinancials,productMarginLabel} from '../lib/lab/domain.ts';
+import {candidateSchema} from '../lib/lab/operations.ts';
 import {productStage} from '../lib/lab/product-stage.ts';
 import {readFileSync} from 'node:fs';
 import {
@@ -99,6 +100,75 @@ test('workspace overlays formula pairs and selects latest versions without mutat
 });
 const product={id:'p1',kind:'product',revision:1,updatedAt:0,data:{...emptyProduct,name:'Đèn thử',price:30,cost:12,shipping:4,fees:2,buffer:3,proofNotes:'Đã thử công tắc và ánh sáng với sample.'}};
 const ex={id:'e1',kind:'experiment',revision:1,updatedAt:0,data:{productId:'p1'}};
+
+test('promotion preserves each amount and its currency without converting or relabelling supplier cost', () => {
+  const candidate = candidateSchema.parse({id:'mixed', name:'Supplier quote', supplierUrl:'https://example.test/item', evidenceNotes:'Exact SKU quote', risks:'Shipping estimate', cost:36.5, costCurrency:'CNY', shipping:4.25, shippingCurrency:'USD', price:19.99, currency:'USD'});
+  const before = structuredClone(candidate);
+  const promoted = schemas.product.parse(productFromCandidate('batch', {market:'United States', locale:'en-US'}, candidate));
+  for (const field of ['cost', 'shipping', 'price', 'currency', 'costCurrency', 'shippingCurrency']) assert.equal(promoted[field], candidate[field]);
+  assert.deepEqual(promoted.researchOrigin, {batchId:'batch', candidateId:'mixed'});
+  assert.equal(promoted.proofNotes, 'Exact SKU quote\nShipping estimate');
+  assert.equal(promoted.sampleVerified, false);
+  assert.equal(promoted.fees, null);
+  assert.equal(promoted.buffer, null);
+  assert.equal(formatMoney(promoted.cost, productCurrency(promoted, 'cost')), formatMoney(36.5, 'CNY'));
+  assert.notEqual(formatMoney(promoted.cost, productCurrency(promoted, 'cost')), formatMoney(36.5, 'USD'));
+  assert.equal(unitMargin(promoted), null);
+  assert.deepEqual(productFinancials(promoted), promoted);
+  assert.deepEqual(candidate, before);
+
+  const unknown = schemas.product.parse(productFromCandidate('batch', {market:'China', locale:'en-US'}, {...candidate, currency:'CNY', costCurrency:null, shippingCurrency:null, shipping:null, price:null}));
+  assert.equal(unknown.currency, 'CNY');
+  assert.equal(unknown.shipping, null);
+  assert.equal(unknown.price, null);
+  assert.equal(productCurrency(unknown, 'cost'), 'CNY');
+  assert.equal(unitMargin(unknown), null);
+});
+
+test('mixed currencies block every unit margin and the commercial gate even with zero costs', () => {
+  for (const patch of [
+    {costCurrency:'CNY'}, {shippingCurrency:'CNY'},
+    {costCurrency:'CNY', shippingCurrency:'CNY'},
+    {currency:'CNY', costCurrency:'USD', shippingCurrency:'USD'},
+    {cost:0, shipping:0, costCurrency:'CNY'},
+  ]) {
+    const mixed = schemas.product.parse({...product.data, ...patch, sampleVerified:true});
+    assert.equal(unitMargin(mixed), null);
+    assert.equal(productMarginLabel(mixed), 'Khác tiền tệ · chưa tính biên');
+    assert.match(productGate(mixed), /Khác tiền tệ · chưa tính biên/);
+  }
+});
+
+test('legacy products without currency overrides still parse and calculate all per-order costs', () => {
+  const legacy = {...product.data};
+  delete legacy.costCurrency;
+  delete legacy.shippingCurrency;
+  const parsed = schemas.product.parse(legacy);
+  assert.equal(parsed.costCurrency, undefined);
+  assert.equal(parsed.shippingCurrency, undefined);
+  assert.equal(unitMargin(parsed), 9);
+  assert.equal(productMarginLabel(parsed), formatMoney(9, 'USD'));
+  for (const currency of ['USD', 'VND', 'GBP', 'EUR', 'CNY']) {
+    for (const overrides of [{}, {costCurrency:null, shippingCurrency:null}, {costCurrency:currency, shippingCurrency:currency}]) {
+      const row = schemas.product.parse({...legacy, currency, ...overrides, sampleVerified:true});
+      assert.equal(unitMargin(row), 9);
+      assert.equal(productGate(row), '');
+      assert.equal(productCurrency(row, 'cost'), currency);
+      assert.equal(productCurrency(row, 'shipping'), currency);
+    }
+  }
+  for (const key of ['currency', 'costCurrency', 'shippingCurrency']) {
+    assert.equal(schemas.product.safeParse({...legacy, [key]:'XYZ'}).success, false);
+  }
+  assert.deepEqual(legacy, parsed);
+});
+
+test('money formatting distinguishes unknown amounts from known zero and CNY from USD', () => {
+  for (const amount of [null, undefined, NaN, Infinity]) assert.equal(formatMoney(amount, 'CNY'), 'Chưa biết');
+  assert.notEqual(formatMoney(0, 'CNY'), 'Chưa biết');
+  assert.notEqual(formatMoney(36.5, 'CNY'), formatMoney(36.5, 'USD'));
+  assert.equal(productMarginLabel({...product.data, shipping:null}), 'Chưa đủ dữ liệu');
+});
 
 test('unknown product costs remain unknown including legacy research zero placeholders', () => {
   assert.equal(unitMargin({...product.data, cost: null}), null);

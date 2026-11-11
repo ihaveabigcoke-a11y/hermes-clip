@@ -565,7 +565,7 @@ export function RecordForm({
                 <select
                   id={`field-${f.name}`}
                   value={values[f.name] ?? ""}
-                  onChange={(e) => change(f.name, e.target.value)}
+                  onChange={(e) => change(f.name, f.nullable && e.target.value === "" ? null : e.target.value)}
                   aria-invalid={!!errors[f.name]}
                   aria-describedby={
                     errors[f.name] ? `error-${f.name}` : undefined

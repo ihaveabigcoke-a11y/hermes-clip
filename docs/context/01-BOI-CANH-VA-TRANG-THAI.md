@@ -1,5 +1,9 @@
 # Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
 
+## Cập nhật source đêm T13 — promote và form tiền tệ
+
+Clone `night-20261111` đã sửa giới hạn còn lại của T01: sản phẩm nhận CNY và tiền tệ riêng optional/null cho giá vốn, ship; promote giữ nguyên số và đơn vị từng khoản. Form ứng viên/sản phẩm hiển thị CNY và lựa chọn kế thừa tiền tệ chung. Khi khác tiền tệ, biên là null và UI hiện “Khác tiền tệ · chưa tính biên”; không quy đổi tỷ giá. Domain 107/107, API 12/12, desktop 183 đạt/1 skip OpenMontage, typecheck và build output riêng đạt. Chưa triển khai bản cài hay kiểm GUI thật. Xem [checkpoint T13](T13-PROMOTE-CURRENCIES.md) cho hợp đồng, bằng chứng và cách kiểm tiếp.
+
 ## Cập nhật source đêm T05 — thư viện công thức video
 
 Clone `night-20261111` đã có seed source 6 công thức/12 video tham khảo với taxonomy cố định, Zod validation, gợi ý theo traits và khối chỉ đọc **Công thức video** trong Nghiên cứu. API lưu `viral_formula` thành record phiên bản bất biến trong workspace; seed không ghi đè dữ liệu người dùng. CTA dùng mốc từ cuối rõ ràng. Test offline/API/desktop fixture và build riêng đã qua; chưa triển khai bản cài, chưa phân tích MP4/OCR/Muse thật hay tự áp công thức vào kịch bản. Xem [checkpoint và hợp đồng T05](../VIRAL-FORMULAS.md) cho quy ước, bằng chứng và lộ trình cập nhật sau này.

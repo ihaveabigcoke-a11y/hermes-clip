@@ -26,7 +26,8 @@ let routesPath;
 try {({routesPath}=await buildLocalServer(buildRoot));}
 catch(error){await rm(buildRoot,{recursive:true,force:true});throw error;}
 const compiledUrl=name=>pathToFileURL(join(buildRoot,'server/lib/lab',name)).href;
-const {emptyProduct}=await import(compiledUrl('domain.mjs'));
+const {emptyProduct,productFromCandidate,unitMargin,productMarginLabel}=await import(compiledUrl('domain.mjs'));
+const {researchProductId}=await import(compiledUrl('operations.mjs'));
 const {viralFormulas,viralFormulaRecordId,workspaceFormulas,formulasForProduct}=await import(compiledUrl('viral-formulas.mjs'));
 const startLocalServer=options=>startBuiltLocalServer({...options,routesPath});
 
@@ -35,6 +36,36 @@ test('fresh local API build packages the exact formula seed without a prebuilt s
   assert.deepEqual(await readFile(new URL(compiledUrl('viral-formulas.seed.json'))),source);
   assert.equal(viralFormulas.length,6);
   assert.ok(formulasForProduct(['night_glow']).some(formula=>formula.id==='problem-vs-result-cta'));
+});
+
+test('promoted currencies survive local API storage and restart without a numeric mixed margin', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'product-lab-currencies-'));
+  let server;
+  const request = async (method, json) => {
+    const response = await fetch(server.origin+'/api/lab', {method, headers:{
+      Cookie:sessionCookie+'='+server.session, Origin:server.origin, 'Content-Type':'application/json',
+    }, ...(json ? {body:JSON.stringify(json)} : {})});
+    assert.equal(response.status, 200);
+    return response.json();
+  };
+  try {
+    server = await startLocalServer({root, port:0});
+    const candidate = {id:'quote', name:'Currency quote', supplierUrl:'https://example.test/item', evidenceNotes:'Fixture quote', cost:36.5, costCurrency:'CNY', shipping:4.25, shippingCurrency:'USD', price:19.99, currency:'USD'};
+    const batch = await request('POST', {kind:'research_batch', id:'currency_batch', revision:0, data:{name:'Currency batch', candidates:[candidate], selectedIds:['quote']}});
+    const data = {...productFromCandidate(batch.record.id, batch.record.data, batch.record.data.candidates[0]), fees:0, buffer:0};
+    const productId = researchProductId(batch.record.id, 'quote');
+    const created = await request('POST', {kind:'product', id:productId, revision:0, action:'promote', data});
+    assert.deepEqual(created.record.data, data);
+    await server.close();
+    server = await startLocalServer({root, port:0});
+    const restored = (await request('GET')).records.find(row => row.id === productId);
+    assert.deepEqual(restored.data, data);
+    assert.equal(unitMargin(restored.data), null);
+    assert.equal(productMarginLabel(restored.data), 'Khác tiền tệ · chưa tính biên');
+  } finally {
+    await server?.close();
+    await rm(root, {recursive:true, force:true});
+  }
 });
 
 test('bundled formula seed and immutable workspace versions survive local fixture restart', async () => {

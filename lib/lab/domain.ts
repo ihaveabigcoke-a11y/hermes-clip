@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { productionSchema } from "./production.ts";
 import { codexRunSchema } from "./codex-exchange.ts";
-import { operationSchemas } from "./operations.ts";
+import { operationSchemas, candidateCurrencySchema, type Candidate, type ResearchBatch } from "./operations.ts";
 import { viralFormulaSchema } from "./viral-formulas.ts";
 export const kinds = [
   "product",
@@ -76,7 +76,9 @@ export const schemas = {
       shipping: money.nullable(),
       fees: money.nullable(),
       buffer: money.nullable(),
-      currency: z.enum(["USD", "VND", "GBP", "EUR"]).default("USD"),
+      currency: candidateCurrencySchema.default("USD"),
+      costCurrency: candidateCurrencySchema.nullable().optional(),
+      shippingCurrency: candidateCurrencySchema.nullable().optional(),
       archived: z.boolean().default(false),
       researchOrigin: z.object({batchId: z.string().max(50), candidateId: z.string().max(50)}).optional(),
     })
@@ -206,8 +208,21 @@ export const emptyProduct = {
   fees: null,
   buffer: null,
   currency: "USD",
+  costCurrency: null,
+  shippingCurrency: null,
   archived: false,
 };
+export function productFromCandidate(batchId: string, batch: Pick<ResearchBatch, "market" | "locale">, candidate: Candidate) {
+  return {
+    ...emptyProduct, name: candidate.name, market: batch.market, locale: batch.locale,
+    supplierUrl: candidate.supplierUrl, referenceUrl: candidate.evidenceUrl,
+    price: candidate.price, cost: candidate.cost, shipping: candidate.shipping, currency: candidate.currency,
+    costCurrency: candidate.costCurrency ?? null, shippingCurrency: candidate.shippingCurrency ?? null,
+    problem: candidate.contentAngle,
+    proofNotes: [candidate.evidenceNotes, candidate.risks].filter(Boolean).join("\n"),
+    researchOrigin: {batchId, candidateId: candidate.id},
+  };
+}
 export const emptySettings = {
   budgetUsd: 0,
   paused: false,
@@ -224,15 +239,30 @@ export function productFinancials(p: Record<string, any>) {
 }
 export function unitMargin(product: Record<string, any>) {
   const p = productFinancials(product);
+  if (productHasMixedCurrencies(p)) return null;
   if (['price', 'cost', 'shipping', 'fees', 'buffer'].some(key => typeof p[key] !== 'number' || !Number.isFinite(p[key]))) return null;
   return (
     Math.round((p.price - p.cost - p.shipping - p.fees - p.buffer) * 100) / 100
   );
 }
+// Fees and buffer use the shared selling-price currency. Missing/null overrides
+// inherit it, matching legacy records; amounts are never converted.
+export function productCurrency(product: Record<string, any>, field: "price" | "cost" | "shipping") {
+  return (field === "price" ? undefined : product[field + "Currency"]) ?? product.currency ?? "USD";
+}
+export function productHasMixedCurrencies(product: Record<string, any>) {
+  return (["cost", "shipping"] as const).some(field => productCurrency(product, field) !== productCurrency(product, "price"));
+}
+export function productMarginLabel(product: Record<string, any>) {
+  if (productHasMixedCurrencies(product)) return "Khác tiền tệ · chưa tính biên";
+  const margin = unitMargin(product);
+  return margin === null ? "Chưa đủ dữ liệu" : formatMoney(margin, productCurrency(product, "price"));
+}
 export function productGate(p: Record<string, any>) {
   if (p.archived) return "Sản phẩm đang lưu trữ.";
   if (!p.sampleVerified)
     return "Cần kiểm mẫu sản phẩm và ghi bằng chứng trước khi chạy bài test.";
+  if (productHasMixedCurrencies(p)) return "Khác tiền tệ · chưa tính biên. Cần giá và chi phí cùng tiền tệ trước khi chạy bài test thương mại.";
   const margin = unitMargin(p);
   if (margin === null) return "Điền đủ giá và chi phí trước khi chạy bài test thương mại.";
   if (margin <= 0)
@@ -341,12 +371,13 @@ export function makeBriefs(
     })),
   );
 }
-export function formatMoney(v: number, currency = "USD") {
+export function formatMoney(v: number | null | undefined, currency = "USD") {
+  if (v == null || !Number.isFinite(v)) return "Chưa biết";
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency,
     maximumFractionDigits: currency === "VND" ? 0 : 2,
-  }).format(v || 0);
+  }).format(v);
 }
 export function formatTime(v: number) {
   return new Intl.DateTimeFormat("vi-VN", {
