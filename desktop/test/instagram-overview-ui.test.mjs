@@ -82,6 +82,36 @@ test('empty content retains comparison note; stored strings render as text',()=>
   assert.match(empty,/Chưa có bài đăng/);assert.match(empty,/So sánh hook chỉ có ý nghĩa/);
 });
 
+test('UTM column shortens saved links with the full title and retains unknown as a dash',()=>{
+  const {records,product}=instagramOverviewFixture();
+  const plan=records.find(row=>row.id==='plan_1_1');
+  const link='https://shop.example/landing?utm_source=instagram&utm_medium=dm&utm_campaign=light&utm_content=shop-hook-a&utm_term=led';
+  plan.data.utmLink=link;
+  const html=render(InstagramContentTable,{records,productId:product.id});
+  assert.match(html,/<th scope="col">Link UTM<\/th>/);
+  assert.ok(html.includes('title="'+link.replaceAll('&','&amp;')+'"'));
+  assert.ok(html.includes('>'+link.slice(0,39)+'…</span>'));
+  assert.match(html,/<td>LED<\/td><td>—<\/td>/);
+  plan.data.utmLink='javascript:alert(1)';assert.doesNotMatch(render(InstagramContentTable,{records,productId:product.id}),/javascript:/);
+});
+
+test('plan detail offers landing default, explicit hook choice, saved link and copy without needing publication',()=>{
+  const {records,product}=instagramOverviewFixture(),plan=records.find(row=>row.id==='plan_1_1');
+  records.push({id:'landing',kind:'landing_page',data:{productId:product.id,ctaUrl:'https://shop.example/landing?ref=partner'}});
+  const props={view:'social',records,demo:true,offline:false,persist:async()=>{throw Error('Read-only render');},notify(){},reload(){}};
+  globalThis.location={href:'http://fixture.invalid/?view=social&ops_id='+product.id+'&ig_tab=content'};
+  for(const status of ['draft','published_manual']){
+    plan.data.status=status;
+    const html=render(OperationsPanel,props);
+    for(const label of ['Link landing gốc','Biến thể / hook cho link','Tạo và lưu link UTM','Sao chép link UTM','Link UTM đã lưu','@fixture_1'])assert.ok(html.includes(label),label);
+    assert.match(html,/value="https:\/\/shop.example\/landing\?ref=partner"/);
+    assert.match(html,/<option value="variant_plan_1_1" selected=""/);
+  }
+  plan.data.landingBaseUrl='https://shop.example/custom';plan.data.utmLink='https://shop.example/custom?utm_source=instagram';
+  const saved=render(OperationsPanel,props);assert.ok(saved.includes('value="'+plan.data.landingBaseUrl+'"'));
+  assert.ok(saved.includes('value="'+plan.data.utmLink+'"'));
+});
+
 test('keyword table separates measured zero from missing data and shows manual provenance and approximate view rate',()=>{
   const {records,product}=instagramOverviewFixture();
   const plan=records.find(r=>r.id==='plan_1_1'),metric=records.find(r=>r.id==='metric_'+plan.id);

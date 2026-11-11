@@ -18,6 +18,27 @@ async function save(kind, id, data, revision = 0, who = 'ops-owner', action = 's
   return {status: response.status, ...await response.json()};
 }
 
+test('UTM links round-trip through plan save/read/CAS without requiring a migration for legacy plans',async()=>{
+  const who='utm-owner';
+  const {buildUtmLink}=await importApiModule('lib/lab/utm.ts');
+  const read=async()=>(await (await call(lab.GET,new Request('https://qa.invalid/api/lab',{headers:{'oai-authenticated-user-id':who,'oai-authenticated-user-email':who+'@example.invalid'}}))).json()).records;
+  assert.equal((await save('product','utm_product',{...emptyProduct,name:'Đèn ngủ'},0,who)).status,200);
+  assert.equal((await save('social_account','utm_account',{name:'UTM account',productId:'utm_product',handle:'shop.one'},0,who)).status,200);
+  const legacy=await save('content_plan','utm_plan',{name:'Legacy plan',productId:'utm_product',accountId:'utm_account',hook:'English hook',notes:'Keep original notes'},0,who);
+  assert.equal(legacy.status,200);assert.equal(legacy.record.data.utmLink,undefined);
+  const landingBaseUrl='https://shop.example/light?ref=partner#join';
+  const utmLink=buildUtmLink(landingBaseUrl,{productSlug:'Đèn ngủ',accountHandle:'shop.one',planId:legacy.record.id,hookId:'hook_a',ctaKeyword:'LED'});
+  const data={...legacy.record.data,utmLink,landingBaseUrl,utmHookId:'hook_a',ctaKeyword:'LED'};
+  const saved=await save('content_plan',legacy.record.id,data,legacy.record.revision,who);
+  assert.equal(saved.status,200);assert.deepEqual(saved.record.data,data);
+  assert.deepEqual((await read()).find(row=>row.id===saved.record.id),saved.record);
+  assert.equal((await save('content_plan',legacy.record.id,{...data,utmLink:null},legacy.record.revision,who)).status,409);
+  for(const field of ['utmLink','landingBaseUrl'])assert.equal((await save('content_plan',saved.record.id,{...data,[field]:'javascript:alert(1)'},saved.record.revision,who)).status,422);
+  assert.deepEqual((await read()).find(row=>row.id===saved.record.id),saved.record);
+  const nullable=await save('content_plan','utm_nullable',{name:'Nullable plan',productId:'utm_product',utmLink:null,landingBaseUrl:null,utmHookId:null},0,who);
+  assert.equal(nullable.status,200);assert.equal(nullable.record.data.utmLink,null);
+});
+
 test('manual comment measurements round-trip separately, recompute counts and preserve Insights and every previous paste',async()=>{
   const who='comment-measure-owner';
   const read=async(owner=who)=>(await (await call(lab.GET,new Request('https://qa.invalid/api/lab',{headers:{'oai-authenticated-user-id':owner,'oai-authenticated-user-email':owner+'@example.invalid'}}))).json()).records;

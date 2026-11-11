@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ctaKeywordSchema } from './production.ts';
+import { isHttpsLink } from './utm.ts';
 import { countKeywordComments, parseCommentPaste } from './keyword-comments.ts';
 
 export const commentKeywordSchema = z.string().trim().toUpperCase().pipe(ctaKeywordSchema);
@@ -144,6 +145,10 @@ export const contentPlanSchema = z.object({
   script: text(6000),
   caption: text(2200),
   ctaKeyword: z.preprocess(value => value === '' ? null : value, commentKeywordSchema.nullable().optional()),
+  landingBaseUrl: z.preprocess(value => value === '' ? null : value,
+    z.string().trim().max(2048).refine(isHttpsLink, 'Điền URL HTTPS hợp lệ, không chứa thông tin đăng nhập.').nullable().optional()),
+  utmLink: z.string().trim().max(8192).refine(isHttpsLink, 'Link UTM phải dùng HTTPS.').nullable().optional(),
+  utmHookId: z.string().trim().max(180).nullable().optional(),
   // Missing/null keeps old records readable; the publishing snapshot resolves
   // it to off (user default). Only explicit "required" turns on the label check.
   aiLabel: z.enum(["required", "off"]).nullable().optional(),

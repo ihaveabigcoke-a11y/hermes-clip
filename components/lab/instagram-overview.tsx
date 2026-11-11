@@ -5,6 +5,7 @@ import {type LabRecord,formatTime} from '@/lib/lab/domain';
 import {instagramProductSummary,instagramAccountContentRows,visibleInstagramProducts,instagramTableMetricKeys,summaryMetricKeys,type MetricTotal} from '@/lib/lab/instagram-summary';
 import {useInstagramStatus,type InstagramStatus} from '@/lib/lab/instagram-client';
 import {instagramMetricLabels} from '@/desktop/src/ui-copy.mjs';
+import {isHttpsLink} from '@/lib/lab/utm';
 import {Button,Badge,Empty,Pagination,SearchBox} from './primitives';
 
 export function MetricValue({metric}:{metric:MetricTotal}){
@@ -32,12 +33,14 @@ export function InstagramContentTable({records,productId,status,onOpenPlan}:{rec
       <div className="operations-table-scroll" role="region" aria-label="Số liệu theo tài khoản và nội dung" tabIndex={0}>
         <table className="operations-comparison instagram-content-table">
           <caption className="sr-only">Tài khoản × nội dung, bản đo mới nhất mỗi bài; không tính trùng permalink.</caption>
-          <thead><tr><th scope="col">Tài khoản</th><th scope="col">Nội dung</th><th scope="col">Từ khóa CTA</th>{instagramTableMetricKeys.map(key=><th scope="col" key={key}>{instagramMetricLabels[key]}</th>)}<th scope="col">Comment từ khóa</th><th scope="col">Tỷ lệ comment từ khóa / lượt xem</th><th scope="col">Lần đo</th></tr></thead>
+          <thead><tr><th scope="col">Tài khoản</th><th scope="col">Nội dung</th><th scope="col">Từ khóa CTA</th><th scope="col">Link UTM</th>{instagramTableMetricKeys.map(key=><th scope="col" key={key}>{instagramMetricLabels[key]}</th>)}<th scope="col">Comment từ khóa</th><th scope="col">Tỷ lệ comment từ khóa / lượt xem</th><th scope="col">Lần đo</th></tr></thead>
           <tbody>{rows.slice((currentPage-1)*10,currentPage*10).map(post=><tr key={post.plan.id}>
             <td>{post.account?.data.name??post.accountId??'Chưa rõ tài khoản'}{post.account?.data.handle&&<small>@{post.account.data.handle}</small>}</td>
             <th scope="row">{onOpenPlan?<button type="button" className="comparison-name" onClick={()=>onOpenPlan(post.plan.id)}>{post.plan.data.name}</button>:post.plan.data.name}
               {post.url&&<small><a href={post.url} target="_blank" rel="noreferrer">Xem bài đã đăng</a></small>}</th>
             <td>{post.ctaKeyword??'—'}{post.keywordMeasurement&&post.plannedCtaKeyword&&post.plannedCtaKeyword!==post.ctaKeyword&&<small>CTA hiện tại: {post.plannedCtaKeyword}</small>}</td>
+            <td>{post.plan.data.utmLink && isHttpsLink(post.plan.data.utmLink)
+              ? <span title={post.plan.data.utmLink}>{post.plan.data.utmLink.length > 42 ? post.plan.data.utmLink.slice(0, 39) + '…' : post.plan.data.utmLink}</span> : '—'}</td>
             {instagramTableMetricKeys.map(key=><td key={key}><MetricValue metric={{value:post.metric?.data[key]??null,known:post.metric?.data[key]!=null?1:0,total:1,approximate:!!post.metric?.data.approximate?.includes(key)}}/></td>)}
             <td>{post.keywordComments===null?'—':post.keywordComments.toLocaleString('vi-VN')}{post.keywordMeasurement&&<small>Dán tay · <time dateTime={post.keywordMeasurement.data.observedAt}>{formatTime(Date.parse(post.keywordMeasurement.data.observedAt))}</time></small>}</td>
             <td>{post.keywordCommentRate===null?'—':`${post.metric?.data.approximate?.includes('views')?'≈ ':''}${(post.keywordCommentRate*100).toLocaleString('vi-VN',{maximumFractionDigits:2})}%`}</td>

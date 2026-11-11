@@ -251,6 +251,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
     return <InstagramPanel key={chosen.id} product={chosen} accounts={accounts} plans={plans} records={records}
       demo={demo} disabled={disabled} onAccount={accountForm} onPlan={planForm}
       onSaveComments={(id,data)=>save('keyword_comment_measurement',id,data)}
+      onSavePlan={(plan,data)=>save('content_plan',plan.id,data,plan.revision)}
       onCreateProduction={plan => act(() => createProduction(plan))} notify={notify}/>;
   }
 

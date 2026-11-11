@@ -15,6 +15,7 @@ import {MediaPlayer} from './media-preview';
 import InstagramMetrics from './instagram-metrics';
 import {ProductMetrics,InstagramContentTable} from './instagram-overview';
 import InstagramKeywordComments from './instagram-keyword-comments';
+import PlanUtmLink from './plan-utm-link';
 import {instagramAccountContentRows} from '@/lib/lab/instagram-summary';
 
 type Props = {
@@ -22,6 +23,7 @@ type Props = {
   onAccount: (account?: LabRecord) => void; onPlan: (plan?: LabRecord) => void;
   onCreateProduction: (plan: LabRecord) => void;
   onSaveComments: (id:string,data:Record<string,any>) => Promise<LabRecord>;
+  onSavePlan: (plan:LabRecord,data:Record<string,any>) => Promise<LabRecord>;
   notify: (text: string, tone?: string) => void;
 };
 const pendingStates = ['queued', 'waiting_login', 'preparing', 'uploading', 'submitting', 'needs_attention'];
@@ -39,7 +41,7 @@ function jobTone(job?: InstagramJob) {
   return 'neutral';
 }
 
-export default function InstagramPanel({product, accounts, plans, records, demo, disabled, onAccount, onPlan, onCreateProduction, onSaveComments, notify}: Props) {
+export default function InstagramPanel({product, accounts, plans, records, demo, disabled, onAccount, onPlan, onCreateProduction, onSaveComments, onSavePlan, notify}: Props) {
   const live = useInstagramStatus(!demo);
   const organization = useDesktopPreference<MediaOrganization>('mediaOrganization', {});
   type Tab='overview'|'content'|'accounts'|'history';
@@ -183,6 +185,7 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
             {!production && <Button tone="neutral" disabled={disabled || demo || !(plan.data.hook || plan.data.script)} onClick={() => onCreateProduction(plan)}>Tạo dự án từ kịch bản</Button>}
           </div></div>
         {latest && <div className="instagram-job-status" aria-live="polite"><Badge tone={jobTone(latest)}>{instagramStateLabels[latest.state]}</Badge><p>{latest.error || latest.history.at(-1)?.note}</p>{latest.syncError && <p>{latest.syncError}</p>}{jobActions(latest)}</div>}
+        <PlanUtmLink key={plan.id + ':' + plan.revision} plan={plan} records={records} disabled={disabled || busy || !!pending} onSave={onSavePlan}/>
         {published && <InstagramMetrics record={records.find(record=>record.kind==='social_metric'&&record.data.planId===plan.id)}
           state={live.status?.metrics?.rows.find(row=>row.planId===plan.id)} disabled={disabled||busy||demo||!live.status}
           foreground={!!profile?.open&&!profile.background}

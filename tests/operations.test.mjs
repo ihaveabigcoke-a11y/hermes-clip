@@ -17,6 +17,77 @@ import {analysisReferences,analysisResponse,structureFor} from './fixtures/formu
 import {countKeywordComments,parseCommentPaste} from '../lib/lab/keyword-comments.ts';
 import {keywordCommentMeasurementSchema} from '../lib/lab/operations.ts';
 import {keywordCommentViewRate} from '../lib/lab/instagram-summary.ts';
+import {buildUtmLink,planUtmContext} from '../lib/lab/utm.ts';
+
+test('UTM links contain all attribution parameters and preserve existing query values and fragment',()=>{
+  const input={productSlug:'Night light',accountHandle:'@Shop.One',planId:'plan_1',hookId:'hook_A',ctaKeyword:'LED'};
+  const original=structuredClone(input);
+  const url=new URL(buildUtmLink('https://shop.example/product?ref=partner&tag=one&tag=two&empty=&offer=a%26b#join',input));
+  assert.equal(url.origin+url.pathname,'https://shop.example/product');assert.equal(url.hash,'#join');
+  assert.equal(url.searchParams.get('ref'),'partner');assert.deepEqual(url.searchParams.getAll('tag'),['one','two']);
+  assert.equal(url.searchParams.get('empty'),'');assert.equal(url.searchParams.get('offer'),'a&b');
+  assert.equal(url.searchParams.get('utm_source'),'instagram');assert.equal(url.searchParams.get('utm_medium'),'dm');
+  assert.equal(url.searchParams.get('utm_campaign'),'night-light');assert.equal(url.searchParams.get('utm_content'),'shop.one-hook-a');
+  assert.equal(url.searchParams.get('utm_term'),'led');assert.deepEqual(input,original);
+  const changed=new URL(buildUtmLink(url.href.replace('utm_source=instagram','utm_source=old')+'&utm_source=duplicate',input));
+  assert.deepEqual(changed.searchParams.getAll('utm_source'),['instagram']);
+});
+
+test('UTM slugs remove Vietnamese accents, normalize whitespace and fall back to plan ID for a missing hook',()=>{
+  const input={productSlug:'  Đèn ngủ ĐỎ – tiện ích! ',accountHandle:'@Cửa_Hàng.Đẹp',planId:'Kế hoạch 02',hookId:'Mở đầu Á',ctaKeyword:'ĐẶT CHỖ'};
+  const url=new URL(buildUtmLink('https://shop.example',input));
+  assert.equal(url.searchParams.get('utm_campaign'),'den-ngu-do-tien-ich');
+  assert.equal(url.searchParams.get('utm_content'),'cua_hang.dep-mo-dau-a');
+  assert.equal(url.searchParams.get('utm_term'),'dat-cho');
+  for(const hookId of [undefined,null,'','  '])assert.equal(new URL(buildUtmLink('https://shop.example',{...input,hookId})).searchParams.get('utm_content'),'cua_hang.dep-ke-hoach-02');
+  assert.equal(buildUtmLink('https://shop.example',input),buildUtmLink('https://shop.example',{...input,productSlug:input.productSlug.normalize('NFD')}));
+});
+
+test('UTM links distinguish account/hook pairs, including dots versus underscores in Instagram handles',()=>{
+  const links=[];
+  for(const accountHandle of ['shop.one','shop_one','shoptwo'])for(const hookId of ['hook_A','hook_B'])
+    links.push(buildUtmLink('https://shop.example',{productSlug:'Light',accountHandle,planId:'plan',hookId,ctaKeyword:'LED'}));
+  assert.equal(new Set(links).size,6);
+});
+
+test('UTM rejects non-HTTPS URLs, credentials and missing attribution instead of inventing values',()=>{
+  const input={productSlug:'Light',accountHandle:'shop',planId:'plan',hookId:'a',ctaKeyword:'LED'};
+  for(const base of ['http://shop.example','javascript:alert(1)','data:text/plain,x','file:///landing.html','//shop.example','/landing','not a URL','https://user:secret@shop.example'])
+    assert.throws(()=>buildUtmLink(base,input),/HTTPS/);
+  for(const patch of [{productSlug:''},{accountHandle:'@'},{ctaKeyword:'🙏'},{hookId:null,planId:''}])
+    assert.throws(()=>buildUtmLink('https://shop.example',{...input,...patch}),/Thiếu/);
+});
+
+test('UTM plan fields are optional/null for legacy records and reject unsafe stored links',()=>{
+  const legacy={name:'Old plan',productId:'p'};
+  const parsed=contentPlanSchema.parse(legacy);
+  for(const key of ['utmLink','landingBaseUrl','utmHookId'])assert.equal(parsed[key],undefined);
+  const empty=contentPlanSchema.parse({...legacy,utmLink:null,landingBaseUrl:null,utmHookId:null});
+  assert.equal(empty.utmLink,null);assert.equal(empty.landingBaseUrl,null);assert.equal(empty.utmHookId,null);
+  const utmLink=buildUtmLink('https://shop.example/?keep=1',{productSlug:'Light',accountHandle:'shop',planId:'plan',hookId:'a',ctaKeyword:'LED'});
+  const saved=contentPlanSchema.parse({...legacy,utmLink,landingBaseUrl:'https://shop.example/?keep=1',utmHookId:'a'});
+  assert.deepEqual(contentPlanSchema.parse(JSON.parse(JSON.stringify(saved))),saved);
+  for(const field of ['utmLink','landingBaseUrl'])for(const value of ['http://shop.example','javascript:alert(1)'])
+    assert.equal(contentPlanSchema.safeParse({...legacy,[field]:value}).success,false);
+});
+
+test('UTM context follows saved product/account/export; ambiguous A/B never silently picks the first hook',()=>{
+  const {records,product}=instagramOverviewFixture(),plan=records.find(row=>row.id==='plan_1_1');
+  const project=records.find(row=>row.id===plan.data.productionId),first=project.data.variants[0];
+  records.push({id:'landing',kind:'landing_page',data:{productId:product.id,ctaUrl:'https://shop.example/landing'}});
+  let context=planUtmContext(records,plan);
+  assert.equal(context.account.id,'account_1');assert.equal(context.landing.data.ctaUrl,'https://shop.example/landing');assert.equal(context.hookId,first.id);
+  project.data.variants.push({id:'hook_b',name:'B',ctaKeyword:'RUN'});
+  assert.equal(planUtmContext(records,plan).hookId,first.id);
+  plan.data.assetId='';assert.equal(planUtmContext(records,plan).hookId,'');
+  plan.data.utmHookId='hook_b';assert.equal(planUtmContext(records,plan).hookId,'hook_b');
+  plan.data.utmHookId='';assert.equal(planUtmContext(records,plan).hookId,'');
+  delete plan.data.utmHookId;plan.data.productionId='';assert.equal(planUtmContext(records,plan).variants.length,2);
+  records.push({...project,id:'ambiguous'});assert.equal(planUtmContext(records,plan).variants.length,0);
+  plan.data.accountId='missing';assert.equal(planUtmContext(records,plan).account,undefined);
+  plan.data.accountId='account_1';records.find(row=>row.id==='account_1').data.productId='other';
+  assert.equal(planUtmContext(records,plan).account,undefined);
+});
 
 test('keyword comments match entire words, ignoring case/punctuation/emoji without joining word parts',()=>{
   const positive=['LED','led!','LED 🙏','Please, LeD.','🔥LED🔥','ＬＥＤ','(LED) LED','🏃‍♂️LED','❤️LED❤️','LED1️⃣','#️⃣LED'];
