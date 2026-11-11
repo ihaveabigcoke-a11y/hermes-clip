@@ -2,11 +2,12 @@ import {z} from 'zod';
 import {sessionCookie} from '../local/server.mjs';
 import {mergeMuseResearch,museTaskPrompt} from '../local-dist/server/lib/lab/muse-workflows.mjs';
 import {assertDiskSpace,storagePolicy} from './storage-policy.mjs';
+import {ResearchSources} from './research-sources.mjs';
 
 const input=z.object({requestId:z.string().regex(/^[a-zA-Z0-9_-]{1,80}$/),profileId:z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/).optional(),query:z.string().trim().min(2).max(1500).default('Sản phẩm nguồn Trung Quốc phù hợp video ngắn cho thị trường Mỹ; ưu tiên sản phẩm không thương hiệu, nhẹ, dễ trình diễn.')});
 const activeStates=['queued','running'];
 export class ResearchRunner{
-  constructor({worker,chat,local,changed=()=>{}}){this.worker=worker;this.store=worker.store;this.chat=chat;this.local=local;this.changed=changed;this.running=null;this.stopped=false;}
+  constructor({worker,chat,local,integrations,changed=()=>{}}){this.worker=worker;this.store=worker.store;this.chat=chat;this.local=local;this.changed=changed;this.running=null;this.stopped=false;this.sources=integrations?new ResearchSources({integrations,records:()=>this.records(),save:r=>this.save(r),changed}):null;}
   rows(){return this.store.get('research_runs',[]);}
   status(){return {runs:this.rows(),active:this.running?.id??null};}
   update(id,patch){const rows=this.rows();const row={...rows.find(r=>r.id===id),...patch,updatedAt:Date.now()};this.store.set('research_runs',[row,...rows.filter(r=>r.id!==id)]);this.changed();return row;}
@@ -31,12 +32,18 @@ export class ResearchRunner{
   launch(id){if(this.running||this.stopped)return;const promise=this.run(id).catch(error=>this.update(id,{state:'needs_attention',error:error.message})).finally(()=>{this.running=null;});this.running={id,promise};}
   boot(){const row=this.rows().find(r=>activeStates.includes(r.state));if(row)this.launch(row.id);}
   resume({id}){const row=this.rows().find(r=>r.id===id);if(!row||!['needs_attention','partial'].includes(row.state))throw Error('Chọn đợt cần kiểm tra.');if(this.running)throw Error('Chờ đợt hiện tại kết thúc.');this.update(id,{state:'queued',error:''});this.launch(id);return this.status();}
+  checkSources(id,record){
+    try{this.sources?.enqueue(record);}catch(error){this.update(id,{sourceCheckError:error.message});}
+    return record;
+  }
+  recheckSources(payload){if(!this.sources)throw Error('Kiểm nguồn chỉ có trong bản desktop local.');return this.sources.recheck(payload);}
+  queueSources(payload){if(!this.sources)throw Error('Kiểm nguồn chỉ có trong bản desktop local.');return this.sources.checkBatch(payload);}
   async apply(id,chat){
     for(let retry=0;retry<4;retry++){
       const row=this.rows().find(r=>r.id===id),record=(await this.records()).find(r=>r.id===row.batchId);
       if(!record)throw Error('Đợt nghiên cứu không còn trong dữ liệu.');
-      const data=mergeMuseResearch(record.data,chat);if(data===record.data)return record;
-      try{return await this.save({...record,data});}catch(error){if(error.status!==409||retry===3)throw error;}
+      const data=mergeMuseResearch(record.data,chat);if(data===record.data)return this.checkSources(id,record);
+      try{return this.checkSources(id,await this.save({...record,data}));}catch(error){if(error.status!==409||retry===3)throw error;}
     }
   }
   async run(id){

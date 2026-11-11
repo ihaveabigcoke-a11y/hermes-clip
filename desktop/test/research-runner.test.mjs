@@ -5,6 +5,7 @@ import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {registerHooks} from 'node:module';
 import {Store} from '../src/store.mjs';
+import {Integrations} from '../src/integrations.mjs';
 import {startLocalServer} from '../local/server.mjs';
 // Exercise current research source, including API validation, even when local-dist
 // belongs to an earlier build. Other local API modules still use the desktop build.
@@ -97,4 +98,32 @@ test('research sends the formula brief, stops at three turns and stores decision
  }
  runner.resume({id:'formula'});await runner.running.promise;
  assert.equal(counts().sends,3);assert.equal((await runner.records()).find(r=>r.id==='research_formula').data.candidates.length,3);
+}));
+
+test('saved Muse batches trigger source checks once without spending a Muse turn; network failures stay local',()=>fixture(async({root,store,worker,chat,local,counts})=>{
+ let calls=0;
+ const integrations=new Integrations(store,root,async()=>{calls++;throw Error('Network unavailable');});
+ integrations.saveConfig({python:'python',reach:'agent-reach',montage:root});
+ store.set('integration-health',{reach:{ready:true,listingRead:{command:['read'],timeoutFlag:false}}});
+ const runner=new ResearchRunner({worker,chat,local,integrations});
+ runner.start({requestId:'sources'});await runner.running.promise;await integrations.idle();
+ assert.equal(runner.rows()[0].state,'done');assert.equal(counts().sends,1);assert.equal(calls,30);
+ const record=(await runner.records()).find(r=>r.id==='research_sources');
+ assert.equal(record.data.candidates.length,10);assert.equal(record.data.candidates[0].listingCheck.status,'failed');
+ assert.equal(record.data.candidates[0].competition.youtubeShorts.resultCount,null);
+ assert.deepEqual(record.data.selectedIds,[]);assert.equal(record.data.candidates[0].cost,null);
+ await runner.apply('sources',chat.get('research_sources_0'));await integrations.idle();assert.equal(calls,30);assert.equal(counts().sends,1);
+ assert.equal(await runner.queueSources({batchId:'research_sources'}),null);assert.equal(calls,30);
+}));
+
+test('manual Muse import can queue source checks using a saved batch ID and honors the auto preference',()=>fixture(async({root,store,worker,chat,local})=>{
+ let calls=0;const integrations=new Integrations(store,root,async()=>{calls++;return {ok:true,items:[]};});
+ integrations.saveConfig({python:'python',reach:'agent-reach',montage:root});
+ store.set('integration-health',{reach:{ready:true}});
+ const runner=new ResearchRunner({worker,chat,local,integrations});
+ await runner.save({id:'manual_batch',kind:'research_batch',revision:0,data:{name:'Manual fixture',candidates:[{id:'one',name:'Leash fixture',supplierUrl:'https://example.test/item',evidenceNotes:'Muse saved'}]}});
+ integrations.saveSourceCheckPreference({enabled:false});assert.equal(await runner.queueSources({batchId:'manual_batch'}),null);assert.equal(calls,0);
+ integrations.saveSourceCheckPreference({enabled:true});await runner.queueSources({batchId:'manual_batch'});await integrations.idle();assert.equal(calls,2);
+ const record=(await runner.records()).find(r=>r.id==='manual_batch');assert.equal(record.data.candidates[0].listingCheck.status,'blocked');
+ assert.equal(await runner.queueSources({batchId:'manual_batch'}),null);assert.equal(calls,2);
 }));

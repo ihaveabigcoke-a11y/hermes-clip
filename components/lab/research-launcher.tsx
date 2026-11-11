@@ -3,7 +3,7 @@ import {useEffect,useRef,useState} from 'react';
 import {Search,RefreshCw} from 'lucide-react';
 import {desktopBridge} from '@/lib/lab/desktop-client';
 import {Button,Badge} from './primitives';
-type Run={id:string;batchId:string;state:string;count:number;step:number;error:string;createdAt:number};
+type Run={id:string;batchId:string;state:string;count:number;step:number;error:string;sourceCheckError?:string;createdAt:number};
 export default function ResearchLauncher({disabled,onOpen}:{disabled:boolean;onOpen:(id:string)=>void}){
  const [runs,setRuns]=useState<Run[]>([]),[error,setError]=useState(''),[busy,setBusy]=useState(false);
  const [query,setQuery]=useState('Sản phẩm nguồn Trung Quốc, không thương hiệu, nhẹ, dễ trình diễn bằng video ngắn cho khách hàng Mỹ.');
@@ -23,5 +23,6 @@ export default function ResearchLauncher({disabled,onOpen}:{disabled:boolean;onO
   {latest&&<div className="research-run-progress" role="status"><Badge tone={latest.state==='done'?'success':'neutral'}>{states[latest.state]??latest.state}</Badge><span>{latest.count}/10 sản phẩm · {latest.step}/3 lượt hoàn tất</span><progress max={10} value={latest.count} aria-label="Số ứng viên đã lưu"/>
    <Button tone="ghost" onClick={()=>onOpen(latest.batchId)}>Xem kết quả</Button>{['needs_attention','partial'].includes(latest.state)&&<Button tone="neutral" disabled={busy||active} onClick={recover}><RefreshCw size={15}/>Đọc lại kết quả</Button>}</div>}
   {(error||latest?.error)&&<p className="inline-error" role="alert">{error||latest?.error}</p>}
+  {latest?.sourceCheckError&&<p className="inline-error">Kết quả Muse đã lưu, chưa xếp được tác vụ kiểm nguồn: {latest.sourceCheckError}. Mở đợt rồi bấm Kiểm lại nguồn.</p>}
  </section>;
 }

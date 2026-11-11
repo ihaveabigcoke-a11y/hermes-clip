@@ -1,5 +1,9 @@
 # Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
 
+## Cập nhật source đêm T11 — kiểm nguồn Agent Reach
+
+Đã nối hàng đợi kiểm listing/tín hiệu YouTube/web sau khi lưu research Muse, giữ nguyên số liệu Muse, thêm nút kiểm lại và trạng thái/cờ trong bảng/chi tiết. Test dùng runner giả, build trong output riêng; chưa triển khai bản cài. Clone đêm thiếu checkout/venv Agent Reach nên chưa xác minh CLI đọc của revision ghim; runtime chỉ gọi đọc khi help local xác nhận, thiếu thì ghi `blocked`. Xem [checkpoint T11](T11-AGENT-REACH-RESEARCH.md) cho hợp đồng, bằng chứng, blocker và lệnh thử sáng mai.
+
 ## Cập nhật source đêm T02 — quyết định và chất lượng nghiên cứu
 
 Clone `night-20261111` đã thêm trường quyết định/đối chiếu SKU, cảnh kết quả, rủi ro AI/vận chuyển và cạnh tranh quan sát cho candidate. Prompt/brief ưu tiên Problem → Vs → Result → CTA, listing riêng và mục tiêu vốn + ship Mỹ ≤ 20 USD có báo giá. Bộ kiểm thuần gắn cảnh báo nguồn chung/số liệu cấp trang khi merge và hiển thị, giữ dữ liệu cũ, lựa chọn và receipt. Đây là thay đổi source chưa triển khai vào bản cài. Xem [checkpoint T02](T02-RESEARCH-QUALITY.md) cho hợp đồng, kết quả fixture và giới hạn kiểm chứng.

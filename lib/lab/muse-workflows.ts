@@ -8,7 +8,12 @@ export type MuseResponse = {requestId: string; response: string; providerUrl: st
 
 const researchResponse = z.object({
   summary: z.string().trim().max(8000),
-  candidates: z.array(candidateSchema.omit({id: true})).max(10),
+  // Provider text must not impersonate local Agent Reach receipts.
+  candidates: z.array(candidateSchema.omit({id: true, listingCheck: true}).transform(candidate => {
+    if (!candidate.competition) return candidate;
+    const {youtubeShorts: _shorts, webReferences: _web, ...competition} = candidate.competition;
+    return {...candidate, competition};
+  })).max(10),
 }).strict();
 const contentResponse = z.object({
   name: z.string().trim().min(2).max(150), hook: z.string().trim().min(1).max(600),

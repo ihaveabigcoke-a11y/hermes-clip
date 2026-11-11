@@ -14,6 +14,28 @@ const count = z.number().int().min(0).max(1e12);
 export const candidateCurrencySchema = z.enum(["USD", "VND", "GBP", "EUR", "CNY"]);
 const nullableText = (max: number) => z.string().trim().max(max).nullable().default(null);
 const logisticsFlag = z.boolean().nullable().default(null);
+const observationStatus = z.enum(['ok', 'blocked', 'failed']);
+const observedAt = z.string().datetime({offset: true});
+const observationFile = z.string().max(2048).nullable().default(null);
+export const listingCheckSchema = z.object({
+  status: observationStatus, fetchedAt: observedAt,
+  title: nullableText(500), priceText: nullableText(500), currencyDetected: nullableText(20),
+  moqText: nullableText(500), shippingText: nullableText(500),
+  productCountOnPage: count.nullable().default(null), rawPath: observationFile,
+  sourceUrl: sourceLink, warnings: z.array(z.string().max(1200)).max(6).default([]),
+  error: nullableText(1000),
+});
+const youtubeShortsSchema = z.object({
+  status: observationStatus, resultCount: z.number().int().min(1).max(10).nullable().default(null),
+  maxViews: count.nullable().default(null), newestPublishedAt: observedAt.nullable().default(null),
+  sourceUrl: sourceLink, observedAt, rawPath: observationFile,
+  matchType: z.literal('similar'), period: z.string().max(500), note: z.string().max(1200), error: nullableText(1000),
+});
+const webReferencesSchema = z.object({
+  status: observationStatus, links: z.array(sourceLink).min(1).max(5).nullable().default(null),
+  sourceUrl: sourceLink.nullable().default(null), observedAt, rawPath: observationFile,
+  query: z.string().max(300), note: z.string().max(1200), error: nullableText(1000),
+});
 
 export const candidateSchema = z.object({
   id: identifier,
@@ -46,6 +68,8 @@ export const candidateSchema = z.object({
     observedAt: z.string().datetime({offset: true}).nullable().default(null),
     sourceUrl: sourceLink.nullable().default(null),
     note: nullableText(1200),
+    youtubeShorts: youtubeShortsSchema.nullable().optional(),
+    webReferences: webReferencesSchema.nullable().optional(),
   }).superRefine((value, ctx) => {
     if (value.activeAdsObserved !== null || value.similarReels30d !== null) {
       for (const field of ["sourceUrl", "observedAt"] as const) {
@@ -53,6 +77,7 @@ export const candidateSchema = z.object({
       }
     }
   }).nullable().default(null),
+  listingCheck: listingCheckSchema.nullable().optional(),
   qualityWarnings: z.array(z.enum(["shared_supplier_url"])).max(1).default([]),
   imageUrl: optionalLink,
   imageSourceUrl: optionalLink,

@@ -125,6 +125,10 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
     if (museTask.kind === 'research') {
       const updated = mergeMuseResearch(current.data as ResearchBatch, chat);
       if (updated !== current.data) await execute(() => save('research_batch', current.id, updated, current.revision));
+      if (!demo && desktopBridge()?.researchQueueSources) {
+        try { await desktopBridge()!.researchQueueSources({batchId: current.id}); }
+        catch (error) { notify('Kết quả Muse đã lưu; chưa xếp được tác vụ kiểm nguồn: ' + (error as Error).message); }
+      }
       return;
     }
     if (museTask.kind === 'analysis') return;

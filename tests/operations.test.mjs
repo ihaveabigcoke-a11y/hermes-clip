@@ -7,6 +7,33 @@ import {mergeMuseResearch, parseMuseResponse, museTaskPrompt} from '../lib/lab/m
 import {instagramProductSummary} from '../lib/lab/instagram-summary.ts';
 import {annotateResearchQuality, sharedSourceWarning, pageLevelEvidenceWarning} from '../lib/lab/research-quality.ts';
 
+test('Agent Reach fields are optional for legacy records and retain source-specific nulls',()=>{
+  const legacy=candidate('legacy');
+  assert.equal(legacy.listingCheck,undefined);
+  const listingCheck={status:'ok',fetchedAt:'2026-11-11T00:00:00Z',sourceUrl:legacy.supplierUrl,priceText:'¥ 12.50',currencyDetected:'¥',warnings:['Muse ghi giá khác trang nguồn']};
+  const youtubeShorts={status:'ok',sourceUrl:'https://youtube.com/results?search_query=leash',observedAt:'2026-11-11T00:00:00Z',resultCount:null,maxViews:null,newestPublishedAt:null,matchType:'similar',period:'Search snapshot',note:'YouTube Shorts, không phải Instagram'};
+  const parsed=candidateSchema.parse({...legacy,listingCheck,competition:{youtubeShorts}});
+  assert.equal(parsed.listingCheck.productCountOnPage,null);assert.equal(parsed.listingCheck.rawPath,null);
+  assert.equal(parsed.competition.youtubeShorts.resultCount,null);assert.equal(parsed.competition.activeAdsObserved,null);assert.equal(parsed.competition.similarReels30d,null);
+  assert.equal(parsed.cost,legacy.cost);assert.equal(parsed.minimumOrder,legacy.minimumOrder);
+  for(const patch of [{resultCount:0},{resultCount:11},{sourceUrl:'http://youtube.com'},{observedAt:'today'},{maxViews:-1}])assert.equal(candidateSchema.safeParse({...legacy,competition:{youtubeShorts:{...youtubeShorts,...patch}}}).success,false);
+  assert.equal(candidateSchema.safeParse({...legacy,listingCheck:{...listingCheck,status:'interrupted'}}).success,false);
+  assert.equal(candidateSchema.parse({...parsed,competition:{...parsed.competition,youtubeShorts:{...youtubeShorts,resultCount:1,maxViews:0}}}).competition.youtubeShorts.maxViews,0);
+});
+
+test('Muse cannot forge local checks and replay preserves existing Agent Reach evidence',()=>{
+  const row=candidate('candidate'),listingCheck={status:'ok',fetchedAt:'2026-11-11T00:00:00Z',sourceUrl:row.supplierUrl};
+  const youtubeShorts={status:'ok',sourceUrl:'https://youtube.com/results?search_query=leash',observedAt:'2026-11-11T00:00:00Z',resultCount:2,matchType:'similar',period:'Snapshot',note:'YouTube'};
+  const chat={requestId:'sources',profileId:'p',providerUrl:null,response:JSON.stringify({summary:'Provider text',candidates:[{...row,listingCheck,competition:{youtubeShorts}}]})};
+  const imported=mergeMuseResearch(researchBatchSchema.parse({name:'Fixture'}),chat);
+  assert.equal(imported.candidates[0].listingCheck,undefined);assert.equal(imported.candidates[0].competition.youtubeShorts,undefined);
+  const checked=researchBatchSchema.parse({...imported,candidates:imported.candidates.map(c=>({...c,listingCheck,competition:{youtubeShorts}}))});
+  assert.equal(mergeMuseResearch(checked,chat),checked);
+  const later=mergeMuseResearch(checked,{...chat,requestId:'later',response:JSON.stringify({summary:'Second receipt',candidates:[]})});
+  assert.deepEqual(later.candidates[0].listingCheck,checked.candidates[0].listingCheck);
+  assert.deepEqual(later.candidates[0].competition.youtubeShorts,checked.candidates[0].competition.youtubeShorts);
+});
+
 test('Muse research imports provenance once and retains manual selection and unknown prices', () => {
   const batch = researchBatchSchema.parse({name: 'Pet products', candidates: [candidate('existing')], selectedIds: ['existing']});
   const chat = {requestId: 'request1', profileId: 'profile1', providerUrl: 'https://muse.ai/thread/test', response: JSON.stringify({summary: 'Review source', candidates: [{name: 'Treat pouch', supplierUrl: 'https://shop.example/pouch', evidenceNotes: 'Supplier listing', cost: null}]})};
