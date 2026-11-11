@@ -1,36 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {registerHooks} from 'node:module';
-import {readFileSync, existsSync} from 'node:fs';
-import {fileURLToPath, pathToFileURL} from 'node:url';
-import ts from 'typescript';
+import {importModule} from './helpers/local-server.mjs';
 import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 
 // Actual React source rendered offline. No browser, network, desktop IPC or
 // real workspace is involved. Match the existing source component test setup.
-const root = new URL('../../', import.meta.url);
-registerHooks({resolve(specifier, context, next) {
-  let url;
-  if (specifier.startsWith('@/')) url = new URL(specifier.slice(2), root);
-  else if (specifier.startsWith('.') && /\.tsx?$/.test(context.parentURL ?? '')) url = new URL(specifier, context.parentURL);
-  if (url) {
-    const path = fileURLToPath(url), found = [path, path+'.ts', path+'.tsx'].find(p => existsSync(p));
-    if (found) return {url: pathToFileURL(found).href, shortCircuit: true};
-  }
-  return next(specifier, context);
-}, load(url, context, next) {
-  if (/\.tsx?$/.test(url)) return {format: 'module', source: ts.transpileModule(readFileSync(fileURLToPath(url), 'utf8'), {
-    fileName: fileURLToPath(url), compilerOptions: {module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX},
-  }).outputText, shortCircuit: true};
-  return next(url, context);
-}});
-const {default: ViralFormulas} = await import('../../components/lab/viral-formulas.tsx');
-const {viralFormulas, viralFormulaRecordId} = await import('../../lib/lab/viral-formulas.ts');
-const {FormulaDraftPanel} = await import('../../components/lab/production-intelligence.tsx');
-const {newProduction} = await import('../../lib/lab/production.ts');
-const {ReferenceDraftPreview} = await import('../../components/lab/reference-video.tsx');
-const {draftReferenceVideo} = await import('../../lib/lab/viral-reference.ts');
+const {default: ViralFormulas} = await importModule('components/lab/viral-formulas.tsx');
+const {viralFormulas, viralFormulaRecordId} = await importModule('lib/lab/viral-formulas.ts');
+const {FormulaDraftPanel} = await importModule('components/lab/production-intelligence.tsx');
+const {newProduction} = await importModule('lib/lab/production.ts');
+const {ReferenceDraftPreview} = await importModule('components/lab/reference-video.tsx');
+const {draftReferenceVideo} = await importModule('lib/lab/viral-reference.ts');
 const render = records => renderToStaticMarkup(React.createElement(ViralFormulas, {records}));
 
 test('formula library exposes analysis only with a save handler and renders a separate draft with bounded preview',()=>{

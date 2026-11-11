@@ -1,10 +1,11 @@
+import {importApiModule} from '../desktop/test/helpers/local-server.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {call} from './runtime-fixture.mjs';
-import * as route from '../app/api/codex/route.ts';
-import * as lab from '../app/api/lab/route.ts';
-import * as production from '../app/api/production/route.ts';
-import {emptyProduct} from '../lib/lab/domain.ts';
+const route=await importApiModule('app/api/codex/route.ts');
+const lab=await importApiModule('app/api/lab/route.ts');
+const production=await importApiModule('app/api/production/route.ts');
+const {emptyProduct}=await importApiModule('lib/lab/domain.ts');
 
 const report = projectId => ({schemaVersion:1,missionId:'real_report_contract',projectId,startedAt:100,finishedAt:200,status:'completed',steps:[{stepId:'research',type:'research',jobId:'local-job',channel:'web',query:'customer problems',sources:[{title:'Source',url:'https://example.org/source',excerpt:'Unreviewed excerpt'}],frameCount:0,artifactSha256:'a'.repeat(64)}]});
 const request = (who,path,payload,origin='https://qa.invalid') => new Request('https://qa.invalid'+path,{method:payload?'POST':'GET',headers:{...(who?{'oai-authenticated-user-id':who,'oai-authenticated-user-email':who+'@example.invalid'}:{}),...(payload?{'Content-Type':'application/json',Origin:origin}:{})},...(payload?{body:JSON.stringify(payload)}:{})});

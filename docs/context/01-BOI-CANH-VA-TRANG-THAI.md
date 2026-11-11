@@ -1,5 +1,9 @@
 # Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
 
+## Cập nhật source đêm T19 — test từ build tạm dùng chung
+
+Clone `night-20261111` đã bỏ hook nạp module trong desktop/API test. Các lệnh test dùng một build từ source tại `outputs/local-api-test-*`, dùng chung server/domain/JSON và UI cho kiểm HTTP/font, rồi dọn khi kết thúc. Không cần cập nhật `desktop/local-dist`. Desktop tăng từ 244 lên 248 test (247 đạt, 1 skip OpenMontage); domain 136/136, API 16/16, typecheck và build output riêng đạt. 543 assertion cũ giữ nguyên điều kiện; 48 file build khớp SHA-256 với baseline. Chỉ kiểm fixture trên Node 26.13.0, chưa triển khai bản cài. Xem [checkpoint và cách chạy T19](../../ops/night/out/T19.md).
+
 ## Cập nhật đêm 12/11/2026
 
 Tổng kết T10 cho đêm 11–12/11, giờ Asia/Saigon. Checkout `C:/HermesNight/hermes-clip`, nhánh `night-20261111`, HEAD khi bắt đầu tổng kết là `5f1d4bb`. Đây là clone phát triển; bản cài Windows được nhận diện theo mục Hệ thống hiện hành bên dưới, không mở để đối chiếu và chưa được triển khai các thay đổi đêm. Mục này cùng các checkpoint T01–T14 cập nhật trạng thái source; phần bằng chứng ngày 11/11 bên dưới vẫn là lịch sử của bản cài.

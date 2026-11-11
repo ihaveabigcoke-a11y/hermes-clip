@@ -4,7 +4,7 @@ import {mkdtemp,rm,readFile,writeFile,stat,readdir,utimes,mkdir} from 'node:fs/p
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {putImmutableMedia,digest,saveDownload,maintainStorage,assertDiskSpace,rotateLog} from '../src/storage-policy.mjs';
-import {startLocalServer,sessionCookie} from '../local/server.mjs';
+import {startLocalServer,sessionCookie} from './helpers/local-server.mjs';
 import {Store} from '../src/store.mjs';
 import {Worker} from '../src/worker.mjs';
 async function fixture(run){const root=await mkdtemp(join(tmpdir(),'hermes-storage-'));try{await run(root);}finally{await rm(root,{recursive:true,force:true});}}

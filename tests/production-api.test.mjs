@@ -1,3 +1,4 @@
+import {importApiModule} from '../desktop/test/helpers/local-server.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,mkdtempSync,rmSync} from 'node:fs';
@@ -5,13 +6,13 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {call} from './runtime-fixture.mjs';
-import * as lab from '../app/api/lab/route.ts';
-import * as production from '../app/api/production/route.ts';
-import * as upload from '../app/api/assets/route.ts';
-import * as asset from '../app/api/assets/[id]/route.ts';
-import {emptyProduct} from '../lib/lab/domain.ts';
-import {formulaStoryboard} from '../lib/lab/intelligence.ts';
-import {viralFormulas} from '../lib/lab/viral-formulas.ts';
+const lab=await importApiModule('app/api/lab/route.ts');
+const production=await importApiModule('app/api/production/route.ts');
+const upload=await importApiModule('app/api/assets/route.ts');
+const asset=await importApiModule('app/api/assets/[id]/route.ts');
+const {emptyProduct}=await importApiModule('lib/lab/domain.ts');
+const {formulaStoryboard}=await importApiModule('lib/lab/intelligence.ts');
+const {viralFormulas}=await importApiModule('lib/lab/viral-formulas.ts');
 const req=(path,owner,payload,origin='https://qa.invalid')=>new Request('https://qa.invalid'+path,{method:payload?'POST':'GET',headers:{'oai-authenticated-user-id':owner,'oai-authenticated-user-email':owner+'@example.invalid',...(payload?{'Content-Type':'application/json',Origin:origin}:{})},...(payload?{body:JSON.stringify(payload)}:{})});
 async function json(handler,path,owner,payload,origin){const r=await call(handler,req(path,owner,payload,origin));return {status:r.status,data:await r.json()};}
 test('formula drafts persist optional overlay/CTA and shared A/B atomically through real routes, retaining CAS and approval gates',async()=>{

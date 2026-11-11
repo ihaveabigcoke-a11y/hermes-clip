@@ -3,22 +3,10 @@ import assert from 'node:assert/strict';
 import {mkdtemp,rm} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
-import {registerHooks} from 'node:module';
 import {Store} from '../src/store.mjs';
 import {Integrations} from '../src/integrations.mjs';
-import {startLocalServer} from '../local/server.mjs';
-// Exercise current research source, including API validation, even when local-dist
-// belongs to an earlier build. Other local API modules still use the desktop build.
-const researchSources=new Map(['operations','muse-workflows'].map(name=>[
- new URL('../local-dist/server/lib/lab/'+name+'.mjs',import.meta.url).href,
- new URL('../../lib/lab/'+name+'.ts',import.meta.url).href,
-]));
-registerHooks({resolve(specifier,context,next){
- const url=specifier.startsWith('.')||specifier.startsWith('file:')?new URL(specifier,context.parentURL).href:null;
- if(researchSources.has(url))return {url:researchSources.get(url),shortCircuit:true};
- return next(specifier,context);
-}});
-const {ResearchRunner}=await import('../src/research-runner.mjs');
+import {startLocalServer,importModule} from './helpers/local-server.mjs';
+const {ResearchRunner}=await importModule('desktop/src/research-runner.mjs');
 async function fixture(run){
  const root=await mkdtemp(join(tmpdir(),'hermes-research-'));const store=new Store(join(root,'worker.sqlite'));
  const local=await startLocalServer({root:join(root,'workspace'),seedPath:join(root,'no-seed.json')});

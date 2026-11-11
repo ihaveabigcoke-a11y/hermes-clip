@@ -1,28 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {registerHooks} from 'node:module';
-import {readFileSync,existsSync} from 'node:fs';
-import {fileURLToPath,pathToFileURL} from 'node:url';
-import ts from 'typescript';
+import {readFileSync} from 'node:fs';
+import {importModule} from './helpers/local-server.mjs';
 import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 
 // Render actual source components offline; no browser, image fetch or desktop IPC.
-const root=new URL('../../',import.meta.url);
-registerHooks({resolve(specifier,context,next){
- let url;
- if(specifier.startsWith('@/'))url=new URL(specifier.slice(2),root);
- else if(specifier.startsWith('.')&&/\.tsx?$/.test(context.parentURL??''))url=new URL(specifier,context.parentURL);
- if(url){const path=fileURLToPath(url),found=[path,path+'.ts',path+'.tsx'].find(p=>existsSync(p));if(found)return {url:pathToFileURL(found).href,shortCircuit:true};}
- return next(specifier,context);
-},load(url,context,next){
- if(/\.tsx?$/.test(url))return {format:'module',source:ts.transpileModule(readFileSync(fileURLToPath(url),'utf8'),{fileName:fileURLToPath(url),compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText,shortCircuit:true};
- return next(url,context);
-}});
-const {SourceChip,SourceDetails,ShortsSignal,shouldPollSourceChecks,SOURCE_POLL_MS}=await import('../../components/lab/research-sources.tsx');
-const {default:ResearchCandidates}=await import('../../components/lab/research-candidates.tsx');
-const {default:ResearchLauncher}=await import('../../components/lab/research-launcher.tsx');
-const {candidateSchema,researchBatchSchema}=await import('../../lib/lab/operations.ts');
+const {SourceChip,SourceDetails,ShortsSignal,shouldPollSourceChecks,SOURCE_POLL_MS}=await importModule('components/lab/research-sources.tsx');
+const {default:ResearchCandidates}=await importModule('components/lab/research-candidates.tsx');
+const {default:ResearchLauncher}=await importModule('components/lab/research-launcher.tsx');
+const {candidateSchema,researchBatchSchema}=await importModule('lib/lab/operations.ts');
 const {extractListing,listingWarnings,youtubeObservation}=await import('../src/listing-check.mjs');
 const candidate=candidateSchema.parse({id:'fixture',name:'Night leash',supplierUrl:'https://example.test/item',evidenceNotes:'Muse',cost:5,costCurrency:'CNY',minimumOrder:1});
 const render=(Component,candidate)=>renderToStaticMarkup(React.createElement(Component,{candidate}));

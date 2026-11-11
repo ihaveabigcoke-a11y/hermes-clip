@@ -1,37 +1,26 @@
-import test, {after} from 'node:test';
+import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdir,mkdtemp,rm,readFile} from 'node:fs/promises';
+import {mkdtemp,rm,readFile} from 'node:fs/promises';
 import {dirname,join,resolve} from 'node:path';
 import {tmpdir} from 'node:os';
-import {fileURLToPath,pathToFileURL} from 'node:url';
 import {request as httpRequest} from 'node:http';
 import {createHash} from 'node:crypto';
 import {DatabaseSync} from 'node:sqlite';
-import {startLocalServer as startBuiltLocalServer,sessionCookie} from '../local/server.mjs';
-import {buildLocalServer} from '../../scripts/build-local-server.mjs';
+import {startLocalServer,sessionCookie,getTestBuild,outputs,localUiFile} from './helpers/local-server.mjs';
 import {Store} from '../src/store.mjs';
 import {Worker} from '../src/worker.mjs';
 import {assertSender} from '../src/contracts.mjs';
 import {MuseAdapter} from '../src/muse.mjs';
 import {initializeMuseConnection,MUSE_START_URL} from '../src/defaults.mjs';
 
-// Compile current API source before importing it. Keep artifacts under the repo
-// for node_modules resolution; no prebuilt server or external loader is needed.
-const outputs=fileURLToPath(new URL('../../outputs/',import.meta.url));
-await mkdir(outputs,{recursive:true});
-const buildRoot=await mkdtemp(join(outputs,'local-api-test-'));
+const {buildRoot,moduleUrl}=await getTestBuild();
 assert.equal(dirname(buildRoot),resolve(outputs));
-after(()=>rm(buildRoot,{recursive:true,force:true}));
-let routesPath;
-try {({routesPath}=await buildLocalServer(buildRoot));}
-catch(error){await rm(buildRoot,{recursive:true,force:true});throw error;}
-const compiledUrl=name=>pathToFileURL(join(buildRoot,'server/lib/lab',name)).href;
+const compiledUrl=name=>moduleUrl('lib/lab/'+name);
 const {emptyProduct,productFromCandidate,unitMargin,productMarginLabel}=await import(compiledUrl('domain.mjs'));
 const {researchProductId}=await import(compiledUrl('operations.mjs'));
 const {viralFormulas,viralFormulaRecordId,workspaceFormulas,formulasForProduct}=await import(compiledUrl('viral-formulas.mjs'));
 const {formulaStoryboard}=await import(compiledUrl('formula-storyboard.mjs'));
 const {draftReferenceVideo}=await import(compiledUrl('viral-reference.mjs'));
-const startLocalServer=options=>startBuiltLocalServer({...options,routesPath});
 
 test('reference video draft round-trips through source-built local API and restart independently of formulas',async()=>{
   const root=await mkdtemp(join(tmpdir(),'t12-local-reference-'));
@@ -303,10 +292,10 @@ test('Muse login uses the chosen URL; changing domains disables an old flow inst
 });
 
 test('local distribution includes the font bytes referenced by its compiled stylesheet',async()=>{
-  const index=await readFile(new URL('../local-dist/ui/index.html',import.meta.url),'utf8');
+  const index=await readFile(await localUiFile('index.html'),'utf8');
   const css=index.match(/href="(\/assets\/[^" ]+\.css)"/)[1];
-  const text=await readFile(new URL('../local-dist/ui'+css,import.meta.url),'utf8');
+  const text=await readFile(await localUiFile(css),'utf8');
   const fonts=[...new Set([...text.matchAll(/\/fonts\/[^)"'\s]+\.woff2/g)].map(x=>x[0]))];
   assert.ok(fonts.length>=10);
-  for(const font of fonts)assert.ok((await readFile(new URL('../local-dist/ui'+font,import.meta.url))).length>100);
+  for(const font of fonts)assert.ok((await readFile(await localUiFile(font))).length>100);
 });

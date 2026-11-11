@@ -4,7 +4,7 @@ import {mkdtemp, rm} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {createHash} from 'node:crypto';
-import {startLocalServer, sessionCookie} from '../local/server.mjs';
+import {startLocalServer, sessionCookie} from './helpers/local-server.mjs';
 import {importWorkerOutput} from '../local/import-worker.mjs';
 import {Store} from '../src/store.mjs';
 import {Worker} from '../src/worker.mjs';

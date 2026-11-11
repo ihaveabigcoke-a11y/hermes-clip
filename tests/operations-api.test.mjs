@@ -1,13 +1,14 @@
+import {importApiModule} from '../desktop/test/helpers/local-server.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {call} from './runtime-fixture.mjs';
-import * as lab from '../app/api/lab/route.ts';
-import * as production from '../app/api/production/route.ts';
-import {emptyProduct,productFromCandidate,unitMargin,productMarginLabel} from '../lib/lab/domain.ts';
-import {researchProductId} from '../lib/lab/operations.ts';
-import {viralFormulas, viralFormulaRecordId} from '../lib/lab/viral-formulas.ts';
-import {draftReferenceVideo, referenceDraftRecordId} from '../lib/lab/viral-reference.ts';
-import {saveResearchSelection} from '../lib/lab/research-selection.ts';
+const lab=await importApiModule('app/api/lab/route.ts');
+const production=await importApiModule('app/api/production/route.ts');
+const {emptyProduct,productFromCandidate,unitMargin,productMarginLabel}=await importApiModule('lib/lab/domain.ts');
+const {researchProductId}=await importApiModule('lib/lab/operations.ts');
+const {viralFormulas, viralFormulaRecordId}=await importApiModule('lib/lab/viral-formulas.ts');
+const {draftReferenceVideo, referenceDraftRecordId}=await importApiModule('lib/lab/viral-reference.ts');
+const {saveResearchSelection}=await importApiModule('lib/lab/research-selection.ts');
 
 async function save(kind, id, data, revision = 0, who = 'ops-owner', action = 'save') {
   const request = new Request('https://qa.invalid/api/lab', {method: 'POST', headers: {'Content-Type': 'application/json', Origin: 'https://qa.invalid', 'oai-authenticated-user-id': who, 'oai-authenticated-user-email': who+'@example.invalid'}, body: JSON.stringify({kind, id, data, revision, action})});
