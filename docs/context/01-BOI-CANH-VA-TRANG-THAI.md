@@ -1,4 +1,34 @@
-# Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
+# Hermes Clip — bối cảnh và trạng thái (source cập nhật đến đêm 3, 12/11/2026)
+
+## Cập nhật đêm 3 — tổng kết T20 (12/11/2026)
+
+Đối chiếu tại checkout `C:/HermesNight/hermes-clip`, nhánh `night-20261111`, HEAD `a5113d63f2982293961d893893d262c08af84caa`. Đây là source trong clone đêm; bản cài được nhận diện theo context là `C:/Users/ADMIN/Downloads/Product-Lab-Local/Product-Lab-Local`, chưa mở hoặc triển khai trong T20. Bằng chứng của bản cài ngày 11/11 ở các mục dưới vẫn là lịch sử.
+
+Đã đọc `git log --oneline origin/main..HEAD`, đặc tả, báo cáo tại `ops/night/out/reports/`, checkpoint và các diff liên quan. Trong phạm vi đêm 3 sau task pack `76fba38`, có **11 task có commit triển khai và báo cáo `done`**:
+
+| Task | Commit | Kết quả source |
+| --- | --- | --- |
+| T15 | `d00d5f4` | Bước tiếp theo trên thẻ sản phẩm, điều hướng đúng hồ sơ/dự án, checklist mẫu optional và cảnh báo landing. |
+| T16 | `763a5e0` | Dán comment, đếm từ khóa CTA, lưu lịch sử riêng và tỷ lệ trên views; chưa tự lấy nội dung comment. |
+| T17 | `f446325` | Tạo/lưu/sao chép link UTM HTTPS theo tài khoản × hook; URL landing gợi ý cần người dùng kiểm. |
+| T18 | `a5113d6` | Adapter Instagram API và cấu hình token mã hóa, receipt/insights; mặc định tắt, chưa nghiệm thu Meta. |
+| T19 | `097830b` | Test desktop/API dùng build tạm từ source, bỏ module hooks, giữ điều kiện assertion cũ. |
+| T21 | `e7e8234` | Sheet dày 4 fps, caption/tên file, parse/khớp/đề xuất công thức; lưu tham chiếu và phiên bản khi người dùng bấm. |
+| T22 | `a357801` | Gửi sheet thưa + sheet dày đầu tiên qua Muse, duyệt phản hồi và đọc lại receipt; chưa kiểm Muse thật. |
+| T23 | `0aad44c` | Kiểm sản phẩm từ dữ liệu đã lưu: bán lẻ Mỹ, giả thuyết ×3–4, listing/IP, gợi ý và câu hỏi supplier. |
+| T24 | `bc31c49` | Script đọc Git/báo cáo/log và gắn cờ để hỗ trợ review đêm; không thay review nội dung. |
+| T26 | `5b3681b` | Nhận diện trang chặn, giải thích tiền tệ phí/dự phòng, tiến độ theo nguồn gốc Muse và tài liệu nhãn AI. |
+| T27 | `02db982` | Bản nháp thiếu take hiện “Chờ chọn take”, chặn xuất/ghép; giữ cột thao tác Nghiên cứu trong vùng nhìn. |
+
+**T25: chưa có dữ liệu** — không thấy đặc tả, báo cáo hoặc commit; không tự gán FAILED/SKIPPED. `ops/night/out/REPORT.md` hiện là báo cáo lượt trước kết thúc **02:21 ngày 12/11**, chỉ có T13/T14/T06/T12/T04/T07/T08/T09/T10. Chưa có bảng runner đêm 3 hoặc runner.log được đối soát trong T20 để kết luận các lần thử bị FAILED/SKIPPED. T15 có báo cáo lượt `a2`, không suy trạng thái lượt trước từ tên file.
+
+[Tổng kết đêm 3](../../ops/night/out/CHANGES-3.md) ghi cách bấm kiểm từng task và sáu việc người dùng làm tay: thử **Phân tích bằng Muse** với một video/một lượt; **Kiểm sản phẩm** với một ứng viên; tạo Meta app nếu muốn API; thiết lập comment → tin nhắn trong Business Suite nếu tài khoản được hỗ trợ; lưu trữ ba sản phẩm cũ; kiểm `agent-reach --help` đúng bản tích hợp. Các thao tác này chưa được thực hiện trong đêm. Quyền đăng/nhắn tin/nhận tiền vẫn theo tài khoản, nội dung và phạm vi đã duyệt.
+
+Giới hạn cần đọc cùng tài liệu cũ: T21/T22 đã bổ sung phân tích và gửi Muse cho T12; T16 đã có bộ đếm phần comment dán tay, chưa có tự đọc comment/DM. T18 mới có client đọc comment, chưa nối vào T16 hoặc gửi DM; endpoint/quyền/version và upload API cần xác minh trước khi bật, cờ resumable riêng vẫn tắt. T26 thay quy tắc “sửa ghi chú Muse là tăng bậc” bằng nguồn gốc/bằng chứng; nhãn AI mặc định vẫn tắt. Giá ×3–4 vẫn là giả thuyết, thiếu dữ liệu giữ null, không quy đổi tiền; chưa có luồng thu tiền được nghiệm thu.
+
+Kết quả kiểm cuối được **đọc lại từ báo cáo T18**, không phải T20 chạy lại: `npm test` 190 đạt, `test:api` 24 đạt, `test:desktop` 317 đạt + 1 skip OpenMontage; typecheck và build output riêng đạt. Các task có fixture/UI offline, T21 có video FFmpeg tổng hợp; chưa chứng minh Electron/DPI, video/mẫu/tài khoản người dùng, Muse/Instagram/Meta hoặc clipboard thật. T19 chưa kiểm Node 24.
+
+T20 chỉ sửa tài liệu: thêm mục skills vào AGENTS, tổng kết và checkpoint. Đã chạy [kiểm máy móc cho 11 commit đêm 3](../../ops/night/out/T20-AUTO-REVIEW.md), chưa cung cấp `--runs`; `done` là trạng thái báo cáo tại commit, không phải kết luận nghiệm thu toàn bộ. HEAD/nhánh/stash giữ nguyên. Xem [checkpoint T20](../../ops/night/out/T20.md) cho kiểm diff, liên kết, phạm vi và phần chưa xác minh. Runner tiếp tục kiểm và commit; T20 chưa commit/push hoặc áp vào bản cài.
 
 ## Cập nhật source đêm T18 — Instagram API có cờ, mặc định tắt
 
@@ -40,7 +70,7 @@ Clone `night-20261111` đã đưa quy tắc của skill `hermes-product-check` v
 
 Clone `night-20261111` đã bỏ hook nạp module trong desktop/API test. Các lệnh test dùng một build từ source tại `outputs/local-api-test-*`, dùng chung server/domain/JSON và UI cho kiểm HTTP/font, rồi dọn khi kết thúc. Không cần cập nhật `desktop/local-dist`. Desktop tăng từ 244 lên 248 test (247 đạt, 1 skip OpenMontage); domain 136/136, API 16/16, typecheck và build output riêng đạt. 543 assertion cũ giữ nguyên điều kiện; 48 file build khớp SHA-256 với baseline. Chỉ kiểm fixture trên Node 26.13.0, chưa triển khai bản cài. Xem [checkpoint và cách chạy T19](../../ops/night/out/T19.md).
 
-## Cập nhật đêm 12/11/2026
+## Cập nhật đêm 12/11/2026 — tổng kết T10 (lượt trước)
 
 Tổng kết T10 cho đêm 11–12/11, giờ Asia/Saigon. Checkout `C:/HermesNight/hermes-clip`, nhánh `night-20261111`, HEAD khi bắt đầu tổng kết là `5f1d4bb`. Đây là clone phát triển; bản cài Windows được nhận diện theo mục Hệ thống hiện hành bên dưới, không mở để đối chiếu và chưa được triển khai các thay đổi đêm. Mục này cùng các checkpoint T01–T14 cập nhật trạng thái source; phần bằng chứng ngày 11/11 bên dưới vẫn là lịch sử của bản cài.
 

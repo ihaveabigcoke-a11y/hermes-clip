@@ -14,6 +14,14 @@
 
 Không tự chạy các script cũ có hành động bên ngoài chỉ vì chúng có trong repo. Người dùng đang phát triển desktop Windows; bản source này không biến dịch vụ Muse hoặc Instagram thành API không cần đăng nhập.
 
+## Skills trong repo
+
+Codex/Claude phải đọc `SKILL.md` tương ứng trước khi làm việc đó:
+
+- [.claude/skills/viral-formula-analyzer](.claude/skills/viral-formula-analyzer/SKILL.md): khi phân tích video mẫu, hook, chữ/CTA hoặc cập nhật công thức; Hermes có tính năng tương ứng ở T21/T22.
+- [.claude/skills/hermes-product-check](.claude/skills/hermes-product-check/SKILL.md): khi kiểm ứng viên, listing, vốn + ship, giá bán lẻ Mỹ và rủi ro sản phẩm; Hermes có tính năng tương ứng ở T23.
+- [.claude/skills/hermes-night-review](.claude/skills/hermes-night-review/SKILL.md): khi review/tổng kết commit đêm hoặc chuẩn bị áp vào app chính; Hermes có script kiểm máy móc tương ứng ở T24, vẫn cần review nội dung.
+
 ## Chạy đêm
 
 - Codex vẫn là **một worker duy nhất**, làm trong clone riêng trên nhánh `night-*`, được runner `ops/night/RUN-NIGHT.ps1` gọi tuần tự từng task. Cấm sub-agent, phân vai và orchestrator tự dựng bên trong Codex; không gọi lại runner từ task.
