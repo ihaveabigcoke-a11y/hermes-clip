@@ -1,3 +1,4 @@
+import {pendingTakeSelection,productionSchema} from './production.ts';
 type Row = {id:string;kind:string;data:Record<string,any>;updatedAt:number};
 type Job = {state:string;updatedAt:number;snapshot:{planId:string;productId:string;accountId?:string;assetId?:string};postUrl:string;syncError?:string};
 export const instagramTableMetricKeys = ['views','likes','comments','saves','shares','profileVisits','linkClicks'] as const;
@@ -51,7 +52,13 @@ export function instagramProductSummary(records:Row[],productId:string,jobs:Job[
   })) as Record<SummaryMetric,MetricTotal>;
   const measured=published.filter(p=>p.metric);
   const publishedIds=new Set(published.flatMap(p=>p.planIds));
+  const waitingTakeProjects=records.filter(record=>record.kind==='production'&&record.data.productId===productId).flatMap(record=>{
+    const parsed=productionSchema.safeParse(record.data);
+    const selection=parsed.success?pendingTakeSelection(parsed.data):null;
+    return selection?[{projectId:record.id,...selection}]:[];
+  });
   return {productId,accounts:accounts.length,plans:plans.length,drafts:plans.filter(p=>!publishedIds.has(p.id)).length,
+    waitingTakeProjects,
     publishedPosts:published.length,measuredPosts:measured.length,totals,posts:published,
     oldestMeasuredAt:measured.length?Math.min(...measured.map(p=>Date.parse(p.metric!.data.observedAt))):null,
     newestMeasuredAt:measured.length?Math.max(...measured.map(p=>Date.parse(p.metric!.data.observedAt))):null};

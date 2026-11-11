@@ -130,8 +130,9 @@ export function takeGate(p: Production, s: Scene, t: Take) {
     (t.sceneRevision !== s.revision ? "Phiên bản thuộc phiên bản cảnh cũ. Giữ lịch sử; thêm phiên bản cho phiên bản hiện tại." : "") || checkMedia(s, t).join(" ");
 }
 export function resolveItems(p: Production, items: {sceneId: string;takeId: string|null}[]) {
+  // Check the whole timeline first: an earlier stale take must not hide an unselected pin.
+  if (items.some(i => i.takeId === null)) throw new ProductionError("Biến thể nháp: Chờ chọn take. Duyệt kịch bản/video rồi chọn phiên bản để ghép.");
   return items.map(i => {
-    if (i.takeId === null) throw new ProductionError("Biến thể nháp: duyệt kịch bản/video rồi chọn phiên bản để ghép.");
     const s = p.scenes.find(s => s.id === i.sceneId), t = s?.takes.find(t => t.id === i.takeId);
     if (!s || !t || t.review !== "approved") throw new ProductionError("Có cảnh/phiên bản chưa được duyệt.");
     const gate = takeGate(p,s,t); if(gate) throw new ProductionError(gate);
@@ -143,6 +144,13 @@ export function variantItems(p: Production, variantId: string) {
   const v=p.variants.find(x=>x.id===variantId), b=p.bodies.find(x=>x.id===v?.bodyId);
   if(!v||!b)throw new ProductionError("Không tìm thấy biến thể hoặc nội dung chính.");
   return resolveItems(p,[...(v.hook?[v.hook]:[]),...b.items,...(v.cta?[v.cta]:[])]);
+}
+/** Selection only, never approval: old productions without draft pins have no pending selection. */
+export function pendingTakeSelection(p: Pick<Production,'bodies'|'variants'>) {
+  const bodyIds=(p.bodies??[]).filter(body=>body.items.some(item=>item.takeId===null)).map(body=>body.id);
+  const variantIds=(p.variants??[]).filter(variant=>bodyIds.includes(variant.bodyId)
+    ||variant.hook?.takeId===null||variant.cta?.takeId===null).map(variant=>variant.id);
+  return bodyIds.length||variantIds.length?{state:'waiting_take' as const,label:'Chờ chọn take',bodyIds,variantIds}:null;
 }
 const commandSchemas: Record<string, z.ZodTypeAny> = {
   reference: referenceSchema.omit({version:true,createdAt:true}),

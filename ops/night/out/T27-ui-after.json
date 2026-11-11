@@ -1,0 +1,271 @@
+{
+  "phase": "after",
+  "fixtureOnly": true,
+  "networkRequestsSent": 0,
+  "measurements": [
+    {
+      "width": 1366,
+      "height": 768,
+      "sidebar": 232,
+      "pageWidth": 1356,
+      "tableWidth": 1523,
+      "available": 1076,
+      "scrollLeft": 0,
+      "scrollWidth": 1523,
+      "cells": [
+        {
+          "column": 1,
+          "left": 251,
+          "right": 293,
+          "visible": true,
+          "unobscured": true
+        },
+        {
+          "column": 2,
+          "left": 293,
+          "right": 493,
+          "visible": true,
+          "unobscured": true
+        },
+        {
+          "column": 9,
+          "left": 1097,
+          "right": 1187,
+          "visible": true,
+          "unobscured": true
+        },
+        {
+          "column": 11,
+          "left": 1187,
+          "right": 1337,
+          "visible": true,
+          "unobscured": true
+        }
+      ],
+      "maxRowHeight": 100.890625,
+      "buttonVisible": true
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "sidebar": 232,
+      "pageWidth": 1356,
+      "tableWidth": 1523,
+      "available": 1076,
+      "scrollLeft": 224,
+      "scrollWidth": 1523,
+      "cells": [
+        {
+          "column": 1,
+          "left": 251,
+          "right": 293,
+          "visible": true,
+          "unobscured": true
+        },
+        {
+          "column": 2,
+          "left": 293,
+          "right": 493,
+          "visible": true,
+          "unobscured": true
+        },
+        {
+          "column": 9,
+          "left": 1097,
+          "right": 1187,
+          "visible": true,
+          "unobscured": true
+        },
+        {
+          "column": 11,
+          "left": 1187,
+          "right": 1337,
+          "visible": true,
+          "unobscured": true
+        }
+      ],
+      "maxRowHeight": 100.890625,
+      "buttonVisible": true
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "sidebar": 232,
+      "pageWidth": 1356,
+      "tableWidth": 1523,
+      "available": 1076,
+      "scrollLeft": 437,
+      "scrollWidth": 1523,
+      "cells": [
+        {
+          "column": 1,
+          "left": 251,
+          "right": 293,
+          "visible": true,
+          "unobscured": true
+        },
+        {
+          "column": 2,
+          "left": 293,
+          "right": 493,
+          "visible": true,
+          "unobscured": true
+        },
+        {
+          "column": 9,
+          "left": 897,
+          "right": 987,
+          "visible": true,
+          "unobscured": true
+        },
+        {
+          "column": 11,
+          "left": 1187,
+          "right": 1337,
+          "visible": true,
+          "unobscured": true
+        }
+      ],
+      "maxRowHeight": 100.890625,
+      "buttonVisible": true
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "sidebar": 232,
+      "pageWidth": 1910,
+      "tableWidth": 1630,
+      "available": 1630,
+      "scrollLeft": 0,
+      "scrollWidth": 1630,
+      "cells": [
+        {
+          "column": 1,
+          "left": 251,
+          "right": 293,
+          "visible": true,
+          "unobscured": true
+        },
+        {
+          "column": 2,
+          "left": 293,
+          "right": 600,
+          "visible": true,
+          "unobscured": true
+        },
+        {
+          "column": 9,
+          "left": 1441,
+          "right": 1531,
+          "visible": true,
+          "unobscured": true
+        },
+        {
+          "column": 11,
+          "left": 1731,
+          "right": 1881,
+          "visible": true,
+          "unobscured": true
+        }
+      ],
+      "maxRowHeight": 100.890625,
+      "buttonVisible": true
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "sidebar": 232,
+      "pageWidth": 1910,
+      "tableWidth": 1630,
+      "available": 1630,
+      "scrollLeft": 0,
+      "scrollWidth": 1630,
+      "cells": [
+        {
+          "column": 1,
+          "left": 251,
+          "right": 293,
+          "visible": true,
+          "unobscured": true
+        },
+        {
+          "column": 2,
+          "left": 293,
+          "right": 600,
+          "visible": true,
+          "unobscured": true
+        },
+        {
+          "column": 9,
+          "left": 1441,
+          "right": 1531,
+          "visible": true,
+          "unobscured": true
+        },
+        {
+          "column": 11,
+          "left": 1731,
+          "right": 1881,
+          "visible": true,
+          "unobscured": true
+        }
+      ],
+      "maxRowHeight": 100.890625,
+      "buttonVisible": true
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "sidebar": 232,
+      "pageWidth": 1910,
+      "tableWidth": 1630,
+      "available": 1630,
+      "scrollLeft": 0,
+      "scrollWidth": 1630,
+      "cells": [
+        {
+          "column": 1,
+          "left": 251,
+          "right": 293,
+          "visible": true,
+          "unobscured": true
+        },
+        {
+          "column": 2,
+          "left": 293,
+          "right": 600,
+          "visible": true,
+          "unobscured": true
+        },
+        {
+          "column": 9,
+          "left": 1441,
+          "right": 1531,
+          "visible": true,
+          "unobscured": true
+        },
+        {
+          "column": 11,
+          "left": 1731,
+          "right": 1881,
+          "visible": true,
+          "unobscured": true
+        }
+      ],
+      "maxRowHeight": 100.890625,
+      "buttonVisible": true
+    }
+  ],
+  "errors": [],
+  "checks": [
+    "selection/name/decision/actions visible and hit-tested at start/middle/end scroll",
+    "detail and product-check dialogs accessible",
+    "row height <=120px",
+    "formula draft labels and disabled export/render controls",
+    "body has no phantom take text",
+    "queue notice without invented jobs",
+    "Instagram waiting notice",
+    "approved takes require explicit selection; selectors initially blank",
+    "no writes or desktop render calls"
+  ]
+}

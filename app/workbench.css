@@ -439,6 +439,24 @@ input::placeholder,textarea::placeholder { opacity:1; }
 .research-candidate-table input[type=checkbox] { width:20px; height:20px; accent-color:var(--lab-primary); cursor:pointer; }
 .research-candidate-table input:disabled { cursor:not-allowed; }
 .research-candidate-table input:focus-visible { outline:2px solid var(--lab-focus); outline-offset:3px; }
+/* Keep selection and decisions visible beside the 232px sidebar. Other columns scroll locally. */
+@media (min-width:1200px) {
+  .research-candidate-table { min-width:1615px; }
+  .research-candidate-table col:nth-child(2) { width:auto !important; }
+  .research-candidate-table col:nth-child(10) { width:200px !important; }
+  .research-candidate-table tr > :is(:nth-child(1),:nth-child(2),:nth-child(9),:nth-child(11)) { position:sticky; z-index:1; background:var(--lab-surface); }
+  .research-candidate-table tr > :nth-child(1) { left:0; }
+  .research-candidate-table tr > :nth-child(2) { left:42px; box-shadow:1px 0 var(--lab-subtle-border); }
+  .research-candidate-table tr > :nth-child(9) { right:150px; box-shadow:-1px 0 var(--lab-subtle-border); }
+  .research-candidate-table tr > :nth-child(11) { right:0; }
+  .research-candidate-table thead tr > :is(:nth-child(1),:nth-child(2),:nth-child(9),:nth-child(11)) { background:var(--lab-sidebar); z-index:2; }
+  .research-candidate-table tbody tr:hover > :is(:nth-child(1),:nth-child(2),:nth-child(9),:nth-child(11)) { background:var(--lab-raised); }
+  .research-candidate-table tbody tr.is-selected > :is(:nth-child(1),:nth-child(2),:nth-child(9),:nth-child(11)) { background:var(--lab-accent); }
+}
+@media (min-width:1200px) and (max-width:1439px) {
+  .research-candidate-table { min-width:1523px; }
+  .research-candidate-table th,.research-candidate-table td { padding:8px 6px; }
+}
 .research-candidate-table a { display:inline-flex; gap:4px; align-items:center; font-size:12px; margin-top:5px; }
 .research-product-name { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; overflow-wrap:anywhere; font-size:14px; line-height:1.45; }
 .research-candidate-table .research-source-link { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; }

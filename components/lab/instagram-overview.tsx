@@ -16,6 +16,7 @@ export function ProductMetrics({records,productId,status}:{records:LabRecord[];p
   const summary=instagramProductSummary(records,productId,status?.jobs);
   return <section className="instagram-product-metrics" aria-label="Tổng số liệu sản phẩm">
     <header><h2>Tổng quan sản phẩm</h2><span>{summary.publishedPosts} bài đã đăng · {summary.measuredPosts} bài đã đo · {summary.accounts} hồ sơ</span></header>
+    {summary.waitingTakeProjects.length>0&&<p className="instagram-data-note">Chờ chọn take · {summary.waitingTakeProjects.length} dự án còn bản nháp chưa chọn đủ video để ghép.</p>}
     <dl>{summaryMetricKeys.map(key=><div key={key}><dt>{instagramMetricLabels[key]}</dt><dd><MetricValue metric={summary.totals[key]}/></dd></div>)}</dl>
     <p className="instagram-data-note">Cộng các bài đăng của sản phẩm trên mọi hồ sơ. Dấu — là chưa đủ dữ liệu; mỗi bài chỉ lấy bản đo mới nhất.</p>
   </section>;
@@ -89,7 +90,7 @@ export default function InstagramOverview({products,records,demo,onOpen}:{produc
       <table className="operations-comparison instagram-overview-table"><caption className="sr-only">Số liệu cộng dồn theo sản phẩm, gộp mọi hồ sơ và không tính trùng bài đăng.</caption>
         <thead><tr><th scope="col">Sản phẩm</th><th scope="col">Bài đăng</th>{instagramTableMetricKeys.map(key=><th scope="col" key={key}>{instagramMetricLabels[key]}</th>)}<th scope="col">Cập nhật</th><th scope="col">Chi tiết</th></tr></thead>
         <tbody>{filtered.slice((page-1)*10,page*10).map(row=><Fragment key={row.product.id}><tr>
-          <th scope="row"><button className="comparison-name" type="button" onClick={()=>onOpen(row.product.id)}>{row.product.data.name}</button><small>{row.drafts} nội dung chưa đăng · {row.accounts} hồ sơ</small></th>
+          <th scope="row"><button className="comparison-name" type="button" onClick={()=>onOpen(row.product.id)}>{row.product.data.name}</button><small>{row.drafts} nội dung chưa đăng · {row.accounts} hồ sơ</small>{row.waitingTakeProjects.length>0&&<small>Chờ chọn take · {row.waitingTakeProjects.length} dự án</small>}</th>
           <td><span className="instagram-total">{row.publishedPosts}</span><small>{row.measuredPosts} đã đo</small></td>
           {instagramTableMetricKeys.map(key=><td key={key}><MetricValue metric={row.totals[key]}/></td>)}
           <td><Badge tone={issue(row).tone}>{issue(row).text}</Badge><small>{row.oldestMeasuredAt?formatTime(row.oldestMeasuredAt):'Chưa đo'}{row.measuredPosts>1?' · bản cũ nhất':''}</small></td>

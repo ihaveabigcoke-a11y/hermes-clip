@@ -48,6 +48,33 @@ test('formula drafts persist optional overlay/CTA and shared A/B atomically thro
   assert.deepEqual(all.find(row=>row.id===project.id),persisted);
   assert.equal((await json(lab.GET,'/api/lab','formula-stranger')).data.records.length,0);
 });
+test('API rejects package and owned render exports for null draft pins with a waiting message and no persisted mutation',async()=>{
+  const who='null-export-owner',productId='null_export_product';
+  assert.equal((await json(lab.POST,'/api/lab',who,{id:productId,kind:'product',revision:0,data:{...emptyProduct,name:'Null pin fixture'}})).status,200);
+  let project,sequence=0;
+  const post=async(action,input)=>{
+    const response=await json(production.POST,'/api/production',who,{id:'null_export_project',revision:project?.revision??0,commandId:'null_export_'+(++sequence),action,input});
+    if(response.status===200)project=response.data.record;
+    return response;
+  };
+  assert.equal((await post('create',{name:'Null pin fixture',productId,locale:'en-US'})).status,200);
+  assert.equal((await post('formula_draft',formulaStoryboard({},project.data,viralFormulas[0],'LED'))).status,200);
+  const before=structuredClone(project),dir=mkdtempSync(join(tmpdir(),'null-export-api-'));
+  try{
+    const file=join(dir,'synthetic.mp4');
+    execFileSync('ffmpeg',['-v','error','-f','lavfi','-i','color=c=blue:s=90x160:r=24:d=1','-c:v','libx264','-pix_fmt','yuv420p',file]);
+    const form=new FormData();form.set('file',new File([readFileSync(file)],'synthetic.mp4',{type:'video/mp4'}));
+    const response=await call(upload.POST,new Request('https://qa.invalid/api/assets',{method:'POST',headers:{'oai-authenticated-user-id':who,'oai-authenticated-user-email':who+'@example.invalid'},body:form}));
+    assert.equal(response.status,200);const owned=await response.json();
+    for(const variant of project.data.variants)for(const kind of ['package','render']){
+      const result=await post('export',{variantId:variant.id,filename:kind==='package'?'draft.zip':'draft.mp4',assetId:kind==='package'?null:owned.id,kind});
+      assert.equal(result.status,422);assert.match(result.data.error,/Chờ chọn take/);
+    }
+    const restored=(await json(lab.GET,'/api/lab',who)).data.records.find(record=>record.id===project.id);
+    assert.deepEqual(restored,before);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
 test('real routes against isolated SQLite/R2: scope, CAS, replay, atomic import, take checks and trace',async()=>{
   const owner='qa-a',other='qa-b';let command=0;
   const post=(record,action,input,revision=record?.revision??0,commandId='command_'+(++command),who=owner)=>json(production.POST,'/api/production',who,{id:record?.id??'production_qa',revision,commandId,action,input});

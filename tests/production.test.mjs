@@ -10,7 +10,75 @@ import {productionPackage,buildManifest,zipFiles,crc32} from '../lib/lab/package
 import {formulaStoryboard} from '../lib/lab/intelligence.ts';
 import {viralFormulas} from '../lib/lab/viral-formulas.ts';
 import {sceneInputSchema} from '../lib/lab/production.ts';
+import {pendingTakeSelection,ProductionError} from '../lib/lab/production.ts';
+import {variantExportStatus} from '../lib/lab/package.ts';
+import {workflowGuidance} from '../lib/lab/workflow-guidance.ts';
+import {queueTakeSelections,groupQueueJobs} from '../lib/lab/queue-view.ts';
+import {mediaCatalog} from '../lib/lab/media-catalog.ts';
+import {instagramProductSummary,instagramAccountContentRows} from '../lib/lab/instagram-summary.ts';
+import {formulaProduction,formulaRecords} from './fixtures/formula-production.mjs';
 let seq=0;const run=(p,a,d,key=`cmd_${++seq}`,productRevision=p.productRevision)=>applyProduction(p,a,d,key,1000+seq,productRevision);
+
+test('nullable formula draft has safe waiting status across package preflight, guidance, queue and Instagram; export does no I/O',async t=>{
+  const p=productionSchema.parse(JSON.parse(JSON.stringify(formulaProduction()))),before=structuredClone(p),records=formulaRecords(p);
+  const fetched=t.mock.method(globalThis,'fetch',()=>{throw Error('Draft must never fetch media');});
+  const progress=[];
+  for(const variant of p.variants){
+    const status=variantExportStatus(p,variant.id);
+    assert.equal(status.state,'waiting_take');assert.equal(status.label,'Chờ chọn take');
+    const blocked=error=>error instanceof ProductionError&&/Chờ chọn take/.test(error.message);
+    assert.throws(()=>buildManifest(p,variant.id,records[0]),blocked);
+    await assert.rejects(productionPackage(p,variant.id,records[0],new AbortController().signal,message=>progress.push(message)),blocked);
+    assert.throws(()=>run(p,'export',{variantId:variant.id,filename:'draft.zip',kind:'package',assetId:null}),blocked);
+    assert.throws(()=>run(p,'export',{variantId:variant.id,filename:'draft.mp4',kind:'render',assetId:'fixture_render'}),blocked);
+  }
+  assert.equal(fetched.mock.callCount(),0);assert.deepEqual(progress,[]);
+  assert.equal(workflowGuidance(p,1).takeSelection.label,'Chờ chọn take');
+  assert.equal(workflowGuidance(p,1).stage,'scenes','Storyboard approval remains the first action');
+  const queue=queueTakeSelections(records);
+  assert.equal(queue.length,1);assert.equal(queue[0].label,'Chờ chọn take');assert.equal(queue[0].variantIds.length,2);
+  assert.deepEqual(queueTakeSelections(records,'another_project'),[]);
+  assert.deepEqual(mediaCatalog(records),[]);assert.deepEqual(groupQueueJobs([]),[]);
+  const summary=instagramProductSummary(records,'draft_product');
+  assert.equal(summary.waitingTakeProjects[0].label,'Chờ chọn take');assert.equal(summary.publishedPosts,0);
+  assert.equal(summary.totals.views.value,null);assert.deepEqual(instagramAccountContentRows(records,'draft_product'),[]);
+  assert.deepEqual(instagramProductSummary(records,'another_product').waitingTakeProjects,[]);
+  assert.deepEqual(p,before);
+});
+
+test('approved available takes are not implicitly selected; pinning clears waiting but still enforces revision and review',()=>{
+  const unpinned=formulaProduction({approved:true}),records=formulaRecords(unpinned);
+  assert.equal(workflowGuidance(unpinned,1).title,'Chờ chọn take');
+  assert.equal(workflowGuidance(unpinned,2).stage,'references');
+  unpinned.scenes[0].attempts.push({status:'unknown'});
+  assert.equal(workflowGuidance(unpinned,1).stage,'queue');unpinned.scenes[0].attempts.pop();
+  // A post referencing an actual take must not borrow CTA from an unselected variant.
+  records.push({id:'plan',kind:'content_plan',updatedAt:1000,data:{productId:'draft_product',productionId:'draft_project',status:'published_manual',postUrl:'https://www.instagram.com/reel/fixture/',assetId:unpinned.scenes[0].takes[0].assetId}});
+  assert.equal(instagramAccountContentRows(records,'draft_product')[0].ctaKeyword,null);
+  const pinned=formulaProduction({approved:true,pinned:true});
+  assert.equal(pendingTakeSelection(pinned),null);assert.deepEqual(queueTakeSelections(formulaRecords(pinned)),[]);
+  assert.deepEqual(instagramProductSummary(formulaRecords(pinned),'draft_product').waitingTakeProjects,[]);
+  const variant=pinned.variants[0];assert.equal(variantExportStatus(pinned,variant.id).state,'ready');
+  assert.ok(buildManifest(pinned,variant.id,records[0]).media.every(item=>typeof item.takeId==='string'));
+  pinned.scenes.find(s=>s.id===variant.hook.sceneId).takes[0].review='rejected';
+  assert.equal(variantExportStatus(pinned,variant.id).state,'blocked');
+  assert.equal(variantExportStatus(pinned,'missing').state,'blocked');
+});
+
+test('body, hook and CTA null pins each block the entire timeline even after an earlier stale take',()=>{
+  for(const target of ['body','hook','cta']){
+    const p=formulaProduction({approved:true,pinned:true}),variant=p.variants[0];
+    const pin=target==='body'?p.bodies[0].items.at(-1):variant[target];assert.ok(pin);
+    pin.takeId=null;p.scenes[0].storyboardApproved=false;
+    assert.equal(variantExportStatus(p,variant.id).state,'waiting_take',target);
+    assert.throws(()=>variantItems(p,variant.id),/Chờ chọn take/);
+    assert.ok(pendingTakeSelection(p).variantIds.includes(variant.id));
+  }
+  const legacy=newProduction('Legacy','draft_product',1);
+  assert.equal(pendingTakeSelection(productionSchema.parse(legacy)),null);
+  assert.deepEqual(queueTakeSelections([...formulaRecords(legacy),{id:'bad',kind:'production',data:{}}]),[]);
+  assert.equal(instagramProductSummary(formulaRecords(legacy),'draft_product').totals.views.value,null);
+});
 test('formula draft atomically stores a shared body and CTA with two hooks, no approval or attempts',()=>{
   const p=newProduction('Formula','product1',1),draft=formulaStoryboard({},p,viralFormulas[0],'LED');
   const saved=run(p,'formula_draft',draft,'formula');

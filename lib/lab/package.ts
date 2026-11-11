@@ -1,5 +1,12 @@
-import { variantItems, type Production } from "./production.ts";
+import { variantItems, pendingTakeSelection, type Production } from "./production.ts";
 import type { LabRecord } from "./domain";
+
+/** Non-throwing preflight for export views; the actual export keeps its strict domain gate. */
+export function variantExportStatus(p:Production,variantId:string) {
+  if(pendingTakeSelection(p)?.variantIds.includes(variantId))return {state:'waiting_take' as const,label:'Chờ chọn take',reason:'Duyệt kịch bản/video rồi chọn đủ phiên bản cho biến thể trước khi ghép.'};
+  try {variantItems(p,variantId);return {state:'ready' as const,label:'Sẵn sàng xuất gói',reason:''};}
+  catch(error){return {state:'blocked' as const,label:'Cần duyệt lại',reason:(error as Error).message};}
+}
 
 export function crc32(bytes:Uint8Array){let c=0xffffffff;for(const b of bytes){c^=b;for(let j=0;j<8;j++)c=(c>>>1)^((c&1)?0xedb88320:0);}return (c^0xffffffff)>>>0;}
 export function zipFiles(files:{name:string;bytes:Uint8Array}[]):Uint8Array {

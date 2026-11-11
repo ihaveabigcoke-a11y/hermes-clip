@@ -1,6 +1,17 @@
 import {workerStateLabels} from '../../desktop/src/ui-copy.mjs';
 import type {DesktopJob} from './desktop-client';
 import {sceneKey} from './media-organization.ts';
+import {productionSchema,pendingTakeSelection} from './production.ts';
+
+/** Draft selections are notices, never generated jobs or successful media. */
+export function queueTakeSelections(records:{id:string;kind:string;data:Record<string,any>}[],projectId?:string) {
+  return records.filter(record=>record.kind==='production'&&(!projectId||record.id===projectId)).flatMap(record=>{
+    const parsed=productionSchema.safeParse(record.data);
+    if(!parsed.success)return [];
+    const selection=pendingTakeSelection(parsed.data);
+    return selection?[{projectId:record.id,productId:parsed.data.productId,name:parsed.data.name,...selection}]:[];
+  });
+}
 
 export const queueFilters = [
   {id: 'pending', label: 'Cần xử lý'},

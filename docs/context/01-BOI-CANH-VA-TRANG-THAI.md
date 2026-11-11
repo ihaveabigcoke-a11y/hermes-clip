@@ -1,5 +1,9 @@
 # Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
 
+## Cập nhật source đêm T27 — take nháp và bảng Nghiên cứu
+
+Clone `night-20261111` đã rà mọi chỗ đọc `takeId` trong lib/components/app/desktop. Bản nháp A/B có trạng thái **Chờ chọn take** ở kiểm trước xuất, nhóm cảnh/biến thể, guidance, hàng đợi và tổng quan Instagram; không chọn ngầm video đã duyệt. Domain/API tiếp tục từ chối xuất/ghép khi còn pin null, trước khi tải media; không đổi schema lưu trữ. Bảng Nghiên cứu giữ cột chọn/tên/quyết định/thao tác trong vùng nhìn với sidebar 232 px: 1366×768 còn cuộn cột phụ, 1920×1080 không cuộn ngang. Domain 166/166, API 19/19, desktop 274 đạt/1 skip OpenMontage, typecheck/build riêng đạt. UI fixture offline đã chụp trước/sau và kiểm nút xuất/ghép bị khóa; chưa triển khai bản cài hoặc kiểm dịch vụ thật. Xem [checkpoint, audit và ảnh T27](../../ops/night/out/T27.md).
+
 ## Cập nhật source đêm T26 — sửa ghi chú review T14/T13/T03/T09
 
 Clone `night-20261111` nhận lại trang chặn “Access Denied”, “Access Forbidden”, “访问受限” trong title hoặc 2 KiB chữ đầu trang; cụm từ ở cuối mô tả và lỗi đọc file cục bộ không tự thành trang bị chặn. Form sản phẩm giải thích tiền tệ phí/dự phòng khi trộn tiền và có khoản chưa biết/khác 0; không đổi phép tính. Tiến độ ưu tiên `researchOrigin` để nhận diện ghi chú Muse dù sửa chữ, giữ tiền tố cũ làm fallback: chỉ sửa ghi chú của sản phẩm research vẫn bậc 0, thêm bằng chứng `proofUrl` hoặc xác nhận mẫu mới lên bậc 1 khi chưa có nội dung/đo nhu cầu. Không thêm schema hay migration. Hai tài liệu nhãn AI giới hạn fail closed ở lựa chọn **Bắt buộc bật nhãn AI**; mặc định vẫn không gắn nhãn, không sửa code nhãn. Xem [checkpoint và kiểm tra T26](../../ops/night/out/T26.md); chưa triển khai bản cài hoặc kiểm dịch vụ thật. Phần T03 cũ mô tả sửa ghi chú là đủ tăng bậc đã được thay bằng quy tắc nguồn gốc này.
