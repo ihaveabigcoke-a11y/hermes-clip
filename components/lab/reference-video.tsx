@@ -3,6 +3,9 @@
 import {useEffect, useMemo, useRef, useState} from 'react';
 import type {LabRecord} from '@/lib/lab/domain';
 import {desktopBridge, fetchAssetBytes} from '@/lib/lab/desktop-client';
+import {useDesktopStatus} from '@/lib/lab/use-desktop-status';
+import {referenceMusePrompt, parseReferenceMuseResponse} from '@/lib/lab/reference-muse';
+import type {Chat} from './muse-chat';
 import {formulaVersions, workspaceFormulas, type ViralFormula} from '@/lib/lab/viral-formulas';
 import {draftReferenceVideo, referenceVideoDraftSchema, type ReferenceVideoDraft, type VideoStructure} from '@/lib/lab/viral-reference';
 import {formulaAnalysisPrompt, parseFormulaAnalysis, matchFormula, proposeFormulaChanges, type FormulaAnalysis, type FormulaChange} from '@/lib/lab/formula-analysis';
@@ -54,12 +57,12 @@ export function ReferenceAnalysisInput({structure, caption, fileName, jsonText, 
 }) {
   const prompt = formulaAnalysisPrompt({structure,caption,fileName,formulas});
   return <div>
-    <p>Đính kèm sheet thưa và tất cả sheet dày khi gửi prompt. Prompt có thể rút gọn dữ liệu dài và đánh dấu phần rút gọn; kiểm cả caption và tên file gốc.</p>
+    <p>Nếu gửi thủ công, đính kèm sheet thưa và tất cả sheet dày khi gửi prompt. Prompt có thể rút gọn dữ liệu dài và đánh dấu phần rút gọn; kiểm cả caption và tên file gốc.</p>
     <p>Sheet thưa: <code style={{overflowWrap:'anywhere'}}>{structure.contactSheetPath}</code></p>
     <ul>{structure.contactSheets?.dense.map(s=><li key={s.path}>Sheet dày · {s.fromSec}–{s.toSec} giây · <code style={{overflowWrap:'anywhere'}}>{s.path}</code></li>)}</ul>
     {!structure.contactSheets?.dense.length&&<p>Phân tích cũ chưa có sheet dày. Phân tích lại MP4 trước khi kết luận không có chữ hoặc CTA.</p>}
     <Button tone="neutral" disabled={disabled} onClick={()=>onCopy(prompt)}>Sao chép prompt phân tích</Button>
-    <details><summary>Prompt phân tích · chưa gửi</summary><textarea readOnly rows={10} aria-label="Prompt phân tích video cho Muse" value={prompt}/></details>
+    <details><summary>Prompt phân tích để sao chép thủ công</summary><textarea readOnly rows={10} aria-label="Prompt phân tích video cho Muse" value={prompt}/></details>
     <label className="field">Dán kết quả JSON<textarea aria-label="Dán kết quả JSON" rows={8} maxLength={100000} value={jsonText} disabled={disabled} onChange={e=>onJson(e.target.value)}/></label>
     <Button tone="neutral" disabled={disabled||!jsonText.trim()} onClick={onParse}>Đọc kết quả JSON</Button>
   </div>;
@@ -74,6 +77,84 @@ export function ReferenceDraftPreview({draft, contactUrl}: {draft: ReferenceVide
     <ol>{draft.beats?.map((beat,index)=><li key={index}>
       {roleLabels[beat.role]} · {kindLabels[beat.kind]} · {beat.fromSec.toFixed(2)}–{beat.toSec.toFixed(2)} giây · {beat.label || 'Chưa có nhãn chữ'}
     </li>)}</ol>
+  </div>;
+}
+
+export function ReferenceMuseAnalysis({jobId, structure, caption, fileName, formulas, disabled, onBusy, onResponse}: {
+  jobId:string; structure:VideoStructure; caption:string; fileName:string; formulas:ViralFormula[]; disabled:boolean;
+  onBusy:(busy:boolean)=>void; onResponse:(text:string, analysis:FormulaAnalysis|null)=>void;
+}) {
+  const api=desktopBridge(), {status,error:statusError,refresh}=useDesktopStatus();
+  const [profileId,setProfileId]=useState(''),[chat,setChat]=useState<Chat|null>(null),[error,setError]=useState('');
+  const [parseFailed,setParseFailed]=useState(false),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[uncertain,setUncertain]=useState(false);
+  const running=useRef(false),live=useRef(true),attempt=useRef<{key:string;requestId:string}|null>(null);
+  const scope='reference_'+jobId, profiles=(status?.profiles??[]).filter(p=>p.enabled);
+  const selectedId=profileId||profiles.find(p=>p.session==='signed_in')?.id||profiles[0]?.id||'';
+  const selected=profiles.find(p=>p.id===selectedId), count=status?.batch?.submittedByProfile[selectedId]??0;
+  const pending=!!chat&&['preparing','waiting','needs_attention'].includes(chat.state);
+  const context={structure,caption,fileName,formulas};
+  useEffect(()=>{
+    live.current=true;let active=true,reading=false;
+    const update=async()=>{
+      if(reading||running.current||!api?.museChatList)return;
+      reading=true;
+      try {const rows:Chat[]=await api.museChatList({projectId:scope});if(active&&!running.current){setChat(rows.at(-1)??null);setLoading(false);}}
+      catch {if(active)setError('Chưa đọc được receipt Muse. Đợi đọc lại trước khi gửi.');}
+      finally {reading=false;}
+    };
+    void update();const timer=setInterval(update,1500);
+    return()=>{active=false;live.current=false;clearInterval(timer);};
+  },[api,scope]);
+  function consume(result:Chat) {
+    setChat(result);setUncertain(false);
+    if(result.state!=='done'){setParseFailed(false);setError(result.error??'Đang chờ Muse; đọc lại kết quả trước khi gửi tiếp.');return;}
+    try {const parsed=parseReferenceMuseResponse(result.response,context);onResponse(result.response,parsed);setParseFailed(false);setError('');}
+    catch(e){onResponse(result.response,null);setParseFailed(true);setError((e as Error).message);}
+  }
+  async function run(mode:'send'|'repair'|'read') {
+    if(running.current||disabled||!api)return;
+    running.current=true;setBusy(true);onBusy(true);setError('');
+    try {
+      if(mode==='read') {
+        const rows:Chat[]=await api.museChatList({projectId:scope});
+        const row=attempt.current ? rows.find(r=>r.requestId===attempt.current!.requestId)??rows.at(-1) : rows.at(-1);
+        if(!row){setUncertain(false);setError('Chưa có receipt. Có thể thử lại cùng mã yêu cầu.');return;}
+        const result=row.state==='needs_attention'?await api.museChatRecover({requestId:row.requestId}):row;
+        if(live.current)consume(result);
+      } else {
+        if(pending||uncertain||!selected||selected.busy||count>=3)throw Error('Chọn profile đang bật, còn lượt và không có tác vụ cần đối soát.');
+        if(mode==='repair'&&(!parseFailed||chat?.state!=='done'||chat.profileId!==selectedId))throw Error('Dùng đúng profile của phản hồi trước để sửa JSON.');
+        const request={projectId:scope,profileId:selectedId,prompt:referenceMusePrompt(context,mode==='repair'),
+          ...(mode==='repair'?{parentId:chat!.requestId}:{referenceJobId:jobId})};
+        const key=JSON.stringify(request);
+        if(!attempt.current||attempt.current.key!==key)attempt.current={key,requestId:crypto.randomUUID()};
+        setUncertain(true);
+        const result:Chat=await api.museChatSend({...request,requestId:attempt.current.requestId});
+        if(live.current)consume(result);
+        if(['done','failed'].includes(result.state))attempt.current=null;
+      }
+      await refresh();
+    } catch(e){if(live.current)setError((e as Error).message);}
+    finally {running.current=false;onBusy(false);if(live.current)setBusy(false);}
+  }
+  const blocked=disabled||busy||loading||!api?.museChatSend;
+  const cannotSend=blocked||pending||uncertain||!selected||selected.busy||count>=3;
+  return <div>
+    <label className="field">Profile Muse<select aria-label="Profile Muse phân tích" disabled={blocked||pending||uncertain} value={selectedId} onChange={e=>setProfileId(e.target.value)}>
+      {!profiles.length&&<option value="">Chưa có profile đang bật</option>}
+      {profiles.map(p=><option key={p.id} value={p.id}>{p.name} · {status?.batch?.submittedByProfile[p.id]??0}/3 lượt</option>)}
+    </select></label>
+    <p>Tốn 1 lượt Muse · gửi sheet thưa và sheet dày đầu tiên. Kết quả chỉ điền để bạn duyệt, chưa lưu.</p>
+    {(structure.contactSheets?.dense.length??0)>1&&<p>Video có nhiều sheet dày; chữ/CTA ngoài sheet đầu tiên cần kiểm thêm.</p>}
+    {!structure.contactSheets?.dense.length&&<p>Phân tích lại MP4 để có sheet dày trước khi gửi Muse.</p>}
+    <Button disabled={cannotSend||!structure.contactSheets?.dense.length} busy={busy} onClick={()=>void run('send')}>Phân tích bằng Muse</Button>
+    {parseFailed&&<Button tone="neutral" disabled={cannotSend||chat?.profileId!==selectedId} onClick={()=>void run('repair')}>Gửi tiếp yêu cầu sửa JSON</Button>}
+    {parseFailed&&<p>Sửa JSON tốn thêm 1 lượt Muse trong cùng hội thoại.</p>}
+    {(chat||uncertain)&&<Button tone="neutral" disabled={blocked} onClick={()=>void run('read')}>Đọc lại kết quả</Button>}
+    {busy&&<p role="status">Đang chờ phản hồi Muse…</p>}
+    {chat?.state==='needs_attention'&&<p>Cần đối soát hội thoại trước khi gửi tiếp. Đọc lại kết quả không gửi prompt mới.</p>}
+    {chat?.state==='failed'&&<p>Gửi chưa bắt đầu · chưa tính lượt cho yêu cầu này.</p>}
+    {(error||statusError)&&<p role="alert" className="inline-error">{error||statusError}</p>}
   </div>;
 }
 
@@ -152,7 +233,7 @@ export default function ReferenceVideoPanel({records, disabled=false, onSaveDraf
     }finally{clearTimeout(timer);controller.current=null;}
   }
   return <div>
-    <Button tone="neutral" disabled={disabled} onClick={()=>setOpen(!open)}>Phân tích video mẫu</Button>
+    <Button tone="neutral" disabled={disabled||busy} onClick={()=>setOpen(!open)}>Phân tích video mẫu</Button>
     {open&&<div className="production-card production-card-body">
       <p>MP4 tối đa 25 MB / 180 giây. Sheet thưa mỗi 0,8 giây và sheet dày 4 khung hình/giây; phân tích chạy trên máy, chưa gửi Muse.</p>
       {!api?.integrationAnalyzeStructure&&<p>Mở bản desktop đã cập nhật để phân tích video.</p>}
@@ -193,6 +274,9 @@ export default function ReferenceVideoPanel({records, disabled=false, onSaveDraf
           <label className="field">Chữ mở đầu · tiếng Anh<input maxLength={3000} value={hookText} disabled={blocked} onChange={e=>setHookText(e.target.value)}/></label>
           <label className="field">Chữ kêu gọi hành động · tiếng Anh<input maxLength={3000} value={ctaText} disabled={blocked} onChange={e=>setCtaText(e.target.value)}/></label>
         </>}
+        {draft.structure&&analysis&&<ReferenceMuseAnalysis key={analysis.jobId} jobId={analysis.jobId} structure={draft.structure}
+          caption={caption} fileName={fileName} formulas={latest} disabled={blocked} onBusy={setBusy}
+          onResponse={(text,parsed)=>{setJsonText(text);setParsedAnalysis(parsed);setJsonDirty(!parsed);setNotice(parsed?'Đã điền phân tích Muse. Kiểm tra kết quả rồi bấm Lưu tham chiếu.':'');}}/>}
         {draft.structure&&<ReferenceAnalysisInput structure={draft.structure} caption={caption} fileName={fileName} jsonText={jsonText} disabled={blocked} formulas={latest}
           onJson={value=>{setJsonText(value);setJsonDirty(!!value.trim());if(!value.trim())setParsedAnalysis(null);}}
           onCopy={prompt=>void execute(async()=>{await navigator.clipboard.writeText(prompt);setNotice('Đã sao chép prompt. Đính kèm tất cả sheet khi gửi cho AI.');})}

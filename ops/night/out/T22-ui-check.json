@@ -1,0 +1,32 @@
+{
+  "fixtureOnly": true,
+  "networkRequestsSent": 0,
+  "measurements": [
+    {
+      "viewport": 1366,
+      "pageWidth": 1356
+    },
+    {
+      "viewport": 1080,
+      "pageWidth": 1070
+    }
+  ],
+  "apiFixturePosts": 1,
+  "museFixtureSends": 3,
+  "museFixtureRecoveries": 1,
+  "checks": [
+    "enabled profile only",
+    "cost disclosure",
+    "job ID only IPC",
+    "pending send locks save/collapse",
+    "parse error blocks save",
+    "repair uses same parent/profile, no upload",
+    "parse fills for review only",
+    "explicit save only",
+    "transport uncertainty blocks resend",
+    "recovery without extra turn",
+    "three-turn cap",
+    "reopen receipt"
+  ],
+  "consoleErrors": []
+}

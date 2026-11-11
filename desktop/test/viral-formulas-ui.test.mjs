@@ -17,6 +17,30 @@ const {parseFormulaAnalysis,proposeFormulaChanges}=await importModule('lib/lab/f
 const {draftReferenceVideo} = await importModule('lib/lab/viral-reference.ts');
 const render = records => renderToStaticMarkup(React.createElement(ViralFormulas, {records}));
 
+test('Muse analysis prompt states the two attached sheets and parse keeps partial coverage visible',async()=>{
+  const {referenceMusePrompt,parseReferenceMuseResponse}=await importModule('lib/lab/reference-muse.ts');
+  const structure=structureFor();
+  structure.contactSheets.dense.push({...structure.contactSheets.dense[0],path:'later-sheet.jpg',fromSec:30,toSec:40});
+  const context={structure,caption:'Comment LED',fileName:'example.mp4',formulas:viralFormulas};
+  const original=structuredClone(context),prompt=referenceMusePrompt(context);
+  assert.match(prompt,/FIRST dense sheet/);assert.match(prompt,/Later dense pages are NOT attached/);
+  assert.doesNotMatch(prompt,/later-sheet\.jpg/);assert.ok(prompt.length<16000);
+  assert.match(referenceMusePrompt(context,true),/^Repair your previous response as valid JSON/);
+  assert.match(referenceMusePrompt(context,true),/same two images already attached/);
+  assert.throws(()=>parseReferenceMuseResponse('invalid',context),/chưa đúng cấu trúc/);
+  const parsed=parseReferenceMuseResponse(JSON.stringify(analysisResponse()),context);
+  assert.equal(parsed.durationSec,structure.durationSec);assert.ok(parsed.warnings.some(w=>w.includes('sheet dày đầu tiên')));
+  assert.deepEqual(context,original);
+});
+
+test('Muse controls disclose cost and review-only behavior; no profile or receipt read means no Send',async()=>{
+  const {ReferenceMuseAnalysis}=await importModule('components/lab/reference-video.tsx');let calls=0;
+  const html=renderToStaticMarkup(React.createElement(ReferenceMuseAnalysis,{jobId:'fixture',structure:structureFor(),caption:'',fileName:'',formulas:viralFormulas,
+    disabled:false,onBusy:()=>calls++,onResponse:()=>calls++}));
+  for(const text of ['Phân tích bằng Muse','Tốn 1 lượt Muse','Kết quả chỉ điền để bạn duyệt, chưa lưu','Chưa có profile đang bật'])assert.ok(html.includes(text),text);
+  assert.match(html,/<button[^>]*disabled/);assert.equal(calls,0);
+});
+
 test('offline JSON analysis preview exposes beats, CTA provenance, matches and warnings as escaped text',()=>{
   const structure=structureFor(),analysis=parseFormulaAnalysis(JSON.stringify({...analysisResponse(),hookText:'<script>fake</script>',ctaSource:'caption'}),structure,{caption:'Missing keyword'});
   const html=renderToStaticMarkup(React.createElement(FormulaAnalysisPreview,{analysis,formulas:viralFormulas}));

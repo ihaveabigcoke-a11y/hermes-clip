@@ -1,5 +1,9 @@
 # Hermes Clip — bối cảnh và trạng thái ngày 11/11/2026
 
+## Cập nhật source đêm T22 — gửi contact sheet qua chat Muse
+
+Clone `night-20261111` đã nối nút **Phân tích bằng Muse** vào T21: chọn profile bật, gửi sheet thưa + sheet dày đầu tiên qua adapter upload hiện có, parse phản hồi để người dùng duyệt và chỉ lưu khi bấm. JSON sai có yêu cầu sửa cùng `parentId`; kết quả chưa rõ có đọc lại receipt, không tự gửi lại. Main chỉ nhận mã tác vụ từ renderer, kiểm cấu trúc/checksum/confinement/JPEG-PNG/symlink; chat chữ giữ fingerprint cũ. Lỗi chuẩn bị ảnh không gửi prompt hoặc trừ lượt. Chưa triển khai bản cài, chưa mở Muse/Instagram thật; bằng chứng và kết quả kiểm mới ở [checkpoint T22](../../ops/night/out/T22.md), cách thử một video/một lượt ở [MUSE-ANALYSIS.md](../MUSE-ANALYSIS.md). Phần T21 bên dưới mô tả trạng thái trước khi nối Muse.
+
 ## Cập nhật source đêm T21 — phân tích công thức từ video mẫu, chưa gọi Muse
 
 Clone `night-20261111` đã bổ sung sheet 4 fps (11 cột, 200 px/ô, tối đa 120 frame/tấm), caption/tên file optional và bộ prompt/parse/match/đề xuất thuần theo taxonomy T05. UI cho tự gửi sheet, dán JSON, xem beat/CTA/nguồn/cảnh báo rồi lưu tham chiếu qua CAS; chỉ bấm tạo phiên bản mới mới ghi công thức append-only. Giữ dữ liệu cũ, checksum/confinement/JPEG và hợp đồng tác vụ T12. Domain 152/152, API 18/18, desktop 255 đạt/1 skip OpenMontage; typecheck, build riêng và UI offline 1366/1080 đạt. FFmpeg tổng hợp 6 giây có 24 frame dày, 31 giây chia 120+4, đếm từ ảnh giải mã. Chưa triển khai bản cài hoặc phân tích video người dùng/Muse/Instagram thật. Prompt dài có trích đoạn được đánh dấu; caption đầy đủ vẫn lưu để đối chiếu. Xem [checkpoint, giới hạn và cách chạy T21](../../ops/night/out/T21.md).

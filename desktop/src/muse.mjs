@@ -56,7 +56,11 @@ export class MuseAdapter {
         mimeType: reference.type,
         buffer: await readFile(reference.path),
       })));
-      await page.locator(config.upload).setInputFiles(files);
+      try {
+        await page.locator(config.upload).setInputFiles(files);
+      } catch (cause) {
+        throw new Error('Không tải được ảnh đính kèm lên Muse. Chưa gửi prompt, chưa tính lượt.', {cause});
+      }
       if (this.chatMode) {
         // The composer enables text sending before an attachment has finished
         // loading. Wait with an empty prompt so readiness depends on the file.

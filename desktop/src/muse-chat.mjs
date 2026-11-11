@@ -3,11 +3,13 @@ import {z} from 'zod';
 import {MuseAdapter} from './muse.mjs';
 import {museQuotaExhausted} from './muse-quota.mjs';
 import {safeMessage} from './contracts.mjs';
+import {checkedChatAttachments} from './muse-chat-attachments.mjs';
 
 const id = z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/);
 const projectScope = z.string().regex(/^[a-zA-Z0-9_-]{1,240}$/);
-const input = z.object({requestId: id, profileId: id, projectId: projectScope,
+export const chatInput = z.object({requestId: id, profileId: id, projectId: projectScope,
   prompt: z.string().trim().min(1).max(16000), parentId: id.nullable().default(null)});
+const input = chatInput.extend({attachments:z.array(z.string().min(1).max(4096)).max(4, 'Tối đa 4 ảnh đính kèm.').optional()});
 const assistantSelector = '[data-message-id][data-message-role="assistant"]';
 
 export class MuseChat {
@@ -98,8 +100,12 @@ export class MuseChat {
   }
 
   async send(payload) {
-    const value = input.parse(payload);
-    const fingerprint = createHash('sha256').update(JSON.stringify(value)).digest('hex');
+    const {attachments, ...value} = input.parse(payload);
+    if (attachments?.length && value.parentId) throw Error('Chỉ đính kèm ảnh khi bắt đầu hội thoại mới.');
+    const references = attachments?.length ? await checkedChatAttachments(this.worker.root, attachments) : [];
+    // Keep the exact legacy object/order/defaults for text-only receipts.
+    const fingerprint = createHash('sha256').update(JSON.stringify(references.length
+      ? {...value, attachments:references.map(reference => reference.sha256)} : value)).digest('hex');
     const existing = this.get(value.requestId);
     if (existing) {
       if (existing.fingerprint !== fingerprint) throw Error('Mã yêu cầu đã gắn với nội dung khác.');
@@ -114,8 +120,9 @@ export class MuseChat {
     this.lock(value.profileId);
     let page;
     try {
-      let chat = this.save({...value, fingerprint, state: 'preparing', createdAt: Date.now(), response: '',
+      let chat = this.save({...value, ...(references.length ? {attachments:references} : {}), fingerprint, state: 'preparing', createdAt: Date.now(), response: '',
         providerId: null, providerUrl: parent?.providerUrl ?? null, oldAssistantIds: [], error: null});
+      if (references.length && !config.upload) throw Error('Luồng Muse chưa cấu hình tải ảnh đính kèm. Chưa gửi prompt, chưa tính lượt.');
       const context = await this.worker.context(value.profileId, true);
       await this.worker.connectVpn(value.profileId, context);
       page = await context.newPage();
@@ -134,7 +141,12 @@ export class MuseChat {
         if ((await page.locator(config.prompt).inputValue()).trim()) throw Error('Hội thoại Muse đang có bản nháp. Lưu bản nháp trước khi chat.');
         await page.locator(config.prompt).fill(this.textPrompt(value.prompt));
       } else {
-        await adapter.prepare(page, {prompt: this.textPrompt(value.prompt), references: []});
+        if (references.length) {
+          const current = await checkedChatAttachments(this.worker.root, attachments);
+          if (current.some((reference, index) => reference.sha256 !== references[index].sha256))
+            throw Error('Ảnh đính kèm đã đổi trước khi gửi. Chưa tính lượt Muse.');
+        }
+        await adapter.prepare(page, {prompt: this.textPrompt(value.prompt), references});
       }
       this.worker.profileHealth(value.profileId, 'ready');
       chat = this.beginSubmit({...chat, providerUrl: page.url(),
@@ -151,7 +163,9 @@ export class MuseChat {
       if (!chat) throw error;
       if (chat.state === 'done') return chat;
       return this.save({...chat, state: chat.state === 'preparing' ? 'failed' : 'needs_attention',
-        errorCode: error.code ?? null, error: error.code === 'MUSE_CHAT_TIMEOUT' ? error.message : error.code ? safeMessage(error) : String(error.message).slice(0, 600)});
+        errorCode: error.code ?? null, error: references.length && error.code === 'MUSE_ATTACHMENT_NOT_READY'
+          ? 'Muse chưa xác nhận ảnh đính kèm đã tải xong. Chưa gửi prompt, chưa tính lượt.'
+          : error.code === 'MUSE_CHAT_TIMEOUT' ? error.message : error.code ? safeMessage(error) : String(error.message).slice(0, 600)});
     } finally {
       await page?.close().catch(() => {});
       this.worker.chatting.delete(value.profileId);
