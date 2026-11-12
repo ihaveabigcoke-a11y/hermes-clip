@@ -5,6 +5,8 @@ import {type LabRecord,VIETNAM_TIME_ZONE} from '@/lib/lab/domain';
 import {buildOfficeView,parseOfficeView,freshness,todayCount,activeProducts,officeGroups,type OfficeView,type OfficeGroup} from '@/lib/lab/office-view';
 import {Badge,Button,Empty,Modal} from './primitives';
 import './office.css';
+import {productJourneyStep,type JourneyMedia} from '@/lib/lab/product-next-step';
+import {ProductNextStepCard} from './product-next-step';
 
 const clock=(value:string|null)=>value?new Date(value).toLocaleTimeString('vi-VN',{timeZone:VIETNAM_TIME_ZONE,hour12:false}):'Chưa biết';
 const date=(value:string|null)=>value?value.split('-').reverse().join('/'):'Chưa biết';
@@ -12,7 +14,7 @@ const stageNames:Record<string,string>={research:'Nghiên cứu',script:'Chuẩn
 const providerNames:Record<string,string>={muse:'Muse',manual:'Nhập tay',codex:'Codex',openmontage:'OpenMontage','grok-cli':'Grok CLI',fal:'fal'};
 const groupTone=(group:OfficeGroup)=>['failed','attention'].includes(group)?'error':group==='library'?'success':'neutral';
 
-export default function OfficeViews({mode,records,demo}:{mode:'signals'|'office';records:LabRecord[];demo:boolean}) {
+export default function OfficeViews({mode,records,demo,manual,jobs}:{jobs:Parameters<typeof productJourneyStep>[3];manual:JourneyMedia;mode:'signals'|'office';records:LabRecord[];demo:boolean}) {
   const [saved,setSaved]=useState<OfficeView|null>(null),[failed,setFailed]=useState(false),[tick,setTick]=useState(Date.now()),[retry,setRetry]=useState(0);
   const [productId,setProductId]=useState(''),[group,setGroup]=useState(''),[selected,setSelected]=useState(''),[copied,setCopied]=useState(false);
   const [scope,setScope]=useState<'today'|'active'>('today'),[query,setQuery]=useState(''),[day,setDay]=useState('');
@@ -65,8 +67,9 @@ export default function OfficeViews({mode,records,demo}:{mode:'signals'|'office'
         <div className="office-stage-strip" aria-label="Giai đoạn sản phẩm">{['research','script','media','review','publish'].map((stage,i)=><div key={stage}><span>0{i+1}</span><strong>{stageNames[stage]}</strong><small>{cards.filter(p=>p.stage===stage).length} sản phẩm</small></div>)}</div>
         <div className="office-section-title"><h2><Layers3 size={18}/>{scope==='today'?'Đợt hôm nay':'Sản phẩm đang triển khai'}</h2><span>{cards.length} sản phẩm · xếp theo hạng đã chọn</span></div>
         <div className="office-product-grid">{cards.map(product=>{
+          const original=records.find(r=>r.id===product.id&&r.kind==='product');
           const renders=view.exports.filter(e=>e.productId===product.id&&e.kind==='render'&&e.verified),posts=view.posts.filter(p=>p.productId===product.id&&p.status.startsWith('published'));
-          return <article className="office-product" key={product.id} data-product-id={product.id}><div className="office-product-top"><span className="office-rank">{product.priorityRank?'Ưu tiên '+product.priorityRank:'Chưa xếp hạng'}</span><Badge>{stageNames[product.stage]??'Chưa phân loại'}</Badge></div><small className="office-product-key">{product.key??'Chưa gán mã'}</small><h3>{product.name}</h3><dl><div><dt>Chọn lần đầu</dt><dd>{date(product.firstSelectedDay)}</dd></div><div><dt>Chọn gần nhất</dt><dd>{date(product.lastSelectedDay)}</dd></div><div><dt>Lượt được chọn</dt><dd>{product.selectionCount}</dd></div><div><dt>Cần xử lý</dt><dd>{product.openActions} việc</dd></div></dl><footer><span><CheckCircle2 size={14}/>{renders.length} MP4 đã kiểm</span><span>{posts.length} bài đã đăng</span></footer><button type="button" className="office-text-button" onClick={()=>{setProductId(product.id);setGroup('');window.history.pushState({},'', '?view=signals');window.dispatchEvent(new PopStateEvent('popstate'));}}>Xem các lượt của sản phẩm <ArrowRight size={14}/></button></article>;
+          return <article className="office-product" key={product.id} data-product-id={product.id}><div className="office-product-top"><span className="office-rank">{product.priorityRank?'Ưu tiên '+product.priorityRank:'Chưa xếp hạng'}</span><Badge>{stageNames[product.stage]??'Chưa phân loại'}</Badge></div><small className="office-product-key">{product.key??'Chưa gán mã'}</small><h3>{product.name}</h3><dl><div><dt>Chọn lần đầu</dt><dd>{date(product.firstSelectedDay)}</dd></div><div><dt>Chọn gần nhất</dt><dd>{date(product.lastSelectedDay)}</dd></div><div><dt>Lượt được chọn</dt><dd>{product.selectionCount}</dd></div><div><dt>Cần xử lý</dt><dd>{product.openActions} việc</dd></div></dl>{original&&<ProductNextStepCard next={productJourneyStep(original,records,manual,jobs)}/>}<footer><span><CheckCircle2 size={14}/>{renders.length} MP4 đã kiểm</span><span>{posts.length} bài đã đăng</span></footer><button type="button" className="office-text-button" onClick={()=>{setProductId(product.id);setGroup('');window.history.pushState({},'', '?view=signals');window.dispatchEvent(new PopStateEvent('popstate'));}}>Xem các lượt của sản phẩm <ArrowRight size={14}/></button></article>;
         })}</div>{!cards.length&&<Empty title="Chưa có sản phẩm phù hợp" text="Đổi góc nhìn hoặc bộ lọc; lựa chọn sản phẩm được thực hiện ở Nghiên cứu."/>}
         <p className="office-footnote">Hạng do bạn xếp khi chọn sản phẩm. Gói prompt và MP4 đã kiểm là hai loại bản xuất khác nhau.</p>
       </>}

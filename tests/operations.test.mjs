@@ -1,3 +1,4 @@
+import './product-next-step.test.mjs';
 import './metric-import.test.mjs';
 import './hook-analytics.test.mjs';
 import './product-profile.test.mjs';

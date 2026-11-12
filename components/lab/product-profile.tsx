@@ -1,4 +1,6 @@
 "use client";
+import {ProductNextStepCard} from './product-next-step';
+import type {JourneyStep} from '@/lib/lab/product-next-step';
 import {Readiness} from './content-readiness';
 import {useEffect,useState} from 'react';
 import {Button} from './primitives';
@@ -12,12 +14,13 @@ import './product-profile.css';
 const show=(v:any)=>v===null||v===undefined||v===''?'Chưa biết':String(v);
 const money=(v:any,c:string)=>typeof v==='number'?v.toLocaleString('vi-VN',{minimumFractionDigits:2,maximumFractionDigits:2})+' '+c:'Chưa biết';
 function Facts({rows}:{rows:[string,any][]}){return <dl>{rows.map(([label,value])=><div key={label} style={{display:'contents'}}><dt>{label}</dt><dd>{show(value)}</dd></div>)}</dl>;}
-export default function ProductProfile({product,records,onEdit,onBack}:{product:LabRecord;records:LabRecord[];onEdit:()=>void;onBack:()=>void}){
+export default function ProductProfile({product,records,onEdit,onBack,next}:{next:JourneyStep;product:LabRecord;records:LabRecord[];onEdit:()=>void;onBack:()=>void}){
  const [tab,setTab]=useState('overview');useEffect(()=>{const sync=()=>{const value=new URLSearchParams(location.search).get('product_tab');setTab(profileTabs.some(([id])=>id===value)?value!:'overview');};sync();window.addEventListener('popstate',sync);return()=>window.removeEventListener('popstate',sync);},[product.id]);
  const select=(id:string)=>{setTab(id);const u=new URL(location.href);u.searchParams.set('product_tab',id);history.pushState({},'',u);};
  const p=productFinancials(product.data),c=profileCandidate(product,records),f=profileFinance(p),summary=instagramProductSummary(records,product.id),projects=records.filter(r=>r.kind==='production'&&r.data.productId===product.id);
  const researchFacts:[string,any][]=[['Nguồn',c?.evidenceUrl],['Kỳ đo',c?.competition?.observedAt],['Đối chiếu SKU',c?.matchType==='exact_sku'?'Đúng SKU':c?.matchType==='similar'?'Sản phẩm tương tự':'Chưa biết']];
  return <section className="product-profile"><header className="profile-header"><div><Button tone="ghost" onClick={onBack}>← Danh sách sản phẩm</Button><h2>{p.name}</h2><p>{p.productKey||'Chưa gán mã'} · {p.sku||'SKU chưa biết'}</p></div><Button tone="neutral" onClick={onEdit}>Sửa hồ sơ</Button></header>
+ <ProductNextStepCard next={next}/>
  <div className="profile-tabs" role="tablist" aria-label="Hồ sơ sản phẩm">{profileTabs.map(([id,label],i)=><Button key={id} role="tab" id={'tab-'+id} aria-controls={'panel-'+id} aria-selected={tab===id} tabIndex={tab===id?0:-1} tone={tab===id?'primary':'ghost'} onClick={()=>select(id)} onKeyDown={e=>{const n=e.key==='ArrowRight'?(i+1)%9:e.key==='ArrowLeft'?(i+8)%9:e.key==='Home'?0:e.key==='End'?8:null;if(n!==null){e.preventDefault();select(profileTabs[n][0]);document.getElementById('tab-'+profileTabs[n][0])?.focus();}}}>{label}</Button>)}</div>
  <div role="tabpanel" id={'panel-'+tab} aria-labelledby={'tab-'+tab} className="profile-grid" tabIndex={0}>
  {tab==='overview'&&<><section className="production-card profile-wide"><Readiness product={p}/></section><section className="production-card"><h3>Khách hàng & công dụng</h3><Facts rows={[["Khách hàng",p.audience||p.customer],["Vấn đề",p.problem],["Công dụng có bằng chứng",p.allowedClaims],["Thị trường",p.market]]}/></section><section className="production-card"><h3>Nguồn hồ sơ</h3><Facts rows={researchFacts}/><p>{c?.evidenceNotes||'Chưa có bằng chứng nghiên cứu.'}</p></section></>}

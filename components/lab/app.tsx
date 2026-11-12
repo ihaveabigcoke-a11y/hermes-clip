@@ -74,7 +74,7 @@ import { desktopBridge } from "@/lib/lab/desktop-client";
 import { demoRecords } from "@/lib/lab/demo";
 import {productCardDetails, showWorkspaceBanner} from "@/lib/lab/ui-state";
 import { productStage } from "@/lib/lab/product-stage";
-import { productNextStep, latestProductProduction } from "@/lib/lab/product-next-step";
+import { productJourneyStep } from "@/lib/lab/product-next-step";
 import { sampleCheckState } from "@/lib/lab/sample-check";
 import { SampleCheckFields } from "./sample-check-fields";
 import {
@@ -93,6 +93,8 @@ import {
   formatTime,
 } from "@/lib/lab/domain";
 import MetricImport from './metric-import';
+import {useManualMedia} from './manual-media';
+import {useDesktopStatus} from '@/lib/lab/use-desktop-status';
 import {HookAnalytics,ProductDecisions} from './hook-analytics';
 import ProductProfile,{ProfileExtraFields} from './product-profile';
 import {CompetitorVideoFields} from './competitor-videos';
@@ -280,6 +282,8 @@ export default function LabApp() {
     abort = useRef<AbortController | null>(null),
     pending = useRef(false);
   const records = demo ? samples : real;
+  const journeyMedia=useManualMedia(!demo && ['products','overview','office'].includes(view));
+  const journeyWorker=useDesktopStatus(!demo && ['products','overview','office'].includes(view));
   const [profileId,setProfileId]=useState("");
   const [selectionDay,setSelectionDay]=useState("");
   const notify = useCallback(
@@ -942,23 +946,9 @@ export default function LabApp() {
   function productCard(p: LabRecord) {
     const margin = unitMargin(p.data);
     const details = productCardDetails(p, records);
-    const next = productNextStep(p, records);
+    const next = productJourneyStep(p, records, journeyMedia.status,journeyWorker.status?.jobs);
     const sampleState = sampleCheckState(p.data);
-    const openNextStep = () => {
-      if (next.actionView === "products") return openEditor("product", p);
-      const url = urlState(next.actionView, "", 1);
-      for (const key of ["production", "stage", "ops_id", "ig_tab", "ig_plan", "new_product"]) url.searchParams.delete(key);
-      if (next.actionView === "social") url.searchParams.set("ops_id", p.id);
-      else {
-        const latest = latestProductProduction(p, records);
-        if (latest) {
-          url.searchParams.set("production", latest.id);
-          url.searchParams.set("stage", next.stage);
-        } else url.searchParams.set("new_product", p.id);
-      }
-      history.pushState({}, "", url);
-      window.dispatchEvent(new PopStateEvent("popstate"));
-    };
+    const openNextStep = () => { history.pushState({}, "", next.href); window.dispatchEvent(new PopStateEvent("popstate")); };
     return (
       <article className="product-card" key={p.id}>
         {productVisual(p)}
@@ -1493,7 +1483,7 @@ export default function LabApp() {
   }
   function productsView() {
     const profile=allProducts.find(p=>p.id===profileId);
-    if(profile)return <ProductProfile key={profile.id} product={profile} records={records} onEdit={()=>openEditor("product",profile)} onBack={()=>{setProfileId("");const u=new URL(location.href);u.searchParams.delete("product");u.searchParams.delete("product_tab");history.pushState({},"",u);}}/>;
+    if(profile)return <ProductProfile key={profile.id} next={productJourneyStep(profile,records,journeyMedia.status,journeyWorker.status?.jobs)} product={profile} records={records} onEdit={()=>openEditor("product",profile)} onBack={()=>{setProfileId("");const u=new URL(location.href);u.searchParams.delete("product");u.searchParams.delete("product_tab");history.pushState({},"",u);}}/>;
     const selectedIds=new Set(selectionEntries(records).filter(s=>s.selectionDay===selectionDay).map(s=>s.productId));
     const rows = filtered(allProducts).filter(p=>!selectionDay||selectedIds.has(p.id)),
       paged = pageRows(rows);
@@ -2319,7 +2309,7 @@ export default function LabApp() {
           ) : view === "overview" ? (
             overview()
           ) : view === "office" || view === "signals" ? (
-            <OfficeViews key={demo?"demo-office":"local-office"} mode={view} records={records} demo={demo}/>
+            <OfficeViews jobs={journeyWorker.status?.jobs??[]} manual={journeyMedia.status} key={demo?"demo-office":"local-office"} mode={view} records={records} demo={demo}/>
           ) : view === "products" ? (
             productsView()
           ) : ["research", "social", "landing"].includes(view) ? (
