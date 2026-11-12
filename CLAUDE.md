@@ -63,7 +63,7 @@ Từ chối/captcha/đăng xuất/cảnh báo hoặc hai lỗi liên tiếp: T�
 - Hàm thuần buildOfficeView(records, workerStore, manual, integrations, now) chiếu dữ liệu gốc. GET /api/lab?view=office dùng cùng phiên local, host/origin bảo vệ; không có endpoint ghi cho màn theo dõi.
 - Local server chỉ 127.0.0.1. View không chứa cookie/key/token/email, cấu hình proxy, đường dẫn tuyệt đối hay prompt đầy đủ. Không có kênh xuất sang repo ngoài.
 - Envelope schema=hermes-office-view, version=1, generatedAt, source, today; selection giữ ngày/đợt/sản phẩm/tổng; products giữ productKey/rank/stage; runs giữ nguồn, event/history tối đa 20, output IDs và needsAction; exports/posts/measurements là các đơn vị riêng.
-- ID product ổn định; product_selection liên kết selectionDay, batchId, candidateId, productId, rank, reason, active. Ngày dùng vietnamDay/Asia_Ho_Chi_Minh hiện có.
+- ID product ổn định; product_selection liên kết selectionDay, batchId, candidateId, productId, rank, reason, active. Ngày dùng vietnamDay/Asia/Ho_Chi_Minh hiện có.
 - Run ID job:<id>, manual:<sha256>, compose:<id>. Nhóm queued/sending/generating/checking/library/manual/attention/failed/stopped/refused/unmapped; ready chỉ vào library khi có assetId. Trạng thái lạ phải hiện, không bỏ qua.
 - Office đọc receipt render bền vững và metadata đã kiểm, đọc số nhập mới với null/0 nguyên nghĩa. Không cộng lượt media + bản xuất + bài đăng + lần đo thành một số.
 - Poll 5 giây và sự kiện workspace; lỗi giữ dữ liệu gần nhất với Mất kết nối, quá 3 phút là Dữ liệu cũ. Demo luôn ghi Dữ liệu mô phỏng.
