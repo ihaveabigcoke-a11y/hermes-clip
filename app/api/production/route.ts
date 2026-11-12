@@ -1,7 +1,7 @@
 import {resolveProvider, mediaProviderReceipts} from '@/desktop/src/provider-routing.mjs';
 import { z } from "zod";
 import { env } from "cloudflare:workers";
-import { owner, body, getRecord, save, getSettings, ApiError, failure } from "@/lib/lab/server";
+import { owner, body, getRecord, save, getSettings, createProductionIfAbsent, ApiError, failure } from "@/lib/lab/server";
 import { applyProduction, newProduction, productionSchema, providerAdapter, variantItems, ProductionError, creativeDrafts } from "@/lib/lab/production";
 import { validationMessage } from "@/lib/lab/domain";
 
@@ -32,13 +32,15 @@ export async function POST(request: Request) {
     let p;
     if(envelope.action==="create") {
       if(old)throw new ApiError(409,"Dự án đã tồn tại.");
-      const d=z.object({name:z.string().trim().min(1).max(150),productId:z.string(),locale:z.string().trim().min(2).max(40),creativeId:z.string().max(120).default(""),contentPlanId:z.string().max(120).optional(),contentPlanRevision:z.number().int().positive().optional()}).parse(envelope.input);
+      const d=z.object({name:z.string().trim().min(1).max(150),productId:z.string(),locale:z.string().trim().min(2).max(40),creativeId:z.string().max(120).default(""),contentPlanId:z.string().max(120).optional(),contentPlanRevision:z.number().int().positive().optional(),reuseProduct:z.boolean().default(false)}).parse(envelope.input);
       const product=await getRecord(uid,d.productId);
       if(!product||product.kind!=="product"||product.data.archived)throw new ApiError(422,"Chọn sản phẩm hiện hành trong workspace.");
+      if (d.reuseProduct && (d.creativeId || d.contentPlanId)) throw new ApiError(422, 'Triển khai sản phẩm chỉ tạo dự án trống; thêm kịch bản trong Tạo video.');
       const c=d.creativeId?await getRecord(uid,d.creativeId):null;
       if(d.creativeId&&(!c||c.kind!=="creative"||c.data.productId!==product.id))throw new ApiError(422,"Concept không thuộc sản phẩm.");
       p=newProduction(d.name,d.productId,product.revision,d.locale,d.creativeId);p.receipts.push(envelope.commandId);
       p.events.push({id:envelope.commandId,at:Date.now(),action:"create",detail:d.name});
+      if (d.reuseProduct) return Response.json(await createProductionIfAbsent(uid,envelope.id,p), {headers:{'Cache-Control':'no-store'}});
       if(c)p=applyProduction(p,"import",{rows:creativeDrafts(c.data,envelope.commandId)},envelope.commandId+"_draft",Date.now(),product.revision);
       if (d.contentPlanId) {
         if (d.creativeId) throw new ApiError(422, "Chọn một nguồn kịch bản cho dự án.");

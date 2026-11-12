@@ -1,5 +1,17 @@
 # Hermes Clip — bối cảnh và trạng thái (source cập nhật đến đêm 3, 12/11/2026)
 
+## T-005 vòng 2 — baseline đạt, bổ sung kiểm lớp che trong script ảnh
+
+Boss xác nhận ngoài sandbox: typecheck 0, domain 208/208, API 28/28, desktop 420 pass/0 fail, build đạt và đủ 6 PNG. Logic vòng 1 giữ nguyên. Ảnh thiếu hồ sơ 1366 có vùng đen che nội dung dù bounds nút trong viewport; ảnh 1920 đúng. Script cũ bỏ lọt vì chỉ kiểm bounds; Tạo video còn giữ scroll từ màn trước. Vòng 2 chỉ sửa script chụp: đợi scroll/layout ổn định, hit-test cảnh báo/lỗi/nút bằng elementFromPoint, lưu DOM/styles trước–sau, kiểm actionability, chụp Tạo video từ đầu trang và xác nhận tên sản phẩm đầu tiên.
+
+**Chưa xác định lớp gây vùng đen hoặc chứng minh đã hết lỗi:** Chrome IPC vẫn bị Access is denied trong sandbox, chưa lấy được DOM/PNG vòng 2. Không sửa CSS/app logic khi thiếu bằng chứng. Syntax, typecheck và diff check đạt. Xem mục vòng 2 trong [báo cáo T-005](../../ops/office/reports/T-005.md) và chạy script ngoài sandbox với artifacts `D:/hermes-wt/artifacts/T-005/round-2`. Các kết quả fail sandbox vòng 1 bên dưới là lịch sử; baseline logic đã được boss nghiệm thu.
+
+## T-005 — hoàn tất hồ sơ đã chọn và mở dự án video nháp (12/11/2026)
+
+Sửa source app chính trên `main`, tag `before-T-005`, chưa commit hoặc áp build vào `desktop/local-dist`. Promote rút gọn problem/proofNotes có đánh dấu, giữ ứng viên đầy đủ và researchOrigin; hồ sơ đã có không bị ghi đè. Màn Nghiên cứu tự thử một lần cho mỗi ứng viên đã chọn còn thiếu hồ sơ trong lần mở màn, hiện lỗi theo trường và có nút **Hoàn tất tạo hồ sơ**. **Triển khai N sản phẩm** dùng action create tạo/dùng lại dự án theo sản phẩm bằng SQL nguyên tử, mở dự án đầu tiên ở Tạo video. Không có cảnh/prompt giả; provider auto theo routing hiện có, không gọi Muse/Flow/Gemini. Nhãn nguồn đổi thành **Nguồn research: Muse**.
+
+Typecheck/build riêng `outputs/T-005-build` đạt. Fixture mới: 4 domain + 2 API + 2 desktop đạt; bộ hồi quy tập trung 48/48 (bao gồm 2 desktop mới). Full suite chuẩn bị spawn EPERM chặn; chạy thêm isolation none: domain 197 pass/11 fail, API 24 pass/4 fail, desktop từng file 337 pass/69 fail/1 skip. Không coi tất cả lỗi desktop là do sandbox: còn lỗi fixture screenshot và assertion hậu quả cần kiểm ngoài sandbox. Chrome IPC Access is denied, **0/6 PNG**, chưa nghiệm thu thao tác/layout thực tế. Script `scripts/check-t005-ui.mjs` sẵn cho boss chạy. Chưa kiểm dữ liệu thật ba ứng viên đợt “10 sản phẩm · 17:49:44 12/11/2026”; không truy cập AppData/SQLite/profile thật. Xem [báo cáo T-005](../../ops/office/reports/T-005.md) cho bằng chứng và cách chạy tiếp.
+
 ## T-002c vòng 2 — cập nhật sau nghiệm thu baseline
 
 Boss xác nhận vòng 1 ngoài sandbox: typecheck exit 0, domain 204/204, API 26/26, desktop 402 pass/0 fail, build đạt. Giữ nguyên logic/UI app vòng 1. Vòng 2 sửa script ảnh để xử lý textarea có JSON điền sẵn, resume fake clock và ghi chẩn đoán trước/sau; Chrome trong sandbox vẫn bị IPC Access is denied, chưa có kết luận DOM/PNG mới.

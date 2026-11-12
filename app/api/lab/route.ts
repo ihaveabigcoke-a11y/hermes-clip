@@ -89,7 +89,11 @@ export async function POST(request: Request) {
       const existing = await getRecord(uid, id);
       if (!existing && !batch.data.selectedIds.includes(candidateId))
         throw new ApiError(422, "Chọn ứng viên trong đợt nghiên cứu trước khi tạo sản phẩm.");
-      if (existing && b.action === "promote") return Response.json({record: existing, deduplicated: true});
+      if (existing && b.action === "promote") {
+        if (existing.kind !== 'product' || existing.data.researchOrigin?.batchId !== batchId || existing.data.researchOrigin?.candidateId !== candidateId)
+          throw new ApiError(409, 'ID hồ sơ đã dùng cho nguồn khác. Giữ nguyên hồ sơ và kiểm tra nguồn ứng viên.');
+        return Response.json({record: existing, deduplicated: true});
+      }
     }
     if (["social_account", "content_plan", "landing_page"].includes(kind)) {
       const product = await getRecord(uid, d.productId);
@@ -199,7 +203,17 @@ export async function POST(request: Request) {
         throw new ApiError(422, "Sản phẩm không tồn tại.");
     }
     const old = kind === "product" ? await getRecord(uid, id) : null;
-    const record = await save(uid, id, kind, d, revision);
+    let record;
+    try { record = await save(uid, id, kind, d, revision); }
+    catch (error) {
+      // A second tab may have promoted this candidate after our initial read.
+      if (error instanceof ApiError && error.status === 409 && kind === 'product' && b.action === 'promote' && d.researchOrigin) {
+        const existing = await getRecord(uid, id);
+        if (existing?.kind === 'product' && existing.data.researchOrigin?.batchId === d.researchOrigin.batchId && existing.data.researchOrigin?.candidateId === d.researchOrigin.candidateId)
+          return Response.json({record: existing, deduplicated: true});
+      }
+      throw error;
+    }
     if (
       old &&
       kind === "product" &&

@@ -7,7 +7,8 @@ import { Button, Badge, Empty, Modal, RecordForm, ClientError, api, type FieldDe
 import { type Kind, type LabRecord, formatTime, schemas } from "@/lib/lab/domain";
 import { currencyFields } from "./currency-fields";
 import { candidateSchema, landingHtml, landingPageSchema, type Candidate, type ResearchBatch } from "@/lib/lab/operations";
-import {saveResearchSelection} from '@/lib/lab/research-selection';
+import {saveResearchSelection, completeResearchProfiles, researchSelection, deployResearchProducts, researchFailure} from '@/lib/lab/research-selection';
+import {newProduction} from '@/lib/lab/production';
 import { desktopBridge, fetchAssetBytes } from "@/lib/lab/desktop-client";
 import InstagramPanel from './instagram-panel';
 import InstagramOverview from './instagram-overview';
@@ -30,6 +31,7 @@ type Props = {
   persist: (kind: Kind, id: string, data: Record<string, any>, revision?: number, action?: string) => Promise<LabRecord>;
   notify: (message: string, tone?: string) => void;
   reload: () => void;
+  onRecords: (records: LabRecord[]) => void;
 };
 type FormSpec = {
   title: string;
@@ -49,7 +51,7 @@ const candidateFormSchema = candidateSchema.extend(Object.fromEntries(["price", 
   z.preprocess(value => value === "" || Number.isNaN(value) ? null : value, z.number().finite().min(0).max(1e9).nullable()),
 ])));
 
-export default function OperationsPanel({view, records, demo, offline, persist, notify, reload}: Props) {
+export default function OperationsPanel({view, records, demo, offline, persist, notify, reload, onRecords}: Props) {
   const {status: desktopStatus} = useDesktopStatus();
   const musePaused = desktopStatus?.musePaused !== false;
   const [selected, setSelected] = useState(() => new URL(location.href).searchParams.get("ops_id") ?? "");
@@ -58,6 +60,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [profileErrors, setProfileErrors] = useState<Record<string, Record<string, string>>>({});
   const [preview, setPreview] = useState("");
   const [museTask, setMuseTask] = useState<{kind: MuseTaskKind; recordId: string; prompt: string} | null>(null);
   const lock = useRef(false);
@@ -155,8 +158,41 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
     if (!chosen) return;
     try {
       await saveResearchSelection(chosen, candidate.id, checked, persist);
+      setProfileErrors(previous => ({...previous, [chosen.id]: {...previous[chosen.id], [candidate.id]: ''}}));
       notify(checked ? 'Đã chọn và giữ hồ sơ sản phẩm.' : 'Đã bỏ chọn. Hồ sơ vẫn giữ.');
-    } catch (failure) { reload(); throw failure; }
+    } catch (failure) {
+      setProfileErrors(previous => ({...previous, [chosen.id]: {...previous[chosen.id], [candidate.id]: researchFailure(failure)}}));
+      reload(); throw failure;
+    }
+  }
+  async function completeProfiles(candidateIds?: string[]) {
+    if (!chosen) return;
+    const errors = await completeResearchProfiles(chosen, records, persist, candidateIds);
+    setProfileErrors(previous => ({...previous, [chosen.id]: errors}));
+    if (Object.keys(errors).length) reload();
+  }
+  async function deployProducts() {
+    if (!chosen) return;
+    const products = researchSelection(chosen, records).ready;
+    const result = await deployResearchProducts(products, async envelope => {
+      if (!demo) return api('/api/production', {method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(envelope)});
+      const existing = records.find(row => row.kind === 'production' && row.data.productId === envelope.input.productId);
+      if (existing) return {record: existing, deduplicated: true};
+      const product = products.find(row => row.id === envelope.input.productId)!;
+      return {record: {id: envelope.id, kind: 'production', revision: 1, updatedAt: Date.now(),
+        data: newProduction(envelope.input.name, product.id, product.revision, envelope.input.locale)}};
+    });
+    onRecords(result.projects);
+    if (result.errors.length) {
+      reload();
+      throw new ClientError(`Đã tạo ${result.created} dự án video. Chưa hoàn tất: ${result.errors.join(' · ')}. Bấm Triển khai để đối soát; dự án đã có sẽ được giữ.`);
+    }
+    if (!result.projects.length) return;
+    notify(`Đã tạo ${result.created} dự án video.${result.projects.length > result.created ? ` Dùng lại ${result.projects.length-result.created} dự án đã có.` : ''} Bước tiếp: viết cảnh → duyệt → Xuất gói prompt cho Flow/Gemini`);
+    const url = new URL(location.href);
+    for (const key of ['ops_id','new_product','p_q','p_page','desk_scene','desk_take']) url.searchParams.delete(key);
+    url.searchParams.set('view','production');url.searchParams.set('production',result.projects[0].id);url.searchParams.set('stage','scenes');
+    history.pushState({},'',url);window.dispatchEvent(new PopStateEvent('popstate'));
   }
   function accountForm(account?: LabRecord) {
     if (!chosen) return;
@@ -249,6 +285,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
         <Button tone="neutral" disabled={musePaused || disabled || demo || !desktopBridge() || batch.candidates.length >= 10} onClick={() => openMuseTask("research")}><Search size={16}/>{batch.candidates.length>=10?'Đã đủ 10 ứng viên':'Nghiên cứu bằng Muse'}</Button>
       </div>
       <ResearchCandidates key={chosen.id} record={chosen} records={records} disabled={disabled} onEdit={candidateForm}
+        promotionErrors={profileErrors[chosen.id]} onComplete={ids=>act(()=>completeProfiles(ids))} onDeploy={()=>act(deployProducts)}
         onSelect={(candidate,checked)=>act(()=>selectCandidate(candidate,checked))}/>
       {batch.notes && <details className="operations-evidence"><summary>Kết quả tìm nguồn đã lưu</summary><pre>{batch.notes}</pre></details>}
     </>;
