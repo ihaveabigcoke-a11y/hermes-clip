@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';import {officeUI} from './office-ui.mjs';import {importModule} from '../desktop/test/helpers/local-server.mjs';import {hookFixture} from '../tests/fixtures/hook-matrix.mjs';
+const p=await importModule('lib/lab/production.ts'),{getRenderPlan}=await importModule('lib/lab/render-plan.ts'),{emptyProduct}=await importModule('lib/lab/domain.ts'),{planHookDrafts}=await importModule('lib/lab/hook-matrix.ts');const f=hookFixture({...p,getRenderPlan,emptyProduct});
+const plans=planHookDrafts(f.records,f.input);plans.forEach((p,i)=>{p.data.status='published_manual';p.data.postUrl='https://instagram.com/p/test'+i;});
+const metrics=plans.map((p,i)=>({id:'metric_'+i,kind:'social_metric',revision:1,updatedAt:1,data:{planId:p.id,views:100,keywordComments:i+1,utmClicks:2,orders:null,observedAt:'2026-11-13T00:00:00Z',sourceUrl:p.data.postUrl,source:'manual'}}));
+await officeUI('T-018',[...f.records,...plans,...metrics],async({page,origin,screenshot})=>{
+ page.setDefaultTimeout(12000);await page.goto(origin+'/?view=results');await page.getByRole('heading',{name:'So ba hook theo sản phẩm'}).waitFor();assert.equal(await page.locator('.profile-table tbody tr').count(),3);await page.getByText('Chưa đặt ngưỡng',{exact:true}).first().waitFor();
+ for(const width of [1366,1920]){await page.setViewportSize({width,height:900});await screenshot('hooks-'+width);}
+ await page.goto(origin+'/?view=experiments');await page.getByLabel('Lý do quyết định',{exact:true}).fill('Cần thử tình huống rõ hơn trước khi tăng sản lượng.');await page.getByRole('button',{name:'Lưu quyết định',exact:true}).click();await page.getByRole('status').filter({hasText:'Đã lưu quyết định'}).waitFor();
+ for(const width of [1366,1920]){await page.setViewportSize({width,height:900});await screenshot('decisions-'+width);}
+ await page.reload();await page.getByText('Cần thử tình huống rõ hơn trước khi tăng sản lượng.',{exact:true}).waitFor();
+ await page.goto(origin+'/?view=settings');await page.getByRole('button',{name:'Cập nhật cài đặt',exact:true}).click();await page.getByLabel('Ngưỡng comment đúng từ khóa / lượt xem (%)',{exact:true}).fill('2');await page.getByRole('button',{name:'Lưu thay đổi',exact:true}).click();await page.getByRole('dialog').waitFor({state:'hidden'});await page.goto(origin+'/?view=results');await page.getByText('Đạt ngưỡng đã đặt',{exact:true}).first().waitFor();await screenshot('threshold-1920');return {hooks:3,historySaved:true,userThreshold:2};
+});

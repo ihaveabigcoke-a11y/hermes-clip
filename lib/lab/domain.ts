@@ -1,3 +1,4 @@
+import {productDecisionSchema} from "./hook-analytics.ts";
 import {profileOptionalFields} from "./product-profile-schema.ts";
 import {competitorVideosSchema} from "./competitor-videos.ts";
 import { z } from "zod";
@@ -24,6 +25,7 @@ export const kinds = [
   "codex_run",
   "research_batch",
   "product_selection",
+  "product_decision",
   "social_account",
   "content_plan",
   "social_metric",
@@ -65,6 +67,7 @@ export const schemas = {
   codex_run: codexRunSchema,
   production: productionSchema,
   assistant_run: z.object({configId:z.string().optional(),day:z.string(),state:z.enum(["pending","done"]),fingerprint:z.string().max(5000),rows:z.array(z.record(z.unknown())).nullable()}),
+  product_decision: productDecisionSchema,
   product_selection: z.object({selectionDay:z.string(),batchId:z.string(),candidateId:z.string(),productId:z.string(),rank:z.number().int().min(1).max(3).nullable(),reason:z.string().max(1000),active:z.boolean()}),
   product: z
     .object({
@@ -177,6 +180,7 @@ export const schemas = {
     productId: str(100),
   }),
   settings: z.object({
+    scaleSignalThreshold:z.number().finite().min(0).max(100).nullable().optional(),
     budgetUsd: money,
     paused: z.boolean().default(false),
     providerName: str(100),
@@ -246,6 +250,7 @@ export function productFromCandidate(batchId: string, batch: Pick<ResearchBatch,
   };
 }
 export const emptySettings = {
+  scaleSignalThreshold: null as number | null,
   budgetUsd: 0,
   paused: false,
   providerName: "",

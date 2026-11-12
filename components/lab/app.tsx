@@ -92,6 +92,7 @@ import {
   productMarginLabel,
   formatTime,
 } from "@/lib/lab/domain";
+import {HookAnalytics,ProductDecisions} from './hook-analytics';
 import ProductProfile,{ProfileExtraFields} from './product-profile';
 import {CompetitorVideoFields} from './competitor-videos';
 import OfficeViews from './office-views';
@@ -738,6 +739,7 @@ export default function LabApp() {
         ];
       case "settings":
         return [
+          {name:"scaleSignalThreshold",label:"Ngưỡng comment đúng từ khóa / lượt xem (%)",type:"number",nullable:true,help:"Để trống khi chưa chốt. Chỉ so với ngưỡng do bạn đặt."},
           {
             name: "budgetUsd",
             label: "Ngân sách vận hành · USD",
@@ -2068,7 +2070,7 @@ export default function LabApp() {
           </Button>
         </div>
         <MuseConnectionStrip onNavigate={navigate} />
-        <ManualMediaSettings demo={demo}/><AssistantSettings demo={demo}/><InstagramSettings records={records} demo={demo}/>
+        <p>{settings.scaleSignalThreshold==null?"Chưa đặt ngưỡng tín hiệu":`Ngưỡng comment đúng từ khóa / lượt xem: ${settings.scaleSignalThreshold}%`} · dùng Cập nhật cài đặt để sửa.</p><ManualMediaSettings demo={demo}/><AssistantSettings demo={demo}/><InstagramSettings records={records} demo={demo}/>
         <div className="connection-grid">
           {[
             {
@@ -2326,11 +2328,11 @@ export default function LabApp() {
           ) : view === "chat" ? (
             null
           ) : view === "experiments" ? (
-            experimentsView()
+            <><ProductDecisions records={records} persist={persist} disabled={offline}/><details><summary>Thử nghiệm nội dung đã lưu</summary>{experimentsView()}</details></>
           ) : view === "studio" ? (
             studioView()
           ) : view === "results" ? (
-            resultsView()
+            <><HookAnalytics records={records} threshold={settings.scaleSignalThreshold??null}/><details><summary>Số liệu bài test đã lưu</summary>{resultsView()}</details></>
           ) : view === "library" ? (<WorkspaceLibrary key={demo ? 'demo-library' : 'real-library'} records={records} demo={demo}/>) : view === "queue" ? (<DesktopConsole mode="queue" records={records} demo={demo}/>) : ["production","images","content"].includes(view) ? null : view === "accounts" ? (
             <section className="accounts-view"><nav className="provider-tabs"><a href="?view=accounts">Tài khoản Muse</a><a href="?view=chat">Chat Muse</a><a href="?view=settings">Cấu hình nhà cung cấp</a></nav><DesktopConsole active={view==="accounts"}/></section>
           ) : (

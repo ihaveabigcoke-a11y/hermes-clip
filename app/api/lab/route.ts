@@ -72,6 +72,7 @@ export async function POST(request: Request) {
       !kinds.includes(b.kind) ||
       ![
         "product",
+        "product_decision",
         "experiment",
         "creative",
         "metric",
@@ -101,6 +102,10 @@ export async function POST(request: Request) {
         throw new ApiError(409, "Giữ phiên bản đã lưu. Tăng version để lưu công thức thành bản mới.");
       id = viralFormulaRecordId({id: d.id, version: d.version});
       d.updatedAt = new Date().toISOString();
+    }
+    if(kind==='product_decision'){
+      if(revision!==0)throw new ApiError(409,'Giữ lịch sử quyết định. Tạo quyết định mới.');
+      const product=await getRecord(uid,d.productId);if(product?.kind!=='product')throw new ApiError(422,'Chọn sản phẩm trong không gian làm việc.');
     }
     if (kind === "settings") id = "workspace";
     if(kind==='product') {

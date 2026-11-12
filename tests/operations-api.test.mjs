@@ -20,6 +20,15 @@ async function save(kind, id, data, revision = 0, who = 'ops-owner', action = 's
   return {status: response.status, ...await response.json()};
 }
 
+test('T018 product decisions are append-only and scoped to an existing product',async()=>{
+ const who='decision-owner';assert.equal((await save('product','decision_product',{...emptyProduct,name:'Product'},0,who)).status,200);
+ const d={productId:'decision_product',decision:'revise',reason:'Need better hook evidence',decidedAt:'2026-11-13T00:00:00Z'};
+ assert.equal((await save('product_decision','decision_one',d,0,who)).status,200);
+ assert.equal((await save('product_decision','decision_one',{...d,decision:'push'},1,who)).status,409);
+ assert.equal((await save('product_decision','decision_two',{...d,decision:'push'},0,who)).status,200);
+ assert.equal((await save('product_decision','decision_wrong',d,0,'other-owner')).status,422);
+});
+
 test('T-005: long valid research promotes all three, concurrent retries preserve edited profiles and full candidates',async()=>{
   const {researchBatchSchema}=await importApiModule('lib/lab/operations.ts');
   const who='t005-promote',batch=t005Batch(researchBatchSchema);
