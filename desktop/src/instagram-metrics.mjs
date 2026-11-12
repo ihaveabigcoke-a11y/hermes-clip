@@ -1,5 +1,6 @@
 import {z} from 'zod';
 import {InstagramInsights,metricKeys} from './instagram-insights.mjs';
+import {apiMode,browserEnabled,assertBrowserEnabled} from './instagram-policy.mjs';
 
 const input=z.object({planId:z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/)});
 export const METRICS_INTERVAL=30*60*1000;
@@ -27,6 +28,8 @@ export class InstagramMetrics {
       const row=this.rows().find(row=>row.planId===plan.id);
       const profile=p.browsers.profile(plan.data.accountId);
       if(!profile)continue;
+      if(apiMode(profile)&&!profile.encryptedApiToken)continue;
+      if(!apiMode(profile)&&(!browserEnabled(p.store)||p.browserBootHold))continue;
       // Once login is missing, only a newly verified session or an explicit click resumes it.
       if(row?.state==='login_required'){
         if(profile.session!=='signed_in'||profile.checkedAt<=row.lastAttemptAt)continue;
@@ -56,11 +59,12 @@ export class InstagramMetrics {
       if(p.browsers.busy.has(accountId)||p.browsers.opening.has(accountId)||p.browsers.pageOpening.has(accountId))throw Error('Hồ sơ đang bận. Thử cập nhật khi thao tác trước kết thúc.');
       p.browsers.busy.add(accountId);locked=true;
       const profile=p.browsers.profile(accountId);
-      if(profile?.apiMode!=='api'&&(!profile?.userId||!profile?.handle))throw Object.assign(Error('Đăng nhập hồ sơ Instagram của sản phẩm để đọc số liệu.'),{code:'login_required'});
+      if(!apiMode(profile))assertBrowserEnabled(p.store);
+      if(!apiMode(profile)&&(!profile?.userId||!profile?.handle))throw Object.assign(Error('Đăng nhập hồ sơ Instagram của sản phẩm để đọc số liệu.'),{code:'login_required'});
       const published=p.jobs().find(job=>job.state==='published'&&job.snapshot.planId===planId);
       if(published&&(published.snapshot.accountId!==accountId||published.postUrl!==target.postUrl))throw Error('Bài đăng không khớp hồ sơ đã dùng để đăng.');
       let measurement;
-      if(profile?.apiMode==='api') measurement=await p.apiAdapter.read(profile,target,published);
+      if(apiMode(profile)) measurement=await p.apiAdapter.read(profile,target,published);
       else {
         wasOpen=p.browsers.contexts.has(accountId);
         const context=await p.browsers.context(accountId,true);

@@ -1,16 +1,16 @@
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
-import {InstagramApi, apiError, nextCursor} from './instagram-api.mjs';
+import {InstagramApi, apiError, nextCursor, publicVideoUrl} from './instagram-api.mjs';
 import {instagramPostUrl} from './instagram-adapter.mjs';
 
 export class InstagramApiAdapter {
-  constructor({secret, fetch = globalThis.fetch, enabled = false, version = null, resumableEnabled = false,
+  constructor({secret, fetch = globalThis.fetch, enabled = true, version = 'v25.0', resumableEnabled = false,
     readVideo = readFile, delay = ms => new Promise(resolve => setTimeout(resolve, ms)), pollAttempts = 12, timeoutMs = 30000} = {}) {
     this.secret = secret; this.fetch = fetch; this.enabled = enabled; this.version = version;
     this.resumableEnabled = resumableEnabled; this.readVideo = readVideo; this.delay = delay;
     this.pollAttempts = pollAttempts; this.timeoutMs = timeoutMs;
   }
-  status() { return {enabled:this.enabled, resumableEnabled:this.resumableEnabled}; }
+  status() { return {enabled:this.enabled, resumableEnabled:this.resumableEnabled, videoUrlEnabled:true, version:this.version}; }
   async client(profile, upload = false) {
     if (!this.enabled) throw apiError('api_disabled', 'Instagram API đang tắt. Cần đối chiếu tài liệu Meta trước khi bật.');
     let token;
@@ -31,8 +31,11 @@ export class InstagramApiAdapter {
   }
   async publish({profile, job, update, beforePublish, stopped}) {
     if (job.apiReceipt) throw apiError('api_uncertain', 'Lượt API đã có receipt; cần đối soát, không tạo container mới.');
-    const client = await this.client(profile, true);
-    if (job.snapshot.aiLabel === 'required') throw apiError('ai_label', 'API chưa xác minh hỗ trợ nhãn AI bắt buộc. Chọn đường trình duyệt cho nội dung này.');
+    const videoUrl = job.snapshot.apiVideoUrl;
+    if (videoUrl) publicVideoUrl(videoUrl);
+    else if (!this.resumableEnabled) throw apiError('invalid', 'Lưu URL HTTPS công khai của đúng video đã duyệt trước khi đăng qua Instagram Login.');
+    const client = await this.client(profile, !videoUrl);
+    if (job.snapshot.aiLabel === 'required') throw apiError('ai_label', 'API chưa xác minh hỗ trợ nhãn AI bắt buộc. Dừng để kiểm tra thủ công, không tự đổi chế độ.');
     const session = await client.identity();
     this.matchHandle(session.handle, job.snapshot.expectedHandle);
     if (job.snapshot.apiUserId !== session.userId) throw apiError('identity', 'Tài khoản API đã đổi từ lúc nhận lượt đăng.');
@@ -48,12 +51,14 @@ export class InstagramApiAdapter {
     // response never turns this job into retryable/failed or another container.
     update({state:'uploading',handle:session.handle,userId:session.userId,apiReceipt:receipt,
       note:'Đang tạo container Instagram API; receipt được giữ để đối soát.'});
-    const container = await client.createReelContainer({caption:job.snapshot.caption});
+    const container = await client.createReelContainer({caption:job.snapshot.caption,videoUrl});
     save({containerId:container.containerId,phase:'created'});
     if (!container.uploadSupported) throw apiError('api_uncertain', 'Endpoint upload Meta khác hợp đồng đã kiểm; cần đối soát container.');
     if (stopped()) throw apiError('stopped', 'App đang đóng; cần đối soát container API.');
-    save({phase:'uploading'});
-    await client.uploadVideo(receipt.containerId, video);
+    if (!videoUrl) {
+      save({phase:'uploading'});
+      await client.uploadVideo(receipt.containerId, video);
+    }
     save({phase:'processing'});
     let statusCode;
     for (let attempt = 0; attempt < this.pollAttempts; attempt++) {

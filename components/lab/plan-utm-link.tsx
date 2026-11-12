@@ -18,6 +18,9 @@ export default function PlanUtmLink({plan, records, disabled, onSave}: Props) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [clicks,setClicks]=useState(plan.data.utmClicks==null?'':String(plan.data.utmClicks));
+  const [clickSource,setClickSource]=useState(plan.data.utmClicksSource??'');
+  const [clickPeriod,setClickPeriod]=useState(plan.data.utmClicksPeriod??'');
   const lock = useRef(false);
   const variant = context.variants.find(row => row.id === hookId);
   const keyword = keywordOverride ?? plan.data.ctaKeyword ?? variant?.ctaKeyword ?? '';
@@ -32,7 +35,7 @@ export default function PlanUtmLink({plan, records, disabled, onSave}: Props) {
       const utmLink = buildUtmLink(baseUrl, {productSlug: context.product?.data.name ?? '', accountHandle: handle,
         planId: plan.id, hookId, ctaKeyword: keyword});
       const parsed = contentPlanSchema.safeParse({...plan.data, landingBaseUrl: baseUrl, utmHookId: hookId,
-        ctaKeyword: keyword, utmLink});
+        ctaKeyword: keyword, utmLink,...(utmLink!==savedLink?{utmClicks:null,utmClicksSource:'',utmClicksPeriod:'',utmClicksObservedAt:null}:{})});
       if (!parsed.success) throw Error(parsed.error.issues.map(validationMessage).join(' '));
       await onSave(plan, parsed.data);
       setMessage('Đã tạo và lưu link UTM vào kế hoạch.');
@@ -64,6 +67,15 @@ export default function PlanUtmLink({plan, records, disabled, onSave}: Props) {
       <Button tone="ghost" disabled={busy || !savedLink} onClick={() => void copy()}>Sao chép link UTM</Button>
     </div>
     <label className="field">Link UTM đã lưu<input readOnly value={savedLink} title={savedLink || undefined} placeholder="Chưa tạo link UTM"/></label>
+    <details><summary>Nhập số click từ analytics landing</summary><p>Đo riêng đúng link UTM đã lưu. Chưa có nguồn thì để trống; không lấy số DM làm số click. Tổng sản phẩm chỉ cộng các link có cùng kỳ đo.</p>
+      <label className="field">Click UTM<input type="number" min="0" step="1" value={clicks} disabled={disabled||busy} onChange={e=>setClicks(e.target.value)}/></label>
+      <label className="field">Nguồn analytics<input value={clickSource} disabled={disabled||busy} onChange={e=>setClickSource(e.target.value)} placeholder="Tên báo cáo hoặc URL nguồn"/></label>
+      <label className="field">Kỳ đo (dùng cùng kỳ cho các tài khoản)<input value={clickPeriod} disabled={disabled||busy} onChange={e=>setClickPeriod(e.target.value)} placeholder="2026-11-01 / 2026-11-12 UTC"/></label>
+      <Button disabled={disabled||busy||!savedLink} onClick={async()=>{
+        if(lock.current)return;lock.current=true;setBusy(true);change();
+        try{const data=contentPlanSchema.parse({...plan.data,utmClicks:clicks.trim()===''?null:Number(clicks),utmClicksSource:clickSource,utmClicksPeriod:clickPeriod,utmClicksObservedAt:new Date().toISOString()});await onSave(plan,data);setMessage('Đã lưu bản đo click UTM và nguồn.');}catch(e){setError((e as Error).message);}finally{lock.current=false;setBusy(false);}
+      }}>Lưu bản đo click UTM</Button>
+    </details>
     {message && <p role="status">{message}</p>}{error && <p className="inline-error" role="alert">{error}</p>}
   </section>;
 }

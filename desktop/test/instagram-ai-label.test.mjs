@@ -142,6 +142,7 @@ class FixtureAdapter extends InstagramAdapter {
 }
 async function publisherFixture(t, page, aiLabel) {
   const store = new Store(':memory:'); t.after(() => store.close());
+  store.set('instagram_browser_enabled',true); // Explicit legacy-browser fixture; defaults are tested in T-004.
   const snapshot = {planId: 'plan', revision: 1, accountId: 'account', assetId: 'asset', productId: 'product',
     caption: 'AI-generated concept', path: video, sha256: 'a'.repeat(64), ratio: '9:16', duration: 10,
     ...(aiLabel === undefined ? {} : {aiLabel})};
@@ -151,7 +152,7 @@ async function publisherFixture(t, page, aiLabel) {
   publisher.stopped = true;
   publisher.browsers.page = async () => page;
   publisher.browsers.visibility = async () => {};
-  store.set('instagram_profiles', [{id: 'account', vpnEnabled: false, proxy: {server: '', username: ''}, ...await adapter.session()}]);
+  store.set('instagram_profiles', [{id: 'account', apiMode:'browser', vpnEnabled: false, proxy: {server: '', username: ''}, ...await adapter.session()}]);
   const request = {requestId: 'request', planId: 'plan', revision: 1, accountId: 'account', assetId: 'asset'};
   const job = await publisher.enqueue(request);
   publisher.stopped = false;

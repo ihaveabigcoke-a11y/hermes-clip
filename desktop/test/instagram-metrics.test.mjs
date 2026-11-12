@@ -16,8 +16,8 @@ test('Insights parser preserves explicit zero, unknown, rounded numbers and unre
 });
 
 function fixture(t){
- const store=new Store(':memory:');t.after(()=>store.close());let now=1000000;let reads=0,closes=0,saves=0,release;
- const profile={id:'a',handle:'owner',userId:'100',session:'signed_in',checkedAt:now};
+ const store=new Store(':memory:');store.set('instagram_browser_enabled',true);t.after(()=>store.close());let now=1000000;let reads=0,closes=0,saves=0,release;
+ const profile={apiMode:'browser',id:'a',handle:'owner',userId:'100',session:'signed_in',checkedAt:now};
  const page={setDefaultTimeout(){},close:async()=>{}};
  const contexts=new Map();const context={newPage:async()=>page,close:async()=>{closes++;contexts.delete('a');}};
  const target={planId:'p',accountId:'a',postUrl:'https://www.instagram.com/reel/post/',expectedHandle:'owner'};

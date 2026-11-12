@@ -8,6 +8,7 @@ import {instagramReceipt, instagramPostUrl} from '../src/instagram-adapter.mjs';
 const signedIn = {session:'signed_in', handle:'hermes_test', userId:'100'};
 function fixture(t) {
   const store = new Store(':memory:');
+  store.set('instagram_browser_enabled',true);
   t.after(() => store.close());
   const snapshot = {planId:'plan', revision:1, accountId:'account', productId:'product', assetId:'asset',
     accountRevision:1, name:'Video test', path:'fixture.mp4', sha256:'a'.repeat(64), caption:'A close look.', duration:10, ratio:'9:16', width:720, height:1280};
@@ -23,7 +24,7 @@ function fixture(t) {
   publisher.stopped = true;
   publisher.browsers.page = async()=>page;
   publisher.browsers.visibility = async(id,value)=>calls.visible.push({id,value});
-  store.set('instagram_profiles',[{id:'account',name:'Instagram test',productId:'product',vpnEnabled:false,proxy:{server:'',username:''},...signedIn}]);
+  store.set('instagram_profiles',[{apiMode:'browser',id:'account',name:'Instagram test',productId:'product',vpnEnabled:false,proxy:{server:'',username:''},...signedIn}]);
   return {publisher,store,workspace,adapter,calls,snapshot,request:{requestId:'request',planId:'plan',revision:1,accountId:'account',assetId:'asset'},setSession:value=>{session=value;}};
 }
 async function drain(publisher) {publisher.stopped=false;publisher.drain();while(publisher.running) await publisher.running;}
@@ -141,7 +142,7 @@ test('Instagram receipts require recent video, matching identity and caption; un
 });
 
 test('Instagram browser saves secrets privately and keeps concurrent profiles separate',async t=>{
-  const store=new Store(':memory:');t.after(()=>store.close());
+  const store=new Store(':memory:');store.set('instagram_browser_enabled',true);t.after(()=>store.close());
   const browsers=new InstagramBrowsers({store,root:'fixture',browser:{},secret:{encrypt:async value=>'encrypted:'+value}});
   const account=id=>({id,data:{name:'Instagram '+id,productId:'product'}});
   await Promise.all(['one','two'].map(id=>browsers.save(account(id),{vpnEnabled:false,proxy:{server:'http://localhost:1234',username:'user',password:'private'}})));
@@ -161,7 +162,7 @@ test('Instagram profile-prefixed post links normalize to the same canonical perm
 });
 
 test('Opening a profile and polling while navigation loads share one Instagram tab',async t=>{
-  const store=new Store(':memory:');t.after(()=>store.close());
+  const store=new Store(':memory:');store.set('instagram_browser_enabled',true);t.after(()=>store.close());
   const browsers=new InstagramBrowsers({store,root:'fixture',browser:{},secret:{}});
   let release;const waiting=new Promise(resolve=>{release=resolve;});let created=0;let url='about:blank';
   const page={url:()=>url,isClosed:()=>false,setDefaultTimeout:()=>{},goto:async()=>{await waiting;url='https://www.instagram.com/';}};

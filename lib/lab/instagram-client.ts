@@ -7,6 +7,7 @@ export type InstagramProfile = {
   open: boolean; busy: boolean; background: boolean; checkedAt: number | null; error: string;
   vpnEnabled: boolean; vpn: {state?: string}; proxy: {server: string; username: string; hasPassword: boolean};
   apiMode?: 'browser' | 'api'; apiUserId?: string | null; hasApiToken?: boolean;
+  apiAppId?:string; accountType?:string|null;
 };
 export type InstagramJob = {
   id: string; state: string; createdAt: number; updatedAt: number; handle: string; postUrl: string; error: string; syncError: string;
@@ -17,7 +18,10 @@ export type InstagramJob = {
 };
 export type InstagramMetricState = {planId:string;state:string;failures:number;lastAttemptAt:number|null;lastSuccessAt:number|null;nextAttemptAt:number|null;error:string};
 export type InstagramStatus = {profiles: InstagramProfile[]; jobs: InstagramJob[]; active: string | null;
-  api?:{enabled:boolean;resumableEnabled:boolean};
+  api?:{enabled:boolean;resumableEnabled:boolean;videoUrlEnabled?:boolean;version?:string};
+  browserEnabled?:boolean;
+  browserRunning?:boolean;
+  comments?:{stopped:boolean;intervalMs:number;active:boolean;rules:any[];rows:any[];polls:any[];totals:{productId:string;ctaComments:number;dmSent:number}[]};
   metrics?:{intervalMs:number;active:string|null;rows:InstagramMetricState[]}};
 
 export function useInstagramStatus(enabled: boolean) {

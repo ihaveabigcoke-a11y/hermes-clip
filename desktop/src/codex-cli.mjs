@@ -34,11 +34,12 @@ export async function resolveCodexExecutable(configured = '', env = process.env,
 
 // Shared with scripts/run-codex.mjs. No shell, prompt in stdin, bounded NDJSON.
 export async function runCodexText({prompt, executable, cwd, timeoutMs = CODEX_TIMEOUT_MS,
-  maxOutputBytes = CODEX_OUTPUT_LIMIT, spawnProcess = spawn, env = process.env} = {}) {
+  maxOutputBytes = CODEX_OUTPUT_LIMIT, spawnProcess = spawn, env = process.env, profile = ''} = {}) {
   if (typeof prompt !== 'string' || !prompt.trim() || Buffer.byteLength(prompt) > finalLimit) throw Error('Prompt vượt giới hạn hoặc rỗng.');
   executable ??= await resolveCodexExecutable('', env);
   const childEnv = {...env};
-  delete childEnv.OPENAI_API_KEY; delete childEnv.CODEX_API_KEY;
+  if (typeof profile !== 'string' || profile.length > 120 || /[\0\r\n]/.test(profile)) throw Error('Codex profile không hợp lệ.');
+  // Custom providers inherit the user's config, login and environment unchanged.
   return new Promise((yes, no) => {
     let child, timer, settled = false, bytes = 0, pending = '', final = '', failure = '';
     const finish = (error) => {
@@ -63,7 +64,7 @@ export async function runCodexText({prompt, executable, cwd, timeoutMs = CODEX_T
     };
     try {
       child = spawnProcess(executable, ['exec','--json','--ephemeral','--skip-git-repo-check','--sandbox','read-only',
-        '-c','model_provider="openai"','-c','forced_login_method="chatgpt"','-'],
+        ...(profile.trim() ? ['--profile',profile.trim()] : []),'-'],
       {cwd, env: childEnv, shell: false, windowsHide: true, stdio: ['pipe','pipe','pipe']});
       timer = setTimeout(() => finish(Error('Codex CLI hết thời gian chờ. Chưa nhập kết quả; không tự chạy lại.')), timeoutMs);
       child.on('error', error => finish(Error(error.code === 'ENOENT' ? missing : 'Không khởi chạy được Codex CLI: ' + error.message)));
@@ -96,13 +97,15 @@ export class CodexTextService {
   constructor({store, root, exchange, run = runCodexText, resolveExecutable = resolveCodexExecutable}) {
     Object.assign(this, {store, root, exchange, run, resolveExecutable}); this.busy = false;
   }
-  status() { return {enabled: this.store.get('codex_text_enabled', false) === true, executable: this.store.get('codex_text_executable', ''), busy: this.busy}; }
+  status() { return {enabled: this.store.get('codex_text_enabled', false) === true, executable: this.store.get('codex_text_executable', ''), profile: this.store.get('codex_text_profile', ''), busy: this.busy}; }
   configure(value) {
     if (!value || typeof value.enabled !== 'boolean' || typeof value.executable !== 'string' || value.executable.length > 2000 || /[\0\r\n]/.test(value.executable)) throw Error('Cấu hình Codex không hợp lệ.');
     if (this.busy) throw Error('Chờ lượt Codex đang chạy kết thúc.');
+    if (value.profile !== undefined && (typeof value.profile !== 'string' || value.profile.length > 120 || /[\0\r\n]/.test(value.profile))) throw Error('Codex profile không hợp lệ.');
     const path = value.executable.trim();
     if (path && (!isAbsolute(path) || (process.platform === 'win32' && !/\.exe$/i.test(path)))) throw Error('Điền đường dẫn tuyệt đối tới codex.exe.');
     this.store.set('codex_text_executable', path); this.store.set('codex_text_enabled', value.enabled);
+    if (value.profile !== undefined) this.store.set('codex_text_profile', value.profile.trim());
     return this.status();
   }
   async execute(input) {
@@ -126,7 +129,7 @@ export class CodexTextService {
       const executable = await this.resolveExecutable(this.status().executable);
       const base = resolve(this.root, 'codex-text'); await mkdir(base, {recursive:true});
       directory = await mkdtemp(join(base, 'run-'));
-      const text = await this.run({prompt:this.exchange.textTaskPrompt(kind, context), executable, cwd:directory});
+      const text = await this.run({prompt:this.exchange.textTaskPrompt(kind, context), executable, cwd:directory, profile:this.status().profile});
       // Both entry paths use the same validation; invalid output never reaches persistence.
       this.exchange.parseTextExchange(kind, text, 'Codex CLI');
       record({state:'done',finishedAt:Date.now()});

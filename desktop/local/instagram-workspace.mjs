@@ -75,6 +75,7 @@ export class InstagramWorkspace {
     return {planId, revision, name: plan.data.name, productId: product.id, accountId,
       accountRevision: account.revision, expectedHandle: account.data.handle || '', productionId: production.id, sceneId: scene.id, takeId: take.id,
       assetId, assetKey: asset.data.key, sha256: asset.data.sha256, path, caption: plan.data.caption,
+      apiVideoUrl:plan.data.apiVideoUrl || '',
       aiLabel: instagramAiLabelMode(plan.data.aiLabel),
       duration: take.metadata.duration, width: take.metadata.width, height: take.metadata.height, ratio: scene.ratio, review: take.review};
   }
@@ -91,7 +92,7 @@ export class InstagramWorkspace {
   async revalidate(snapshot) {
     const current = await this.snapshot(snapshot);
     if (current.accountRevision !== snapshot.accountRevision || current.sha256 !== snapshot.sha256 || current.caption !== snapshot.caption
-      || current.aiLabel !== instagramAiLabelMode(snapshot.aiLabel)) {
+      || current.aiLabel !== instagramAiLabelMode(snapshot.aiLabel) || current.apiVideoUrl !== (snapshot.apiVideoUrl || '')) {
       throw Error('Hồ sơ hoặc nội dung đã thay đổi trong lúc chờ. Chọn lại nội dung cần đăng.');
     }
     return current;

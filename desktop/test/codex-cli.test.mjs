@@ -13,12 +13,17 @@ const fixture=resolve('desktop/test/fixtures/codex.mjs');
 const fakeFileSpawn=(command,args,options)=>{assert.equal(command,fixture);assert.equal(options.shell,false);assert.equal(args[0],'exec');return spawn(process.execPath,[fixture,...args],options);};
 const runFile=(mode,options={})=>runCodexText({prompt:'Fixture prompt',executable:fixture,cwd:process.cwd(),spawnProcess:fakeFileSpawn,env:{...process.env,CODEX_FIXTURE_MODE:mode},...options});
 
-test('T-003: fake codex file receives exec/stdin without shell, API keys removed, last message selected',async()=>{
+test('T-004: fake codex inherits provider environment and receives exec/stdin without forced login',async()=>{
   const prompt='literal `command` $(command) & | ; " Unicode tiếng Việt';
-  const output=JSON.parse(await runFile('inspect',{prompt,env:{...process.env,CODEX_FIXTURE_MODE:'inspect',OPENAI_API_KEY:'fixture',CODEX_API_KEY:'fixture'}}));
+  const env={...process.env,CODEX_FIXTURE_MODE:'inspect',OPENAI_API_KEY:'fixture',CODEX_API_KEY:'fixture',CODEX_HOME:'fixture-codex-home',HOME:'fixture-home',USERPROFILE:'fixture-user',SESSION_GATEWAY_TOKEN:'fixture-gateway'};
+  const output=JSON.parse(await runFile('inspect',{prompt,env}));
   const inspected=JSON.parse(output.caption);
-  assert.equal(inspected.prompt,prompt);assert.equal(inspected.hasApiKey,false);
-  assert.deepEqual(inspected.args,['exec','--json','--ephemeral','--skip-git-repo-check','--sandbox','read-only','-c','model_provider="openai"','-c','forced_login_method="chatgpt"','-']);
+  assert.equal(inspected.prompt,prompt);assert.equal(inspected.hasApiKey,true);
+  assert.deepEqual(inspected.args,['exec','--json','--ephemeral','--skip-git-repo-check','--sandbox','read-only','-']);
+  for(const key of ['CODEX_HOME','HOME','USERPROFILE','SESSION_GATEWAY_TOKEN'])assert.equal(inspected.env[key],env[key]);
+  assert.ok(!inspected.args.some(arg=>/model_provider|forced_login_method/.test(arg)));
+  const withProfile=JSON.parse(JSON.parse(await runFile('inspect',{profile:'session_gateway',env})).caption);
+  assert.deepEqual(withProfile.args.slice(-3),['--profile','session_gateway','-']);
 });
 test('T-003: fake codex file timeout terminates the invocation',async()=>{
   await assert.rejects(runFile('timeout',{timeoutMs:250}),/hết thời gian/);
@@ -58,6 +63,19 @@ test('T-003: injected NDJSON handles chunk boundaries and selects the final agen
     });return child;
   }});
   assert.equal(result,final);
+});
+test('T-004: injected process preserves custom provider config environment and optional profile',async()=>{
+  for(const profile of ['', 'session_gateway']){
+    const env={CODEX_HOME:'fixture-config',HOME:'fixture-home',USERPROFILE:'fixture-user',OPENAI_API_KEY:'dummy',CODEX_API_KEY:'dummy-code',CUSTOM_GATEWAY_AUTH:'dummy-custom'};
+    await runCodexText({prompt:'fixture',executable:fixture,profile,env,spawnProcess:(_exe,args,options)=>{
+      assert.deepEqual(options.env,env);assert.equal(options.shell,false);assert.equal(options.windowsHide,true);
+      assert.ok(!args.some(arg=>/model_provider|forced_login_method/.test(arg)));
+      assert.ok(args.includes('--ephemeral'));assert.equal(args[args.indexOf('--sandbox')+1],'read-only');
+      if(profile)assert.deepEqual(args.slice(-3),['--profile',profile,'-']);else assert.ok(!args.includes('--profile'));
+      const child=new EventEmitter();child.stdin=new PassThrough();child.stdout=new PassThrough();child.stderr=new PassThrough();child.kill=()=>{};
+      setImmediate(()=>{child.stdout.write(JSON.stringify({type:'item.completed',item:{type:'agent_message',text:'{}'}}));child.emit('close',0);});return child;
+    }});
+  }
 });
 test('T-003: service defaults off, validates all task kinds, rejects bad output and serializes runs',async()=>{
   await mkdir('outputs',{recursive:true});const root=await mkdtemp(resolve('outputs/T-003-service-'));

@@ -2,7 +2,7 @@
 import {Fragment,useEffect,useState} from 'react';
 import {ArrowRight,RefreshCw} from 'lucide-react';
 import {type LabRecord,formatTime} from '@/lib/lab/domain';
-import {instagramProductSummary,instagramAccountContentRows,visibleInstagramProducts,instagramTableMetricKeys,summaryMetricKeys,type MetricTotal} from '@/lib/lab/instagram-summary';
+import {instagramProductSummary,instagramAccountContentRows,visibleInstagramProducts,instagramTableMetricKeys,summaryMetricKeys,instagramUtmClicks,type MetricTotal} from '@/lib/lab/instagram-summary';
 import {useInstagramStatus,type InstagramStatus} from '@/lib/lab/instagram-client';
 import {instagramMetricLabels} from '@/desktop/src/ui-copy.mjs';
 import {isHttpsLink} from '@/lib/lab/utm';
@@ -94,17 +94,21 @@ export default function InstagramOverview({products,records,demo,onOpen}:{produc
     {!products.length?<Empty title="Chưa có sản phẩm" text="Vào Nghiên cứu, chọn ứng viên rồi tạo hồ sơ sản phẩm."/>:!filtered.length?<Empty title="Không có sản phẩm phù hợp" text="Đổi từ khóa hoặc bộ lọc để xem lại danh sách." action={<Button tone="neutral" onClick={()=>change({query:'',filter:'all'})}>Xóa bộ lọc</Button>}/>:<>
     <div className="operations-table-scroll" role="region" aria-label="Bảng tổng quan Instagram theo sản phẩm" tabIndex={0}>
       <table className="operations-comparison instagram-overview-table"><caption className="sr-only">Số liệu cộng dồn theo sản phẩm, gộp mọi hồ sơ và không tính trùng bài đăng.</caption>
-        <thead><tr><th scope="col">Sản phẩm</th><th scope="col">Bài đăng</th>{instagramTableMetricKeys.map(key=><th scope="col" key={key}>{instagramMetricLabels[key]}</th>)}<th scope="col">Cập nhật</th><th scope="col">Chi tiết</th></tr></thead>
+        <thead><tr><th scope="col">Sản phẩm</th><th scope="col">Bài đăng</th>{instagramTableMetricKeys.map(key=><th scope="col" key={key}>{instagramMetricLabels[key]}</th>)}<th scope="col">Comment CTA (API)</th><th scope="col">DM đã gửi</th><th scope="col">Click UTM</th><th scope="col">Cập nhật</th><th scope="col">Chi tiết</th></tr></thead>
         <tbody>{filtered.slice((page-1)*10,page*10).map(row=><Fragment key={row.product.id}><tr>
           <th scope="row"><button className="comparison-name" type="button" onClick={()=>onOpen(row.product.id)}>{row.product.data.name}</button><small>{row.drafts} nội dung chưa đăng · {row.accounts} hồ sơ</small>{row.waitingTakeProjects.length>0&&<small>Chờ chọn take · {row.waitingTakeProjects.length} dự án</small>}</th>
           <td><span className="instagram-total">{row.publishedPosts}</span><small>{row.measuredPosts} đã đo</small></td>
           {instagramTableMetricKeys.map(key=><td key={key}><MetricValue metric={row.totals[key]}/></td>)}
+          <td>{live.status?.comments?.totals.find(total=>total.productId===row.product.id)?.ctaComments??'—'}</td>
+          <td>{live.status?.comments?.totals.find(total=>total.productId===row.product.id)?.dmSent??'—'}</td>
+          <td><MetricValue metric={instagramUtmClicks(records,row.product.id)}/></td>
           <td><Badge tone={issue(row).tone}>{issue(row).text}</Badge><small>{row.oldestMeasuredAt?formatTime(row.oldestMeasuredAt):'Chưa đo'}{row.measuredPosts>1?' · bản cũ nhất':''}</small></td>
           <td><Button tone="ghost" aria-expanded={expanded.includes(row.product.id)} aria-controls={'ig-content-'+row.product.id} onClick={()=>setExpanded(ids=>ids.includes(row.product.id)?ids.filter(id=>id!==row.product.id):[...ids,row.product.id])}>{expanded.includes(row.product.id)?'Thu gọn':'Mở rộng'}<span className="sr-only"> {row.product.data.name}</span></Button>
             <Button tone="ghost" onClick={()=>onOpen(row.product.id)} aria-label={'Xem sản phẩm '+row.product.data.name}>Xem <ArrowRight size={16}/></Button></td>
-        </tr>{expanded.includes(row.product.id)&&<tr id={'ig-content-'+row.product.id}><td colSpan={instagramTableMetricKeys.length+4}><InstagramContentTable records={records} productId={row.product.id} status={live.status}/></td></tr>}</Fragment>)}</tbody></table>
+        </tr>{expanded.includes(row.product.id)&&<tr id={'ig-content-'+row.product.id}><td colSpan={instagramTableMetricKeys.length+7}><InstagramContentTable records={records} productId={row.product.id} status={live.status}/></td></tr>}</Fragment>)}</tbody></table>
     </div><Pagination page={page} total={filtered.length} size={10} onPage={page=>change({page})}/></>}
     <p className="instagram-data-note">Mỗi dòng là một sản phẩm, gộp tất cả tài khoản. Dấu — là chưa đủ dữ liệu, không phải số 0. Mở sản phẩm để xem từng bài hoặc quản lý tài khoản.</p>
+    <p className="instagram-data-note">Comment CTA/DM: số đã quan sát từ khi bật quy tắc API, duy nhất theo comment ID. Click UTM lấy từ analytics landing theo đúng link và cùng kỳ đo, không suy từ DM hay bấm profile. Chưa có nguồn thì —.</p>
     <p className="instagram-data-note">{instagramHookNote}</p>
   </div>;
 }

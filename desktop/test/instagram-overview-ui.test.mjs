@@ -20,11 +20,20 @@ const entry=join(scratch,'entry.ts');
 await writeFile(entry,[
   'export {default as Overview,ProductMetrics,InstagramContentTable} from "../../components/lab/instagram-overview";',
   'export {default as OperationsPanel} from "../../components/lab/operations";',
+  'export {InstagramSettings} from "../../components/lab/instagram-settings";',
 ].join('\n'));
 await build({configFile:false,root,publicDir:false,logLevel:'error',plugins:[react()],resolve:{alias:{'@':root}},
   build:{ssr:entry,outDir:join(scratch,'bundle'),rollupOptions:{output:{entryFileNames:'entry.mjs'}}}});
-const {Overview,ProductMetrics,InstagramContentTable,OperationsPanel}=await import(pathToFileURL(join(scratch,'bundle/entry.mjs')));
+const {Overview,ProductMetrics,InstagramContentTable,OperationsPanel,InstagramSettings}=await import(pathToFileURL(join(scratch,'bundle/entry.mjs')));
 const render=(component,props)=>renderToStaticMarkup(React.createElement(component,props));
+test('T-004: settings source renders API accounts, private reply controls and browser switch off until loaded',()=>{
+  const {records}=instagramOverviewFixture();
+  const html=render(InstagramSettings,{records,demo:true});
+  assert.match(html,/aria-label="Cài đặt Instagram"/);assert.match(html,/type="checkbox" role="switch" aria-label="Bật Instagram trình duyệt" disabled=""/);
+  assert.doesNotMatch(html,/aria-label="Bật Instagram trình duyệt"[^>]*checked/);
+  assert.equal((html.match(/type="password"/g)??[]).length,3);
+  for(const label of ['Meta App ID','Instagram user_id','Kiểm tra kết nối Account 1','Tắt khẩn cấp mọi DM','poll mỗi 3 phút','Chỉ gửi link khi xác minh đã follow','không gửi link'])assert.ok(html.includes(label),label);
+});
 
 test('overview renders profile/link columns, hidden-product switch and the fixed hook comparison note',()=>{
   globalThis.location={href:'http://fixture.invalid/?view=social'};

@@ -1,57 +1,66 @@
-# Instagram API — thử nghiệm, mặc định tắt
+# Instagram API — T-004, 12/11/2026
 
-T18 chỉ thêm source và kiểm bằng fetch giả. **Chưa có Meta app/token thật; chưa gọi Meta, chưa xác minh tài liệu trực tuyến hoặc triển khai vào bản cài Windows.** Tài khoản cũ mặc định `apiMode: 'browser'`, tiếp tục Playwright. Cờ API không làm cookie trình duyệt thành access token.
+Source mở rộng adapter T18, **mặc định API**, dành cho Instagram Business/Creator qua **Instagram API with Instagram Login** (`graph.instagram.com`). **Chưa kiểm với tài khoản thật**, cho tới khi người dùng tạo Meta App và cấp quyền. Không dùng cookie hoặc token Facebook Page làm token Instagram Login. Không tự chuyển sang trình duyệt khi API lỗi.
 
-## Trước khi bật
+## Cấu hình và bước người dùng cần làm trên Meta Developer
 
-Đối chiếu tài liệu Meta hiện hành cho **Instagram API with Instagram Login**, không dùng hướng dẫn Facebook Login/Page token lẫn vào luồng này:
+1. Tạo Meta App với use case Instagram, thêm **Instagram API with Instagram Login**, giữ Development khi thử nghiệm. Tài khoản phải là Business/Creator. Thêm tester/role cho đúng tài khoản và chấp nhận lời mời theo dashboard Meta hiện hành.
+2. Xin các quyền: **`instagram_business_basic`**, **`instagram_business_content_publish`**, **`instagram_business_manage_comments`**, **`instagram_business_manage_messages`**. Với Insights, đối chiếu quyền bổ sung mà dashboard/tài liệu của version yêu cầu (`instagram_business_manage_insights`: **chưa kiểm chứng**). Không coi danh sách scope đã yêu cầu là bằng chứng token được cấp đủ quyền.
+3. Cấu hình Instagram Business Login, redirect URI HTTPS chính xác, privacy policy và data deletion URL theo dashboard. Khi phục vụ tài khoản ngoài role/tester, hoàn tất App Review/Advanced Access và xác minh doanh nghiệp nếu Meta yêu cầu. Không mở rộng quyền từ một tài khoản/bài sang các tài khoản/bài khác.
+4. Dùng login/token generator chính thức để lấy Instagram User access token và `user_id`. App secret giữ ở môi trường tin cậy; **không nhập secret vào Hermes, Git hoặc báo cáo**. Hermes hiện nhận token đã cấp, chưa có OAuth callback, tự đổi token dài hạn hay refresh. Token hết hạn cần cấp lại.
+5. Trong **Cài đặt → Instagram**, từng tài khoản: nhập Meta App ID, Instagram `user_id`, access token → **Lưu API** → **Kiểm tra kết nối**. Nút kiểm gọi `GET /me`, đối chiếu handle với tài khoản đã chọn; hiển thị handle và account type do API trả. Nếu thiếu account type thì hiển thị chưa rõ, không đoán Business. Chỉ báo kết nối từ phản hồi API, không từ việc có token.
+6. Sau review source/build và kiểm offline, chủ động chọn nội dung/tài khoản cụ thể để nghiệm thu thật. Không đăng thật hoặc gửi DM thật chỉ để kiểm thiết lập.
 
-- [Instagram Platform](https://developers.facebook.com/docs/instagram-platform/)
-- [Instagram API with Instagram Login](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/)
-- Các mục Business Login, Content Publishing / Reels / resumable upload, Insights, Comment Moderation và API Reference bên trong tài liệu trên.
+Token đi qua IPC vào Electron `safeStorage` (cơ chế secret mã hóa proxy hiện có). SQLite chỉ giữ ciphertext; thiếu kho mã hóa thì từ chối lưu, không fallback plaintext. Status không trả token/ciphertext. Ô token trống giữ token cũ; “Xóa token” xóa bản lưu cục bộ, thu hồi tại Meta làm riêng. App ID là định danh công khai, lưu cấu hình thường. Không ghi request/response raw hoặc exception fetch vào log.
 
-Các liên kết là điểm bắt đầu đọc, **không phải bằng chứng đã kiểm endpoint ngày 12/11/2026**. Mỗi endpoint/field trong `desktop/src/instagram-api.mjs` có `TODO META VERIFY`. Phải đối chiếu version, host, header, field, period, quyền và response trước khi bật. `v99.0` trong test là phiên bản giả, không dùng trong bản cài.
+API bật mặc định. `HERMES_INSTAGRAM_API_ENABLED=0` là công tắc kỹ thuật tắt API; không cần đặt `=1`. Version mặc định ghim `v25.0`, có thể cấu hình `HERMES_INSTAGRAM_API_VERSION` sau khi đối chiếu Meta. Đây không phải tuyên bố đã nghiệm thu version trên tài khoản thật. Proxy/Touch VPN cũ chỉ dùng cho trình duyệt, không áp vào API.
 
-## Tạo app phát triển cho tài khoản của mình
+## Đăng Reel và receipt
 
-1. Trong Meta for Developers, tạo app cho use case Instagram mà dashboard hiện hành cung cấp, giữ **Development**. Thiết lập Instagram API với Instagram Login. Luồng này dành cho tài khoản Instagram chuyên nghiệp (Business/Creator), không yêu cầu gắn Facebook Page theo mô hình Instagram Login; kiểm lại điều kiện của loại tài khoản/use case trong dashboard.
-2. Thêm tài khoản chuyên nghiệp của chính mình vào role/tester được Meta hỗ trợ và chấp nhận lời mời trên Instagram. Cấu hình business login, redirect URI HTTPS chính xác và các URL policy/data deletion mà dashboard yêu cầu. Chưa bật production hay mời tài khoản ngoài phạm vi đã duyệt.
-3. Yêu cầu các quyền theo tài liệu hiện hành: `instagram_business_basic`, `instagram_business_content_publish`, `instagram_business_manage_insights`, `instagram_business_manage_comments`. Quyền xuất hiện trong yêu cầu login chưa chứng minh đã được cấp: kiểm danh sách quyền trên token. Advanced Access, App Review hoặc xác minh doanh nghiệp có thể cần khi phục vụ người khác; không coi token development là quyền đăng mọi tài khoản.
-4. Dùng luồng Instagram Business Login/OAuth của Meta cho tester đó (hoặc công cụ tạo token cho tester mà dashboard cung cấp). Nếu dùng authorization code, đổi code thành access token ở môi trường backend/local tin cậy theo đúng endpoint hiện hành. App secret không đưa vào renderer, repo hoặc lệnh shell/log. Đối chiếu cách đổi token dài hạn, thời hạn và refresh của loại token này. **Hermes chưa có OAuth callback, đổi/refresh token tự động.**
-5. Xác minh token thuộc đúng tài khoản bằng endpoint identity của version đã chọn; lưu `user_id` của Instagram Login và username đối chiếu. Không dùng `ds_user_id` từ browser làm API ID. Giữ token kín, không chụp màn hình/token explorer URL chứa token hoặc ghi token vào báo cáo.
+- Trong **Instagram → sản phẩm → Sửa nội dung**, lưu **URL video công khai cho Instagram API**: HTTPS của đúng video đã chọn/duyệt, không localhost hoặc token trong URL. Người dùng phải đưa file lên chỗ lưu trữ được phép và xác minh URL trả đúng file; app không tự cài server/upload ra dịch vụ khác. Checksum chỉ chứng minh file local, **chưa chứng minh bytes tại URL công khai**. Đổi URL phải lưu lại kế hoạch trước khi bấm đăng.
+- Luồng: `POST /{user_id}/media` (`media_type=REELS`, `video_url`, caption) → đọc container tới FINISHED → `POST /{user_id}/media_publish` → đọc media/permalink. Giữ snapshot, fingerprint, revision, account, checksum và revalidate trước publish. Không tự đăng nếu chưa có yêu cầu người dùng.
+- Receipt ghi **trước** tác động đầu tiên; lưu container ID, media ID và trạng thái từng bước. Mất phản hồi, crash hoặc lỗi sau create giữ **Cần đối soát**, không tự tạo container/publish lại. `PUBLISHED` thiếu media ID không đủ chứng minh permalink.
+- Kiểm tra kết quả chỉ đọc lại bằng chứng đúng tài khoản, media ID, caption, timestamp và permalink. Nhãn AI `required` vẫn chặn vì chưa xác minh API hỗ trợ; không âm thầm bỏ nhãn hoặc chuyển browser.
+- T18 có mã resumable để đối chiếu/fixture cũ; **main không bật đường này** và không dùng biến `HERMES_INSTAGRAM_API_RESUMABLE`. Hỗ trợ resumable với Instagram Login chưa kiểm chứng; không dùng để tránh yêu cầu URL công khai.
 
-## Cấu hình từng tài khoản trong Hermes
+## Insights và bảng sản phẩm
 
-Trong Instagram → sản phẩm → **Tài khoản** → nút cấu hình kết nối:
+API lấy `views,reach,saved,shares,comments,likes`, kỳ `lifetime`. Mapper giữ plays nếu phản hồi dùng tên cũ; `saved` → saves, reach không thay viewers. Thiếu/khác kỳ/sai kiểu/không rõ giữ `null`; số 0 tường minh giữ 0. Không gọi lại mù bằng metric khác khi Meta từ chối. Có source, permalink, tài khoản và thời điểm đo; lịch API độc lập với công tắc trình duyệt.
 
-1. Chọn **Instagram API (thử nghiệm)** ở **Cách kết nối** (`apiMode: 'api'`).
-2. Điền **Mã tài khoản Instagram API** (`apiUserId`) và **Token Instagram API**. Lưu. Token đi qua IPC và được mã hóa bằng Electron `safeStorage`, cùng cơ chế dùng cho mật khẩu proxy. Thiếu kho mã hóa thì từ chối lưu; không fallback plaintext. Status chỉ trả `hasApiToken`, không trả plaintext hay ciphertext. Mở form lại luôn là ô token trống; để trống giữ token cũ, chọn **Xóa token API đã lưu** để thu hồi bản lưu cục bộ. Thu hồi trên Meta làm riêng.
-3. Chỉ sau khi đối chiếu tài liệu và chuẩn bị nội dung/tài khoản đã được duyệt, cấu hình môi trường tiến trình desktop: `HERMES_INSTAGRAM_API_ENABLED=1`, `HERMES_INSTAGRAM_API_VERSION=<version đã xác minh, dạng vNN.0>`. Không đặt token trong biến môi trường. Cả hai mặc định chưa bật/chưa đặt.
-4. Upload video có cờ riêng `HERMES_INSTAGRAM_API_RESUMABLE=1`, mặc định tắt. Chỉ bật sau khi xác minh create container `upload_type=resumable`, URL `https://rupload.facebook.com/ig-api-upload/{version}/{container-id}`, Authorization `OAuth`, header `offset: 0`, `file_size`, body bytes và phản hồi `success: true`. URI trả về khác hợp đồng sẽ dừng, giữ container receipt. Hiện chỉ upload một lần, chưa có tự tiếp tục byte offset; không đoán/gửi lại khi mất phản hồi.
-5. Bấm **Kiểm tra API** để thực sự đọc danh tính khi cờ bật; có token/URL hoặc nút hiện lên không phải bằng chứng kết nối. Chỉ bấm đăng sau khi phạm vi tài khoản/nội dung đã được duyệt. Chọn lại **Trình duyệt** để các lượt mới dùng Playwright. Snapshot lượt cũ vẫn giữ adapter đã chọn; đổi cấu hình không đổi một lượt đang cần đối soát.
+Bảng gộp các tài khoản của một sản phẩm, mỗi permalink lấy bản đo mới nhất. Comment CTA và DM tính theo comment ID duy nhất từ khi bật quy tắc; không cộng số paste T16 vào quan sát API. Tổng comment đã thấy **không khẳng định đã đọc toàn bộ lịch sử**; nhật ký có trạng thái đọc đủ/chưa đủ.
 
-Không thực hiện các bước gọi mạng này trong task đêm. Cờ tiến trình cần khởi động lại sau này khi an toàn, không khi có tác vụ đang chạy. Proxy/Touch VPN trong form chỉ áp dụng trình duyệt; API dùng kết nối fetch của tiến trình, không tự dùng proxy hay phiên browser. Chưa có retry/refresh token tự động; token hết hạn cần thay bằng token cùng tài khoản.
+Click UTM không được Instagram cung cấp và không suy từ DM. Ở **Nội dung → Link UTM → Nhập số click từ analytics landing**, nhập số riêng cho đúng link, nguồn và kỳ đo. Bảng lấy bản mới nhất mỗi URL UTM, chỉ cộng khi đủ dữ liệu và cùng kỳ; thiếu thì “—”. Đây là nhập bản đo từ analytics, **chưa có tích hợp tự đọc analytics hoặc redirect tracking server**. Đổi link bằng T17 làm trống bản đo cũ. Hàm tạo link T17 dùng chung với DM tại `desktop/src/utm.mjs`, không có hai bản logic tạo UTM.
 
-## Hợp đồng đăng và đối soát
+## Comment → DM trên desktop
 
-- Dùng snapshot tài khoản/video/checksum/caption, revision và fingerprint chống trùng hiện có. API thêm `apiMode`, `apiUserId`, revision cấu hình; kiểm danh tính và revalidate trước container và trước publish. Video bytes được kiểm checksum lần nữa trước upload. Không có fallback tự động sang trình duyệt.
-- Trước request tạo container, ghi receipt `phase: creating`. Có container ID thì lưu ngay trước upload; có media ID thì lưu ngay trước đọc permalink. Mỗi lần publish tối đa một POST `media_publish`; không tự tạo container/publish/upload lại.
-- Lỗi sau khi bắt đầu create, kể cả timeout chưa nhận container ID, luôn thành `needs_attention` (**Cần đối soát**). Restart giữ trạng thái này, chặn retry/cancel và yêu cầu trùng. Container ERROR/EXPIRED/UNKNOWN hoặc chưa FINISHED sau 12 lần đọc (cách nhau 5 giây) không publish. Cần điều chỉnh poll theo tài liệu/quan sát thực tế sau này.
-- **Kiểm tra kết quả** của API chỉ đọc identity, `status_code` và media đã biết. `PUBLISHED` đơn lẻ không đủ xác định permalink. Nếu publish response bị mất trước khi có media ID, giữ cần đối soát; không đoán bài từ caption/thời gian và không POST lần hai. Chưa có thao tác UI gắn media ID/xác nhận container bỏ an toàn. Trường hợp này cần bổ sung luồng đối soát thủ công có kiểm danh tính trước khi mở lại quyền gửi; không sửa DB để ép retry.
-- Chỉ ghi published khi media ID/permalink/username/video/Reels/caption/timestamp khớp receipt/snapshot. Workspace giữ status cũ `published_browser` để tương thích các nơi đọc “đã đăng qua app”, thêm `publishSource: 'api'`; nguồn chính xác cũng có trong proof. Lỗi đồng bộ workspace sau khi đã publish được thử đồng bộ lại, không đăng lại.
-- Kế hoạch chọn nhãn AI **required** bị chặn trước container vì chưa xác minh API gắn nhãn tương ứng. `off` giữ lựa chọn hiện tại. Không âm thầm bỏ yêu cầu nhãn để đăng qua API.
-- Đọc `content_publishing_limit` với `config,quota_usage` trước tạo container; các giá trị không biết giữ null. Con số khoảng 100 bài/24 giờ chỉ là bối cảnh, không được hard-code làm quyền hay hạn mức chắc chắn của mỗi tài khoản.
+- Không có URL HTTPS công khai cho webhook ở app local: dùng **poll mỗi 3 phút khi app mở**. Không cài server/tunnel, không công khai local HTTP API, không nhận webhook chưa ký. Máy ngủ/tắt app thì dừng; khi mở lại chỉ có thể xử lý comment còn trong cửa sổ 7 ngày. Poll tối đa 10 trang × 100 comment mỗi bài/lượt; lỗi/cursor lặp/trần trang hiện “chưa đọc đủ”, không tuyên bố đã đồng bộ toàn bộ.
+- Cài đặt chỉ liệt kê bài đã đăng, sản phẩm và tài khoản hoạt động. Người dùng duyệt riêng bài/tài khoản, từ khóa, mẫu có `{link}` và link preview. Dùng UTM theo tài khoản × hook; một từ khóa 2–40 chữ/số, khớp nguyên từ, với từ ≥4 ký tự cho một lỗi chèn/xóa/thay chữ hoặc đảo hai chữ liền nhau. Từ ngắn phải khớp chính xác. Không phản hồi comment của chính tài khoản.
+- Bật DM mặc định **tắt**. Bật mỗi quy tắc có xác nhận; đổi revision nội dung/tài khoản/cấu hình API/link thì cần duyệt lại. **Tắt khẩn cấp mọi DM** chặn mọi lần gửi tiếp theo ngay; không thu hồi request đã gửi lên Meta. Tắt một quy tắc không cần kết nối mạng. Sau tắt khẩn cấp, duyệt/lưu quy tắc bật sẽ cho chạy lại các quy tắc đang được duyệt (hộp xác nhận nêu rõ).
+- Giới hạn nội bộ 20 DM/giờ/tài khoản, cách ít nhất 10 giây, không phải quota Meta được cam kết. Khi gặp rate limit, backoff 1 giờ. Comment chưa thử gửi vì giới hạn có thể chờ lượt poll sau. **Lượt đã gửi POST dù lỗi/timeout không tự retry**.
+- Ghi claim `sending` trước POST private reply `/{user_id}/messages`, JSON `recipient.comment_id` + `message.text`; cần `message_id` để xác nhận sent. Khóa bền theo comment ID qua restart, không xóa receipt để gửi lại. Timeout/thất lạc → Cần đối soát; không có nút ép gửi lại. Không gửi follow-up hoặc public reply.
+- **Follow mặc định yêu cầu xác minh. Polling này chưa xác minh được follow, nên giữ `follow_unknown` và KHÔNG gửi link.** Người dùng muốn gửi cho mọi người comment CTA phải chủ động bỏ điều kiện follow và duyệt. Không lặp lỗi fail-open của OpenReply. Chưa có callback nút follow hay lấy hồ sơ khách để suy follow.
+- Nhật ký lưu ID comment, keyword, thời điểm, product/account/plan, trạng thái, mã message và lỗi đã làm sạch; không lưu nội dung DM của khách, không đọc inbox. UI xem 200 mục gần nhất; receipt chống trùng không cắt theo giới hạn này.
 
-## Đo và đọc comment
+## Trình duyệt cũ
 
-Adapter được chọn theo cấu hình tài khoản. Đo bằng API đọc danh tính và permalink đúng bài; dùng media ID đã lưu, hoặc tìm URL trong tối đa 5 trang media của chính tài khoản cho bài đăng bằng browser/thủ công trước đây. Không tìm thấy thì giữ bản đo cũ và báo chưa xác định được media ID.
+Main dùng boot riêng thay cho `instagram.start()`. Công tắc `instagram_browser_enabled` mặc định false; thiếu/null/giá trị không phải boolean true đều tắt. Khi tắt, chặn open/context/page/VPN, queued dispatch, check và lịch browser metrics; dữ liệu/profile/job/media cũ giữ nguyên. API không phụ thuộc công tắc này.
 
-Insights yêu cầu `views,reach,saved,shares,comments,likes` ở kỳ `lifetime`. Mapper hỗ trợ `plays` nếu dữ liệu trả về dùng tên cũ; **không tự gọi lại bằng metric khác khi API từ chối**, phải đối chiếu version. `saved` → `saves`, `reach` → trường `reach` optional riêng, không thay `viewers`. Thiếu/không hợp lệ/khác kỳ/không rõ giữ null, số 0 tường minh giữ 0. `social_metric.source = 'api'`, có `sourceUrl`, account, handle, observedAt, notes về kỳ đo; các chỉ số không hỗ trợ vẫn null. API lưu nội bộ áp kiểm account/URL như đường browser.
+Chỉ bật tại **Cài đặt → Instagram** sau hộp xác nhận:
 
-Client đọc comments bằng cursor, không follow `paging.next` chứa token/host lạ; phát hiện cursor lặp, giới hạn mặc định 100 trang và báo chưa đọc hết nếu chạm trần. Chỉ thêm client đọc, **chưa nối comments API vào UI T16 và chưa gửi private reply/DM**. Không mở rộng quyền đăng/nhắn tin từ việc cấu hình token.
+> Instagram trình duyệt tự động có thể khiến Meta khoá tài khoản (kể cả dây chuyền). Nên dùng API chính thức. Bật?
 
-## Kiểm offline và giới hạn
+Công tắc lưu bền. **Mở lại app vẫn không tự chạy worker trình duyệt, kể cả đã cho phép trước đó**: Cài đặt hiện “Đã cho phép · chờ bật tay”, nút chạy lại yêu cầu cùng cảnh báo. Bật tay chạy worker cũ, có thể tiếp tục các job đang queued đã được duyệt trước đó. Khi tắt không tự hủy hàng chờ hoặc xóa profile. Hồ sơ thiếu `apiMode` mặc định API; hồ sơ đã ghi browser không bị sửa dữ liệu, nhưng worker bị chặn khi công tắc tắt.
 
-`node --test desktop/test/instagram-api.test.mjs` dùng fetch giả, SQLite `:memory:`, bytes fixture và secret codec giả trong test; không phải MP4 thật, token thật, safeStorage Windows thật hoặc nghiệm thu Meta. Test kiểm thứ tự, receipt ghi trước tác động, container lỗi, mất phản hồi từng bước, restart/chống trùng, token, nguồn đo, null/0, reach và phân trang. API/workspace test dùng build tạm từ source, giữ nguyên các test Playwright cũ.
+## Hợp đồng và nguồn cần kiểm chứng
 
-Chưa kiểm: endpoint/version/permission đang được Meta hỗ trợ, quota thực tế, upload video thật, latency/timeout thực, token expiry/refresh, Insights có sẵn theo loại tài khoản, comment paging thực, nhãn AI API, private reply, safeStorage thực và Electron UI. Các cờ mặc định tắt giữ nguyên các giới hạn đó. Báo cáo và cách chạy lại: [T18](../ops/night/out/T18.md).
+Mọi request Instagram của đường API chỉ ở `desktop/src/instagram-api.mjs`. Không có API module song song hoặc browser fallback. Nguồn đọc ngày 12/11/2026:
+
+- [Meta Instagram Login](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/), [Content Publishing](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/content-publishing), [Private Replies](https://developers.facebook.com/docs/instagram-platform/private-replies), [Business Login](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/business-login).
+- Truy cập Meta trực tiếp trong task bị lỗi fetch/HTTP 429. **Chưa kiểm chứng** trực tiếp endpoint/version/quyền/field tại thời điểm này. Fixture mô tả hợp đồng dự kiến, không chứng minh dịch vụ Meta chấp nhận: `/me` fields user_id,username,account_type; media create/status/publish/permalink; insights lifetime/metric; comments paging/timestamp; content_publishing_limit; messages private reply/receipt/window/rate errors.
+- Đã tham khảo README [OpenReply](https://github.com/diwenne/openreply/blob/main/README.md) và [insta-p8](https://github.com/ayuuxh2/insta-p8/blob/main/README.md): keyword → queue → private reply, nhiều tài khoản và nhật ký. Không chép mã, không cài PostgreSQL/Redis/Supabase hoặc server. OpenReply công khai hành vi fail-open follow; Hermes chặn khi chưa rõ.
+
+## Kiểm và chạy tiếp
+
+Xem [báo cáo T-004](../ops/office/reports/T-004.md) cho lệnh, số pass/fail, log và blocker. Test dùng fetch, SQLite, secret/process/browser giả; chỉ dùng MP4 tổng hợp ở những test media sẵn có. Chưa nghiệm thu token/safeStorage Windows, upload/permalink, Insights, private reply hoặc tài khoản thật. Chưa mở bản cài, chưa thay `desktop/local-dist`.
+
+Sau review, boss chạy các lệnh chuẩn và build override `HERMES_LOCAL_BUILD_DIR=outputs/T-004-build`; script chụp UI `node scripts/check-instagram-official-ui.mjs` với `HERMES_ARTIFACTS=D:/hermes-wt/artifacts/T-004`. Chỉ sau khi các kiểm đạt mới build bản cài và thực hiện các bước Meta/tài khoản được duyệt ở trên.

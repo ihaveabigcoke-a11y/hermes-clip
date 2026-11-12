@@ -100,18 +100,20 @@ export default function TextExchange({kind, context, target, disabled, demo, onA
 
 export function CodexTextSettings({demo}: {demo: boolean}) {
   const [enabled, setEnabled] = useState(false), [executable, setExecutable] = useState('');
+  const [profile,setProfile]=useState('');
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState('');
   useEffect(() => {let live = true; void desktopBridge()?.codexTextSettings?.().then(value => {
-    if (live) {setEnabled(value.enabled === true); setExecutable(value.executable ?? '');}
+    if (live) {setEnabled(value.enabled === true); setExecutable(value.executable ?? '');setProfile(value.profile??'');}
   }).catch(failure => {if (live) setError(failure.message);}); return () => {live = false;};}, []);
   return <section className="production-card production-card-body">
     <h3>Research và nội dung bằng Codex CLI</h3>
-    <p>Không cần Muse hoặc khóa API. Dùng phiên đăng nhập Codex CLI và hạn mức gói của bạn; app không mua thêm lượt. Mỗi lượt tối đa 3 phút, đầu ra tối đa 2 MB, JSON tối đa 384 KB.</p>
+    <p>Dùng cấu hình provider và đăng nhập Codex CLI hiện có của bạn. Mỗi lượt tối đa 3 phút, đầu ra tối đa 2 MB, JSON tối đa 384 KB.</p>
     <label className="field"><span><input type="checkbox" checked={enabled} disabled={busy || demo} onChange={event => setEnabled(event.target.checked)}/> Bật Codex CLI (mặc định tắt)</span></label>
     <label className="field">Đường dẫn Codex native (không bắt buộc)<input value={executable} disabled={busy || demo} maxLength={2000} onChange={event => setExecutable(event.target.value)} placeholder="Để trống để tìm codex.exe trong PATH"/></label>
+    <label className="field">Codex profile (không bắt buộc)<input value={profile} maxLength={120} disabled={busy||demo} onChange={e=>setProfile(e.target.value)} placeholder="Để trống để dùng cấu hình mặc định"/></label>
     <Button disabled={busy || demo || !desktopBridge()?.saveCodexTextSettings} onClick={async () => {
       setBusy(true); setError(''); setNotice('');
-      try {await desktopBridge()!.saveCodexTextSettings({enabled, executable}); window.dispatchEvent(new Event('product-lab:codex-settings-changed')); setNotice('Đã lưu cấu hình Codex CLI.');}
+      try {await desktopBridge()!.saveCodexTextSettings({enabled, executable, profile}); window.dispatchEvent(new Event('product-lab:codex-settings-changed')); setNotice('Đã lưu cấu hình Codex CLI.');}
       catch (failure) {setError((failure as Error).message);} finally {setBusy(false);}
     }}>Lưu cấu hình Codex CLI</Button>
     {error && <p className="inline-error" role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}

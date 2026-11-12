@@ -52,6 +52,16 @@ async function fixture(t, options = {}) {
 }
 async function drain(p) {p.stopped = false; p.drain(); while (p.running) await p.running;}
 const mutations = f => f.calls.filter(call => call.init.method === 'POST');
+test('T-004: Instagram Login URL container publishes once without resumable upload or browser',async t=>{
+  const f=await fixture(t,{resumableEnabled:false});f.snapshot.apiVideoUrl='https://example.com/approved.mp4';
+  f.hook((key,init)=>{if(key==='POST /v99.0/100/media'){
+    assert.equal(init.body.get('video_url'),f.snapshot.apiVideoUrl);assert.equal(init.body.has('upload_type'),false);return response({id:'200'});
+  }});
+  const job=await f.publisher.enqueue(f.request);await drain(f.publisher);
+  assert.equal(f.publisher.job(job.id).state,'published');assert.equal(f.publisher.job(job.id).proof.postUrl,media().permalink);
+  await f.publisher.enqueue(f.request);await drain(f.publisher);assert.equal(mutations(f).length,2);
+  assert.equal(f.calls.some(call=>call.url.includes('rupload')),false);
+});
 
 test('API Reel freezes account/video/caption, writes receipt before effects and publishes once in exact order', async t => {
   const f = await fixture(t); const job = await f.publisher.enqueue(f.request);
@@ -181,6 +191,7 @@ test('API profile writes and checks exclude each other; mode switches do not reu
   while(!release)await new Promise(resolve=>setImmediate(resolve));
   await assert.rejects(f.publisher.saveProfile({id:'account',apiToken:''}),/Chờ kiểm tra/);
   release();await check;assert.equal(f.publisher.browsers.profile('account').userId,'100');
+  f.store.set('instagram_browser_enabled',true);
   await f.publisher.saveProfile({id:'account',apiMode:'browser'});assert.equal(f.publisher.browsers.profile('account').userId,'');
   f.publisher.browsers.saving.add('account');await assert.rejects(f.publisher.check({id:'account'}),/Chờ lưu/);f.publisher.browsers.saving.clear();
 });
@@ -204,10 +215,11 @@ test('Token is encrypted only, retained on blank save, clearable and absent from
   await assert.rejects(f.publisher.saveProfile({id:'account',apiToken:token}),error => !error.message.includes(token));
 });
 
-test('Legacy profile defaults to browser and does not lose API credentials on browser config save', async t => {
+test('New profile defaults to API and does not lose API credentials on browser config save', async t => {
   const f = await fixture(t);
   await f.publisher.browsers.save({id:'old',data:{name:'Old profile',productId:'product'}},{vpnEnabled:false});
-  assert.equal(f.publisher.status().profiles.find(row => row.id === 'old').apiMode,'browser');
+  assert.equal(f.publisher.status().profiles.find(row => row.id === 'old').apiMode,'api');
+  f.store.set('instagram_browser_enabled',true);
   await f.publisher.saveProfile({id:'account',apiMode:'browser'});
   assert.equal(f.publisher.status().profiles.find(row => row.id === 'account').hasApiToken,true);
   assert.equal(f.calls.length,0);

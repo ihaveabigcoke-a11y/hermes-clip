@@ -1,12 +1,11 @@
-// EXPERIMENTAL / OFF by default. Every endpoint, permission, version and field
-// below MUST be checked against current Meta Instagram Login documentation
-// before enabling. No Facebook Page token and no browser cookies are used.
+// Single network boundary for Instagram Login. Fixture-tested contracts;
+// real-account acceptance and Meta permissions remain required (docs/INSTAGRAM-API.md).
 // This client has no filesystem, logger, implicit fetch or automatic retries.
 const objectId = value => {
   if (typeof value !== 'string' || !/^\d{1,40}$/.test(value)) throw apiError('invalid', 'Mã đối tượng Instagram API không hợp lệ.');
   return value;
 };
-export function apiError(code, message) { return Object.assign(new Error(message), {code}); }
+export function apiError(code, message) { return Object.assign(new Error(message), {code, instagramApiSafe:true}); }
 const count = value => typeof value === 'number' && Number.isSafeInteger(value) && value >= 0 && value <= 1e12 ? value : null;
 const metricNames = ['views','likes','comments','saves','shares','profileVisits','linkClicks','viewers','interactions','reelInteractions','accountsEngaged','profileActivity','follows','reach'];
 
@@ -37,39 +36,45 @@ export class InstagramApi {
     if (typeof this.#fetch !== 'function' || typeof this.#token !== 'string' || !this.#token.trim()) throw apiError('login_required', 'Chưa có token Instagram API hợp lệ.');
     objectId(this.userId);
   }
-  async #request(path, {method = 'GET', query, body, upload} = {}) {
+  async #request(path, {method = 'GET', query, body, upload, json = false} = {}) {
     this.ready(!!upload);
     const url = upload ? new URL(`https://rupload.facebook.com/ig-api-upload/${this.version}/${objectId(path)}`)
       : new URL(`https://graph.instagram.com/${this.version}/${path}`);
     for (const [key, value] of Object.entries(query ?? {})) if (value != null) url.searchParams.set(key, value);
     const headers = {Authorization: `${upload ? 'OAuth' : 'Bearer'} ${this.#token}`};
     if (upload) Object.assign(headers, {'Content-Type':'application/octet-stream', offset:'0', file_size:String(body.byteLength)});
-    else if (body) headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    else if (body) headers['Content-Type'] = json ? 'application/json' : 'application/x-www-form-urlencoded';
     let response, data;
     try {
-      response = await this.#fetch(url.href, {method, headers, body: body ? upload ? body : new URLSearchParams(body) : undefined,
+      response = await this.#fetch(url.href, {method, headers, body: body ? upload ? body : json ? JSON.stringify(body) : new URLSearchParams(body) : undefined,
         signal: AbortSignal.timeout(this.timeoutMs), redirect:'error'});
       data = await response.json();
     } catch {
       // Never expose thrown fetch messages, URLs, response bodies or token values.
       throw apiError('api_uncertain', 'Instagram API chưa trả kết quả xác định. Cần đối soát trước khi thử lại.');
     }
-    if (!response.ok || data?.error) throw apiError(response.status === 401 || data?.error?.code === 190 ? 'login_required' : 'api_rejected',
-      'Instagram API từ chối yêu cầu. Kiểm tra token, quyền và phiên bản API; không gửi lại lượt đăng chưa rõ.');
+    if (!response.ok || data?.error) {
+      if (response.status === 401 || data?.error?.code === 190) throw apiError('login_required', 'Token Instagram hết hạn hoặc không hợp lệ. Cấp lại token trong Cài đặt → Instagram.');
+      if (response.status === 429 || [4,17,32,613,80002].includes(data?.error?.code)) throw apiError('rate_limit', 'Instagram giới hạn tốc độ. Tạm dừng ít nhất 1 giờ; không tự gửi lại lượt chưa rõ.');
+      if ([10,200].includes(data?.error?.code)) throw apiError('permission', 'Thiếu quyền Instagram API. Kiểm tra quyền đã cấp và App Review.');
+      throw apiError('api_rejected', 'Instagram API từ chối yêu cầu. Kiểm tra token, quyền và phiên bản API; không gửi lại lượt đăng chưa rõ.');
+    }
     if (!data || typeof data !== 'object') throw apiError('api_uncertain', 'Phản hồi Instagram API chưa đủ bằng chứng.');
     return data;
   }
   // TODO META VERIFY: GET /me fields=user_id,username (Instagram Login identity).
   async identity() {
-    const row = await this.#request('me', {query:{fields:'user_id,username'}});
+    const row = await this.#request('me', {query:{fields:'user_id,username,account_type'}});
     const userId = objectId(row.user_id);
     if (userId !== this.userId || !/^[a-zA-Z0-9._]{1,30}$/.test(row.username ?? '')) throw apiError('identity', 'Token không khớp tài khoản API đã chọn.');
-    return {userId, handle:row.username, session:'signed_in'};
+    const accountType = ['BUSINESS','MEDIA_CREATOR','CREATOR'].includes(row.account_type) ? row.account_type : null;
+    if (row.account_type && !accountType) throw apiError('account_type', 'Instagram API cần tài khoản Business hoặc Creator.');
+    return {userId, handle:row.username, accountType, session:'signed_in'};
   }
   // TODO META VERIFY: POST /{ig-user-id}/media, REELS + upload_type=resumable.
-  async createReelContainer({caption}) {
-    this.ready(true);
-    const row = await this.#request(`${objectId(this.userId)}/media`, {method:'POST', body:{media_type:'REELS',upload_type:'resumable',caption}});
+  async createReelContainer({caption, videoUrl}) {
+    if (videoUrl) publicVideoUrl(videoUrl); else this.ready(true);
+    const row = await this.#request(`${objectId(this.userId)}/media`, {method:'POST', body:{media_type:'REELS',...(videoUrl ? {video_url:videoUrl} : {upload_type:'resumable'}),caption}});
     const containerId = objectId(row.id);
     // Do not trust/follow an arbitrary returned upload URI or persist its query.
     const expected = `https://rupload.facebook.com/ig-api-upload/${this.version}/${containerId}`;
@@ -113,6 +118,13 @@ export class InstagramApi {
       username:typeof item.username === 'string' ? item.username : null,timestamp:typeof item.timestamp === 'string' ? item.timestamp : null})),
       nextCursor:nextCursor(row)};
   }
+  async privateReply(commentId, text) {
+    if (typeof text !== 'string' || !text.trim() || new TextEncoder().encode(text).length > 1000) throw apiError('invalid', 'Private reply phải từ 1 đến 1000 byte.');
+    const row = await this.#request(`${objectId(this.userId)}/messages`, {method:'POST',json:true,
+      body:{recipient:{comment_id:objectId(commentId)},message:{text}}});
+    if (typeof row.message_id !== 'string' || !/^[a-zA-Z0-9_:.=-]{1,512}$/.test(row.message_id)) throw apiError('api_uncertain', 'Private reply chưa có message ID. Cần đối soát, không gửi lại.');
+    return {messageId:row.message_id};
+  }
   async *comments(mediaId, {maxPages = 100} = {}) {
     let after = null; const seen = new Set();
     for (let page = 0; page < maxPages; page++) {
@@ -132,6 +144,16 @@ export class InstagramApi {
     const value = row.data?.[0];
     return {quotaUsage:count(value?.quota_usage),quotaTotal:count(value?.config?.quota_total),quotaDuration:count(value?.config?.quota_duration)};
   }
+}
+
+export function publicVideoUrl(value) {
+  let url;
+  try { url = new URL(value); } catch { throw apiError('invalid', 'Cần URL HTTPS công khai của đúng video đã duyệt.'); }
+  if (url.protocol !== 'https:' || url.username || url.password || url.port || url.hash || !url.hostname.includes('.')
+    || /^(localhost|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.)/.test(url.hostname)
+    || url.hostname.endsWith('.local') || url.hostname.includes(':') || /(?:access_token|token|password|secret|key)=/i.test(url.search))
+    throw apiError('invalid', 'Video cần URL HTTPS công khai, không chứa token hoặc thông tin đăng nhập.');
+  return url.href;
 }
 
 export function nextCursor(row) {

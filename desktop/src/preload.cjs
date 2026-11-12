@@ -3,6 +3,7 @@ const methods=['assistantSettings','saveAssistantSettings','integrationStatus','
 methods.push('loadUiState', 'saveUiState', 'museChatList', 'museChatSend', 'museChatRecover', 'museChatOpen', 'museChatPin', 'openResult', 'recheckResult');
 methods.push('instagramStatus', 'instagramSaveProfile', 'instagramOpen', 'instagramCheck', 'instagramClose', 'instagramOpenVpn', 'instagramPublish', 'instagramRetry', 'instagramCancel', 'instagramReconcile');
 methods.push('instagramRefreshMetrics');
+methods.push('instagramConfigureBrowser','instagramSaveDmRule','instagramDmEmergencyStop');
 methods.push('researchStatus','researchStart','researchResume','researchCheckSources','researchQueueSources','saveSourceCheckPreference');
 methods.push('setMusePaused','manualMediaStatus','manualMediaConfigure','manualMediaExport','manualMediaAssign','manualMediaOpen');
 methods.push('codexTextSettings','saveCodexTextSettings','codexTextRun');

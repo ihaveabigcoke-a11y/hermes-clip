@@ -21,6 +21,25 @@ function postKey(value:unknown) {
     return ['instagram.com','www.instagram.com'].includes(url.hostname)&&url.protocol==='https:'&&match?match[1]:null;
   }catch{return null;}
 }
+/** Latest observation for each exact UTM link, never sum aliases or measurements. */
+export function instagramUtmClicks(records:Row[],productId:string) {
+  const links=new Map<string,Row|null>();
+  for(const plan of records.filter(row=>row.kind==='content_plan'&&row.data.productId===productId)){
+    if(!plan.data.utmLink)continue;
+    let key:string;
+    try{const url=new URL(plan.data.utmLink);if(url.protocol!=='https:'||url.searchParams.get('utm_source')!=='instagram'||url.searchParams.get('utm_medium')!=='dm')continue;url.searchParams.sort();url.hash='';key=url.href;}catch{continue;}
+    const valid=typeof plan.data.utmClicks==='number'&&Number.isSafeInteger(plan.data.utmClicks)&&plan.data.utmClicks>=0
+      &&plan.data.utmClicksSource?.trim()&&plan.data.utmClicksPeriod?.trim()&&Number.isFinite(Date.parse(plan.data.utmClicksObservedAt));
+    const old=links.get(key);
+    if(!links.has(key))links.set(key,null);
+    if(valid&&(!old||Date.parse(plan.data.utmClicksObservedAt)>Date.parse(old.data.utmClicksObservedAt)))links.set(key,plan);
+  }
+  const known=[...links.values()].filter((row):row is Row=>row!==null);
+  // Different measurement windows are not an aggregate of the same period.
+  const periods=new Set(known.map(row=>row.data.utmClicksPeriod));
+  return {value:links.size&&known.length===links.size&&periods.size===1?known.reduce((sum,row)=>sum+row.data.utmClicks,0):null,
+    known:known.length,total:links.size,approximate:false};
+}
 export function instagramProductSummary(records:Row[],productId:string,jobs:Job[]=[]){
   const plans=records.filter(r=>r.kind==='content_plan'&&r.data.productId===productId);
   const accounts=records.filter(r=>r.kind==='social_account'&&r.data.productId===productId&&!r.data.archived);

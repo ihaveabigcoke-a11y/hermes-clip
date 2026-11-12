@@ -155,11 +155,16 @@ export const contentPlanSchema = z.object({
   hook: text(600),
   script: text(6000),
   caption: text(2200),
+  apiVideoUrl: z.union([z.literal(''),z.string().trim().max(2048).refine(isHttpsLink,'Video cần URL HTTPS công khai.')]).optional(),
   ctaKeyword: z.preprocess(value => value === '' ? null : value, commentKeywordSchema.nullable().optional()),
   landingBaseUrl: z.preprocess(value => value === '' ? null : value,
     z.string().trim().max(2048).refine(isHttpsLink, 'Điền URL HTTPS hợp lệ, không chứa thông tin đăng nhập.').nullable().optional()),
   utmLink: z.string().trim().max(8192).refine(isHttpsLink, 'Link UTM phải dùng HTTPS.').nullable().optional(),
   utmHookId: z.string().trim().max(180).nullable().optional(),
+  utmClicks: count.nullable().optional(),
+  utmClicksSource: text(500).optional(),
+  utmClicksPeriod: text(200).optional(),
+  utmClicksObservedAt: z.string().datetime().nullable().optional(),
   // Missing/null keeps old records readable; the publishing snapshot resolves
   // it to off (user default). Only explicit "required" turns on the label check.
   aiLabel: z.enum(["required", "off"]).nullable().optional(),
@@ -169,6 +174,8 @@ export const contentPlanSchema = z.object({
   postUrl: optionalLink,
   notes: text(),
 }).superRefine((value, ctx) => {
+  if (value.utmClicks != null && (!value.utmLink || !value.utmClicksSource?.trim() || !value.utmClicksPeriod?.trim() || !value.utmClicksObservedAt))
+    ctx.addIssue({code:'custom',path:['utmClicks'],message:'Click UTM cần đúng link, nguồn analytics, kỳ đo và thời điểm đo.'});
   if (value.status !== "draft" && !value.accountId) ctx.addIssue({code: "custom", path: ["accountId"], message: "Chọn tài khoản trước khi lên kế hoạch hoặc ghi nhận bài đăng."});
   if (["published_manual", "published_browser"].includes(value.status)) {
     let valid = false;

@@ -1,5 +1,13 @@
 # Hermes Clip — bối cảnh và trạng thái (source cập nhật đến đêm 3, 12/11/2026)
 
+## Cập nhật T-004 — Instagram Login và comment → DM (12/11/2026)
+
+Sửa trực tiếp app chính trên `main`, tag `before-T-004`, không commit/đổi nhánh/PR. Mặc định dùng adapter API T18 mở rộng; token mã hóa bằng safeStorage, cấu hình theo tài khoản ở Cài đặt. Trình duyệt Instagram mặc định tắt, thiếu/null cũng tắt, chỉ bật tay sau cảnh báo; main dùng boot API riêng. Giữ profile/job/receipt và Muse Bật/Tạm dừng, routing T-002b.
+
+Reel qua URL HTTPS công khai (không bật resumable Instagram Login chưa xác minh), receipt ghi trước tác động/chống trùng; Insights thiếu giữ null. Comment poll 3 phút khi app mở, duyệt theo bài/tài khoản/sản phẩm, private reply một lần/comment ID, giới hạn nội bộ và tắt khẩn cấp. Không xác minh follow thì không gửi link khi có điều kiện follow. Bảng thêm CTA/DM và click UTM từ bản đo analytics có nguồn/kỳ đo, không có tracking server. Codex giữ provider/config/login/env người dùng và có profile tùy chọn; không chạy CLI thật.
+
+**Chưa kiểm với tài khoản thật** cho tới khi người dùng tạo Meta App/cấp quyền. Meta docs trực tiếp bị fetch/429; endpoint/field cần nghiệm thu. Build riêng outputs/T-004-build và fixture đạt; full suite/Chrome vẫn có blocker sandbox. Không mở AppData/SQLite/profile/media thật, không ghi desktop/local-dist. Đọc [báo cáo T-004](../../ops/office/reports/T-004.md), [hướng dẫn API](../INSTAGRAM-API.md) và [Codex](../RESEARCH-WITHOUT-MUSE.md) trước khi chạy tiếp; các đoạn T18/browser mặc định bên dưới là lịch sử.
+
 ## Cập nhật T-002b vòng 2 — sửa theo duyệt A–F (12/11/2026)
 
 Giới hạn chặn Codex/JSON theo đúng scope/đợt research; có Bỏ qua, không đối soát cho run/chat trên Nghiên cứu, lưu bền và không gửi lại kết quả cũ. Pause xóa quyền duyệt hàng chờ, job đang chạy vẫn hoàn tất; bật lại cần bấm Chạy/start. Quyền tiếp tục gắn job/profile và thu hồi sau khi hoàn tất, timer không được dùng cho profile/job khác. Nhập research báo số mới/trùng; landing đã lưu import:<tool>, bổ sung kiểm UI. Test nhãn AI bỏ timeout riêng 180 ms để dùng mặc định app 3 giây, không đổi app/assertion. Chi tiết test, blocker sandbox và cách chạy tiếp ở [báo cáo vòng 2](../../ops/office/reports/T-002b.md). Không triển khai bản cài, không dữ liệu/dịch vụ thật, không commit.

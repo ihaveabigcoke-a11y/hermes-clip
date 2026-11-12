@@ -3,8 +3,10 @@ import {join} from 'node:path';
 import {profileInput} from './shared.mjs';
 import {TouchVpn, TOUCH_VPN_ID} from './touch-vpn.mjs';
 import {z} from 'zod';
+import {assertBrowserEnabled, apiMode} from './instagram-policy.mjs';
 
 const apiInput = z.object({apiMode:z.enum(['browser','api']).optional(),
+  apiAppId:z.string().regex(/^\d{1,40}$|^$/).optional(),
   apiUserId:z.string().regex(/^\d{1,40}$|^$/).optional(),
   apiToken:z.string().trim().max(8192).optional(),clearApiToken:z.boolean().optional()});
 
@@ -31,8 +33,8 @@ export class InstagramBrowsers {
   }
   status() {
     return this.rows().map(({proxy, encryptedApiToken, ...profile}) => ({...profile,
-      apiMode: profile.apiMode ?? 'browser', hasApiToken: !!encryptedApiToken,
-      session: profile.apiMode === 'api' || this.contexts.has(profile.id) ? profile.session : 'unknown',
+      apiMode: profile.apiMode ?? 'api', hasApiToken: !!encryptedApiToken,
+      session: apiMode(profile) || this.contexts.has(profile.id) ? profile.session : 'unknown',
       proxy: {server: proxy.server, username: proxy.username, hasPassword: !!proxy.encryptedPassword},
       open: this.contexts.has(profile.id), busy: this.busy.has(profile.id) || this.opening.has(profile.id) || this.pageOpening.has(profile.id),
       background: this.background.has(profile.id),
@@ -63,7 +65,8 @@ export class InstagramBrowsers {
       if (password) encryptedPassword = await this.secret.encrypt(password);
       if (this.contexts.has(id) || this.opening.has(id) || this.busy.has(id)) throw Error('Hồ sơ đang được mở. Thử lưu lại sau.');
       const profile = {id, productId: account.data.productId, name: account.data.name,
-        apiMode:api.apiMode ?? old?.apiMode ?? 'browser',apiUserId:api.apiUserId ?? old?.apiUserId ?? null,
+        apiMode:api.apiMode ?? old?.apiMode ?? 'api',apiUserId:api.apiUserId ?? old?.apiUserId ?? null,
+        apiAppId:api.apiAppId ?? old?.apiAppId ?? '',
         encryptedApiToken,apiConfigRevision:(old?.apiConfigRevision ?? 0) + 1,
         vpnEnabled: value.vpnEnabled, proxy: {...proxy, encryptedPassword},
         session: 'unknown', handle: old?.handle ?? '',
@@ -75,6 +78,8 @@ export class InstagramBrowsers {
   }
 
   async context(id, background = false) {
+    assertBrowserEnabled(this.store);
+    if (apiMode(this.profile(id))) throw Error('Hồ sơ API không mở trình duyệt.');
     if (this.saving.has(id)) throw Error('Chờ lưu cấu hình hồ sơ hoàn tất.');
     if (this.opening.has(id)) return this.opening.get(id);
     if (this.contexts.has(id)) {
@@ -99,6 +104,7 @@ export class InstagramBrowsers {
   }
 
   async launch(profile, background) {
+    assertBrowserEnabled(this.store);
     let bridge;
     let context;
     try {
@@ -114,10 +120,12 @@ export class InstagramBrowsers {
       if (background) args.push('--start-minimized');
       if (extension) args.push('--disable-extensions-except=' + extension.directory, '--load-extension=' + extension.directory);
       await trimProfileCaches(join(this.root, 'instagram', 'profiles', profile.id),this.store);
+      assertBrowserEnabled(this.store);
         context = await this.browser.launchPersistentContext(join(this.root, 'instagram', 'profiles', profile.id), {
         headless: false, acceptDownloads: false, args, ignoreDefaultArgs: extension ? ['--disable-extensions'] : [],
         proxy: bridge?.proxy ?? proxy, timeout: 30000,
       });
+      if (!this.store.get('instagram_browser_enabled', false)) { await context.close(); assertBrowserEnabled(this.store); }
       this.contexts.set(profile.id, context);
       context.on('close', () => {
         this.contexts.delete(profile.id);
@@ -141,6 +149,7 @@ export class InstagramBrowsers {
   }
 
   async page(id, background = false) {
+    assertBrowserEnabled(this.store);
     if (this.pageOpening.has(id)) return this.pageOpening.get(id);
     const pending = (async () => {
       const context = await this.context(id, background);
@@ -172,6 +181,7 @@ export class InstagramBrowsers {
   }
 
   async openVpn(id) {
+    assertBrowserEnabled(this.store);
     const profile = this.profile(id);
     if (!profile?.vpnEnabled) throw Error('Hồ sơ này chưa bật Touch VPN.');
     let context = this.contexts.get(id);

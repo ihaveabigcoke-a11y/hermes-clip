@@ -67,6 +67,7 @@ import ProductionStudio from "./production";
 import OperationsPanel from "./operations";
 import {ManualMediaSettings} from './manual-media';
 import AssistantSettings from "./assistant-settings";
+import {InstagramSettings} from './instagram-settings';
 import MuseChatPanel from "./muse-chat";
 import { creativeDuration } from "@/lib/lab/production";
 import { desktopBridge } from "@/lib/lab/desktop-client";
@@ -2035,14 +2036,14 @@ export default function LabApp() {
           </Button>
         </div>
         <MuseConnectionStrip onNavigate={navigate} />
-        <ManualMediaSettings demo={demo}/><AssistantSettings demo={demo}/>
+        <ManualMediaSettings demo={demo}/><AssistantSettings demo={demo}/><InstagramSettings records={records} demo={demo}/>
         <div className="connection-grid">
           {[
             {
               icon: BarChart3,
               title: "Mạng xã hội và số liệu",
-              status: "Nhập tay",
-              copy: "Chưa kết nối tài khoản hay tự đăng. Hiện nhập số liệu và mẫu bình luận.",
+              status: "Instagram Login",
+              copy: "Cấu hình từng tài khoản ở trên. API đọc số liệu; comment → DM chỉ chạy theo quy tắc đã duyệt khi app mở.",
             },
           ].map((x) => (
             <article className="connection-card" key={x.title}>
