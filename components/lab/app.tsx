@@ -95,9 +95,17 @@ import {
 import ProductProfile,{ProfileExtraFields} from './product-profile';
 import {CompetitorVideoFields} from './competitor-videos';
 import OfficeViews from './office-views';
-import {selectionCounts} from '@/lib/lab/daily-selection';
+import {selectionEntries} from '@/lib/lab/daily-selection';
+import {CompetitorVideoList} from './competitor-videos';
+import ReferenceVideoPanel from './reference-video';
+import ViralFormulas from './viral-formulas';
+import {referenceDraftRecordId} from '@/lib/lab/viral-reference';
+import {viralFormulaRecordId} from '@/lib/lab/viral-formulas';
+import './department-nav.css';
 const businessViews = new Set(["overview", "studio", "experiments", "results", "social", "landing"]);
 const navigation = [
+  {id:"content",label:"Khung content",icon:FileText},
+  {id:"competitors",label:"Đối thủ & video",icon:Search},
   {id:"office",label:"Phòng sản xuất",icon:LayoutDashboard},
   {id:"signals",label:"Tín hiệu & Phòng chờ",icon:BarChart3},
   { id: "production", label: "Tạo nội dung", icon: Video },
@@ -105,12 +113,12 @@ const navigation = [
   { id: "queue", label: "Hàng đợi", icon: Clapperboard },
   { id: "chat", label: uiCopy.chat, icon: MessageSquare },
   { id: "library", label: "Thư viện", icon: Images },
-  { id: "research", label: "Nghiên cứu", icon: Search },
+  { id: "research", label: "Săn sản phẩm", icon: Search },
   { id: "products", label: "Sản phẩm", icon: Package },
   { id: "accounts", label: uiCopy.accounts, icon: UsersRound },
   { id: "overview", label: "Tổng quan", icon: LayoutDashboard },
   { id: "studio", label: "Ý tưởng đã lưu", icon: Clapperboard },
-  { id: "experiments", label: "Thử nghiệm nội dung", icon: FlaskConical },
+  { id: "experiments", label: "Quyết định", icon: FlaskConical },
   { id: "results", label: "Số liệu", icon: BarChart3 },
   { id: "social", label: "Instagram", icon: Globe2 },
   { id: "landing", label: "Trang giới thiệu", icon: FileText },
@@ -271,9 +279,7 @@ export default function LabApp() {
     pending = useRef(false);
   const records = demo ? samples : real;
   const [profileId,setProfileId]=useState("");
-  const [selectionNow,setSelectionNow]=useState(Date.now());
-  useEffect(()=>{const timer=setInterval(()=>setSelectionNow(Date.now()),60000);return()=>clearInterval(timer);},[]);
-  const selectionSummary=selectionCounts(records,selectionNow);
+  const [selectionDay,setSelectionDay]=useState("");
   const notify = useCallback(
     (text: string, tone = "success") => setNotice({ text, tone }),
     [],
@@ -314,6 +320,7 @@ export default function LabApp() {
       const v = p.get("view") || "production";
       setView(navigation.some((n) => n.id === v) ? v : "production");
       setProfileId(p.get("product")||"");
+      setSelectionDay(p.get("selection_day")||"");
       setQuery(p.get("q") || "");
       setPage(Math.max(1, Number(p.get("page")) || 1));
     };
@@ -1077,6 +1084,7 @@ export default function LabApp() {
       .filter((r) =>
         JSON.stringify([
           r.data.name,
+          r.data.productKey,
           r.data.niche,
           r.data.problem,
           r.data.market,
@@ -1483,12 +1491,13 @@ export default function LabApp() {
   function productsView() {
     const profile=allProducts.find(p=>p.id===profileId);
     if(profile)return <ProductProfile key={profile.id} product={profile} records={records} onEdit={()=>openEditor("product",profile)} onBack={()=>{setProfileId("");const u=new URL(location.href);u.searchParams.delete("product");u.searchParams.delete("product_tab");history.pushState({},"",u);}}/>;
-    const rows = filtered(allProducts),
+    const selectedIds=new Set(selectionEntries(records).filter(s=>s.selectionDay===selectionDay).map(s=>s.productId));
+    const rows = filtered(allProducts).filter(p=>!selectionDay||selectedIds.has(p.id)),
       paged = pageRows(rows);
     return (
       <>
         {workspaceNotice(true)}
-        {toolbar()}
+        {toolbar()}<div className="product-day-filter"><label htmlFor="product-selection-day">Ngày chọn</label><input id="product-selection-day" type="date" value={selectionDay} onChange={e=>{setSelectionDay(e.target.value);setPage(1);const u=new URL(location.href);if(e.target.value)u.searchParams.set("selection_day",e.target.value);else u.searchParams.delete("selection_day");u.searchParams.delete("page");history.replaceState({},"",u);}}/><Button tone="ghost" onClick={()=>{setSelectionDay("");const u=new URL(location.href);u.searchParams.delete("selection_day");history.replaceState({},"",u);}}>Tất cả ngày</Button></div>
         {rows.length ? (
           <>
             <div className="product-grid">{paged.rows.map(productCard)}</div>
@@ -2154,11 +2163,11 @@ export default function LabApp() {
     );
   }
   return (
-    <div className={`lab-shell workbench-shell ${["production","images","library"].includes(view)?"is-production-route":""}`}>
+    <div className={`lab-shell workbench-shell ${["production","images","library","content"].includes(view)?"is-production-route":""}`}>
       <a href="#lab-main" className="skip-link">
         Bỏ qua điều hướng
       </a>
-      <aside className="sidebar">
+      <aside className="sidebar department-sidebar">
         <a
           className="brand"
           href="?view=production"
@@ -2176,30 +2185,17 @@ export default function LabApp() {
           </span>
         </a>
         <div className="sidebar-navigation">
-          <nav aria-label="Tạo nội dung">
-            {navigation.filter(item => !businessViews.has(item.id) && item.id !== "settings" && item.id !== "images").map(item => (
-              <a key={item.id} href={`?view=${item.id}`} aria-current={view === item.id ? "page" : undefined}
-                className={view === item.id ? "active" : ""}
-                onClick={event => { event.preventDefault(); navigate(item.id); }}>
-                <item.icon size={19}/><span>{item.label}{item.id==='products'&&<small className="office-nav-count">Hôm nay {selectionSummary.count}/3</small>}</span>
-              </a>
-            ))}
-          </nav>
-          <details className="business-navigation" key={businessViews.has(view) ? "business-active" : "creation-active"} open={businessViews.has(view)}>
-            <summary><BarChart3 size={18}/><span>Kinh doanh</span><ChevronDown size={14}/></summary>
-            <nav aria-label="Kinh doanh">
-              {navigation.filter(item => businessViews.has(item.id)).map(item => (
-                <a key={item.id} href={`?view=${item.id}`} aria-current={view === item.id ? "page" : undefined}
-                  className={view === item.id ? "active" : ""}
-                  onClick={event => { event.preventDefault(); navigate(item.id); }}>
-                  <item.icon size={17}/><span>{item.label}</span>
-                </a>
-              ))}
-            </nav>
-          </details>
+          {[
+            {label:'',items:[['office','Tổng quan']]},
+            {label:'PHÒNG NGHIÊN CỨU',items:[['research','Săn sản phẩm'],['competitors','Đối thủ & video']]},
+            {label:'',items:[['products','Sản phẩm']]},
+            {label:'PHÒNG SẢN XUẤT',items:[['content','Khung content'],['production','Tạo media'],['signals','Tín hiệu & Phòng chờ'],['library','Thư viện']]},
+            {label:'PHÒNG PHÁT HÀNH',items:[['social','Instagram'],['landing','Trang giới thiệu']]},
+            {label:'PHÒNG SỐ LIỆU',items:[['results','Số liệu'],['experiments','Quyết định']]},
+          ].map((group,i)=><section key={i}>{group.label&&<p className="department-label">{group.label}</p>}<nav aria-label={group.label||(i===0?'Tổng quan':'Sản phẩm')}>{group.items.map(([id,label])=>{const item=navigation.find(x=>x.id===id)!;const active=view===id||(id==='production'&&view==='images');return <a key={id} href={'?view='+id} aria-current={active?'page':undefined} className={active?'active':''} onClick={e=>{e.preventDefault();navigate(id);}}><item.icon size={17}/><span>{label}</span></a>;})}</nav></section>)}
         </div>
         <div className="sidebar-bottom">
-          <nav aria-label="Tiện ích">
+          <nav aria-label="Tiện ích"><a href="?view=accounts" className={["accounts","chat"].includes(view)?"active":""} onClick={e=>{e.preventDefault();navigate("accounts");}}><UsersRound size={18}/><span>Nhà cung cấp AI</span></a>
             <a href="?view=settings" aria-current={view === "settings" ? "page" : undefined} className={view === "settings" ? "active" : ""}
               onClick={event => { event.preventDefault(); navigate("settings"); }}><PlugZap size={18}/><span>Cài đặt</span></a>
           </nav>
@@ -2325,6 +2321,8 @@ export default function LabApp() {
             productsView()
           ) : ["research", "social", "landing"].includes(view) ? (
             <OperationsPanel key={`${demo}-${view}`} view={view as "research" | "social" | "landing"} records={records} demo={demo} offline={offline} persist={persist} notify={notify} reload={() => void load()} onRecords={rows=>{if(demo)putMemory(rows);else setReal(previous=>[...rows,...previous.filter(row=>!rows.some(next=>next.id===row.id))]);}}/>
+          ) : view === "competitors" ? (
+            <section className="competitor-products"><h2>Video đối thủ theo sản phẩm</h2>{products.map(p=><article key={p.id} className="production-card production-card-body"><h3>{p.data.name}</h3><a href={'?view=products&product='+encodeURIComponent(p.id)+'&product_tab=competitors'}>Mở hồ sơ đối thủ</a><CompetitorVideoList videos={p.data.competitorVideos} records={records} productId={p.id}/></article>)}<ReferenceVideoPanel records={records} disabled={offline||demo} onSaveDraft={(d,revision)=>persist('reference_video_draft',referenceDraftRecordId(d),d,revision)} onSaveFormula={f=>persist('viral_formula',viralFormulaRecordId(f),f,0)}/><ViralFormulas records={records}/></section>
           ) : view === "chat" ? (
             null
           ) : view === "experiments" ? (
@@ -2333,13 +2331,13 @@ export default function LabApp() {
             studioView()
           ) : view === "results" ? (
             resultsView()
-          ) : view === "library" ? (<WorkspaceLibrary key={demo ? 'demo-library' : 'real-library'} records={records} demo={demo}/>) : view === "queue" ? (<DesktopConsole mode="queue" records={records} demo={demo}/>) : ["production","images"].includes(view) ? null : view === "accounts" ? (
-            <section className="accounts-view"><DesktopConsole active={view==="accounts"}/></section>
+          ) : view === "library" ? (<WorkspaceLibrary key={demo ? 'demo-library' : 'real-library'} records={records} demo={demo}/>) : view === "queue" ? (<DesktopConsole mode="queue" records={records} demo={demo}/>) : ["production","images","content"].includes(view) ? null : view === "accounts" ? (
+            <section className="accounts-view"><nav className="provider-tabs"><a href="?view=accounts">Tài khoản Muse</a><a href="?view=chat">Chat Muse</a><a href="?view=settings">Cấu hình nhà cung cấp</a></nav><DesktopConsole active={view==="accounts"}/></section>
           ) : (
             settingsView()
           )}
-          <div hidden={!["production","images"].includes(view) || !initialModeApplied.current}><ProductionStudio key={demo ? "demo-production" : "real-production"} surface={view==="images"?"images":view==="library"?"library":"production"} active={["production","images"].includes(view) && initialModeApplied.current} onSwitchMode={()=>switchMode(!demo)} records={records} demo={demo} offline={offline} paused={settings.paused} onRecord={(r)=>{if(demo)putMemory([r]);else setReal(prev=>[r,...prev.filter(x=>x.id!==r.id)]);}} reload={()=>void load()} notify={notify}/></div>
-          <div hidden={view !== "chat" || !initialModeApplied.current}><MuseChatPanel key={demo ? 'demo-chat' : 'real-chat'} demo={demo} active={view === "chat" && initialModeApplied.current} records={records} onCompose={(mode, prompt, projectId) => {
+          <div hidden={!["production","images","content"].includes(view) || !initialModeApplied.current}><ProductionStudio contentMode={view==="content"} key={demo ? "demo-production" : "real-production"} surface={view==="images"?"images":view==="library"?"library":"production"} active={["production","images","content"].includes(view) && initialModeApplied.current} onSwitchMode={()=>switchMode(!demo)} records={records} demo={demo} offline={offline} paused={settings.paused} onRecord={(r)=>{if(demo)putMemory([r]);else setReal(prev=>[r,...prev.filter(x=>x.id!==r.id)]);}} reload={()=>void load()} notify={notify}/></div>
+          <div hidden={view !== "chat" || !initialModeApplied.current}><nav className="provider-tabs"><a href="?view=accounts">Tài khoản Muse</a><a href="?view=chat">Chat Muse</a></nav><MuseChatPanel key={demo ? 'demo-chat' : 'real-chat'} demo={demo} active={view === "chat" && initialModeApplied.current} records={records} onCompose={(mode, prompt, projectId) => {
             sessionStorage.setItem('hermes-composer-transfer', JSON.stringify({mode, prompt, projectId}));
             const nextView = mode === 'image' ? 'images' : 'production';
             setView(nextView);

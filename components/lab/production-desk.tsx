@@ -26,7 +26,7 @@ type Props = {
   onSave: (input: any) => Promise<unknown>; onRun: (input: any, existing?: Scene) => Promise<unknown>; onAction: (action: string, input: any) => Promise<unknown>;
   onEdit: (s: Scene) => void; onAttach: (s: Scene) => void; onReview: (s: Scene, t: Take, review?: "approved" | "rejected") => void;
   templates: {id:string;name:string;prompt:string;source?:string}[]; onNotice:(text:string,tone?:string)=>void;
-  formulaPanel?: ReactNode;
+  contentMode?:boolean;formulaPanel?: ReactNode;
   onReference: (onCreated: (id: string) => void) => void; onImport: () => void; onCreateProject: () => void;
 };
 const newId = () => "scene_" + Array.from(crypto.getRandomValues(new Uint8Array(12)), b => b.toString(16).padStart(2,"0")).join("");
@@ -89,6 +89,7 @@ export default function ProductionDesk(props: Props) {
   const consumedLink = useRef('');
   const [query,setQuery]=useState(""),[status,setStatus]=useState("all"),[sort,setSort]=useState("order"),[page,setPage]=useState(1),[mobile,setMobile]=useState("compose");
   const [templateOpen,setTemplateOpen]=useState(false);
+  useEffect(()=>{if(props.contentMode&&props.production)setTemplateOpen(true);},[props.contentMode,props.projectId]);
   const [writerOpen,setWriterOpen]=useState(false);
   const [formError,setFormError]=useState(""),[actionError,setActionError]=useState(""),[downloadBusy,setDownloadBusy]=useState(false),[fieldErrors,setFieldErrors]=useState<Record<string,string>>({});
   const promptRef=useRef<HTMLTextAreaElement>(null),previewRef=useRef<HTMLElement>(null), downloadAbort=useRef<AbortController|null>(null);
