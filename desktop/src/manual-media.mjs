@@ -1,13 +1,15 @@
+import {compressMedia} from './compress.mjs';
 import {resolveProvider,mediaProviderReceipts} from './provider-routing.mjs';
 import {museIsPaused} from './muse-pause.mjs';
 import {createHash, randomUUID} from 'node:crypto';
 import {mkdir, readdir, readFile, writeFile, rename, stat, lstat, copyFile, unlink} from 'node:fs/promises';
-import {join, resolve, isAbsolute, extname, basename} from 'node:path';
+import {join, resolve, isAbsolute, extname, basename, dirname} from 'node:path';
 import {spawn} from 'node:child_process';
 import {sessionCookie} from '../local/server.mjs';
 import {assertDiskSpace, storagePolicy} from './storage-policy.mjs';
+import {confinedFile} from './reference-structure.mjs';
 
-const types = {'.mp4':'video/mp4', '.webm':'video/webm', '.png':'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.webp':'image/webp'};
+const types = {'.mov':'video/quicktime', '.mp4':'video/mp4', '.webm':'video/webm', '.png':'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.webp':'image/webp'};
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const pad = value => String(value).padStart(2, '0');
 const stamp = date => `${date.getFullYear()}${pad(date.getMonth()+1)}${pad(date.getDate())}-${pad(date.getHours())}${pad(date.getMinutes())}`;
@@ -49,8 +51,8 @@ export async function probeManualMedia(path) {
 
 // Only loopback workspace requests. No provider, browser or external API is used.
 export class ManualMedia {
-  constructor({store, local, changed=()=>{}, now=()=>new Date()}) {
-    this.store=store; this.local=local; this.changed=changed; this.now=now;
+  constructor({store, local, changed=()=>{}, now=()=>new Date(), trashItem=null, compress=compressMedia}) {
+    this.store=store; this.local=local; this.trashItem=trashItem; this.compress=compress; this.changed=changed; this.now=now;
     this.observed=new Map(); this.processed=new Map(); this.errors=new Map(); this.tail=Promise.resolve();
   }
   exclusive(operation) {
@@ -82,7 +84,7 @@ export class ManualMedia {
   receipts() {return this.store.get('manual_receipts', []);}
   saveReceipt(receipt) {
     receipt={...receipt,provider:'manual'};
-    this.store.set('manual_receipts', [...this.receipts().filter(row=>row.sha256!==receipt.sha256), receipt]);
+    this.store.set('manual_receipts', [...this.receipts().filter(row=>(row.sourceSha256??row.sha256)!==(receipt.sourceSha256??receipt.sha256)), receipt]);
     this.changed(); return receipt;
   }
   catalog(records) {
@@ -121,6 +123,21 @@ export class ManualMedia {
     const rows=this.catalog(records).filter(row=>row.project.id===projectId&&!row.archived&&row.scene.storyboardApproved&&this.route(row.project.data,row.scene,row.project.id).provider==='manual'&&!this.route(row.project.data,row.scene,row.project.id).blocked&&(!sceneIds?.length||sceneIds.includes(row.scene.id)));
     if (!rows.length) throw Error('Duyệt ít nhất một cảnh manual trước khi xuất prompt.');
     if (rows.some(row=>row.product.revision!==row.project.data.productRevision)) throw Error('Đồng bộ phiên bản sản phẩm trước khi xuất prompt.');
+    const units=new Map();
+    for(const row of rows.filter(row=>row.scene.storyboardVersion===2)) {
+      const s=row.scene;
+      if(!s.packaging?.brandName?.trim())throw Error('Chưa đặt tên bao bì.');
+      if(!s.packaging?.boxText?.trim()||!s.situation?.trim()||!s.ctaKeyword?.trim())throw Error('Điền chữ trên hộp, tình huống mở đầu và từ khóa CTA trước khi xuất.');
+      if(!s.generationUnit||!s.overlay||!s.constraints||!s.setting)throw Error('Shot thiếu mốc chữ đè hoặc nhóm tạo.');
+      const key=s.generationUnit.id;
+      units.set(key,[...(units.get(key)||[]),row]);
+    }
+    for(const group of units.values()) {
+      group.sort((a,b)=>a.scene.fromSec-b.scene.fromSec);
+      const unit=group[0].scene.generationUnit;
+      const expected=rows[0].project.data.scenes.filter(s=>s.generationUnit?.id===unit.id);
+      if(expected.length!==group.length||group[0].scene.fromSec!==unit.fromSec||group.at(-1).scene.toSec!==unit.toSec||unit.toSec-unit.fromSec>8||group.some((r,i)=>r.scene.setting!==group[0].scene.setting||JSON.stringify(r.scene.generationUnit)!==JSON.stringify(unit)||['references','constraints','packaging'].some(key=>JSON.stringify(r.scene[key])!==JSON.stringify(group[0].scene[key]))||(i>0&&r.scene.fromSec!==group[i-1].scene.toSec)))throw Error('Duyệt và chọn đủ shot liên tiếp cùng bối cảnh, tham chiếu, bao bì và giới hạn của nhóm tạo trước khi xuất.');
+    }
     const base=join(this.local.root,'exports','prompt-packs'); await mkdir(base,{recursive:true});
     const destination=join(base,`${rows[0].productCode}-${stamp(date)}`);
     try {await stat(destination); throw Error('Đã có gói trong phút này. Giữ gói cũ; xuất lại vào phút tiếp theo.');} catch(error) {if(error.code!=='ENOENT')throw error;}
@@ -129,6 +146,16 @@ export class ManualMedia {
     const exports=this.store.get('manual_exports',{});
     for (const {project,scene,code} of rows) {
       const references=[];
+      if(scene.sourceReference){
+        const source=scene.sourceReference,job=this.store.get('integration-jobs',[]).find(j=>j.id===source.jobId&&j.engine==='rea-video'&&j.state==='done');
+        if(!job)throw Error('Không tìm thấy tác vụ tham chiếu đã phân tích.');
+        // Resolve from the saved receipt, never a renderer-provided absolute path.
+        const actualRoot=join(dirname(job.path),'rea-video');
+        for(const role of ['firstFrame','lastFrame'])if(source[role]){
+          const path=await confinedFile(actualRoot,join(actualRoot,source[role]));if((await stat(path)).size>5*1024**2)throw Error('Khung mẫu vượt giới hạn.');
+          const name=`${code}-${role}.jpg`;await copyFile(path,join(staging,name));references.push(`${name} | ${role} | Composition reference only; replace source branding with the approved product.`);
+        }
+      }
       for (const [index,pin] of scene.references.entries()) {
         const ref=project.data.references.find(row=>row.id===pin.id&&row.version===pin.version);
         const latest=project.data.references.filter(row=>row.id===pin.id).sort((a,b)=>b.version-a.version)[0];
@@ -138,17 +165,40 @@ export class ManualMedia {
         if (!ext) throw Error('Ảnh tham chiếu chưa hỗ trợ.');
         const bytes=new Uint8Array(await (await this.request(`/api/assets/${asset.id}`)).arrayBuffer());
         if (hash(bytes)!==asset.data.sha256) throw Error('Checksum ảnh tham chiếu không khớp.');
-        const name=`${code}-ref-${index+1}${ext}`; await writeFile(join(staging,name),bytes,{flag:'wx'});
+        const original=join(staging,`${code}-ref-${index+1}${ext}`); await writeFile(original,bytes,{flag:'wx'});
+        const compressed=await this.compress(original);
+        let name=basename(original);
+        try {if(compressed.type==='image/webp'&&compressed.path!==original){name=`${code}-ref-${index+1}.webp`;const target=join(staging,name);if(target===original)await writeFile(target,await readFile(compressed.path));else {await copyFile(compressed.path,target);await unlink(original);}}}finally{await compressed.cleanup();}
         references.push(`${name} | role: ${ref.role} | ${ref.notes||ref.name}`);
       }
-      const prompt=[`Scene: ${code}`, 'Create a vertical 9:16 video, exactly 8 seconds. Use English for all dialogue and on-screen text.',
+      const prompt=[`Scene: ${code}`, scene.storyboardVersion===2?`Editing shot: ${scene.duration} seconds. Generate the matching UNIT file, then trim this shot using timeline.json.`:'Create a vertical 9:16 video, exactly 8 seconds. Use English for all dialogue and on-screen text.',
         scene.mediaType==='image'?'First create a vertical 9:16 reference image; use it for the 8-second video if needed.':'',
         scene.prompt, scene.action&&`Action: ${scene.action}`, scene.camera&&`Camera: ${scene.camera}`, scene.voice&&`Audio: ${scene.voice}`,
-        scene.overlayText&&`On-screen text: ${scene.overlayText}`, 'Reference images:', ...references,
+        scene.storyboardVersion===2?`Editing overlay (global seconds): ${JSON.stringify(scene.overlay)}\nConstraints:\n${scene.constraints.join('\n')}`:scene.overlayText&&`On-screen text: ${scene.overlayText}`, 'Reference images:', ...references,
         !references.length?'No reference images supplied.':'Preserve the product appearance from the supplied reference images.',
         `Save the downloaded file as ${code}-take1.mp4 (or ${code}-take1.png for an image).`].filter(Boolean).join('\n\n');
       await writeFile(join(staging,`${code}.txt`),prompt+'\n',{flag:'wx'});
       exports[code]={provider:'manual',revision:scene.revision,path:destination,waiting:false,at:date.getTime()};
+    }
+    if(units.size) {
+      const timeline=[];
+      for(const [index,group] of [...units.values()].entries()) {
+        const name=`${rows[0].productCode}-UNIT-${pad(index+1)}`,unit=group[0].scene.generationUnit;
+        const shots=group.map(({scene,code})=>({code,sceneId:scene.id,sceneRevision:scene.revision,fromSec:scene.fromSec,toSec:scene.toSec,
+          trimFromSec:Number((scene.fromSec-unit.fromSec).toFixed(3)),trimToSec:Number((scene.toSec-unit.fromSec).toFixed(3)),duration:scene.duration,
+          overlay:scene.overlay,ctaOverlay:scene.ctaOverlay,packaging:scene.packaging,metadata:scene.metadata,sourceReference:scene.sourceReference,
+          ffmpegArgs:['-n','-i',`${name}.mp4`,'-ss',String(Number((scene.fromSec-unit.fromSec).toFixed(3))),'-t',String(scene.duration),'-map','0:v:0','-an','-c:v','libx264','-pix_fmt','yuv420p',`${code}-take1.mp4`]}));
+        timeline.push({file:`${name}.mp4`,unit,shots});
+        await writeFile(join(staging,`${name}.txt`),[
+          'Create one vertical 9:16 video, exactly 8 seconds. Silent visual sequence with hard cuts at the specified offsets.',
+          `Use the reference images listed in ${group[0].code}.txt. Keep the same setting and subjects throughout this unit.`,
+          ...group.filter(r=>r.scene.sourceReference).map(({scene,code})=>`Shot ${code} composition references: ${[scene.sourceReference.firstFrame&&code+'-firstFrame.jpg',scene.sourceReference.lastFrame&&code+'-lastFrame.jpg'].filter(Boolean).join(', ')}. Replace source branding with the approved product.`),
+          ...group.map(({scene},i)=>`SHOT ${i+1}: ${shots[i].trimFromSec}–${shots[i].trimToSec}s\n${scene.prompt}`),
+          `Hold the last end frame from ${unit.toSec-unit.fromSec}s to 8s; this tail is discarded in editing.`,
+          'Constraints:',...group[0].scene.constraints,`Download as ${name}.mp4. Trim using timeline.json before placing scene clips in the inbox.`,
+        ].join('\n\n')+'\n',{flag:'wx'});
+      }
+      await writeFile(join(staging,'timeline.json'),JSON.stringify({version:2,overlayStyle:{color:'white',outline:'black',heightPercent:[5,6],position:'top-center',lines:[1,2],transition:'hard-cut'},units:timeline},null,2)+'\n',{flag:'wx'});
     }
     await writeFile(join(staging,'README-VI.txt'),[
       'GÓI PROMPT MANUAL — HERMES CLIP', `Mã sản phẩm: ${rows[0].productCode}`, `Dự án: ${rows[0].project.data.name}`,
@@ -157,10 +207,14 @@ export class ManualMedia {
       '3. Chọn tỷ lệ 9:16 và thời lượng 8 giây. Tự kiểm chi phí của công cụ trước khi tạo.',
       '4. Tải ảnh/video về máy. Đặt tên chứa đúng mã cảnh (ví dụ '+rows[0].code+'-take2.mp4).',
       `5. Chép file đã tải xong vào Hộp nhận media: ${this.inbox()}`,
-      '6. App kiểm file, tạo phiên bản chờ duyệt và receipt; giữ nguyên bản gốc, không nhập lại checksum cũ.',
+      '6. App nén file mới, kiểm và gắn phiên bản chờ duyệt; sau khi thành công, đưa gốc mới vào Thùng rác Windows. File cũ giữ nguyên.',
       '7. File chưa khớp mã nằm ở Chưa gắn cảnh. Chọn đúng cảnh trong app để gắn tay.',
       '8. Xem lại nội dung, tỷ lệ/thời lượng trước khi duyệt và ghép. Gói này yêu cầu 8 giây; thông số cảnh cũ không tự thay đổi.',
       'App không tự gửi prompt hay điều khiển trang web. Muse đang được tạm dừng mặc định.',
+      ...(units.size?['KỊCH BẢN V2: tạo từng file UNIT (8 giây, nhiều shot). timeline.json có mốc cắt tương đối và ffmpegArgs cho từng mã cảnh.',
+        'Không chép file UNIT nguyên vào Hộp nhận. Cắt bằng FFmpeg/OpenMontage đúng thời lượng từng shot, bỏ phần giữ khung cuối, rồi nhập các file mã cảnh.',
+        'Chữ đè trong timeline.json dùng mốc toàn video, thêm khi dựng: trắng viền đen, cao 5–6% khung, giữa trên, vào/ra cứng. CTA thay nhãn ở các shot cuối; caption giữ trong biến thể.',
+        'Mở đầu B dùng nhóm tạo riêng, chỉ thay shot đầu; các shot tiếp theo dùng chung.']:[]),
     ].join('\n')+'\n',{flag:'wx'});
     // A complete pack becomes visible in one rename; existing packs are never overwritten.
     await rename(staging,destination); this.store.set('manual_exports',exports); this.changed();
@@ -172,7 +226,7 @@ export class ManualMedia {
     this.store.set('manual_exports',exports); await mkdir(this.inbox(),{recursive:true}); this.changed(); return this.inbox();
   });}
   assign({sha256,projectId,sceneId}) {return this.exclusive(async()=>{
-    const receipt=this.receipts().find(row=>row.sha256===sha256);
+    const receipt=this.receipts().find(row=>row.sha256===sha256&&row.state!=='received')??this.receipts().find(row=>row.sha256===sha256);
     if(receipt?.intent&&receipt.state!=='received') {
       // Reconcile the previous intent before honoring a new explicit assignment.
       const records=await this.records();
@@ -183,10 +237,11 @@ export class ManualMedia {
         this.saveReceipt({...receipt,state:'received',projectId:previous.id,sceneId:received.id,sceneRevision:take.sceneRevision,commandId:'manual_'+sha256,receivedAt:take.createdAt});
       } else this.saveReceipt({...receipt,intent:null});
     }
-    return this.attach(sha256,projectId,sceneId);
+    const attached=await this.attach(sha256,projectId,sceneId,receipt?.sourceSha256);
+    await this.recycleSource(attached);return attached;
   });}
-  async attach(sha256,projectId,sceneId) {
-    let receipt=this.receipts().find(row=>row.sha256===sha256);
+  async attach(sha256,projectId,sceneId,sourceSha256) {
+    let receipt=this.receipts().find(row=>row.sha256===sha256&&(!sourceSha256||row.sourceSha256===sourceSha256));
     if (!receipt?.assetId) throw Error('File chưa được nhập vào Thư viện.');
     if (receipt.state==='received') {
       if(receipt.projectId!==projectId||receipt.sceneId!==sceneId)throw Error('File đã gắn vào cảnh khác; giữ receipt cũ.');
@@ -210,6 +265,19 @@ export class ManualMedia {
       }catch(error){if(error.status!==409||attempt===3)throw error;}
     }
   }
+  async recycleSource(receipt) {
+    // Legacy receipts have no compression/sourceSha256 and are never trashed.
+    if(!this.trashItem||!receipt.compression||!receipt.sourceSha256||receipt.state!=='received'||receipt.trashedAt)return;
+    const path=receipt.sourcePath;
+    if(resolve(path)!==join(resolve(this.inbox()),basename(path)))throw Error('File gốc không còn ở Hộp nhận hiện tại; giữ nguyên.');
+    const info=await lstat(path).catch(error=>{if(error.code==='ENOENT')return null;throw error;});
+    if(!info)return;
+    if(!info.isFile()||info.isSymbolicLink()||hash(await readFile(path))!==receipt.sourceSha256)throw Error('File gốc đã thay đổi; không đưa vào Thùng rác.');
+    if((receipt.trashAttempts??0)>=3)throw Error('Đã thử Thùng rác 3 lần; gốc còn nguyên. Kiểm quyền Windows và tự chuyển gốc sau khi xem take đã nhập.');
+    receipt=this.saveReceipt({...receipt,trashAttempts:(receipt.trashAttempts??0)+1});
+    await this.trashItem(path);
+    this.saveReceipt({...receipt,trashedAt:Date.now(),error:''});
+  }
   async importFile(path, rows) {
     const before=await stat(path), ext=extname(path).toLowerCase();
     const type=types[ext];
@@ -218,30 +286,40 @@ export class ManualMedia {
     // Probe a private snapshot, so a browser still writing the source cannot change the imported bytes.
     const staging=join(this.local.root,'manual-staging'); await mkdir(staging,{recursive:true});
     const snapshot=join(staging,randomUUID()+ext);
+    let compressed;
     try {
       await copyFile(path,snapshot);
       const after=await stat(path);
       if(before.size!==after.size||before.mtimeMs!==after.mtimeMs)throw Error('File đang thay đổi; chờ tải xong.');
-      const bytes=await readFile(snapshot), sha256=hash(bytes), prior=this.receipts().find(row=>row.sha256===sha256);
+      const sourceBytes=await readFile(snapshot), sourceSha256=hash(sourceBytes);
+      const prior=this.receipts().find(row=>(row.sourceSha256??row.sha256)===sourceSha256);
       if(prior?.assetId) {
-        if(prior.intent&&prior.state!=='received')await this.attach(sha256,prior.intent.projectId,prior.intent.sceneId);
-        return prior;
+        let receipt=prior;
+        if(prior.intent&&prior.state!=='received')receipt=await this.attach(prior.sha256,prior.intent.projectId,prior.intent.sceneId,prior.sourceSha256);
+        // Reconcile only the original intake path. A later duplicate drop is
+        // ignored, never silently removed using a receipt for another path.
+        if(receipt.sourcePath===path)await this.recycleSource(receipt);
+        return this.receipts().find(row=>(row.sourceSha256??row.sha256)===sourceSha256)??receipt;
       }
-      const probe=await probeManualMedia(snapshot), name=basename(path);
+      compressed=await this.compress(snapshot);
+      const {sha256,metadata,compression}=compressed, name=basename(path);
+      const warning=Math.abs((metadata.width/metadata.height)/(9/16)-1)>.01?'Sai tỷ lệ 9:16; file vẫn được nhập, cần xem lại.':'';
+      const probe={type:compressed.type,metadata,warning};
       const matched=rows.filter(row=>!row.archived&&new RegExp(`(^|[^a-z0-9])${row.code}([^a-z0-9]|$)`,'i').test(name));
       const target=matched.length===1&&this.route(matched[0].project.data,matched[0].scene,matched[0].project.id).provider==='manual'&&!this.route(matched[0].project.data,matched[0].scene,matched[0].project.id).blocked?matched[0]:null;
-      let receipt=this.saveReceipt({sha256,name,sourcePath:path,state:'unmatched',...probe,
+      let receipt=this.saveReceipt({sha256,sourceSha256,compression,sourceSize:before.size,size:compressed.size,name,sourcePath:path,state:'unmatched',...probe,
         error:matched.length===1?this.route(matched[0].project.data,matched[0].scene,matched[0].project.id).reason:'',createdAt:Date.now(),assetId:null});
-      const form=new FormData(); form.append('commandId','manual_'+sha256); form.append('file',new File([bytes],name,{type:probe.type}));
+      const form=new FormData(); form.append('commandId','manual_'+sourceSha256);
+      form.append('preparedToken',this.local.registerPreparedMedia({...compressed,name:name.replace(/\.[^.]+$/,'')+extname(compressed.path)}));
       const asset=await (await this.request('/api/assets',{method:'POST',body:form})).json();
       if(asset.sha256!==sha256)throw Error('Checksum sau nhập không khớp.');
       receipt=this.saveReceipt({...receipt,assetId:asset.id});
       if(target) {
-        try {return await this.attach(sha256,target.project.id,target.scene.id);}
-        catch(error) {return this.saveReceipt({...this.receipts().find(row=>row.sha256===sha256),error:error.message});}
+        try {const attached=await this.attach(sha256,target.project.id,target.scene.id,sourceSha256);await this.recycleSource(attached);return attached;}
+        catch(error) {return this.saveReceipt({...this.receipts().find(row=>row.sourceSha256===sourceSha256),error:error.message});}
       }
       return receipt;
-    } finally {await unlink(snapshot).catch(()=>{});}
+    } finally {await compressed?.cleanup();await unlink(snapshot).catch(()=>{});}
   }
   scan() {return this.exclusive(async()=>{
     const inbox=this.inbox(); await mkdir(inbox,{recursive:true});
@@ -254,7 +332,7 @@ export class ManualMedia {
         const signature=`${info.size}:${info.mtimeMs}`;
         if(this.processed.get(path)===signature)continue;
         if(this.observed.get(path)!==signature){this.observed.set(path,signature);continue;}
-        await this.importFile(path,rows); this.processed.set(path,signature); this.errors.delete(entry.name);
+        const receipt=await this.importFile(path,rows); if(receipt?.error){this.errors.set(entry.name,receipt.error);}else{this.processed.set(path,signature);this.errors.delete(entry.name);}
       }catch(error){this.errors.set(entry.name,error.message);}
     }
     return this.status();

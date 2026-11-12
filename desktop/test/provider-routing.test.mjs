@@ -17,7 +17,7 @@ const cases=[
   ['zero weekly and no tokens',{profiles:[{...profile,quota:{state:'available',weeklyRemainingPercent:0,additionalTokens:null}}]},false],
   ['extra tokens',{profiles:[{...profile,quota:{state:'available',weeklyRemainingPercent:0,additionalTokens:10}}]},true],
   ['available with null percent follows legacy ready',{profiles:[{...profile,quota:{state:'available',weeklyRemainingPercent:null}}]},true],
-  ['batch exhausted',{batch:{submittedByProfile:{one:3}}},false],
+  ['legacy local cap ignored',{batch:{perProfileLimit:3,submittedByProfile:{one:300}}},true],
   ['second ready profile',{profiles:[{...profile,enabled:false},{...profile,id:'two'}]},true],
 ];
 for(const [name,patch,ready] of cases)test('routing table: '+name,()=>{

@@ -53,8 +53,8 @@ export default function ResearchLauncher({disabled,onOpen,actions,scope}:{disabl
   {queryError&&<p className="inline-error" role="alert">{queryError}</p>}
   {request.current&&error&&<p>Yêu cầu chưa rõ kết quả. Bấm lại để đối soát cùng mã và tiêu chí; không tạo lượt mới.</p>}
   {musePaused&&<p className="field-help">Muse đang tạm dừng, bật lại ở Tài khoản Muse</p>}
-  <p>Muse chạy nền, tìm tối đa 10 ứng viên có nguồn cho thị trường Mỹ và tự lưu kết quả. Giữ app mở và máy thức; có thể chuyển sang màn khác. Tối đa 3 lượt mỗi hồ sơ trong một đợt.</p>
-  {latest&&<div className="research-run-progress" role="status"><Badge tone={latest.state==='done'?'success':'neutral'}>{latest.reconciled?'Đã bỏ qua':states[latest.state]??latest.state}</Badge><span>{latest.count}/10 sản phẩm · {latest.step}/3 lượt hoàn tất</span><progress max={10} value={latest.count} aria-label="Số ứng viên đã lưu"/>
+  <p>Muse chạy nền, tìm tối đa 10 ứng viên có nguồn cho thị trường Mỹ và tự lưu kết quả. Giữ app mở và máy thức; có thể chuyển sang màn khác. Hermes không giới hạn số lượt theo hồ sơ.</p>
+  {latest&&<div className="research-run-progress" role="status"><Badge tone={latest.state==='done'?'success':'neutral'}>{latest.reconciled?'Đã bỏ qua':states[latest.state]??latest.state}</Badge><span>{latest.count}/10 sản phẩm · {latest.step} lượt hoàn tất</span><progress max={10} value={latest.count} aria-label="Số ứng viên đã lưu"/>
    <Button tone="ghost" onClick={()=>onOpen(latest.batchId)}>Xem kết quả</Button>{!latest.reconciled&&['needs_attention','partial'].includes(latest.state)&&<Button tone="neutral" disabled={musePaused||busy||active} onClick={recover}><RefreshCw size={15}/>Đọc lại kết quả</Button>}{latest.reconciled&&<span>Đã bỏ qua đối soát · Không gửi lại</span>}</div>}
   {(uncertainRuns.length>0||uncertainChats.length>0)&&<section aria-label="Kết quả Muse cần đối soát">
    <p>Kết quả Muse cũ chưa rõ; app sẽ không gửi lại</p>

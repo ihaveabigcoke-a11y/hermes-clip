@@ -1,0 +1,36 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 720
+PlayResY: 1280
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: subtitle_1,Sans,47,&H00F6F6F6,&H0000FFFF,&H000A0C10,&H00000000,0,0,0,0,100,100,0,-0,1,2,0,5,0,0,0,1
+Style: subtitle_2,Sans,51,&H00F6F6F6,&H0000FFFF,&H000A0C10,&H00000000,0,0,0,0,100,100,0,-1,1,2,0,5,0,0,0,1
+Style: subtitle_3,Sans,51,&H00FAF8F7,&H0000FFFF,&H000C0A0B,&H00000000,0,0,0,0,100,100,0,-0,1,2,0,5,0,0,0,1
+Style: subtitle_4,Sans,52,&H00F6F6F6,&H0000FFFF,&H000A0C10,&H00000000,0,0,0,0,100,100,0,-0,1,2,0,5,0,0,0,1
+Style: label_5,Sans,85,&H005E4E3E,&H0000FFFF,&H00EBE7E6,&H00000000,0,0,0,0,100,100,0,14,1,1,0,5,0,0,0,1
+Style: label_6,Sans,23,&H00B1AFB7,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,16,1,0,0,5,0,0,0,1
+Style: label_7,Sans,58,&H00B1B1B9,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,16,1,0,0,5,0,0,0,1
+Style: label_8,Sans,83,&H00625347,&H0000FFFF,&H00BCB6B6,&H00000000,0,0,0,0,100,100,0,32,1,1,0,5,0,0,0,1
+Style: subtitle_9,Sans,47,&H00F6F6F6,&H0000FFFF,&H000A0C10,&H00000000,0,0,0,0,100,100,0,-0,1,2,0,5,0,0,0,1
+Style: label_10,Sans,101,&H00485DC3,&H0000FFFF,&H00DADBE1,&H00DADBE1,0,0,0,0,100,100,0,18,3,8,0,5,0,0,0,1
+Style: huazi_11,Sans,18,&H00CDC9CC,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,-64,1,0,0,5,0,0,0,1
+Style: subtitle_12,Sans,56,&H00F6F6F6,&H0000FFFF,&H000A0C10,&H00000000,0,0,0,0,100,100,0,-0,1,2,0,5,0,0,0,1
+Style: subtitle_13,Sans,60,&H00FAF8F7,&H0000FFFF,&H000C0A0B,&H00000000,0,0,0,0,100,100,0,1,1,2,0,5,0,0,0,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:04.60,subtitle_1,,0,0,0,,{\pos(359,303)\fad(200,200)}My dad fell and was\Nleft alone in the bathroom\Nfor 5 hours
+Dialogue: 0,0:00:05.00,0:00:06.50,subtitle_2,,0,0,0,,{\pos(349,278)}I work during the day
+Dialogue: 0,0:00:05.00,0:00:06.50,subtitle_3,,0,0,0,,{\pos(327,331)}and had no idea
+Dialogue: 0,0:00:06.50,0:00:08.80,subtitle_4,,0,0,0,,{\pos(326,308)}Solgot him this
+Dialogue: 1,0:00:06.50,0:00:06.70,label_5,,0,0,0,,{\pos(260,722)}SENVIA
+Dialogue: 1,0:00:06.50,0:00:06.70,label_6,,0,0,0,,{\pos(281,806)}SMART SOS BRACELET
+Dialogue: 1,0:00:06.50,0:00:06.70,label_7,,0,0,0,,{\pos(258,832)}A Co L
+Dialogue: 1,0:00:07.00,0:00:07.10,label_8,,0,0,0,,{\pos(87,821)}NVIA
+Dialogue: 0,0:00:08.80,0:00:13.40,subtitle_9,,0,0,0,,{\pos(355,307)}If he presses the\Nbutton,I get an instant\Nalert on my phone
+Dialogue: 1,0:00:09.50,0:00:10.60,label_10,,0,0,0,,{\pos(334,685)}SOS
+Dialogue: 1,0:00:12.50,0:00:13.40,huazi_11,,0,0,0,,{\pos(215,1248)}SAVAI
+Dialogue: 0,0:00:13.40,0:00:14.40,subtitle_12,,0,0,0,,{\pos(361,301)}Comment "HELP"if you\Nwant one
+Dialogue: 0,0:00:13.40,0:00:14.40,subtitle_13,,0,0,0,,{\pos(357,332)}want one 

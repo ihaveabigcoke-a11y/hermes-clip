@@ -142,7 +142,7 @@ test('all expired profiles leave the task queued and stop automatic retries', as
   assert.equal(worker.active.size, 0);
   assert.equal(worker.approvedIds.length, 0);
   assert.equal(store.job(result.job.id).state, 'queued');
-  assert.match(store.job(result.job.id).history.at(-1).note, /Chưa có profile Muse dùng được/);
+  assert.match(store.job(result.job.id).history.at(-1).note, /Chưa có hồ sơ Muse dùng được/);
 }));
 
 test('browser visibility minimizes background work and restores the saved profile', async () => fixture(async worker => {
@@ -167,7 +167,7 @@ test('browser visibility minimizes background work and restores the saved profil
   assert.equal(worker.status().profiles[0].background, false);
 }));
 
-test('one-click sends share a persisted three-slot batch and the fourth scene stays queued', async context => fixture(async (worker, store) => {
+test('one-click sends allow the fourth scene and preserve uncertain receipts without resetting counts', async context => fixture(async (worker, store) => {
   store.set('profiles', [{id: 'one', name: 'One', enabled: true, proxy: {}, health: 'ready', quota: {state: 'available', weeklyRemainingPercent: 50, additionalTokens: 0}}]);
   let sends = 0;
   worker.context = async () => ({pages: () => [{url: () => 'https://muse.ai/', screenshot: async () => {}}]});
@@ -182,20 +182,15 @@ test('one-click sends share a persisted three-slot batch and the fourth scene st
   for (let index = 0; index < 4; index++) {
     const result = await worker.enqueueAndRun(request('batch_scene_' + index));
     for (let wait = 0; wait < 200 && worker.active.size; wait++) await new Promise(resolve => setTimeout(resolve, 5));
-    assert.equal(store.job(result.job.id).state, index < 3 ? 'needs_attention' : 'queued');
+    assert.equal(store.job(result.job.id).state, 'needs_attention');
     worker.pause();
   }
-  assert.equal(sends, 3);
-  assert.equal(store.batch().submittedByProfile.one, 3);
-  const fourth = store.jobs().find(job => job.request.sceneId === 'batch_scene_3');
-  await worker.start({count: 1, jobIds: [fourth.id], maxConcurrent: 1});
-  assert.equal(sends, 3);
-  assert.match(store.job(fourth.id).history.at(-1).note, /3 lượt/);
-  worker.newBatch();
-  await worker.start({count: 1, jobIds: [fourth.id], maxConcurrent: 1});
-  for (let wait = 0; wait < 200 && worker.active.size; wait++) await new Promise(resolve => setTimeout(resolve, 5));
-  assert.equal(sends, 4);
-  assert.equal(store.batch().submittedByProfile.one, 1);
+  assert.equal(sends,4);assert.equal(store.batch().submittedByProfile.one,4);
+  const fourth=store.jobs().find(job=>job.request.sceneId==='batch_scene_3');
+  const batchId=store.batch().id;
+  const replay=await worker.enqueueAndRun(request('batch_scene_3'));
+  assert.equal(replay.job.id,fourth.id);assert.equal(replay.job.state,'needs_attention');
+  assert.equal(sends,4);assert.equal(store.batch().submittedByProfile.one,4);assert.equal(store.batch().id,batchId);
 }));
 
 test('exhausted quota is refreshed once before switching profiles without a submit slot', async context => fixture(async (worker, store) => {

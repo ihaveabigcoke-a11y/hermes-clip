@@ -1,0 +1,876 @@
+{
+ "by": "claude-fable",
+ "shots": [
+  {
+   "id": "shot_001",
+   "time": "0.00-1.73",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real street, real motion blur"
+   ],
+   "description": "shirtless man stuffs phone in sweatpants; two women run with phones in hand; woman drinks while running",
+   "narrative": {
+    "role": "hook",
+    "point": "Runners struggling with phone and bottle"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot, a runner shoves a phone into the pocket of grey sweatpants while jogging on a city street",
+    "video_prompt": "Medium shot, a runner shoves a phone into the pocket of grey sweatpants while jogging on a city street",
+    "video_prompt_en": "Medium shot, a runner shoves a phone into the pocket of grey sweatpants while jogging on a city street"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_002",
+   "time": "1.73-3.20",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real street, real motion blur"
+   ],
+   "description": "shirtless man stuffs phone in sweatpants; two women run with phones in hand; woman drinks while running",
+   "narrative": {
+    "role": "hook",
+    "point": "Runners struggling with phone and bottle"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot, a runner shoves a phone into the pocket of grey sweatpants while jogging on a city street",
+    "video_prompt": "Medium shot, a runner shoves a phone into the pocket of grey sweatpants while jogging on a city street",
+    "video_prompt_en": "Medium shot, a runner shoves a phone into the pocket of grey sweatpants while jogging on a city street"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_003",
+   "time": "3.20-4.93",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real street, real motion blur"
+   ],
+   "description": "shirtless man stuffs phone in sweatpants; two women run with phones in hand; woman drinks while running",
+   "narrative": {
+    "role": "hook",
+    "point": "Runners struggling with phone and bottle"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot, a runner shoves a phone into the pocket of grey sweatpants while jogging on a city street",
+    "video_prompt": "Medium shot, a runner shoves a phone into the pocket of grey sweatpants while jogging on a city street",
+    "video_prompt_en": "Medium shot, a runner shoves a phone into the pocket of grey sweatpants while jogging on a city street"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_004",
+   "time": "4.93-6.07",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real fabric"
+   ],
+   "description": "woman holds folded vest, pulls it over her head, adjusts straps",
+   "narrative": {
+    "role": "info",
+    "point": "Unfolds and puts on the vest"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot in an autumn park at golden hour, a woman in white pulls a black running vest over her head and tightens the straps",
+    "video_prompt": "Medium shot in an autumn park at golden hour, a woman in white pulls a black running vest over her head and tightens the straps",
+    "video_prompt_en": "Medium shot in an autumn park at golden hour, a woman in white pulls a black running vest over her head and tightens the straps"
+   }
+  },
+  {
+   "id": "shot_005",
+   "time": "6.07-6.90",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real fabric"
+   ],
+   "description": "woman holds folded vest, pulls it over her head, adjusts straps",
+   "narrative": {
+    "role": "info",
+    "point": "Unfolds and puts on the vest"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot in an autumn park at golden hour, a woman in white pulls a black running vest over her head and tightens the straps",
+    "video_prompt": "Medium shot in an autumn park at golden hour, a woman in white pulls a black running vest over her head and tightens the straps",
+    "video_prompt_en": "Medium shot in an autumn park at golden hour, a woman in white pulls a black running vest over her head and tightens the straps"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_006",
+   "time": "6.90-8.00",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real fabric"
+   ],
+   "description": "woman holds folded vest, pulls it over her head, adjusts straps",
+   "narrative": {
+    "role": "info",
+    "point": "Unfolds and puts on the vest"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot in an autumn park at golden hour, a woman in white pulls a black running vest over her head and tightens the straps",
+    "video_prompt": "Medium shot in an autumn park at golden hour, a woman in white pulls a black running vest over her head and tightens the straps",
+    "video_prompt_en": "Medium shot in an autumn park at golden hour, a woman in white pulls a black running vest over her head and tightens the straps"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_007",
+   "time": "8.00-8.93",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real fabric"
+   ],
+   "description": "woman holds folded vest, pulls it over her head, adjusts straps",
+   "narrative": {
+    "role": "info",
+    "point": "Unfolds and puts on the vest"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot in an autumn park at golden hour, a woman in white pulls a black running vest over her head and tightens the straps",
+    "video_prompt": "Medium shot in an autumn park at golden hour, a woman in white pulls a black running vest over her head and tightens the straps",
+    "video_prompt_en": "Medium shot in an autumn park at golden hour, a woman in white pulls a black running vest over her head and tightens the straps"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_008",
+   "time": "8.93-9.63",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real fabric"
+   ],
+   "description": "woman holds folded vest, pulls it over her head, adjusts straps",
+   "narrative": {
+    "role": "info",
+    "point": "Unfolds and puts on the vest"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot in an autumn park at golden hour, a woman in white pulls a black running vest over her head and tightens the straps",
+    "video_prompt": "Medium shot in an autumn park at golden hour, a woman in white pulls a black running vest over her head and tightens the straps",
+    "video_prompt_en": "Medium shot in an autumn park at golden hour, a woman in white pulls a black running vest over her head and tightens the straps"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_009",
+   "time": "9.63-10.60",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real product details"
+   ],
+   "description": "close-ups sliding phone into chest pocket, keys, earbud case, gel pack, bottle on the back, rear view, final pose",
+   "narrative": {
+    "role": "proof",
+    "point": "Pocket tour: phone, keys, earbuds, gel, bottle, reflective back"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up, a hand slides a phone into the chest pocket of a black running vest with neon print, then shows keys and a gel pack going into side pockets, then a rear view with a bottle holder and reflective chevrons",
+    "video_prompt": "Close-up, a hand slides a phone into the chest pocket of a black running vest with neon print, then shows keys and a gel pack going into side pockets, then a rear view with a bottle holder and reflective chevrons",
+    "video_prompt_en": "Close-up, a hand slides a phone into the chest pocket of a black running vest with neon print, then shows keys and a gel pack going into side pockets, then a rear view with a bottle holder and reflective chevrons"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_010",
+   "time": "10.60-10.97",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real product details"
+   ],
+   "description": "close-ups sliding phone into chest pocket, keys, earbud case, gel pack, bottle on the back, rear view, final pose",
+   "narrative": {
+    "role": "proof",
+    "point": "Pocket tour: phone, keys, earbuds, gel, bottle, reflective back"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up, a hand slides a phone into the chest pocket of a black running vest with neon print, then shows keys and a gel pack going into side pockets, then a rear view with a bottle holder and reflective chevrons",
+    "video_prompt": "Close-up, a hand slides a phone into the chest pocket of a black running vest with neon print, then shows keys and a gel pack going into side pockets, then a rear view with a bottle holder and reflective chevrons",
+    "video_prompt_en": "Close-up, a hand slides a phone into the chest pocket of a black running vest with neon print, then shows keys and a gel pack going into side pockets, then a rear view with a bottle holder and reflective chevrons"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_011",
+   "time": "10.97-11.67",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real product details"
+   ],
+   "description": "close-ups sliding phone into chest pocket, keys, earbud case, gel pack, bottle on the back, rear view, final pose",
+   "narrative": {
+    "role": "proof",
+    "point": "Pocket tour: phone, keys, earbuds, gel, bottle, reflective back"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up, a hand slides a phone into the chest pocket of a black running vest with neon print, then shows keys and a gel pack going into side pockets, then a rear view with a bottle holder and reflective chevrons",
+    "video_prompt": "Close-up, a hand slides a phone into the chest pocket of a black running vest with neon print, then shows keys and a gel pack going into side pockets, then a rear view with a bottle holder and reflective chevrons",
+    "video_prompt_en": "Close-up, a hand slides a phone into the chest pocket of a black running vest with neon print, then shows keys and a gel pack going into side pockets, then a rear view with a bottle holder and reflective chevrons"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_012",
+   "time": "11.67-12.40",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real product details"
+   ],
+   "description": "close-ups sliding phone into chest pocket, keys, earbud case, gel pack, bottle on the back, rear view, final pose",
+   "narrative": {
+    "role": "proof",
+    "point": "Pocket tour: phone, keys, earbuds, gel, bottle, reflective back"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up, a hand slides a phone into the chest pocket of a black running vest with neon print, then shows keys and a gel pack going into side pockets, then a rear view with a bottle holder and reflective chevrons",
+    "video_prompt": "Close-up, a hand slides a phone into the chest pocket of a black running vest with neon print, then shows keys and a gel pack going into side pockets, then a rear view with a bottle holder and reflective chevrons",
+    "video_prompt_en": "Close-up, a hand slides a phone into the chest pocket of a black running vest with neon print, then shows keys and a gel pack going into side pockets, then a rear view with a bottle holder and reflective chevrons"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_013",
+   "time": "12.40-13.40",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real product details"
+   ],
+   "description": "close-ups sliding phone into chest pocket, keys, earbud case, gel pack, bottle on the back, rear view, final pose",
+   "narrative": {
+    "role": "proof",
+    "point": "Pocket tour: phone, keys, earbuds, gel, bottle, reflective back"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up, a hand slides a phone into the chest pocket of a black running vest with neon print, then shows keys and a gel pack going into side pockets, then a rear view with a bottle holder and reflective chevrons",
+    "video_prompt": "Close-up, a hand slides a phone into the chest pocket of a black running vest with neon print, then shows keys and a gel pack going into side pockets, then a rear view with a bottle holder and reflective chevrons",
+    "video_prompt_en": "Close-up, a hand slides a phone into the chest pocket of a black running vest with neon print, then shows keys and a gel pack going into side pockets, then a rear view with a bottle holder and reflective chevrons"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_014",
+   "time": "13.40-14.23",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real product details"
+   ],
+   "description": "close-ups sliding phone into chest pocket, keys, earbud case, gel pack, bottle on the back, rear view, final pose",
+   "narrative": {
+    "role": "proof",
+    "point": "Pocket tour: phone, keys, earbuds, gel, bottle, reflective back"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up, a hand slides a phone into the chest pocket of a black running vest with neon print, then shows keys and a gel pack going into side pockets, then a rear view with a bottle holder and reflective chevrons",
+    "video_prompt": "Close-up, a hand slides a phone into the chest pocket of a black running vest with neon print, then shows keys and a gel pack going into side pockets, then a rear view with a bottle holder and reflective chevrons",
+    "video_prompt_en": "Close-up, a hand slides a phone into the chest pocket of a black running vest with neon print, then shows keys and a gel pack going into side pockets, then a rear view with a bottle holder and reflective chevrons"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_015",
+   "time": "14.23-16.03",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real product details"
+   ],
+   "description": "close-ups sliding phone into chest pocket, keys, earbud case, gel pack, bottle on the back, rear view, final pose",
+   "narrative": {
+    "role": "proof",
+    "point": "Pocket tour: phone, keys, earbuds, gel, bottle, reflective back"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up, a hand slides a phone into the chest pocket of a black running vest with neon print, then shows keys and a gel pack going into side pockets, then a rear view with a bottle holder and reflective chevrons",
+    "video_prompt": "Close-up, a hand slides a phone into the chest pocket of a black running vest with neon print, then shows keys and a gel pack going into side pockets, then a rear view with a bottle holder and reflective chevrons",
+    "video_prompt_en": "Close-up, a hand slides a phone into the chest pocket of a black running vest with neon print, then shows keys and a gel pack going into side pockets, then a rear view with a bottle holder and reflective chevrons"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  }
+ ],
+ "aspects": {
+  "camera": {
+   "setups": "",
+   "gear_guess": ""
+  },
+  "lighting": {
+   "lighting_overall": ""
+  },
+  "grade": {
+   "grade_overall": ""
+  },
+  "editing": {
+   "editing": ""
+  },
+  "format": {
+   "format": ""
+  }
+ },
+ "story": {
+  "summary": "Running vest: people stuffing phones in sweatpants and carrying bottles (the problem) vs putting on the vest and a tour of every pocket.",
+  "hook": "'The Problem ❌😡' + shirtless runner shoving a phone into grey sweatpants, then two women holding phones and a bottle while running.",
+  "highlights": [
+   "0–5s: three different runners with the same annoyance, 1.5 s each",
+   "5–16s: 'The product ✅' one long feature tour: unfold, put on, phone pocket, keys, earbuds, gel, bottle on the back, reflective chevrons",
+   "No 'result' scene at all — for a functional product the tour is the payoff",
+   "No on-screen CTA; keyword RUN in caption"
+  ]
+ },
+ "cast": {
+  "style": "Live footage in an autumn park at golden hour",
+  "characters": [
+   {
+    "id": "A",
+    "name": "Runner",
+    "kind": "person",
+    "look": "woman, white long-sleeve, black headband and leggings",
+    "role": "demonstrates",
+    "voice": "",
+    "shots": [
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15
+    ]
+   }
+  ],
+  "scenes": [
+   {
+    "id": "S1",
+    "where": "city street / park",
+    "when": "day",
+    "look": "",
+    "shots": [
+     1,
+     2,
+     3
+    ]
+   },
+   {
+    "id": "S2",
+    "where": "park with yellow trees",
+    "when": "golden hour",
+    "look": "warm backlight",
+    "shots": [
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15
+    ]
+   }
+  ],
+  "props": [
+   {
+    "name": "black running vest with neon print, phone pocket, bottle holder",
+    "note": "product",
+    "shots": [
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15
+    ]
+   }
+  ]
+ },
+ "packaging": {
+  "stickers": [
+   {
+    "id": "sticker_01",
+    "is_overlay": null,
+    "what": ""
+   },
+   {
+    "id": "sticker_02",
+    "is_overlay": null,
+    "what": ""
+   }
+  ],
+  "text": [
+   {
+    "id": "text_001",
+    "kind": ""
+   },
+   {
+    "id": "text_002",
+    "kind": ""
+   }
+  ],
+  "missed": []
+ }
+}

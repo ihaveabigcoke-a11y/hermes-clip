@@ -122,16 +122,16 @@ test('image mutation during browser preparation fails without consuming another 
   assert.equal(f.events.some(e=>['files','beginSubmit','click'].includes(e[0])),false);
 });
 
-test('JSON repair follows the confirmed attached parent without uploading again and shares the three-turn limit',async t=>{
+test('JSON repair follows the confirmed attached parent beyond three sends without uploading again',async t=>{
   const f=await fixture(t),parent=await f.chat.send({...f.request,attachments:f.paths});
   f.chat.historyThroughParent=async(_page,value)=>{assert.equal(value.state,'done');assert.ok([parent.requestId,'repair'].includes(value.requestId));return {};};
   const repair=await f.chat.send({...f.request,requestId:'repair',parentId:parent.requestId,prompt:'Repair the JSON'});
   assert.equal(repair.state,'done');assert.equal(repair.parentId,parent.requestId);
   assert.equal(f.events.filter(e=>e[0]==='files').length,1);assert.equal(f.events.filter(e=>e[0]==='click').length,2);
   assert.equal(f.store.batch().submittedByProfile.profile,3);
-  const rejected=await f.chat.send({...f.request,requestId:'fourth',parentId:repair.requestId,prompt:'Repair again'});
-  assert.equal(rejected.state,'failed');assert.match(rejected.error,/đủ 3 lượt/);assert.equal(f.events.filter(e=>e[0]==='click').length,2);
-  assert.equal(f.store.batch().submittedByProfile.profile,3);
+  const fourth=await f.chat.send({...f.request,requestId:'fourth',parentId:repair.requestId,prompt:'Repair again'});
+  assert.equal(fourth.state,'done');assert.equal(fourth.parentId,repair.requestId);assert.equal(f.events.filter(e=>e[0]==='click').length,3);
+  assert.equal(f.events.filter(e=>e[0]==='files').length,1);assert.equal(f.store.batch().submittedByProfile.profile,4);
 });
 
 test('IPC resolves only sparse + first dense sheet from verified structure, never renderer paths',async t=>{

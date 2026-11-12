@@ -1,0 +1,639 @@
+{
+ "by": "claude-fable",
+ "shots": [
+  {
+   "id": "shot_001",
+   "time": "0.00-0.60",
+   "label_probs": {
+    "live_action": 0.65,
+    "ai_video": 0.35
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real torch flame and marble; masked figure could be either"
+   ],
+   "description": "blowtorch on a zipper; melted gold on a zipper; plastic thorn crown on a folded hoodie; masked man in grey hoodie before a US flag",
+   "narrative": {
+    "role": "hook",
+    "point": "Five gag shots of bad ideas"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up on a white marble counter, a hand holds a small blowtorch flame to the zipper of a grey hoodie",
+    "video_prompt": "Close-up on a white marble counter, a hand holds a small blowtorch flame to the zipper of a grey hoodie",
+    "video_prompt_en": "Close-up on a white marble counter, a hand holds a small blowtorch flame to the zipper of a grey hoodie"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_002",
+   "time": "0.60-1.87",
+   "label_probs": {
+    "live_action": 0.65,
+    "ai_video": 0.35
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real torch flame and marble; masked figure could be either"
+   ],
+   "description": "blowtorch on a zipper; melted gold on a zipper; plastic thorn crown on a folded hoodie; masked man in grey hoodie before a US flag",
+   "narrative": {
+    "role": "hook",
+    "point": "Five gag shots of bad ideas"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up on a white marble counter, a hand holds a small blowtorch flame to the zipper of a grey hoodie",
+    "video_prompt": "Close-up on a white marble counter, a hand holds a small blowtorch flame to the zipper of a grey hoodie",
+    "video_prompt_en": "Close-up on a white marble counter, a hand holds a small blowtorch flame to the zipper of a grey hoodie"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_003",
+   "time": "1.87-2.57",
+   "label_probs": {
+    "live_action": 0.65,
+    "ai_video": 0.35
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real torch flame and marble; masked figure could be either"
+   ],
+   "description": "blowtorch on a zipper; melted gold on a zipper; plastic thorn crown on a folded hoodie; masked man in grey hoodie before a US flag",
+   "narrative": {
+    "role": "hook",
+    "point": "Five gag shots of bad ideas"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up on a white marble counter, a hand holds a small blowtorch flame to the zipper of a grey hoodie",
+    "video_prompt": "Close-up on a white marble counter, a hand holds a small blowtorch flame to the zipper of a grey hoodie",
+    "video_prompt_en": "Close-up on a white marble counter, a hand holds a small blowtorch flame to the zipper of a grey hoodie"
+   }
+  },
+  {
+   "id": "shot_004",
+   "time": "2.57-4.00",
+   "label_probs": {
+    "live_action": 0.65,
+    "ai_video": 0.35
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real torch flame and marble; masked figure could be either"
+   ],
+   "description": "blowtorch on a zipper; melted gold on a zipper; plastic thorn crown on a folded hoodie; masked man in grey hoodie before a US flag",
+   "narrative": {
+    "role": "hook",
+    "point": "Five gag shots of bad ideas"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up on a white marble counter, a hand holds a small blowtorch flame to the zipper of a grey hoodie",
+    "video_prompt": "Close-up on a white marble counter, a hand holds a small blowtorch flame to the zipper of a grey hoodie",
+    "video_prompt_en": "Close-up on a white marble counter, a hand holds a small blowtorch flame to the zipper of a grey hoodie"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_005",
+   "time": "4.00-4.97",
+   "label_probs": {
+    "live_action": 0.65,
+    "ai_video": 0.35
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real torch flame and marble; masked figure could be either"
+   ],
+   "description": "blowtorch on a zipper; melted gold on a zipper; plastic thorn crown on a folded hoodie; masked man in grey hoodie before a US flag",
+   "narrative": {
+    "role": "hook",
+    "point": "Five gag shots of bad ideas"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up on a white marble counter, a hand holds a small blowtorch flame to the zipper of a grey hoodie",
+    "video_prompt": "Close-up on a white marble counter, a hand holds a small blowtorch flame to the zipper of a grey hoodie",
+    "video_prompt_en": "Close-up on a white marble counter, a hand holds a small blowtorch flame to the zipper of a grey hoodie"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_006",
+   "time": "4.97-5.60",
+   "label_probs": {
+    "live_action": 0.7,
+    "ai_video": 0.3
+   },
+   "image_source": "photo",
+   "evidence": [
+    ""
+   ],
+   "description": "hand opens a black box on a dining table with a candle and crucifix, white hoodie folded inside",
+   "narrative": {
+    "role": "proof",
+    "point": "Black gift box opens on the table, hoodie inside"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Overhead close-up, a hand opens a black gift box on a wooden table beside a candle, a folded white hoodie with gold embroidery inside",
+    "video_prompt": "Overhead close-up, a hand opens a black gift box on a wooden table beside a candle, a folded white hoodie with gold embroidery inside",
+    "video_prompt_en": "Overhead close-up, a hand opens a black gift box on a wooden table beside a candle, a folded white hoodie with gold embroidery inside"
+   }
+  },
+  {
+   "id": "shot_007",
+   "time": "5.60-6.77",
+   "label_probs": {
+    "live_action": 0.7,
+    "ai_video": 0.3
+   },
+   "image_source": "photo",
+   "evidence": [
+    ""
+   ],
+   "description": "hand opens a black box on a dining table with a candle and crucifix, white hoodie folded inside",
+   "narrative": {
+    "role": "proof",
+    "point": "Black gift box opens on the table, hoodie inside"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Overhead close-up, a hand opens a black gift box on a wooden table beside a candle, a folded white hoodie with gold embroidery inside",
+    "video_prompt": "Overhead close-up, a hand opens a black gift box on a wooden table beside a candle, a folded white hoodie with gold embroidery inside",
+    "video_prompt_en": "Overhead close-up, a hand opens a black gift box on a wooden table beside a candle, a folded white hoodie with gold embroidery inside"
+   }
+  },
+  {
+   "id": "shot_008",
+   "time": "6.77-8.03",
+   "label_probs": {
+    "live_action": 0.45,
+    "ai_video": 0.55
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "very clean plaza, could be generated; consistent model"
+   ],
+   "description": "woman in white hoodie in a sunny church plaza, lifts the hood over her head",
+   "narrative": {
+    "role": "payoff",
+    "point": "Woman in the white hoodie in front of a church, pulls hood up"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot in a sunny plaza in front of a mission-style church with palm trees, a woman in a white hoodie slowly pulls the hood up",
+    "video_prompt": "Medium shot in a sunny plaza in front of a mission-style church with palm trees, a woman in a white hoodie slowly pulls the hood up",
+    "video_prompt_en": "Medium shot in a sunny plaza in front of a mission-style church with palm trees, a woman in a white hoodie slowly pulls the hood up"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_009",
+   "time": "8.03-8.87",
+   "label_probs": {
+    "live_action": 0.45,
+    "ai_video": 0.55
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "very clean plaza, could be generated; consistent model"
+   ],
+   "description": "woman in white hoodie in a sunny church plaza, lifts the hood over her head",
+   "narrative": {
+    "role": "payoff",
+    "point": "Woman in the white hoodie in front of a church, pulls hood up"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot in a sunny plaza in front of a mission-style church with palm trees, a woman in a white hoodie slowly pulls the hood up",
+    "video_prompt": "Medium shot in a sunny plaza in front of a mission-style church with palm trees, a woman in a white hoodie slowly pulls the hood up",
+    "video_prompt_en": "Medium shot in a sunny plaza in front of a mission-style church with palm trees, a woman in a white hoodie slowly pulls the hood up"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_010",
+   "time": "8.87-10.20",
+   "label_probs": {
+    "live_action": 0.45,
+    "ai_video": 0.55
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "very clean plaza, could be generated; consistent model"
+   ],
+   "description": "woman in white hoodie in a sunny church plaza, lifts the hood over her head",
+   "narrative": {
+    "role": "payoff",
+    "point": "Woman in the white hoodie in front of a church, pulls hood up"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot in a sunny plaza in front of a mission-style church with palm trees, a woman in a white hoodie slowly pulls the hood up",
+    "video_prompt": "Medium shot in a sunny plaza in front of a mission-style church with palm trees, a woman in a white hoodie slowly pulls the hood up",
+    "video_prompt_en": "Medium shot in a sunny plaza in front of a mission-style church with palm trees, a woman in a white hoodie slowly pulls the hood up"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_011",
+   "time": "10.20-11.67",
+   "label_probs": {
+    "live_action": 0.45,
+    "ai_video": 0.55
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    ""
+   ],
+   "description": "top-down close-up of the hood with gold thorn-crown embroidery",
+   "narrative": {
+    "role": "cta",
+    "point": "Close-up of the gold thorn embroidery on the hood"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up from above, a white hood with gold thorn-crown embroidery, head bowed, soft daylight",
+    "video_prompt": "Close-up from above, a white hood with gold thorn-crown embroidery, head bowed, soft daylight",
+    "video_prompt_en": "Close-up from above, a white hood with gold thorn-crown embroidery, head bowed, soft daylight"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  }
+ ],
+ "aspects": {
+  "camera": {
+   "setups": "",
+   "gear_guess": ""
+  },
+  "lighting": {
+   "lighting_overall": ""
+  },
+  "grade": {
+   "grade_overall": ""
+  },
+  "editing": {
+   "editing": ""
+  },
+  "format": {
+   "format": ""
+  }
+ },
+ "story": {
+  "summary": "Christian hoodie: 'what people think we sell' is gaudy (torch on zipper, gold crucifix zipper, plastic thorn crown, masked guy before a US flag) vs the real white hoodie with gold thorn embroidery in front of a church.",
+  "hook": "'What people think we sell 🤢🤮' + a blowtorch on a hoodie zipper.",
+  "highlights": [
+   "0–5s: five absurd gags in 5 s (torch, gold zipper, plastic crown, masked figure with flag)",
+   "5–7s: 'VS...' black gift box opens, box inside reads EPHESIANS 1:7 / FORGIVEN",
+   "7–10s: 'What we actually sell ✝️🙏' woman pulls the hood up in front of a church",
+   "10s: 'Comment JESUS to get yours!' over a close-up of the gold thorn embroidery on the hood"
+  ]
+ },
+ "cast": {
+  "style": "Mix: gag shots filmed at home, hero shots in front of a mission church (possibly generated)",
+  "characters": [
+   {
+    "id": "A",
+    "name": "Masked guy",
+    "kind": "person",
+    "look": "grey hoodie, grey balaclava, US flag",
+    "role": "gag",
+    "voice": "",
+    "shots": [
+     5
+    ]
+   },
+   {
+    "id": "B",
+    "name": "Model",
+    "kind": "person",
+    "look": "woman, white hoodie",
+    "role": "shows product",
+    "voice": "",
+    "shots": [
+     8,
+     9,
+     10,
+     11
+    ]
+   }
+  ],
+  "scenes": [
+   {
+    "id": "S1",
+    "where": "kitchen counter / dining table",
+    "when": "day",
+    "look": "white marble, crucifix on wall",
+    "shots": [
+     1,
+     2,
+     3,
+     4,
+     6,
+     7
+    ]
+   },
+   {
+    "id": "S2",
+    "where": "church plaza with palms and bougainvillea",
+    "when": "day",
+    "look": "bright",
+    "shots": [
+     8,
+     9,
+     10,
+     11
+    ]
+   }
+  ],
+  "props": [
+   {
+    "name": "white hoodie with gold thorn embroidery",
+    "note": "product",
+    "shots": [
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "name": "gag items: torch, gold crucifix zipper, plastic thorn crown",
+    "note": "",
+    "shots": [
+     1,
+     2,
+     3,
+     4
+    ]
+   }
+  ]
+ },
+ "packaging": {
+  "stickers": [],
+  "text": [
+   {
+    "id": "text_002",
+    "kind": ""
+   },
+   {
+    "id": "text_003",
+    "kind": ""
+   },
+   {
+    "id": "text_004",
+    "kind": ""
+   },
+   {
+    "id": "text_005",
+    "kind": ""
+   },
+   {
+    "id": "text_006",
+    "kind": ""
+   },
+   {
+    "id": "text_008",
+    "kind": ""
+   },
+   {
+    "id": "text_009",
+    "kind": ""
+   },
+   {
+    "id": "text_011",
+    "kind": ""
+   },
+   {
+    "id": "text_012",
+    "kind": ""
+   }
+  ],
+  "missed": []
+ }
+}

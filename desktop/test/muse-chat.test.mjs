@@ -134,13 +134,14 @@ test('Muse chat excludes video, profile checks and profile close while opening',
   assert.equal(counts.clicks, 1);
 });
 
-test('Muse chat fourth attempt cannot click Send or increment the batch', async t => {
+test('Muse chat ignores the legacy three-turn limit and counts a fourth send exactly once', async t => {
   const {chat, store, request, counts} = fixture(t);
   store.set('generation_batch', {id: 'batch', perProfileLimit: 3, submittedByProfile: {profile: 3}});
   const result = await chat.send(request);
-  assert.equal(result.state, 'failed');
-  assert.equal(counts.clicks, 0);
-  assert.equal(store.batch().submittedByProfile.profile, 3);
+  assert.equal(result.state,'done');assert.equal(counts.clicks,1);
+  assert.equal(store.batch().submittedByProfile.profile,4);assert.equal(store.batch().id,'batch');
+  assert.equal(store.batch().perProfileLimit,null);
+  assert.deepEqual(await chat.send(request),result);assert.equal(counts.clicks,1);assert.equal(store.batch().submittedByProfile.profile,4);
 });
 
 test('Muse chat checkpoints before click and keeps an uncertain send for recovery', async t => {

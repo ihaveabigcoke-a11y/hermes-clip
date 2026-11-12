@@ -263,7 +263,14 @@ export function landedCost(candidate: Pick<Candidate, "cost" | "shipping" | "cur
 
 export function researchProductId(batchId: string, candidateId: string) {
   // Both IDs are generated once and reused for retries and duplicate clicks.
-  return `research_${batchId}_${candidateId}`;
+  const legacy = `research_${batchId}_${candidateId}`;
+  if (legacy.length <= 120) return legacy;
+  // FNV-1a 128 for long imported IDs; preserve all existing, valid legacy IDs.
+  let hash = BigInt('0x6c62272e07bb014262b821756295c58d');
+  for (const char of JSON.stringify([batchId, candidateId])) {
+    hash = BigInt.asUintN(128, (hash ^ BigInt(char.charCodeAt(0))) * BigInt('0x1000000000000000000013b'));
+  }
+  return `research_long_${hash.toString(16).padStart(32, '0')}`;
 }
 
 type OperationRecord = {id: string; kind: string; data: Record<string, any>; updatedAt: number};

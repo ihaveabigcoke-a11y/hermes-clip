@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {call} from './runtime-fixture.mjs';
 import {analysisResponse,structureFor,analysisReferences} from './fixtures/formula-analysis.mjs';
 import {skillProduct,contentResult,landingResult} from './fixtures/text-exchange.mjs';
+import {t005Batch} from './fixtures/t005-research.mjs';
 const lab=await importApiModule('app/api/lab/route.ts');
 const production=await importApiModule('app/api/production/route.ts');
 const {emptyProduct,productFromCandidate,unitMargin,productMarginLabel}=await importApiModule('lib/lab/domain.ts');
@@ -18,6 +19,56 @@ async function save(kind, id, data, revision = 0, who = 'ops-owner', action = 's
   const response = await call(lab.POST, request);
   return {status: response.status, ...await response.json()};
 }
+
+test('T-005: long valid research promotes all three, concurrent retries preserve edited profiles and full candidates',async()=>{
+  const {researchBatchSchema}=await importApiModule('lib/lab/operations.ts');
+  const who='t005-promote',batch=t005Batch(researchBatchSchema);
+  batch.candidates[0].id='a'.repeat(120);batch.selectedIds[0]=batch.candidates[0].id;
+  const saved=await save('research_batch','t005_batch',batch,0,who);assert.equal(saved.status,200);
+  const original=structuredClone(saved.record);
+  for(const candidate of batch.candidates.slice(0,3)) {
+    const id=researchProductId('t005_batch',candidate.id),data=productFromCandidate('t005_batch',batch,candidate);
+    const results=await Promise.all([save('product',id,data,0,who,'promote'),save('product',id,data,0,who,'promote')]);
+    results.forEach(result=>assert.equal(result.status,200,JSON.stringify(result)));
+    assert.deepEqual(results[0].record,results[1].record);
+    assert.match(results[0].record.data.problem,/đã rút gọn/);assert.match(results[0].record.data.proofNotes,/đã rút gọn/);
+    const edited=await save('product',id,{...results[0].record.data,problem:'User edited'},1,who);
+    assert.equal(edited.status,200);
+    const retry=await save('product',id,data,0,who,'promote');assert.equal(retry.deduplicated,true);assert.deepEqual(retry.record,edited.record);
+  }
+  const rows=(await (await call(lab.GET,new Request('https://qa.invalid/api/lab',{headers:{'oai-authenticated-user-id':who,'oai-authenticated-user-email':who+'@example.invalid'}}))).json()).records;
+  assert.deepEqual(rows.find(row=>row.id==='t005_batch'),original);assert.equal(rows.filter(row=>row.kind==='product').length,3);
+});
+
+test('T-005: create/reuse is atomic by product across two tabs, keeps existing drafts, and makes no provider requests',async()=>{
+  const who='t005-projects', fetchOriginal=globalThis.fetch;let providerCalls=0;
+  globalThis.fetch=async()=>{providerCalls++;throw Error('T-005 must not call a service');};
+  const create=async(productId,id,reuseProduct=true)=>{
+    const response=await call(production.POST,new Request('https://qa.invalid/api/production',{method:'POST',headers:{'Content-Type':'application/json','oai-authenticated-user-id':who,'oai-authenticated-user-email':who+'@example.invalid'},
+      body:JSON.stringify({id,revision:0,commandId:id,action:'create',input:{productId,name:'Draft '+productId,locale:'en-US',reuseProduct}})}));
+    return {status:response.status,...await response.json()};
+  };
+  try{
+    for(const id of ['p1','p2','p3'])assert.equal((await save('product',id,{...emptyProduct,name:id},0,who)).status,200);
+    // Ordinary creation may still create more than one project intentionally.
+    const existing=await create('p1','existing',false);assert.equal(existing.status,200);
+    for(const productId of ['p1','p2','p3']) {
+      const results=await Promise.all([create(productId,productId+'_tab1'),create(productId,productId+'_tab2')]);
+      results.forEach(result=>assert.equal(result.status,200,JSON.stringify(result)));
+      assert.deepEqual(results[0].record,results[1].record);
+      if(productId==='p1')assert.deepEqual(results[0].record,existing.record);
+      else assert.equal(results.filter(result=>!result.deduplicated).length,1);
+      assert.deepEqual(results[0].record.data.scenes,[]);assert.deepEqual(results[0].record.data.references,[]);
+      assert.equal(results[0].record.data.mediaProvider,undefined);
+      const replay=await create(productId,productId+'_reopened');assert.equal(replay.deduplicated,true);assert.deepEqual(replay.record,results[0].record);
+    }
+    const rows=(await (await call(lab.GET,new Request('https://qa.invalid/api/lab',{headers:{'oai-authenticated-user-id':who,'oai-authenticated-user-email':who+'@example.invalid'}}))).json()).records;
+    assert.equal(rows.filter(row=>row.kind==='production').length,3);assert.equal(providerCalls,0);
+    assert.equal((await create('absent','foreign')).status,422);
+    const archived=await save('product','p3',{...emptyProduct,name:'p3',archived:true},1,who);assert.equal(archived.status,200);
+    assert.equal((await create('p3','archived')).status,422);
+  }finally{globalThis.fetch=fetchOriginal;}
+});
 
 test('T-003: imported research survives API round-trip with metadata/null/currencies and no automatic selection',async()=>{
   const {parseTextExchange,mergeTextResearch}=await importApiModule('lib/lab/codex-exchange.ts');

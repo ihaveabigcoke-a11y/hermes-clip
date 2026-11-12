@@ -1,3 +1,4 @@
+import {runMediaTool,probeMedia} from '../src/compress.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {MuseAdapter} from '../src/muse.mjs';
@@ -133,8 +134,10 @@ test('Muse chat stops on ambiguous results without a second send', async () => {
   assert.equal(clicks, 1);
 });
 
-test('Muse preview download preserves JPEG extension and the exact result selector', async t => {
+test('Muse preview accepts JPEG, publishes compressed WebP and preserves exact result selector', async t => {
   const root=await mkdtemp(join(tmpdir(),'hermes-download-'));t.after(()=>rm(root,{recursive:true,force:true}));
+  const jpeg=join(root,'fixture.jpeg');await runMediaTool('ffmpeg',['-v','error','-f','lavfi','-i','testsrc2=s=800x800','-frames:v','1',jpeg]);
+  const jpegBytes=await (await import('node:fs/promises')).readFile(jpeg);
   let selected;
   let saved;
   const events = [];
@@ -157,7 +160,7 @@ test('Muse preview download preserves JPEG extension and the exact result select
     getByRole: () => ({waitFor: async () => {}, click: async () => events.push('download')}),
     waitForEvent: async () => ({
       suggestedFilename: () => 'Muse-image.jpeg',
-      saveAs: async path => {saved = path;await writeFile(path,Buffer.from('JPEG result'));},
+      saveAs: async path => {saved = path;await writeFile(path,jpegBytes);},
       failure: async () => null,
     }),
   };
@@ -166,8 +169,8 @@ test('Muse preview download preserves JPEG extension and the exact result select
     providerId: 'exact-result',
     request: {mediaType: 'image'},
   }, async () => {}, join(root,'output.png'));
-  assert.equal(path, join(root,'output.jpeg'));
-  assert.ok(saved.startsWith(path+'.hermes-part-'));
+  assert.equal(path, join(root,'output.webp'));assert.equal((await probeMedia(path)).width,800);
+  assert.ok(saved.startsWith(join(root,'output.jpeg')+'.hermes-part-'));
   assert.ok(selected.endsWith('[data-message-id="exact-result"]'));
   assert.deepEqual(events, ['preview', 'download', 'Escape']);
 });

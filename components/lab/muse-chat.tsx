@@ -60,7 +60,6 @@ export default function MuseChatPanel({projectId = 'general', demo = false, acti
   const selectedProfileId = current?.profileId || profileId || profiles.find(profile => profile.enabled && profile.session === 'signed_in')?.id || profiles.find(profile => profile.enabled)?.id || '';
   const selectedProfile = profiles.find(profile => profile.id === selectedProfileId);
   const count = status?.batch?.submittedByProfile[selectedProfileId] ?? 0;
-  const limit = status?.batch?.perProfileLimit ?? 3;
   const pending = history.some(chat => chat.profileId === selectedProfileId && ['preparing', 'waiting'].includes(chat.state));
   const draftKey = projectId + ':' + (current ? threadKey(current) : 'new:' + selectedProfileId);
   const prompt = drafts[draftKey] ?? initialPrompt;
@@ -123,7 +122,7 @@ export default function MuseChatPanel({projectId = 'general', demo = false, acti
   async function run(recoverId?: string) {
     const bridge = desktopBridge();
     if (!bridge?.museChatSend) return;
-    if (!recoverId && (!prompt.trim() || prompt.length > 16000 || pending || last?.state === 'needs_attention' || count >= limit || !selectedProfile?.enabled || selectedProfile.busy)) return;
+    if (!recoverId && (!prompt.trim() || prompt.length > 16000 || pending || last?.state === 'needs_attention' || !selectedProfile?.enabled || selectedProfile.busy)) return;
     const submittedPrompt = prompt;
     const submittedKey = draftKey;
     await action(async () => {
@@ -175,7 +174,7 @@ export default function MuseChatPanel({projectId = 'general', demo = false, acti
     </aside>
     <div className="muse-conversation">
       {status?.musePaused!==false&&<p className="field-help">Muse đang tạm dừng, bật lại ở Tài khoản Muse</p>}
-      <header><div><h2>{current ? 'Cuộc trò chuyện với Muse' : 'Cuộc trò chuyện mới'}</h2><small>{selectedProfile?.name || "Chưa có hồ sơ"} · {count}/{limit} lượt trong đợt</small></div>
+      <header><div><h2>{current ? 'Cuộc trò chuyện với Muse' : 'Cuộc trò chuyện mới'}</h2><small>{selectedProfile?.name || "Chưa có hồ sơ"} · Đã gửi {count} lượt trong đợt</small></div>
         {current?.providerUrl && <Button tone="neutral" disabled={unavailable || status?.musePaused!==false || selectedProfile?.busy} onClick={() => void action(() => desktopBridge()!.museChatOpen({requestId: current.requestId}))}>Mở trong Chrome</Button>}
       </header>
       <div ref={historyBox} className="muse-chat-history" onScroll={() => {const el = historyBox.current; if (el) follow.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60;}}>
@@ -192,7 +191,6 @@ export default function MuseChatPanel({projectId = 'general', demo = false, acti
       <form className="muse-composer" noValidate onSubmit={event => {event.preventDefault(); submit();}}>
         {busy && <p role="status">Đang xử lý trên hồ sơ {selectedProfile?.name}…</p>}
         {(error || statusError || selectionPreference.error || draftPreference.error) && <p role="alert" className="inline-error">{error || statusError || selectionPreference.error || draftPreference.error}</p>}
-        {count >= limit && mode === 'chat' && <p className="info-panel">Đã dùng {limit}/{limit} lượt. <a href="?view=accounts">Mở Tài khoản để bắt đầu đợt mới</a>.</p>}
         {!desktopBridge() && <p>Mở Hermes Clip trên máy để dùng hồ sơ Muse.</p>}
         <label className="field"><span className="sr-only">Tin nhắn cho Muse</span><textarea ref={input} aria-label="Tin nhắn cho Muse" value={prompt} rows={4} maxLength={16000} disabled={unavailable}
           onChange={event => setDrafts(value => ({...value, [draftKey]: event.target.value}))}
@@ -201,8 +199,8 @@ export default function MuseChatPanel({projectId = 'general', demo = false, acti
         <div className="muse-composer-tools"><div className="segmented" aria-label="Chế độ Muse">
           <button type="button" aria-pressed={mode === 'chat'} onClick={() => setMode('chat')}>Chat AI</button>
           {studio && onCompose && <><button type="button" aria-pressed={mode === 'image'} onClick={() => setMode('image')}>Tạo ảnh</button><button type="button" aria-pressed={mode === 'video'} onClick={() => setMode('video')}>Tạo video</button></>}
-        </div><Button type="submit" busy={busy} disabled={unavailable || (mode==='chat'&&status?.musePaused!==false) || !prompt.trim() || prompt.length > 16000 || (mode === 'chat' ? pending || last?.state === 'needs_attention' || !selectedProfile?.enabled || !!selectedProfile.busy || count >= limit : !project)}><ArrowUp size={17}/>{mode === 'chat' ? (status?.musePaused!==false?'Muse đang tạm dừng':'Gửi Muse') : 'Mở bản nháp'}</Button></div>
-        <small>{mode === 'chat' ? "Chat và tạo ảnh/video dùng chung 3 lượt/hồ sơ/đợt." : 'Chọn ảnh tham chiếu và duyệt bản nháp trong màn tạo nội dung.'}</small>
+        </div><Button type="submit" busy={busy} disabled={unavailable || (mode==='chat'&&status?.musePaused!==false) || !prompt.trim() || prompt.length > 16000 || (mode === 'chat' ? pending || last?.state === 'needs_attention' || !selectedProfile?.enabled || !!selectedProfile.busy : !project)}><ArrowUp size={17}/>{mode === 'chat' ? (status?.musePaused!==false?'Muse đang tạm dừng':'Gửi Muse') : 'Mở bản nháp'}</Button></div>
+        <small>{mode === 'chat' ? "Hermes không giới hạn số lượt. Xem hạn mức thực tế tại Tài khoản Muse." : 'Chọn ảnh tham chiếu và duyệt bản nháp trong màn tạo nội dung.'}</small>
       </form>
     </div>
     {studio && <aside className="muse-media"><header><h2>Ảnh và video dự án</h2><span>{media.length}</span></header>

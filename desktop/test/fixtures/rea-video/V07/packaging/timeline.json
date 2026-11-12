@@ -1,0 +1,130 @@
+{
+  "text": [
+    {
+      "id": "text_001",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 0.0,
+      "t1": 4.6,
+      "text": "The Problem X",
+      "bbox": [
+        0.2056,
+        0.1859,
+        0.5805,
+        0.0602
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#edf0ef",
+        "stroke_name": "black",
+        "stroke": "#1f1918",
+        "stroke_ratio": 0.028,
+        "multicolor": true,
+        "highlight_name": "yellow",
+        "weight": 0.081
+      },
+      "style_zh": "white text, black outline, keywords highlighted in yellow, line height 5.6% (about 72px)",
+      "anim_in": null,
+      "anim_out": {
+        "kind": "fade_out",
+        "kind_zh": "fade out"
+      },
+      "mid_motion": true,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_002",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 4.9,
+      "t1": 15.7,
+      "text": "The product",
+      "bbox": [
+        0.2153,
+        0.1875,
+        0.5556,
+        0.0585
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#f5f5f5",
+        "stroke_name": "black",
+        "stroke": "#150d0d",
+        "stroke_ratio": 0.031,
+        "multicolor": true,
+        "highlight_name": "brown",
+        "weight": 0.084
+      },
+      "style_zh": "white text, black outline, keywords highlighted in brown, line height 5.3% (about 68px)",
+      "anim_in": null,
+      "anim_out": {
+        "kind": "fade_out",
+        "kind_zh": "fade out"
+      },
+      "mid_motion": null,
+      "follows": true,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    }
+  ],
+  "stickers": [
+    {
+      "kind": "animated_sticker",
+      "kind_zh": "animated sticker / GIF",
+      "t0": 10.7,
+      "t1": 11.6,
+      "bbox": [
+        0.45,
+        0.029,
+        0.15,
+        0.086
+      ],
+      "animated": true,
+      "loop_period_s": null,
+      "looping": false,
+      "activity": 4.9,
+      "appears_mid_shot": false,
+      "disappears_mid_shot": false,
+      "crosses_cut": true,
+      "confidence": "medium",
+      "id": "sticker_01",
+      "image": "packaging/sticker_01.jpg"
+    },
+    {
+      "kind": "animated_sticker",
+      "kind_zh": "animated sticker / GIF",
+      "t0": 12.5,
+      "t1": 14.1,
+      "bbox": [
+        0.15,
+        0.143,
+        0.15,
+        0.086
+      ],
+      "animated": true,
+      "loop_period_s": null,
+      "looping": false,
+      "activity": 5.7,
+      "appears_mid_shot": false,
+      "disappears_mid_shot": false,
+      "crosses_cut": true,
+      "confidence": "medium",
+      "id": "sticker_02",
+      "image": "packaging/sticker_02.jpg"
+    }
+  ],
+  "sfx": [
+    {
+      "t": 0.4,
+      "type": "other",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": null
+    }
+  ]
+}

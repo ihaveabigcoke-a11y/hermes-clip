@@ -33,6 +33,7 @@ export const videoStructureSchema = z.object({
 export type VideoStructure = z.infer<typeof videoStructureSchema>;
 
 export const referenceVideoDraftSchema = referenceVideoSchema.extend({
+  proposedFormula:viralFormulaSchema.optional(),
   status: z.literal('draft').default('draft'),
   formulaVersion: z.number().int().positive().nullable().default(null),
   integrationJobId: z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/).nullable().default(null),

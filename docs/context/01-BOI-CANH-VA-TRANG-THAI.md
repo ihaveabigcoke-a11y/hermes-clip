@@ -1,4 +1,50 @@
-# Hermes Clip — bối cảnh và trạng thái (source cập nhật đến đêm 3, 12/11/2026)
+# Hermes Clip — bối cảnh và trạng thái (cập nhật 13/11/2026)
+
+## T-009 — Codex tiếp quản bằng một main agent, nghiệm thu rea-video
+
+Yêu cầu trực tiếp ngày 13/11: Codex tự làm boss và hoàn tất các job trong `D:/agent-office/CODEX-BOSS-PROMPT.md`, chỉ **một main agent**. Không thuê worker, gọi `codex exec` để giao việc, spawn sub-agent hoặc chạy lại orchestrator. Các quy trình hai boss trong tài liệu ngày 12/11 là lịch sử. T-001 đến T-008 đã có commit; prompt cũ còn ghi T-006 chờ làm và 31 file WIP là lỗi thời. Khi tiếp quản, app ở `bd8aba9`, nhánh `main`, cây sạch, không có Electron đang chạy.
+
+Đã cài rea-video đúng revision `2f50ab340ab09da334c0dbffc55244ddbaa52e44` vào `desktop/.integrations/rea-video`, dùng Python 3.12.14 trong `.rea-venv` riêng và model local. Cấu hình đường dẫn chỉ ghi trong `.integrations/config.json` bị Git bỏ qua. Commit code **`e47b51d`** bổ sung đường dẫn rea-video còn thiếu khi app đã có cấu hình tích hợp cũ, giữ nguyên đường dẫn người dùng đã chọn và các receipt. Bridge dùng chung cache model cạnh checkout, vẫn tôn trọng `REA_VIDEO_MODELS` do người dùng đặt. Không mở app hoặc đọc/ghi SQLite/profile thật.
+
+Nghiệm thu local thật qua service Hermes: MP4 10 giây từ snapshot đã công khai → rea-video (~62,5 giây) → 1 shot, OCR có mốc, BPM chưa biết giữ `null` → xuất review → chính main agent đọc contact sheet → nhập qua CLI `apply-review` → trạng thái `complete`, đủ narrative và prompt. DB dùng fixture riêng; SHA-256 media gốc không đổi. Không gọi Codex/Gemini/Muse/Instagram, không chọn lại sản phẩm cũ hoặc cập nhật thư viện công thức. OCR nhận cả chữ in trên túi là chữ đè; cần kiểm mắt trước tái dùng, không coi đây là nghiệm thu chất lượng nội dung.
+
+Sau sửa: typecheck đạt; domain **213/213**, API **28/28**, desktop **465 pass / 1 skip OpenMontage / 0 fail**; bridge Python **2/2**. Không nới assertion. Build và kiểm ảnh chạy tiếp từ cây sạch; kết quả cuối, giờ build và hash được ghi trong `outputs/office-20261113/FINAL.md` và `D:/agent-office/ngh-ch-ti-p-agent-office/STATUS.md`. Chưa kiểm Electron trên dữ liệu thật, VLM thật, Meta thật, file mới từ Flow/Gemini và Thùng rác Windows thật. Không push/merge trong lượt này.
+
+Bàn giao và cách chạy tiếp: [T-009](T-009-OFFICE-HANDOVER.md), [báo cáo](../../ops/office/reports/T-009.md). Các checkpoint bên dưới giữ nguyên làm lịch sử; các dòng “chưa commit/chưa build” của worker ngày 12/11 không phủ nhận những lần boss đã nghiệm thu sau đó.
+
+
+## T-006 — nén file mới, chưa nghiệm thu full suite/ảnh UI
+
+Source app chính đã thêm nén local cho Hộp nhận, tải tay, renderClips và download Muse mới; ảnh gói prompt mới dùng WebP nếu nhỏ hơn; nguồn research/reference/youtube và log xoay mới dùng gzip, đọc được plain cũ. Chỉ gốc Hộp nhận mới có receipt nén, nhập và gắn take thành công mới đưa vào Thùng rác Windows; file cũ, media/receipt/job có sẵn không di trú. Clip ≤15 giây phải dưới 6 MiB, video dài giữ sàn khoảng 2 Mbps ở 720×1280 khi nguồn đạt kích thước này; take có nhãn khi vượt trần. Muse vẫn mặc định tạm dừng.
+
+Typecheck và build riêng `outputs/T-006-build` đạt; 32/32 kiểm liên quan T-006 đạt bằng FFmpeg và SQLite fixture. Full runner bị spawn EPERM; chạy isolation none: domain 197 pass/11 fail, API 24 pass/4 fail, desktop từng file 379 pass/67 fail/1 skip. Chrome IPC Access denied: 0/4 PNG, chưa xác minh bố cục 1366/1920. Chưa dùng file Flow/Gemini, Thùng rác Windows hoặc dịch vụ thật; chưa thay `desktop/local-dist`, không commit/push. Chi tiết, kích thước file test và cách boss chạy tiếp: [báo cáo T-006](../../ops/office/reports/T-006.md), [media thủ công](../MANUAL-MEDIA.md). Các mục dưới là trạng thái lịch sử trước T-006.
+
+## Cập nhật 12/11/2026 — bỏ chặn 3 lượt, ba video thật đã về app
+
+Người dùng thay yêu cầu cũ bằng “đừng có limit”. Hermes đã bỏ giới hạn 3 lượt Muse/profile/đợt trong worker, chat, nghiên cứu, chọn công cụ và giao diện. Bộ đếm chỉ ghi lịch sử; không cần reset. Vẫn kiểm phiên và hạn mức thực của Muse, chống gửi trùng và đối soát kết quả chưa rõ. Chỉ một agent Codex thực hiện, không spawn hoặc gọi runner agent.
+
+Đã áp source và build vào `C:/Users/ADMIN/Downloads/Product-Lab-Local/Product-Lab-Local`. Bấm Triển khai 3 sản phẩm với Chi đã tạo đủ ba video mới: vòng cổ LED TIZE TC213, băng tay LED Hong Jing và thẻ thú cưng OKSILICONE OKSBS-001. Cùng đợt cũ, bộ đếm 3 → 6. Tự lấy ảnh, chuẩn bị cảnh theo mẫu, gửi Muse, tải MP4 và nhập đúng cảnh; cả ba 720×1280, 10 giây, SHA-256/file API khớp, FFmpeg giải mã toàn bộ và phát được trong app sau restart. Nút Xem và duyệt video mở đúng asset. Bấm lại đợt hoàn tất không thêm lượt/job.
+
+429 desktop tests đạt, 1 OpenMontage tùy chọn bỏ qua; TypeScript và build đạt. Domain 208/API 28 là kiểm tra trước lần bỏ cap; không gọi chúng là đã chạy lại sau cap. Provider trong các test tự động là fixture; ba video nêu trên dùng Muse thật. 25 job cũ, 45 record không thuộc đợt và trường gốc của ba dự án giữ checksum; 21 media cũ, chat và 4 danh tính profile giữ nguyên. Tổng sau chạy: 28 jobs, 54 records, 27 media.
+
+Video vẫn chờ người dùng duyệt, chưa đăng Instagram. Các khung hình cho thấy Muse có phóng gần/đổi góc; chưa nghiệm thu độ đúng SKU hoặc chất lượng quảng cáo. Khôi phục khi crash giữa lượt gửi mới chỉ có fixture, chưa thử gây crash tài khoản thật. Xóa hồ sơ có dialog xác nhận và bảo vệ job cần đối soát; không xóa profile người dùng khi test.
+
+Context-mode 2.1.9 đã cài/bật, MCP và hook replay đạt; chat hiện tại chưa nạp ctx_* và chưa xác minh hook trong lượt model thật. Cần khởi động lại Codex. Không đổi model/provider.
+
+Bằng chứng local: workspace `outputs/Hermes-Clip-Automation-2026-11-12/REPORT.md`, `.product-lab-repair/automation-20261112/unlimited-acceptance.json`, `installed-complete.json`; plugin: `outputs/context-mode-integration/README.md`. Bản cập nhật này chưa push GitHub. Các mục 3/3/chờ mở đợt bên dưới là lịch sử đã được thay thế.
+
+
+## T-005 vòng 2 — baseline đạt, bổ sung kiểm lớp che trong script ảnh
+
+Boss xác nhận ngoài sandbox: typecheck 0, domain 208/208, API 28/28, desktop 420 pass/0 fail, build đạt và đủ 6 PNG. Logic vòng 1 giữ nguyên. Ảnh thiếu hồ sơ 1366 có vùng đen che nội dung dù bounds nút trong viewport; ảnh 1920 đúng. Script cũ bỏ lọt vì chỉ kiểm bounds; Tạo video còn giữ scroll từ màn trước. Vòng 2 chỉ sửa script chụp: đợi scroll/layout ổn định, hit-test cảnh báo/lỗi/nút bằng elementFromPoint, lưu DOM/styles trước–sau, kiểm actionability, chụp Tạo video từ đầu trang và xác nhận tên sản phẩm đầu tiên.
+
+**Chưa xác định lớp gây vùng đen hoặc chứng minh đã hết lỗi:** Chrome IPC vẫn bị Access is denied trong sandbox, chưa lấy được DOM/PNG vòng 2. Không sửa CSS/app logic khi thiếu bằng chứng. Syntax, typecheck và diff check đạt. Xem mục vòng 2 trong [báo cáo T-005](../../ops/office/reports/T-005.md) và chạy script ngoài sandbox với artifacts `D:/hermes-wt/artifacts/T-005/round-2`. Các kết quả fail sandbox vòng 1 bên dưới là lịch sử; baseline logic đã được boss nghiệm thu.
+
+## T-005 — hoàn tất hồ sơ đã chọn và mở dự án video nháp (12/11/2026)
+
+Sửa source app chính trên `main`, tag `before-T-005`, chưa commit hoặc áp build vào `desktop/local-dist`. Promote rút gọn problem/proofNotes có đánh dấu, giữ ứng viên đầy đủ và researchOrigin; hồ sơ đã có không bị ghi đè. Màn Nghiên cứu tự thử một lần cho mỗi ứng viên đã chọn còn thiếu hồ sơ trong lần mở màn, hiện lỗi theo trường và có nút **Hoàn tất tạo hồ sơ**. **Triển khai N sản phẩm** dùng action create tạo/dùng lại dự án theo sản phẩm bằng SQL nguyên tử, mở dự án đầu tiên ở Tạo video. Không có cảnh/prompt giả; provider auto theo routing hiện có, không gọi Muse/Flow/Gemini. Nhãn nguồn đổi thành **Nguồn research: Muse**.
+
+Typecheck/build riêng `outputs/T-005-build` đạt. Fixture mới: 4 domain + 2 API + 2 desktop đạt; bộ hồi quy tập trung 48/48 (bao gồm 2 desktop mới). Full suite chuẩn bị spawn EPERM chặn; chạy thêm isolation none: domain 197 pass/11 fail, API 24 pass/4 fail, desktop từng file 337 pass/69 fail/1 skip. Không coi tất cả lỗi desktop là do sandbox: còn lỗi fixture screenshot và assertion hậu quả cần kiểm ngoài sandbox. Chrome IPC Access is denied, **0/6 PNG**, chưa nghiệm thu thao tác/layout thực tế. Script `scripts/check-t005-ui.mjs` sẵn cho boss chạy. Chưa kiểm dữ liệu thật ba ứng viên đợt “10 sản phẩm · 17:49:44 12/11/2026”; không truy cập AppData/SQLite/profile thật. Xem [báo cáo T-005](../../ops/office/reports/T-005.md) cho bằng chứng và cách chạy tiếp.
 
 ## T-002c vòng 2 — cập nhật sau nghiệm thu baseline
 

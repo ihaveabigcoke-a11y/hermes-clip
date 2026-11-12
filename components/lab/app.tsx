@@ -2299,7 +2299,7 @@ export default function LabApp() {
           ) : view === "products" ? (
             productsView()
           ) : ["research", "social", "landing"].includes(view) ? (
-            <OperationsPanel key={`${demo}-${view}`} view={view as "research" | "social" | "landing"} records={records} demo={demo} offline={offline} persist={persist} notify={notify} reload={() => void load()}/>
+            <OperationsPanel key={`${demo}-${view}`} view={view as "research" | "social" | "landing"} records={records} demo={demo} offline={offline} persist={persist} notify={notify} reload={() => void load()} onRecords={rows=>{if(demo)putMemory(rows);else setReal(previous=>[...rows,...previous.filter(row=>!rows.some(next=>next.id===row.id))]);}}/>
           ) : view === "chat" ? (
             null
           ) : view === "experiments" ? (

@@ -1,3 +1,4 @@
+import {readArchive} from '../src/compress.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtemp,rm,readFile,writeFile,mkdir,stat} from 'node:fs/promises';
@@ -167,7 +168,7 @@ test('fake YouTube runner keeps info, MP4 and optional free subtitles',()=>fixtu
     }});
   assert.deepEqual(calls[0],['youtube','info',url]);assert.ok(calls[1].includes('--skip-download'));assert.ok(calls[2].includes('--write-subs'));
   assert.equal(result.sourceUrl,url);assert.equal(result.subtitles.length,1);
-  assert.equal(result.sha256,sha256(Buffer.from('fake MP4')));assert.ok((await readFile(join(dir,'youtube-source.json'),'utf8')).includes('Fixture'));
+  assert.equal(result.sha256,sha256(Buffer.from('fake MP4')));assert.ok((await readArchive(join(dir,'youtube-source.json'))).includes('Fixture'));
 }));
 test('YouTube missing size, oversized/long/wrong video and malformed JSON stop before download',()=>fixture(async dir=>{
   for(const value of [null,{...info,id:'wrong'},{...info,duration:181},{...info,duration:null},{...info,formats:[{...info.formats[0],filesize:null}]},{...info,formats:[{...info.formats[0],filesize:referenceLimits.bytes+1}]},{...info,formats:null}]) {

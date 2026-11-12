@@ -1,5 +1,6 @@
 import test from 'node:test';
 import './text-exchange.test.mjs';
+import './t005-research.test.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {candidateSchema, candidateCurrency, landedCost, researchBatchSchema, socialMetricSchema, landingPageSchema, landingHtml, socialTotals, contentPlanSchema} from '../lib/lab/operations.ts';

@@ -15,7 +15,11 @@ const formulaRecord = data => ({id: viralFormulaRecordId(data), kind: 'viral_for
 test('formula seed preserves the supplied taxonomy and all 12 references with explicit time origins', () => {
   const input = JSON.parse(readFileSync(new URL('../ops/night/input/formula-seed.json', import.meta.url), 'utf8'));
   const source = JSON.parse(readFileSync(new URL('../lib/lab/viral-formulas.seed.json', import.meta.url), 'utf8'));
-  assert.deepEqual(source, input);
+  const {formulasV2,storyboardMeasurements,...legacy}=source;
+  assert.deepEqual(legacy, input);
+  assert.equal(formulasV2.length,6);
+  assert.equal(storyboardMeasurements.sampleCount,12);
+  assert.deepEqual(parseViralFormulaSeed(input).formulas,viralFormulas);
   assert.deepEqual(source.taxonomy, formulaTaxonomy);
   assert.deepEqual(parseViralFormulaSeed(source), viralFormulaSeed);
   assert.equal(viralFormulas.length, 6);

@@ -1,0 +1,24 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 720
+PlayResY: 1280
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: subtitle_1,Sans,68,&H00F9F7F6,&H0000FFFF,&H00100602,&H00000000,0,0,0,0,100,100,0,-0,1,3,0,5,0,0,0,1
+Style: subtitle_2,Sans,82,&H00F9F7F6,&H0000FFFF,&H00100602,&H00000000,0,0,0,0,100,100,0,-0,1,4,0,5,0,0,0,1
+Style: subtitle_3,Sans,58,&H00F9F7F6,&H0000FFFF,&H00100602,&H00000000,0,0,0,0,100,100,0,-0,1,3,0,5,0,0,0,1
+Style: subtitle_4,Sans,63,&H00F9F7F6,&H0000FFFF,&H00100602,&H00000000,0,0,0,0,100,100,0,-3,1,3,0,5,0,0,0,1
+Style: subtitle_5,Sans,70,&H00F9F7F6,&H0000FFFF,&H00100602,&H00000000,0,0,0,0,100,100,0,-0,1,3,0,5,0,0,0,1
+Style: huazi_6,Sans,81,&H000F0603,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,32,1,0,0,5,0,0,0,1
+Style: huazi_7,Sans,26,&H00130A0C,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,-11,1,0,0,5,0,0,0,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:02.80,subtitle_1,,0,0,0,,{\pos(354,285)}The risk
+Dialogue: 0,0:00:03.00,0:00:03.10,subtitle_2,,0,0,0,,{\pos(356,284)}hs
+Dialogue: 0,0:00:03.20,0:00:04.00,subtitle_3,,0,0,0,,{\pos(326,283)\fad(200,200)}The risk
+Dialogue: 0,0:00:04.00,0:00:09.10,subtitle_4,,0,0,0,,{\pos(357,281)}VS...
+Dialogue: 0,0:00:09.50,0:00:18.00,subtitle_5,,0,0,0,,{\pos(280,275)}The solution
+Dialogue: 1,0:00:13.90,0:00:14.10,huazi_6,,0,0,0,,{\pos(51,760)\fad(200,200)}11
+Dialogue: 1,0:00:15.50,0:00:16.60,huazi_7,,0,0,0,,{\pos(507,1020)\fad(200,200)}MERICAINLBAOUDS

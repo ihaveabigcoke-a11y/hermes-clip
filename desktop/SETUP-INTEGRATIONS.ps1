@@ -13,7 +13,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Install FFmpeg on PATH first.' }
 $ffprobeVersion = @(ffprobe -version)
 $ffprobeVersion[0]
 if ($LASTEXITCODE -ne 0) { throw 'Install ffprobe on PATH first.' }
-foreach ($entry in @(@{ name = 'Agent-Reach'; spec = $lock.agentReach }, @{ name = 'OpenMontage'; spec = $lock.openMontage })) {
+foreach ($entry in @(@{ name = 'Agent-Reach'; spec = $lock.agentReach }, @{ name = 'OpenMontage'; spec = $lock.openMontage }, @{ name = 'rea-video'; spec = $lock.reaVideo })) {
     $repoPath = Join-Path $integrationRoot $entry.name
     if (!(Test-Path $repoPath)) {
         git clone --no-checkout --filter=blob:none $entry.spec.repository $repoPath
@@ -36,6 +36,21 @@ $reachSource = Join-Path $integrationRoot 'Agent-Reach'
 & $pythonPath -m pip install $reachSource -r (Join-Path $PSScriptRoot 'integrations-requirements.txt')
 if ($LASTEXITCODE -ne 0) { throw 'Could not install local integration dependencies.' }
 $config = @{ python = $pythonPath; reach = (Join-Path $venv 'Scripts/agent-reach.exe'); montage = (Join-Path $integrationRoot 'OpenMontage') }
+python -c "import sys; assert (3,10) <= sys.version_info[:2] <= (3,14), 'rea-video requires Python 3.10-3.14'"
+if ($LASTEXITCODE -ne 0) { throw 'Select Python 3.10-3.14 before installing rea-video.' }
+$reaVenv = Join-Path $integrationRoot '.rea-venv'
+if (!(Test-Path $reaVenv)) {
+    python -m venv $reaVenv
+    if ($LASTEXITCODE -ne 0) { throw 'Could not create the rea-video environment.' }
+}
+$reaPython = Join-Path $reaVenv 'Scripts/python.exe'
+Push-Location (Join-Path $integrationRoot 'rea-video')
+try {
+    & $reaPython -m pip install '.[ocr]'
+    if ($LASTEXITCODE -ne 0) { throw 'Could not install pinned rea-video with OCR.' }
+} finally { Pop-Location }
+$config.reaPython = $reaPython
+$config.reaVideo = Join-Path $integrationRoot 'rea-video'
 $config | ConvertTo-Json | Set-Content (Join-Path $integrationRoot 'config.json') -Encoding utf8
 Write-Host 'Installed pinned tools. Open Product Lab Desktop > Nghien cuu & dung > Kiem tra cong cu.'
 Write-Host 'No accounts were signed in, no model API was called, and no social content was posted.'

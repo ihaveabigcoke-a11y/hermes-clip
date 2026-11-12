@@ -1,0 +1,602 @@
+{
+ "by": "claude-fable",
+ "shots": [
+  {
+   "id": "shot_001",
+   "time": "0.00-0.77",
+   "label_probs": {
+    "live_action": 0.85,
+    "ai_video": 0.15
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real room, real tape, phone camera noise"
+   ],
+   "description": "man sits on bed, shows two phones with flashlight on, tapes them to sneakers",
+   "narrative": {
+    "role": "hook",
+    "point": "Holding two phones, taping them to his shoes"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot in a bedroom with a US flag on the wall, a young man sits on the bed holding up two phones with flashlights on, then tapes a phone to each sneaker",
+    "video_prompt": "Medium shot in a bedroom with a US flag on the wall, a young man sits on the bed holding up two phones with flashlights on, then tapes a phone to each sneaker",
+    "video_prompt_en": "Medium shot in a bedroom with a US flag on the wall, a young man sits on the bed holding up two phones with flashlights on, then tapes a phone to each sneaker"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_002",
+   "time": "0.77-1.50",
+   "label_probs": {
+    "live_action": 0.85,
+    "ai_video": 0.15
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real room, real tape, phone camera noise"
+   ],
+   "description": "man sits on bed, shows two phones with flashlight on, tapes them to sneakers",
+   "narrative": {
+    "role": "hook",
+    "point": "Holding two phones, taping them to his shoes"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot in a bedroom with a US flag on the wall, a young man sits on the bed holding up two phones with flashlights on, then tapes a phone to each sneaker",
+    "video_prompt": "Medium shot in a bedroom with a US flag on the wall, a young man sits on the bed holding up two phones with flashlights on, then tapes a phone to each sneaker",
+    "video_prompt_en": "Medium shot in a bedroom with a US flag on the wall, a young man sits on the bed holding up two phones with flashlights on, then tapes a phone to each sneaker"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_003",
+   "time": "1.50-2.17",
+   "label_probs": {
+    "live_action": 0.85,
+    "ai_video": 0.15
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real room, real tape, phone camera noise"
+   ],
+   "description": "man sits on bed, shows two phones with flashlight on, tapes them to sneakers",
+   "narrative": {
+    "role": "hook",
+    "point": "Holding two phones, taping them to his shoes"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot in a bedroom with a US flag on the wall, a young man sits on the bed holding up two phones with flashlights on, then tapes a phone to each sneaker",
+    "video_prompt": "Medium shot in a bedroom with a US flag on the wall, a young man sits on the bed holding up two phones with flashlights on, then tapes a phone to each sneaker",
+    "video_prompt_en": "Medium shot in a bedroom with a US flag on the wall, a young man sits on the bed holding up two phones with flashlights on, then tapes a phone to each sneaker"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_004",
+   "time": "2.17-2.83",
+   "label_probs": {
+    "live_action": 0.85,
+    "ai_video": 0.15
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real room, real tape, phone camera noise"
+   ],
+   "description": "man sits on bed, shows two phones with flashlight on, tapes them to sneakers",
+   "narrative": {
+    "role": "hook",
+    "point": "Holding two phones, taping them to his shoes"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot in a bedroom with a US flag on the wall, a young man sits on the bed holding up two phones with flashlights on, then tapes a phone to each sneaker",
+    "video_prompt": "Medium shot in a bedroom with a US flag on the wall, a young man sits on the bed holding up two phones with flashlights on, then tapes a phone to each sneaker",
+    "video_prompt_en": "Medium shot in a bedroom with a US flag on the wall, a young man sits on the bed holding up two phones with flashlights on, then tapes a phone to each sneaker"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_005",
+   "time": "2.83-5.10",
+   "label_probs": {
+    "live_action": 0.8,
+    "ai_video": 0.2
+   },
+   "image_source": "photo",
+   "evidence": [
+    "dusk street, natural"
+   ],
+   "description": "rear wide shot, man jogs on a suburban sidewalk at dusk, phones glowing on his feet",
+   "narrative": {
+    "role": "hook",
+    "point": "Runs down the sidewalk with phones on his shoes"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Rear wide shot at dusk, a man jogs along a suburban sidewalk with glowing phones taped to his shoes",
+    "video_prompt": "Rear wide shot at dusk, a man jogs along a suburban sidewalk with glowing phones taped to his shoes",
+    "video_prompt_en": "Rear wide shot at dusk, a man jogs along a suburban sidewalk with glowing phones taped to his shoes"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_006",
+   "time": "5.10-6.17",
+   "label_probs": {
+    "live_action": 0.85,
+    "ai_video": 0.15
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real interior"
+   ],
+   "description": "man in black hoodie on a staircase, holds a small product box, fits a light onto an orange sneaker",
+   "narrative": {
+    "role": "proof",
+    "point": "Sits on stairs, shows the box, clips the light on"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot, a man in a black hoodie sits on a wooden staircase, holds a small product box to the camera, then clips a light onto his sneaker",
+    "video_prompt": "Medium shot, a man in a black hoodie sits on a wooden staircase, holds a small product box to the camera, then clips a light onto his sneaker",
+    "video_prompt_en": "Medium shot, a man in a black hoodie sits on a wooden staircase, holds a small product box to the camera, then clips a light onto his sneaker"
+   }
+  },
+  {
+   "id": "shot_007",
+   "time": "6.17-6.90",
+   "label_probs": {
+    "live_action": 0.85,
+    "ai_video": 0.15
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real interior"
+   ],
+   "description": "man in black hoodie on a staircase, holds a small product box, fits a light onto an orange sneaker",
+   "narrative": {
+    "role": "proof",
+    "point": "Sits on stairs, shows the box, clips the light on"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot, a man in a black hoodie sits on a wooden staircase, holds a small product box to the camera, then clips a light onto his sneaker",
+    "video_prompt": "Medium shot, a man in a black hoodie sits on a wooden staircase, holds a small product box to the camera, then clips a light onto his sneaker",
+    "video_prompt_en": "Medium shot, a man in a black hoodie sits on a wooden staircase, holds a small product box to the camera, then clips a light onto his sneaker"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_008",
+   "time": "6.90-8.30",
+   "label_probs": {
+    "live_action": 0.7,
+    "ai_video": 0.3
+   },
+   "image_source": "photo",
+   "evidence": [
+    "glow plausibly real LEDs; fog diffuses light; could be enhanced"
+   ],
+   "description": "runner on a red track under a floodlight in fog, shoes glow blue, rear and side angles, one crouch start",
+   "narrative": {
+    "role": "payoff",
+    "point": "Foggy night track, shoes glow red / blue, several angles"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Wide shot of a foggy running track at night under one floodlight, a runner in black jogs toward the camera, his shoes glow bright blue",
+    "video_prompt": "Wide shot of a foggy running track at night under one floodlight, a runner in black jogs toward the camera, his shoes glow bright blue",
+    "video_prompt_en": "Wide shot of a foggy running track at night under one floodlight, a runner in black jogs toward the camera, his shoes glow bright blue"
+   }
+  },
+  {
+   "id": "shot_009",
+   "time": "8.30-9.33",
+   "label_probs": {
+    "live_action": 0.7,
+    "ai_video": 0.3
+   },
+   "image_source": "photo",
+   "evidence": [
+    "glow plausibly real LEDs; fog diffuses light; could be enhanced"
+   ],
+   "description": "runner on a red track under a floodlight in fog, shoes glow blue, rear and side angles, one crouch start",
+   "narrative": {
+    "role": "payoff",
+    "point": "Foggy night track, shoes glow red / blue, several angles"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Wide shot of a foggy running track at night under one floodlight, a runner in black jogs toward the camera, his shoes glow bright blue",
+    "video_prompt": "Wide shot of a foggy running track at night under one floodlight, a runner in black jogs toward the camera, his shoes glow bright blue",
+    "video_prompt_en": "Wide shot of a foggy running track at night under one floodlight, a runner in black jogs toward the camera, his shoes glow bright blue"
+   }
+  },
+  {
+   "id": "shot_010",
+   "time": "9.33-10.33",
+   "label_probs": {
+    "live_action": 0.7,
+    "ai_video": 0.3
+   },
+   "image_source": "photo",
+   "evidence": [
+    "glow plausibly real LEDs; fog diffuses light; could be enhanced"
+   ],
+   "description": "runner on a red track under a floodlight in fog, shoes glow blue, rear and side angles, one crouch start",
+   "narrative": {
+    "role": "payoff",
+    "point": "Foggy night track, shoes glow red / blue, several angles"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Wide shot of a foggy running track at night under one floodlight, a runner in black jogs toward the camera, his shoes glow bright blue",
+    "video_prompt": "Wide shot of a foggy running track at night under one floodlight, a runner in black jogs toward the camera, his shoes glow bright blue",
+    "video_prompt_en": "Wide shot of a foggy running track at night under one floodlight, a runner in black jogs toward the camera, his shoes glow bright blue"
+   }
+  },
+  {
+   "id": "shot_011",
+   "time": "10.33-11.37",
+   "label_probs": {
+    "live_action": 0.7,
+    "ai_video": 0.3
+   },
+   "image_source": "photo",
+   "evidence": [
+    "glow plausibly real LEDs; fog diffuses light; could be enhanced"
+   ],
+   "description": "runner on a red track under a floodlight in fog, shoes glow blue, rear and side angles, one crouch start",
+   "narrative": {
+    "role": "payoff",
+    "point": "Foggy night track, shoes glow red / blue, several angles"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Wide shot of a foggy running track at night under one floodlight, a runner in black jogs toward the camera, his shoes glow bright blue",
+    "video_prompt": "Wide shot of a foggy running track at night under one floodlight, a runner in black jogs toward the camera, his shoes glow bright blue",
+    "video_prompt_en": "Wide shot of a foggy running track at night under one floodlight, a runner in black jogs toward the camera, his shoes glow bright blue"
+   }
+  },
+  {
+   "id": "shot_012",
+   "time": "11.37-12.40",
+   "label_probs": {
+    "live_action": 0.7,
+    "ai_video": 0.3
+   },
+   "image_source": "photo",
+   "evidence": [
+    ""
+   ],
+   "description": "rear static shot, runner standing on the track, shoes glowing",
+   "narrative": {
+    "role": "cta",
+    "point": "Runner stands facing away, glowing shoes, CTA label"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Rear static shot on a foggy track at night, a runner stands still, both shoes glowing blue",
+    "video_prompt": "Rear static shot on a foggy track at night, a runner stands still, both shoes glowing blue",
+    "video_prompt_en": "Rear static shot on a foggy track at night, a runner stands still, both shoes glowing blue"
+   }
+  }
+ ],
+ "aspects": {
+  "camera": {
+   "setups": "",
+   "gear_guess": ""
+  },
+  "lighting": {
+   "lighting_overall": ""
+  },
+  "grade": {
+   "grade_overall": ""
+  },
+  "editing": {
+   "editing": ""
+  },
+  "format": {
+   "format": ""
+  }
+ },
+ "story": {
+  "summary": "LED shoe lights: guy tapes his phone flashlight to his shoes (the concept) vs the real clip-on lights, then runs on a foggy track with glowing shoes.",
+  "hook": "'The concept 🤢' + man in a bedroom with a US flag holding two phones, then taping them to his shoes.",
+  "highlights": [
+   "0–5s: absurd DIY attempt, 5 shots in 5 s, ends with him running outside with phones on his feet",
+   "5–7s: 'Vs..👀' sits on stairs, holds the box, clips lights on",
+   "7–11s: 'The result 😎' foggy stadium at night, shoes glow red then blue, 4 angles",
+   "11.3s: 'comment run if you want them' over the last result shot"
+  ]
+ },
+ "cast": {
+  "style": "Live phone footage, suburban bedroom, foggy night track",
+  "characters": [
+   {
+    "id": "A",
+    "name": "Runner",
+    "kind": "person",
+    "look": "young Black man, grey tee then black hoodie",
+    "role": "protagonist",
+    "voice": "",
+    "shots": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12
+    ]
+   }
+  ],
+  "scenes": [
+   {
+    "id": "S1",
+    "where": "bedroom with US flag and shoe shelf",
+    "when": "evening",
+    "look": "warm lamp",
+    "shots": [
+     1,
+     2,
+     3,
+     4
+    ]
+   },
+   {
+    "id": "S2",
+    "where": "suburban sidewalk",
+    "when": "dusk",
+    "look": "",
+    "shots": [
+     5
+    ]
+   },
+   {
+    "id": "S3",
+    "where": "stairs at home",
+    "when": "evening",
+    "look": "",
+    "shots": [
+     6,
+     7
+    ]
+   },
+   {
+    "id": "S4",
+    "where": "running track in fog",
+    "when": "night",
+    "look": "floodlight haze",
+    "shots": [
+     8,
+     9,
+     10,
+     11,
+     12
+    ]
+   }
+  ],
+  "props": [
+   {
+    "name": "clip-on LED shoe lights",
+    "note": "product",
+    "shots": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12
+    ]
+   },
+   {
+    "name": "two phones taped to shoes",
+    "note": "the joke",
+    "shots": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ]
+   }
+  ]
+ },
+ "packaging": {
+  "stickers": [],
+  "text": [
+   {
+    "id": "text_003",
+    "kind": ""
+   },
+   {
+    "id": "text_005",
+    "kind": ""
+   }
+  ],
+  "missed": []
+ }
+}

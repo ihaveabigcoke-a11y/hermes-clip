@@ -1,0 +1,34 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 720
+PlayResY: 1280
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: subtitle_1,Sans,58,&H00FCFBFA,&H0000FFFF,&H0007060A,&H00000000,0,0,0,0,100,100,0,0,1,2,0,5,0,0,0,1
+Style: huazi_2,Sans,41,&H007B8088,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,-21,1,0,0,5,0,0,0,1
+Style: label_3,Sans,31,&H009EA2A9,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,-19,1,0,0,5,0,0,0,1
+Style: label_4,Sans,30,&H00A0A6AE,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,-1,1,0,0,5,0,0,0,1
+Style: label_5,Sans,19,&H00A1A7AF,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,-1,1,0,0,5,0,0,0,1
+Style: huazi_6,Sans,68,&H00F8F6F5,&H0000FFFF,&H000A0506,&H00000000,0,0,0,0,100,100,0,4,1,1,0,5,0,0,0,1
+Style: subtitle_7,Sans,59,&H00FCFBFA,&H0000FFFF,&H0007060A,&H00000000,0,0,0,0,100,100,0,-0,1,2,0,5,0,0,0,1
+Style: label_8,Sans,18,&H00878E99,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,10,1,0,0,5,0,0,0,1
+Style: huazi_9,Sans,38,&H007F8590,&H0000FFFF,&H00020000,&H00020000,0,0,0,0,100,100,0,10,3,8,0,5,0,0,0,1
+Style: subtitle_10,Sans,55,&H00FCFBFA,&H0000FFFF,&H0007060A,&H00000000,0,0,0,0,100,100,0,0,1,2,0,5,0,0,0,1
+Style: huazi_11,Sans,39,&H00CECCF9,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,-24,1,0,0,5,0,0,0,1
+Style: subtitle_12,Sans,53,&H00FCFBFA,&H0000FFFF,&H0007060A,&H00000000,0,0,0,0,100,100,0,1,1,2,0,5,0,0,0,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:04.60,subtitle_1,,0,0,0,,{\pos(348,201)}What people think\Nwe sell
+Dialogue: 1,0:00:00.00,0:00:00.60,huazi_2,,0,0,0,,{\pos(623,633)}FOREHTS
+Dialogue: 1,0:00:00.00,0:00:00.50,label_3,,0,0,0,,{\pos(612,648)}EPHHES
+Dialogue: 1,0:00:04.00,0:00:04.60,label_4,,0,0,0,,{\pos(537,724)\fad(200,200)}FORGHTS
+Dialogue: 1,0:00:04.00,0:00:04.60,label_5,,0,0,0,,{\pos(537,745)\fad(200,200)}EPHARHERS
+Dialogue: 1,0:00:04.50,0:00:04.60,huazi_6,,0,0,0,,{\pos(285,234)}we sell
+Dialogue: 0,0:00:05.00,0:00:06.80,subtitle_7,,0,0,0,,{\pos(360,198)}VS...
+Dialogue: 1,0:00:05.30,0:00:06.10,label_8,,0,0,0,,{\pos(607,814)}EPHESIANS 1:7
+Dialogue: 1,0:00:05.40,0:00:06.30,huazi_9,,0,0,0,,{\pos(594,794)\fad(200,200)}FORGIVEN
+Dialogue: 0,0:00:07.00,0:00:09.60,subtitle_10,,0,0,0,,{\pos(370,206)\fad(200,200)}What we actually sell +
+Dialogue: 1,0:00:09.00,0:00:09.10,huazi_11,,0,0,0,,{\pos(125,303)}m
+Dialogue: 0,0:00:10.00,0:00:11.20,subtitle_12,,0,0,0,,{\pos(355,205)\fad(200,200)}Comment "JESUS" to get\Nyours!

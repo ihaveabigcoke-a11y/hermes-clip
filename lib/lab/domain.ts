@@ -88,7 +88,7 @@ export const schemas = {
       costCurrency: candidateCurrencySchema.nullable().optional(),
       shippingCurrency: candidateCurrencySchema.nullable().optional(),
       archived: z.boolean().default(false),
-      researchOrigin: z.object({batchId: z.string().max(50), candidateId: z.string().max(50)}).optional(),
+      researchOrigin: z.object({batchId: z.string().max(120), candidateId: z.string().max(120)}).optional(),
     })
     .superRefine((v, c) => {
       if (v.sampleVerified && !v.proofNotes && !v.proofUrl)
@@ -221,13 +221,19 @@ export const emptyProduct = {
   archived: false,
 };
 export function productFromCandidate(batchId: string, batch: Pick<ResearchBatch, "market" | "locale">, candidate: Candidate) {
+  const summary = (value: string, limit: number) => {
+    const marker = '…[đã rút gọn, xem đầy đủ ở ứng viên research]';
+    // Avoid cutting a UTF-16 surrogate pair. The original stays in the batch.
+    const head = value.slice(0, limit - marker.length).replace(/[\uD800-\uDBFF]$/, '');
+    return value.length <= limit ? value : head + marker;
+  };
   return {
     ...emptyProduct, name: candidate.name, market: batch.market, locale: batch.locale,
     supplierUrl: candidate.supplierUrl, referenceUrl: candidate.evidenceUrl,
     price: candidate.price, cost: candidate.cost, shipping: candidate.shipping, currency: candidate.currency,
     costCurrency: candidate.costCurrency ?? null, shippingCurrency: candidate.shippingCurrency ?? null,
-    problem: candidate.contentAngle,
-    proofNotes: [candidate.evidenceNotes, candidate.risks].filter(Boolean).join("\n"),
+    problem: summary(candidate.contentAngle, 1000),
+    proofNotes: summary([candidate.evidenceNotes, candidate.risks].filter(Boolean).join("\n"), 2000),
     researchOrigin: {batchId, candidateId: candidate.id},
   };
 }

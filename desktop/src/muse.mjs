@@ -234,7 +234,7 @@ export class MuseAdapter {
       }
       path = path.slice(0, -extname(path).length) + extension;
     }
-    await saveDownload(download,path);
+    path=await saveDownload(download,path,{compress:true,onCompression:compression=>{this.compression=compression;}});
     if (this.chatMode) await page.keyboard.press('Escape');
     return path;
   }

@@ -1,0 +1,590 @@
+{
+ "by": "claude-fable",
+ "shots": [
+  {
+   "id": "shot_001",
+   "time": "0.00-4.03",
+   "label_probs": {
+    "live_action": 0.85,
+    "ai_video": 0.15
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real interior reflections, natural dog motion, phone-camera look"
+   ],
+   "description": "driver POV, black puppy standing on centre console looking out windshield, road ahead",
+   "narrative": {
+    "role": "hook",
+    "point": "Puppy standing on the console of a moving car, driver's hand on wheel"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Driver POV inside a luxury car with tan leather, a black Labrador puppy stands on the centre console looking out the windshield, road visible ahead, handheld",
+    "video_prompt": "Driver POV inside a luxury car with tan leather, a black Labrador puppy stands on the centre console looking out the windshield, road visible ahead, handheld",
+    "video_prompt_en": "Driver POV inside a luxury car with tan leather, a black Labrador puppy stands on the centre console looking out the windshield, road visible ahead, handheld"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_002",
+   "time": "4.03-5.03",
+   "label_probs": {
+    "live_action": 0.85,
+    "ai_video": 0.15
+   },
+   "image_source": "photo",
+   "evidence": [
+    "continuous real set, real hands and buckle"
+   ],
+   "description": "woman lifts cream booster seat onto passenger seat, sets puppy in, clips tether, pulls strap around headrest",
+   "narrative": {
+    "role": "proof",
+    "point": "Installing the booster seat and buckling the puppy in"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Handheld medium shot from the driver's side, a woman lifts a cream dog booster seat onto the passenger seat of a luxury car, places a black puppy inside and clips the tether",
+    "video_prompt": "Handheld medium shot from the driver's side, a woman lifts a cream dog booster seat onto the passenger seat of a luxury car, places a black puppy inside and clips the tether",
+    "video_prompt_en": "Handheld medium shot from the driver's side, a woman lifts a cream dog booster seat onto the passenger seat of a luxury car, places a black puppy inside and clips the tether"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_003",
+   "time": "5.03-7.03",
+   "label_probs": {
+    "live_action": 0.85,
+    "ai_video": 0.15
+   },
+   "image_source": "photo",
+   "evidence": [
+    "continuous real set, real hands and buckle"
+   ],
+   "description": "woman lifts cream booster seat onto passenger seat, sets puppy in, clips tether, pulls strap around headrest",
+   "narrative": {
+    "role": "proof",
+    "point": "Installing the booster seat and buckling the puppy in"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Handheld medium shot from the driver's side, a woman lifts a cream dog booster seat onto the passenger seat of a luxury car, places a black puppy inside and clips the tether",
+    "video_prompt": "Handheld medium shot from the driver's side, a woman lifts a cream dog booster seat onto the passenger seat of a luxury car, places a black puppy inside and clips the tether",
+    "video_prompt_en": "Handheld medium shot from the driver's side, a woman lifts a cream dog booster seat onto the passenger seat of a luxury car, places a black puppy inside and clips the tether"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_004",
+   "time": "7.03-8.23",
+   "label_probs": {
+    "live_action": 0.85,
+    "ai_video": 0.15
+   },
+   "image_source": "photo",
+   "evidence": [
+    "continuous real set, real hands and buckle"
+   ],
+   "description": "woman lifts cream booster seat onto passenger seat, sets puppy in, clips tether, pulls strap around headrest",
+   "narrative": {
+    "role": "proof",
+    "point": "Installing the booster seat and buckling the puppy in"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Handheld medium shot from the driver's side, a woman lifts a cream dog booster seat onto the passenger seat of a luxury car, places a black puppy inside and clips the tether",
+    "video_prompt": "Handheld medium shot from the driver's side, a woman lifts a cream dog booster seat onto the passenger seat of a luxury car, places a black puppy inside and clips the tether",
+    "video_prompt_en": "Handheld medium shot from the driver's side, a woman lifts a cream dog booster seat onto the passenger seat of a luxury car, places a black puppy inside and clips the tether"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_005",
+   "time": "8.23-9.00",
+   "label_probs": {
+    "live_action": 0.85,
+    "ai_video": 0.15
+   },
+   "image_source": "photo",
+   "evidence": [
+    "continuous real set, real hands and buckle"
+   ],
+   "description": "woman lifts cream booster seat onto passenger seat, sets puppy in, clips tether, pulls strap around headrest",
+   "narrative": {
+    "role": "proof",
+    "point": "Installing the booster seat and buckling the puppy in"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Handheld medium shot from the driver's side, a woman lifts a cream dog booster seat onto the passenger seat of a luxury car, places a black puppy inside and clips the tether",
+    "video_prompt": "Handheld medium shot from the driver's side, a woman lifts a cream dog booster seat onto the passenger seat of a luxury car, places a black puppy inside and clips the tether",
+    "video_prompt_en": "Handheld medium shot from the driver's side, a woman lifts a cream dog booster seat onto the passenger seat of a luxury car, places a black puppy inside and clips the tether"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_006",
+   "time": "9.00-9.67",
+   "label_probs": {
+    "live_action": 0.85,
+    "ai_video": 0.15
+   },
+   "image_source": "photo",
+   "evidence": [
+    "continuous real set, real hands and buckle"
+   ],
+   "description": "woman lifts cream booster seat onto passenger seat, sets puppy in, clips tether, pulls strap around headrest",
+   "narrative": {
+    "role": "proof",
+    "point": "Installing the booster seat and buckling the puppy in"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Handheld medium shot from the driver's side, a woman lifts a cream dog booster seat onto the passenger seat of a luxury car, places a black puppy inside and clips the tether",
+    "video_prompt": "Handheld medium shot from the driver's side, a woman lifts a cream dog booster seat onto the passenger seat of a luxury car, places a black puppy inside and clips the tether",
+    "video_prompt_en": "Handheld medium shot from the driver's side, a woman lifts a cream dog booster seat onto the passenger seat of a luxury car, places a black puppy inside and clips the tether"
+   }
+  },
+  {
+   "id": "shot_007",
+   "time": "9.67-11.83",
+   "label_probs": {
+    "live_action": 0.85,
+    "ai_video": 0.15
+   },
+   "image_source": "photo",
+   "evidence": [
+    "same seat and dog, natural fur and light"
+   ],
+   "description": "puppy sitting upright in seat, then curled asleep under a grey blanket, driver's hand reaches to pet it",
+   "narrative": {
+    "role": "payoff",
+    "point": "Puppy calm, then asleep in the seat, 4 angles"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up from the driver's seat, a black puppy sleeps curled in a cream booster seat under a grey blanket, car moving, soft daylight",
+    "video_prompt": "Close-up from the driver's seat, a black puppy sleeps curled in a cream booster seat under a grey blanket, car moving, soft daylight",
+    "video_prompt_en": "Close-up from the driver's seat, a black puppy sleeps curled in a cream booster seat under a grey blanket, car moving, soft daylight"
+   }
+  },
+  {
+   "id": "shot_008",
+   "time": "11.83-13.57",
+   "label_probs": {
+    "live_action": 0.85,
+    "ai_video": 0.15
+   },
+   "image_source": "photo",
+   "evidence": [
+    "same seat and dog, natural fur and light"
+   ],
+   "description": "puppy sitting upright in seat, then curled asleep under a grey blanket, driver's hand reaches to pet it",
+   "narrative": {
+    "role": "payoff",
+    "point": "Puppy calm, then asleep in the seat, 4 angles"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up from the driver's seat, a black puppy sleeps curled in a cream booster seat under a grey blanket, car moving, soft daylight",
+    "video_prompt": "Close-up from the driver's seat, a black puppy sleeps curled in a cream booster seat under a grey blanket, car moving, soft daylight",
+    "video_prompt_en": "Close-up from the driver's seat, a black puppy sleeps curled in a cream booster seat under a grey blanket, car moving, soft daylight"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_009",
+   "time": "13.57-15.20",
+   "label_probs": {
+    "live_action": 0.85,
+    "ai_video": 0.15
+   },
+   "image_source": "photo",
+   "evidence": [
+    "same seat and dog, natural fur and light"
+   ],
+   "description": "puppy sitting upright in seat, then curled asleep under a grey blanket, driver's hand reaches to pet it",
+   "narrative": {
+    "role": "payoff",
+    "point": "Puppy calm, then asleep in the seat, 4 angles"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up from the driver's seat, a black puppy sleeps curled in a cream booster seat under a grey blanket, car moving, soft daylight",
+    "video_prompt": "Close-up from the driver's seat, a black puppy sleeps curled in a cream booster seat under a grey blanket, car moving, soft daylight",
+    "video_prompt_en": "Close-up from the driver's seat, a black puppy sleeps curled in a cream booster seat under a grey blanket, car moving, soft daylight"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_010",
+   "time": "15.20-18.00",
+   "label_probs": {
+    "live_action": 0.85,
+    "ai_video": 0.15
+   },
+   "image_source": "photo",
+   "evidence": [
+    "same seat and dog, natural fur and light"
+   ],
+   "description": "puppy sitting upright in seat, then curled asleep under a grey blanket, driver's hand reaches to pet it",
+   "narrative": {
+    "role": "payoff",
+    "point": "Puppy calm, then asleep in the seat, 4 angles"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up from the driver's seat, a black puppy sleeps curled in a cream booster seat under a grey blanket, car moving, soft daylight",
+    "video_prompt": "Close-up from the driver's seat, a black puppy sleeps curled in a cream booster seat under a grey blanket, car moving, soft daylight",
+    "video_prompt_en": "Close-up from the driver's seat, a black puppy sleeps curled in a cream booster seat under a grey blanket, car moving, soft daylight"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  }
+ ],
+ "aspects": {
+  "camera": {
+   "setups": "",
+   "gear_guess": ""
+  },
+  "lighting": {
+   "lighting_overall": ""
+  },
+  "grade": {
+   "grade_overall": ""
+  },
+  "editing": {
+   "editing": ""
+  },
+  "format": {
+   "format": ""
+  }
+ },
+ "story": {
+  "summary": "Dog car seat: puppy standing on the console of a moving Mercedes (risk) vs installing the seat and buckling the dog in, then the puppy sleeps.",
+  "hook": "'The risk 🤢' + black puppy standing on the centre console while the car is moving, driver POV.",
+  "highlights": [
+   "0–4s: danger that any dog owner recognises instantly, shot from the driver's seat",
+   "4–9.5s: 'VS...' install sequence, 5 shots: lift seat in, place dog, clip tether, adjust headrest",
+   "9.5–18s: 'The solution 🤩' 4 angles of the dog calm and then asleep",
+   "Luxury interior (Mercedes, tan leather) is an aspiration cue; no CTA text, keyword is in the caption"
+  ]
+ },
+ "cast": {
+  "style": "Live phone footage inside a Mercedes, overcast daylight",
+  "characters": [
+   {
+    "id": "A",
+    "name": "Owner",
+    "kind": "person",
+    "look": "woman, black sports top",
+    "role": "installs seat",
+    "voice": "",
+    "shots": [
+     2,
+     3,
+     4,
+     5,
+     6,
+     9
+    ]
+   },
+   {
+    "id": "B",
+    "name": "Puppy",
+    "kind": "animal",
+    "look": "black Labrador puppy",
+    "role": "subject",
+    "voice": "",
+    "shots": [
+     1,
+     4,
+     5,
+     7,
+     8,
+     9,
+     10
+    ]
+   }
+  ],
+  "scenes": [
+   {
+    "id": "S1",
+    "where": "Mercedes front seats, tan leather",
+    "when": "day, overcast",
+    "look": "clean, blue ambient strip",
+    "shots": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10
+    ]
+   }
+  ],
+  "props": [
+   {
+    "name": "cream dog booster seat with tether",
+    "note": "product",
+    "shots": [
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10
+    ]
+   }
+  ]
+ },
+ "packaging": {
+  "stickers": [
+   {
+    "id": "sticker_01",
+    "is_overlay": null,
+    "what": ""
+   }
+  ],
+  "text": [
+   {
+    "id": "text_006",
+    "kind": ""
+   },
+   {
+    "id": "text_007",
+    "kind": ""
+   },
+   {
+    "id": "text_008",
+    "kind": ""
+   }
+  ],
+  "missed": []
+ }
+}

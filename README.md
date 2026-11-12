@@ -25,7 +25,7 @@ Người dùng đã duyệt **giữ repository public** và công khai snapshot 
 
 Nghiên cứu 10 ứng viên → chọn tối đa 3 sản phẩm → soạn và duyệt kịch bản → Muse tạo ảnh/video → tải và nhập Thư viện → duyệt/xuất → đăng Instagram vào tài khoản đã chọn → tự đo số liệu.
 
-Thị trường mục tiêu: Mỹ; nội dung sản phẩm: tiếng Anh. Giao diện dùng tiếng Việt. Muse có giới hạn 3 lượt/profile/đợt trong app, gồm chat, nghiên cứu và tạo media. App và máy phải hoạt động khi chạy tác vụ nền; chưa có lịch tự nghiên cứu mỗi đêm được nghiệm thu.
+Thị trường mục tiêu: Mỹ; nội dung sản phẩm: tiếng Anh. Giao diện dùng tiếng Việt. Cập nhật 12/11/2026: đã bỏ giới hạn 3 lượt/profile/đợt trong app theo yêu cầu người dùng; bộ đếm chỉ ghi lịch sử, hạn mức thực tế lấy từ Muse. App và máy phải hoạt động khi chạy tác vụ nền; chưa có lịch tự nghiên cứu mỗi đêm được nghiệm thu.
 
 ## Trạng thái và giới hạn
 
