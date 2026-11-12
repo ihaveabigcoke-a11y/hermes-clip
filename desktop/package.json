@@ -10,7 +10,7 @@
   },
   "scripts": {
     "start": "electron .",
-    "test": "node --test test/*.test.mjs",
+    "test": "node ../scripts/run-source-tests.mjs desktop test/*.test.mjs",
     "browser:install": "playwright install chromium",
     "dist:win": "electron-builder --win nsis --x64",
     "start:hosted": "electron . --hosted",

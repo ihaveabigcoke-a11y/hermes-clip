@@ -7,7 +7,160 @@ import {execFileSync} from 'node:child_process';
 import {newProduction,applyProduction,checkMedia,takeGate,variantItems,parseCsv,productionSchema,providerAdapter,creativeDrafts,creativeDuration} from '../lib/lab/production.ts';
 import {inspectMedia} from '../lib/lab/media.ts';
 import {productionPackage,buildManifest,zipFiles,crc32} from '../lib/lab/package.ts';
+import {formulaStoryboard} from '../lib/lab/intelligence.ts';
+import {viralFormulas} from '../lib/lab/viral-formulas.ts';
+import {sceneInputSchema} from '../lib/lab/production.ts';
+import {pendingTakeSelection,ProductionError} from '../lib/lab/production.ts';
+import {variantExportStatus} from '../lib/lab/package.ts';
+import {workflowGuidance} from '../lib/lab/workflow-guidance.ts';
+import {queueTakeSelections,groupQueueJobs} from '../lib/lab/queue-view.ts';
+import {mediaCatalog} from '../lib/lab/media-catalog.ts';
+import {instagramProductSummary,instagramAccountContentRows} from '../lib/lab/instagram-summary.ts';
+import {formulaProduction,formulaRecords} from './fixtures/formula-production.mjs';
 let seq=0;const run=(p,a,d,key=`cmd_${++seq}`,productRevision=p.productRevision)=>applyProduction(p,a,d,key,1000+seq,productRevision);
+
+test('F03 exported sample verification follows the checklist without rewriting the product',()=>{
+  const p=formulaProduction({approved:true,pinned:true});
+  for(const sampleVerified of [undefined,false,true]){
+    for(const sampleCheck of [undefined,null,{}, {matchesVideo:null},{matchesVideo:false},{matchesVideo:true}]){
+      const product={id:p.productId,revision:p.productRevision,kind:'product',data:{name:'Sample fixture',sampleVerified,sampleCheck}};
+      const before=structuredClone(product);
+      const manifest=buildManifest(p,p.variants[0].id,product);
+      assert.equal(manifest.product.sampleVerified,sampleCheck?.matchesVideo===true);
+      assert.equal(manifest.approval_scope,'internal');
+      assert.deepEqual(product,before);
+    }
+  }
+});
+
+test('nullable formula draft has safe waiting status across package preflight, guidance, queue and Instagram; export does no I/O',async t=>{
+  const p=productionSchema.parse(JSON.parse(JSON.stringify(formulaProduction()))),before=structuredClone(p),records=formulaRecords(p);
+  const fetched=t.mock.method(globalThis,'fetch',()=>{throw Error('Draft must never fetch media');});
+  const progress=[];
+  for(const variant of p.variants){
+    const status=variantExportStatus(p,variant.id);
+    assert.equal(status.state,'waiting_take');assert.equal(status.label,'Chờ chọn take');
+    const blocked=error=>error instanceof ProductionError&&/Chờ chọn take/.test(error.message);
+    assert.throws(()=>buildManifest(p,variant.id,records[0]),blocked);
+    await assert.rejects(productionPackage(p,variant.id,records[0],new AbortController().signal,message=>progress.push(message)),blocked);
+    assert.throws(()=>run(p,'export',{variantId:variant.id,filename:'draft.zip',kind:'package',assetId:null}),blocked);
+    assert.throws(()=>run(p,'export',{variantId:variant.id,filename:'draft.mp4',kind:'render',assetId:'fixture_render'}),blocked);
+  }
+  assert.equal(fetched.mock.callCount(),0);assert.deepEqual(progress,[]);
+  assert.equal(workflowGuidance(p,1).takeSelection.label,'Chờ chọn take');
+  assert.equal(workflowGuidance(p,1).stage,'scenes','Storyboard approval remains the first action');
+  const queue=queueTakeSelections(records);
+  assert.equal(queue.length,1);assert.equal(queue[0].label,'Chờ chọn take');assert.equal(queue[0].variantIds.length,2);
+  assert.deepEqual(queueTakeSelections(records,'another_project'),[]);
+  assert.deepEqual(mediaCatalog(records),[]);assert.deepEqual(groupQueueJobs([]),[]);
+  const summary=instagramProductSummary(records,'draft_product');
+  assert.equal(summary.waitingTakeProjects[0].label,'Chờ chọn take');assert.equal(summary.publishedPosts,0);
+  assert.equal(summary.totals.views.value,null);assert.deepEqual(instagramAccountContentRows(records,'draft_product'),[]);
+  assert.deepEqual(instagramProductSummary(records,'another_product').waitingTakeProjects,[]);
+  assert.deepEqual(p,before);
+});
+
+test('approved available takes are not implicitly selected; pinning clears waiting but still enforces revision and review',()=>{
+  const unpinned=formulaProduction({approved:true}),records=formulaRecords(unpinned);
+  assert.equal(workflowGuidance(unpinned,1).title,'Chờ chọn take');
+  assert.equal(workflowGuidance(unpinned,2).stage,'references');
+  unpinned.scenes[0].attempts.push({status:'unknown'});
+  assert.equal(workflowGuidance(unpinned,1).stage,'queue');unpinned.scenes[0].attempts.pop();
+  // A post referencing an actual take must not borrow CTA from an unselected variant.
+  records.push({id:'plan',kind:'content_plan',updatedAt:1000,data:{productId:'draft_product',productionId:'draft_project',status:'published_manual',postUrl:'https://www.instagram.com/reel/fixture/',assetId:unpinned.scenes[0].takes[0].assetId}});
+  assert.equal(instagramAccountContentRows(records,'draft_product')[0].ctaKeyword,null);
+  const pinned=formulaProduction({approved:true,pinned:true});
+  assert.equal(pendingTakeSelection(pinned),null);assert.deepEqual(queueTakeSelections(formulaRecords(pinned)),[]);
+  assert.deepEqual(instagramProductSummary(formulaRecords(pinned),'draft_product').waitingTakeProjects,[]);
+  const variant=pinned.variants[0];assert.equal(variantExportStatus(pinned,variant.id).state,'ready');
+  assert.ok(buildManifest(pinned,variant.id,records[0]).media.every(item=>typeof item.takeId==='string'));
+  pinned.scenes.find(s=>s.id===variant.hook.sceneId).takes[0].review='rejected';
+  assert.equal(variantExportStatus(pinned,variant.id).state,'blocked');
+  assert.equal(variantExportStatus(pinned,'missing').state,'blocked');
+});
+
+test('body, hook and CTA null pins each block the entire timeline even after an earlier stale take',()=>{
+  for(const target of ['body','hook','cta']){
+    const p=formulaProduction({approved:true,pinned:true}),variant=p.variants[0];
+    const pin=target==='body'?p.bodies[0].items.at(-1):variant[target];assert.ok(pin);
+    pin.takeId=null;p.scenes[0].storyboardApproved=false;
+    assert.equal(variantExportStatus(p,variant.id).state,'waiting_take',target);
+    assert.throws(()=>variantItems(p,variant.id),/Chờ chọn take/);
+    assert.ok(pendingTakeSelection(p).variantIds.includes(variant.id));
+  }
+  const legacy=newProduction('Legacy','draft_product',1);
+  assert.equal(pendingTakeSelection(productionSchema.parse(legacy)),null);
+  assert.deepEqual(queueTakeSelections([...formulaRecords(legacy),{id:'bad',kind:'production',data:{}}]),[]);
+  assert.equal(instagramProductSummary(formulaRecords(legacy),'draft_product').totals.views.value,null);
+});
+test('formula draft atomically stores a shared body and CTA with two hooks, no approval or attempts',()=>{
+  const p=newProduction('Formula','product1',1),draft=formulaStoryboard({},p,viralFormulas[0],'LED');
+  const saved=run(p,'formula_draft',draft,'formula');
+  assert.equal(p.scenes.length,0);assert.equal(saved.scenes.length,draft.rows.length+1);
+  assert.ok(saved.scenes.every(scene=>!scene.storyboardApproved&&!scene.takes.length&&!scene.attempts.length));
+  assert.equal(saved.bodies.length,1);assert.equal(saved.variants.length,2);
+  const [a,b]=saved.variants;
+  assert.equal(a.bodyId,b.bodyId);assert.deepEqual(a.cta,b.cta);assert.equal(a.ctaKeyword,'LED');assert.equal(b.ctaKeyword,'LED');
+  assert.equal(a.ctaText,b.ctaText);assert.notEqual(a.hook.sceneId,b.hook.sceneId);
+  const timeline=v=>[v.hook,...saved.bodies.find(body=>body.id===v.bodyId).items,...(v.cta?[v.cta]:[])];
+  assert.deepEqual(timeline(a).slice(1),timeline(b).slice(1));
+  assert.ok(timeline(a).every(item=>item.takeId===null));
+  const restored=productionSchema.parse(JSON.parse(JSON.stringify(saved)));
+  assert.deepEqual(run(restored,'formula_draft',draft,'formula'),restored);
+  for(const scene of saved.scenes)assert.throws(()=>run(saved,'prepare',{sceneId:scene.id}),/Duyệt kịch bản/);
+  assert.throws(()=>run(saved,'export',{variantId:a.id,filename:'draft.zip',assetId:null,kind:'package'}),/Biến thể nháp/);
+  assert.throws(()=>run(saved,'pin_formula',{bodyId:a.bodyId,items:[{sceneId:a.hook.sceneId,takeId:'missing'}]}),/mỗi cảnh/);
+  const foreign={...draft,rows:draft.rows.map(row=>({...row,referenceIds:['foreign']})),alternateHook:{...draft.alternateHook,referenceIds:['foreign']}};
+  assert.throws(()=>run(p,'formula_draft',foreign),/Tham chiếu/);assert.equal(p.scenes.length,0);
+  assert.throws(()=>run(p,'formula_draft',{...draft,alternateHook:{...draft.alternateHook,duration:9}}));
+  assert.throws(()=>run(p,'formula_draft',{...draft,rows:draft.rows.map(row=>({...row,duration:10}))}));
+});
+test('formula variants pin only explicitly selected approved videos; later overlay edits invalidate takes and preserve snapshots',()=>{
+  let p=newProduction('Formula','product1',1);
+  p=run(p,'formula_draft',formulaStoryboard({},p,viralFormulas[0],'LED'),'formula_pin');
+  const bodyId=p.bodies[0].id,variantId=p.variants[0].id;
+  const selections=[];
+  for(const original of p.scenes){
+    const take={assetId:'asset_'+original.id,name:'fixture.mp4',type:'video/mp4',size:100,sha256:'a'.repeat(64),metadata:{width:720,height:1280,duration:original.duration,verifiedBy:'container'}};
+    p=run(p,'attach',{sceneId:original.id,attemptId:null,take});
+    const takeId=p.scenes.find(scene=>scene.id===original.id).takes[0].id;
+    selections.push({sceneId:original.id,takeId});
+    assert.throws(()=>run(p,'review',{sceneId:original.id,takeId,review:'approved',notes:''}),/Kịch bản chưa duyệt/);
+    p=run(p,'storyboard',{sceneId:original.id});
+    p=run(p,'review',{sceneId:original.id,takeId,review:'approved',notes:'Synthetic fixture review'});
+  }
+  assert.throws(()=>run(p,'pin_formula',{bodyId,items:selections.map((item,index)=>index?item:{...item,takeId:'missing'})}),/chưa được duyệt/);
+  assert.throws(()=>variantItems(p,variantId),/Biến thể nháp/);
+  p=run(p,'pin_formula',{bodyId,items:selections});
+  const [a,b]=p.variants;
+  assert.deepEqual(variantItems(p,a.id).slice(1),variantItems(p,b.id).slice(1));
+  assert.equal(variantItems(p,variantId).length,viralFormulas[0].beats.length);
+  assert.throws(()=>run(p,'pin_formula',{bodyId,items:selections}),/đã ghim/);
+  const manifest=buildManifest(p,a.id,{id:'product1',revision:1,data:{}});
+  assert.equal(manifest.media[0].overlayText,p.scenes[0].overlayText);assert.equal(manifest.variant.ctaKeyword,'LED');
+  const prior=p.scenes[0],snapshot=prior.takes[0].snapshot;
+  assert.equal(JSON.parse(snapshot).overlayText,prior.overlayText);
+  p=run(p,'prepare',{sceneId:prior.id});
+  assert.equal(JSON.parse(p.scenes[0].attempts[0].snapshot).overlayText,prior.overlayText);
+  p=run(p,'scene',{...prior,overlayText:'A revised POV',referenceIds:[]});
+  assert.equal(p.scenes[0].revision,2);assert.equal(p.scenes[0].storyboardApproved,false);
+  assert.equal(p.scenes[0].takes[0].snapshot,snapshot);assert.equal(p.scenes[0].takes.length,1);
+  assert.throws(()=>variantItems(p,variantId),/Kịch bản chưa duyệt/);
+  p=run(p,'storyboard',{sceneId:prior.id});
+  assert.throws(()=>variantItems(p,variantId),/cảnh cũ/);
+});
+test('overlay and CTA fields remain optional for old records and enforce single-line limits for new drafts',()=>{
+  const legacy=newProduction('Old','product1',1);
+  const old=run(legacy,'scene',{id:'old',name:'Old scene',prompt:'Product shot'});
+  assert.equal(productionSchema.parse(JSON.parse(JSON.stringify(old))).scenes[0].overlayText,undefined);
+  for(const overlayText of [null,undefined,'', 'A short overlay'])assert.equal(sceneInputSchema.safeParse({name:'S',prompt:'Shot',overlayText}).success,true);
+  for(const overlayText of ['First\nsecond','x'.repeat(61)])assert.equal(sceneInputSchema.safeParse({name:'S',prompt:'Shot',overlayText}).success,false);
+  const draft=formulaStoryboard({},legacy,viralFormulas[0]);
+  assert.throws(()=>run(legacy,'formula_draft',{...draft,ctaKeyword:'two words'}));
+  const saved=run(legacy,'formula_draft',draft);
+  for(const variant of saved.variants){delete variant.ctaKeyword;delete variant.ctaText;delete variant.formulaId;delete variant.formulaVersion;}
+  assert.equal(productionSchema.safeParse(saved).success,true);
+});
 const input=(id='scene1',patch={})=>({id,name:id,role:'body',mediaType:'video',prompt:'A product scene with one camera movement',ratio:'9:16',duration:5,referenceIds:[],...patch});
 const media=(patch={})=>({assetId:'asset1',name:'source.mp4',type:'video/mp4',sha256:'a'.repeat(64),size:100,metadata:{width:720,height:1280,duration:5,verifiedBy:'container'},...patch});
 const start=()=>newProduction('International multi-product production','product1',1,'en-US');

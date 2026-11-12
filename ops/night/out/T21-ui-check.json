@@ -1,0 +1,29 @@
+{
+  "fixtureOnly": true,
+  "networkRequestsSent": 0,
+  "measurements": [
+    {
+      "viewport": 1366,
+      "pageWidth": 1356
+    },
+    {
+      "viewport": 1080,
+      "pageWidth": 1070
+    }
+  ],
+  "apiFixturePosts": 4,
+  "formulaAppends": 1,
+  "checks": [
+    "filename autofill/edit/reopen",
+    "caption bound",
+    "clipboard prompt <=4000",
+    "invalid JSON blocks save",
+    "fenced JSON and measured override",
+    "CTA source",
+    "no proposal from unsaved analysis",
+    "explicit append-only version",
+    "draft CAS including stale conflict",
+    "no provider/analysis IPC invoked"
+  ],
+  "consoleErrors": []
+}

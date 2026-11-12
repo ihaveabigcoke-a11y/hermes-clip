@@ -1,0 +1,29 @@
+{
+  "fixtureOnly": true,
+  "externalRequestsSent": 0,
+  "realTokenOrEncryption": false,
+  "saves": 3,
+  "tokenSaves": 1,
+  "apiChecks": 0,
+  "viewportChecks": [
+    {
+      "width": 1366,
+      "noPageOverflow": true
+    },
+    {
+      "width": 1920,
+      "noPageOverflow": true
+    }
+  ],
+  "checks": [
+    "legacy browser default",
+    "API config save/reload",
+    "password input and blank reopen",
+    "blank retains token",
+    "clear token",
+    "switch back to browser",
+    "disabled API check",
+    "API metric source and reach"
+  ],
+  "errors": []
+}

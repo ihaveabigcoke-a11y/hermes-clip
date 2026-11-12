@@ -1,17 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode, type ComponentProps } from "react";
 import { z } from "zod";
 import { Plus, Search, Download, Eye, ArrowLeft } from "lucide-react";
 import { Button, Badge, Empty, Modal, RecordForm, ClientError, api, type FieldDef } from "./primitives";
-import { type Kind, type LabRecord, emptyProduct, formatTime, schemas } from "@/lib/lab/domain";
-import { candidateSchema, researchProductId, landingHtml, landingPageSchema, type Candidate, type ResearchBatch } from "@/lib/lab/operations";
+import { type Kind, type LabRecord, formatTime, schemas } from "@/lib/lab/domain";
+import { currencyFields } from "./currency-fields";
+import { candidateSchema, landingHtml, landingPageSchema, type Candidate, type ResearchBatch } from "@/lib/lab/operations";
+import {saveResearchSelection} from '@/lib/lab/research-selection';
 import { desktopBridge, fetchAssetBytes } from "@/lib/lab/desktop-client";
 import InstagramPanel from './instagram-panel';
 import InstagramOverview from './instagram-overview';
 import ResearchCandidates from './research-candidates';
 import ResearchLauncher from './research-launcher';
+import {ProductCheckFields} from './product-check-fields';
+import ViralFormulas from './viral-formulas';
 import {instagramProductSummary} from '@/lib/lab/instagram-summary';
+import {sampleCheckWarning} from '@/lib/lab/sample-check';
 
 type Props = {
   view: "research" | "social" | "landing";
@@ -28,11 +33,11 @@ type FormSpec = {
   initial: Record<string, any>;
   fields: FieldDef[];
   validation?: {safeParse: (value: any) => any};
+  extra?: ComponentProps<typeof RecordForm>['extra'];
   save: (value: any) => Promise<unknown>;
 };
 const newId = () => crypto.randomUUID().replaceAll("-", "");
 const options = (records: LabRecord[]) => records.map(record => ({value: record.id, label: record.data.name}));
-const currencyOptions = ["USD", "VND", "GBP", "EUR"].map(value => ({value, label: value}));
 import MuseChatPanel, {type Chat} from './muse-chat';
 import {museTaskPrompt, mergeMuseResearch, parseMuseResponse, type MuseTaskKind} from '@/lib/lab/muse-workflows';
 
@@ -50,13 +55,14 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
   const [preview, setPreview] = useState("");
   const [museTask, setMuseTask] = useState<{kind: MuseTaskKind; recordId: string; prompt: string} | null>(null);
   const lock = useRef(false);
-  const products = records.filter(record => record.kind === "product" && !record.data.archived);
+  const products = records.filter(record => record.kind === "product" && (view === 'social' || !record.data.archived));
   const batches = records.filter(record => record.kind === "research_batch").sort((a,b)=>b.updatedAt-a.updatedAt);
   const choices = view === "research" ? batches : products;
   const chosen = choices.find(record => record.id === selected) ?? (view === 'social' ? undefined : choices[0]);
   const accounts = records.filter(record => record.kind === "social_account" && record.data.productId === chosen?.id);
   const plans = records.filter(record => record.kind === "content_plan" && record.data.productId === chosen?.id);
   const landing = records.find(record => record.kind === "landing_page" && record.data.productId === chosen?.id);
+  const sampleWarning = chosen && sampleCheckWarning(chosen.data);
   const disabled = busy || (!demo && offline);
   useEffect(()=>{const restore=()=>setSelected(new URL(location.href).searchParams.get('ops_id')??'');window.addEventListener('popstate',restore);return()=>window.removeEventListener('popstate',restore);},[]);
 
@@ -86,7 +92,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
   }
   function batchForm() {
     const id = newId();
-    show({title: "Tạo đợt nghiên cứu", kind: "research_batch", initial: {name: "", market: "United States", locale: "en-US", candidates: [], selectedIds: [], notes: ""},
+    show({title: "Tạo đợt nhập tay", kind: "research_batch", initial: {name: "", market: "United States", locale: "en-US", candidates: [], selectedIds: [], notes: ""},
       fields: [{name: "name", label: "Tên đợt"}, {name: "market", label: "Thị trường"}, {name: "locale", label: "Ngôn ngữ nội dung"}],
       save: async value => { await save("research_batch", id, value); select(id); }});
   }
@@ -94,6 +100,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
     if (!chosen) return;
     const batch = chosen.data as ResearchBatch;
     show({title: candidate ? "Sửa ứng viên" : "Thêm ứng viên có nguồn", kind: "research_batch", validation: candidateFormSchema,
+      extra: (values, change, errors) => <ProductCheckFields values={values} change={change} errors={errors}/>,
       initial: candidate ?? {id: newId(), name: "", supplierUrl: "", supplierCountry: "", evidenceUrl: "", evidenceNotes: "", contentAngle: "", risks: "", cost: null, shipping: null, price: null, currency: "USD"},
       fields: [
         {name: "name", label: "Tên sản phẩm"}, {name: "supplierCountry", label: "Quốc gia nhà cung cấp", help: "Điền theo nguồn đã đọc."},
@@ -102,7 +109,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
         {name: "cost", label: "Giá vốn dự kiến", type: "number", help: "Để trống nếu chưa biết."},
         {name: "shipping", label: "Phí ship dự kiến", type: "number", help: "Để trống nếu chưa biết."},
         {name: "price", label: "Giá bán giả định", type: "number", help: "Dùng để so sánh ứng viên."},
-        {name: "currency", label: "Tiền tệ", type: "select", options: currencyOptions},
+        ...currencyFields,
         {name: "contentAngle", label: "Hướng thử AI content", type: "textarea", full: true},
         {name: "risks", label: "Điều còn thiếu hoặc cần kiểm chứng", type: "textarea", full: true},
       ],
@@ -112,7 +119,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
   function openMuseTask(kind: MuseTaskKind) {
     if (!chosen) return;
     const context = view === 'research'
-      ? {query: chosen.data.name, market: chosen.data.market, locale: chosen.data.locale,
+      ? {query: chosen.data.name, market: chosen.data.market, locale: chosen.data.locale, maxLandedCostUsd: chosen.data.maxLandedCostUsd ?? 20,
         remainingSlots: 10 - chosen.data.candidates.length, existing: chosen.data.candidates.map((candidate: Candidate) => candidate.name),
         sourcing:'Ưu tiên nguồn Trung Quốc giá vốn thấp, sản phẩm không thương hiệu phù hợp video thử cho Mỹ. Đọc listing cụ thể; ghi giá theo tier, MOQ, điều kiện dropship một chiếc. Không lấy giá bán lẻ thương hiệu làm giá vốn. Giữ ship chưa rõ là null. Giá bán chỉ là giả thuyết. Giải thích bằng tiếng Việt, hook bằng tiếng Anh.'}
       : {product: chosen.data, metrics: instagramProductSummary(records,chosen.id)};
@@ -125,6 +132,10 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
     if (museTask.kind === 'research') {
       const updated = mergeMuseResearch(current.data as ResearchBatch, chat);
       if (updated !== current.data) await execute(() => save('research_batch', current.id, updated, current.revision));
+      if (!demo && desktopBridge()?.researchQueueSources) {
+        try { await desktopBridge()!.researchQueueSources({batchId: current.id}); }
+        catch (error) { notify('Kết quả Muse đã lưu; chưa xếp được tác vụ kiểm nguồn: ' + (error as Error).message); }
+      }
       return;
     }
     if (museTask.kind === 'analysis') return;
@@ -134,17 +145,12 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
     setMuseTask(null);
     setDirty(true);
   }
-  async function promote(candidate: Candidate) {
+  async function selectCandidate(candidate: Candidate, checked: boolean) {
     if (!chosen) return;
-    const batch = chosen.data as ResearchBatch;
-    await save("product", researchProductId(chosen.id, candidate.id), {
-      ...emptyProduct, name: candidate.name, market: batch.market, locale: batch.locale,
-      supplierUrl: candidate.supplierUrl, referenceUrl: candidate.evidenceUrl,
-      price: candidate.price, cost: candidate.cost, shipping: candidate.shipping, currency: candidate.currency,
-      problem: candidate.contentAngle,
-      proofNotes: [candidate.evidenceNotes, candidate.risks].filter(Boolean).join("\n"),
-      researchOrigin: {batchId: chosen.id, candidateId: candidate.id},
-    }, 0, "promote");
+    try {
+      await saveResearchSelection(chosen, candidate.id, checked, persist);
+      notify(checked ? 'Đã chọn và giữ hồ sơ sản phẩm.' : 'Đã bỏ chọn. Hồ sơ vẫn giữ.');
+    } catch (failure) { reload(); throw failure; }
   }
   function accountForm(account?: LabRecord) {
     if (!chosen) return;
@@ -167,13 +173,15 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
     if (!chosen) return;
     const id = plan?.id ?? newId();
     show({title: plan ? "Sửa kế hoạch nội dung" : "Thêm kế hoạch nội dung", kind: "content_plan",
-      initial: plan?.data ?? {name: "", productId: chosen.id, accountId: accounts.find(account => !account.data.archived)?.id ?? "", productionId: "", hook: "", script: "", caption: "", plannedDate: "", status: "draft", postUrl: "", notes: "", ...draft},
+      initial: plan ? {...plan.data, aiLabel: plan.data.aiLabel ?? 'off'} : {name: "", productId: chosen.id, accountId: accounts.find(account => !account.data.archived)?.id ?? "", productionId: "", hook: "", script: "", caption: "", plannedDate: "", status: "draft", postUrl: "", notes: "", aiLabel: 'off', ...draft},
       fields: [{name: "name", label: "Tên nội dung"},
         {name: "accountId", label: "Tài khoản", type: "select", options: [{value: "", label: "Gắn tài khoản sau"}, ...options(accounts.filter(account => !account.data.archived))]},
         {name: "productionId", label: "Dự án video", type: "select", options: [{value: "", label: "Chưa gắn dự án"}, ...options(records.filter(record => record.kind === "production" && record.data.productId === chosen.id))]},
         {name: "plannedDate", label: "Ngày dự kiến", placeholder: "YYYY-MM-DD", help: "Lưu lịch dự kiến trong app."},
         {name: "hook", label: "Mở đầu bằng tiếng Anh", type: "textarea", full: true}, {name: "script", label: "Khung kịch bản tiếng Anh", type: "textarea", full: true},
         {name: "caption", label: "Chú thích tiếng Anh", type: "textarea", full: true},
+        {name: "ctaKeyword", label: "Từ khóa CTA", placeholder: "LED / RUN / HELP", help: "Một từ tiếng Anh. Để trống để dùng từ khóa từ biến thể video đã gắn."},
+        {name: "aiLabel", label: "Nhãn AI khi đăng", type: "select", options: [{value: "off", label: "Không gắn nhãn AI (mặc định)"}, {value: "required", label: "Bắt buộc bật nhãn AI"}], help: "Mặc định không bật nhãn AI. Chọn Bắt buộc để script bật nhãn và dừng trước Share nếu không xác nhận được.", full: true},
         ...(plan?.data.status === 'published_browser' ? [] : [{name: "status", label: "Trạng thái", type: "select" as const, options: [{value: "draft", label: "Nháp"}, {value: "planned", label: "Đã lên kế hoạch"}, {value: "published_manual", label: "Đã đăng · ghi nhận thủ công"}]}]),
         {name: "postUrl", label: "URL bài Instagram", type: "url"}, {name: "notes", label: "Ghi chú", type: "textarea", full: true}],
       save: value => save("content_plan", id, value, plan?.revision ?? 0)});
@@ -190,6 +198,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
   function landingForm(draft: Record<string, any> = {}) {
     if (!chosen) return;
     show({title: "Nội dung landing page tiếng Anh", kind: "landing_page",
+      extra: () => sampleWarning ? <div className="advice-banner warning" role="status">{sampleWarning}</div> : null,
       initial: {...(landing?.data ?? {productId: chosen.id, headline: chosen.data.name, description: "", benefits: "", limitations: "", imageAssetId: "", ctaLabel: "Learn more", ctaUrl: ""}), ...draft},
       fields: [{name: "headline", label: "Tiêu đề chính", full: true}, {name: "description", label: "Mô tả tiếng Anh", type: "textarea", full: true},
         {name: "benefits", label: "Điểm nổi bật có bằng chứng · mỗi dòng một ý", type: "textarea", full: true},
@@ -225,16 +234,15 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
   }
 
   function researchView(): ReactNode {
-    if (!chosen) return <Empty title="Chưa có đợt nghiên cứu" text="Tạo đợt, lưu tối đa 10 ứng viên có nguồn và chọn tối đa 3 để thử content." action={<Button onClick={batchForm}>Tạo đợt nghiên cứu</Button>}/>;
+    if (!chosen) return <Empty title="Chưa có đợt nghiên cứu" text="Bấm Bắt đầu nghiên cứu để Muse tìm nguồn, hoặc tạo đợt nhập tay từ nút phía trên."/>;
     const batch = chosen.data as ResearchBatch;
     return <>
       <div className="operations-toolbar"><Badge>{batch.candidates.length}/10 ứng viên</Badge><Badge>{batch.selectedIds.length}/3 đã chọn</Badge>
-        <Button disabled={disabled || batch.candidates.length >= 10} onClick={() => candidateForm()}><Plus size={16}/>Thêm ứng viên</Button>
+        <Button tone="neutral" disabled={disabled || batch.candidates.length >= 10} onClick={() => candidateForm()}><Plus size={16}/>Thêm ứng viên</Button>
         <Button tone="neutral" disabled={disabled || demo || !desktopBridge() || batch.candidates.length >= 10} onClick={() => openMuseTask("research")}><Search size={16}/>{batch.candidates.length>=10?'Đã đủ 10 ứng viên':'Nghiên cứu bằng Muse'}</Button>
       </div>
       <ResearchCandidates key={chosen.id} record={chosen} records={records} disabled={disabled} onEdit={candidateForm}
-        onSelect={candidate=>act(()=>save('research_batch',chosen.id,{...batch,selectedIds:batch.selectedIds.includes(candidate.id)?batch.selectedIds.filter(id=>id!==candidate.id):[...batch.selectedIds,candidate.id]},chosen.revision))}
-        onPromote={candidate=>act(()=>promote(candidate))}/>
+        onSelect={(candidate,checked)=>act(()=>selectCandidate(candidate,checked))}/>
       {batch.notes && <details className="operations-evidence"><summary>Kết quả tìm nguồn đã lưu</summary><pre>{batch.notes}</pre></details>}
     </>;
   }
@@ -242,14 +250,17 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
     if (!chosen) return <InstagramOverview products={products} records={records} demo={demo} onOpen={select}/>;
     return <InstagramPanel key={chosen.id} product={chosen} accounts={accounts} plans={plans} records={records}
       demo={demo} disabled={disabled} onAccount={accountForm} onPlan={planForm}
+      onSaveComments={(id,data)=>save('keyword_comment_measurement',id,data)}
+      onSavePlan={(plan,data)=>save('content_plan',plan.id,data,plan.revision)}
       onCreateProduction={plan => act(() => createProduction(plan))} notify={notify}/>;
   }
 
   const titles = {research: "Nghiên cứu sản phẩm", social: chosen?chosen.data.name:"Instagram · Tổng quan sản phẩm", landing: "Trang giới thiệu"};
   return <section className="operations-panel">
     {view==='social'&&chosen&&<div><Button tone="ghost" onClick={()=>select('')}><ArrowLeft size={16}/>Tất cả sản phẩm</Button></div>}
-    <header className="operations-heading"><div><h1>{titles[view]}</h1><p>{view === "research" ? "So sánh 10 ứng viên có nguồn, chọn 3 sản phẩm để thử." : view==='social'?'Theo dõi nội dung và kết quả theo sản phẩm.':chosen?.data.name}</p></div>{view === "research" && <Button disabled={disabled} onClick={batchForm}>Tạo đợt nghiên cứu</Button>}</header>
+    <header className="operations-heading"><div><h1>{titles[view]}</h1><p>{view === "research" ? "So sánh 10 ứng viên có nguồn, chọn 3 sản phẩm để thử." : view==='social'?'Theo dõi nội dung và kết quả theo sản phẩm.':chosen?.data.name}</p></div>{view === "research" && <Button tone="neutral" disabled={disabled} onClick={batchForm}>Tạo đợt nhập tay</Button>}</header>
     {view==='research'&&<ResearchLauncher disabled={disabled||demo} onOpen={id=>{select(id);reload();}}/>}
+    {view === 'research' && <ViralFormulas records={records} disabled={disabled||demo} onSaveDraft={(draft,revision)=>persist('reference_video_draft','reference_video_draft_'+draft.id,draft,revision)} onSaveFormula={formula=>persist('viral_formula',`viral_formula_${formula.id}_v${formula.version}`,formula,0)}/>}
     {choices.length > 0 && view!=='social' && <div className="field operations-selector"><label htmlFor="operations-selection">{view === "research" ? "Đợt nghiên cứu" : "Sản phẩm"}</label><select id="operations-selection" value={chosen?.id ?? ""} disabled={busy} onChange={event => select(event.target.value)}>{choices.map(record => <option key={record.id} value={record.id}>{record.data.name}</option>)}</select></div>}
     {chosen && view !== 'research' && <div className="operations-toolbar">
       <Button disabled={disabled || demo || !desktopBridge()} onClick={() => openMuseTask(view === 'social' ? 'content' : 'landing')}>Soạn nội dung bằng Muse</Button>
@@ -257,12 +268,13 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
     </div>}
     {error && <div className="inline-error" role="alert"><p>{error}</p><Button tone="ghost" onClick={reload}>Tải lại dữ liệu</Button></div>}
     {view === "research" ? researchView() : view === "social" ? socialView() : !chosen ? <Empty title="Cần hồ sơ sản phẩm" text="Thêm sản phẩm trước khi soạn landing page."/> : <>
+      {sampleWarning && <div className="advice-banner warning" role="status">{sampleWarning}</div>}
       <div className="info-panel">Soạn trang tiếng Anh, xem trước và xuất HTML trên máy. Xuất bản, thu lead và nhận tiền đang chờ quyết định thương mại.</div>
       <div className="operations-toolbar"><Button disabled={disabled} onClick={() => landingForm()}>{landing ? "Sửa nội dung trang" : "Soạn landing page"}</Button><Button tone="neutral" disabled={disabled || !landing || demo} onClick={() => act(() => makeLanding(false))}><Eye size={16}/>Xem trước</Button><Button tone="neutral" disabled={disabled || !landing || demo} onClick={() => act(() => makeLanding(true))}><Download size={16}/>Xuất HTML trên máy</Button></div>
       {landing && <article className="production-card production-card-body"><h2>{landing.data.headline}</h2><p>{landing.data.description}</p><Badge>Bản nháp trên máy</Badge><small>Cập nhật {formatTime(landing.updatedAt)}</small></article>}
     </>}
     <Modal open={!!form} title={form?.title ?? ""} dirty={dirty} locked={busy} onClose={() => { setForm(null); setDirty(false); }}>
-      {form && <RecordForm key={form.title + String(form.initial.id ?? "")} kind={form.kind} initial={form.initial} fields={form.fields} validation={form.validation ?? schemas[form.kind]} demo={demo} onDirty={setDirty} onCancel={() => setForm(null)} onSave={async value => { await execute(() => form.save(value)); setDirty(false); setForm(null); }}/>}</Modal>
+      {form && <RecordForm key={form.title + String(form.initial.id ?? "")} kind={form.kind} initial={form.initial} fields={form.fields} extra={form.extra} validation={form.validation ?? schemas[form.kind]} demo={demo} onDirty={setDirty} onCancel={() => setForm(null)} onSave={async value => { await execute(() => form.save(value)); setDirty(false); setForm(null); }}/>}</Modal>
     <Modal open={!!museTask} title={museTask?.kind === 'research' ? 'Nghiên cứu bằng Muse' : 'Trợ lý Muse'} locked={busy} onClose={() => setMuseTask(null)}
       description={museTask?.kind === 'research' ? 'Muse tìm nguồn và tự lưu ứng viên vào đợt. Bạn kiểm tra nguồn và chọn tối đa 3 sản phẩm.' : 'Muse dùng hồ sơ sản phẩm và số liệu đã lưu để soạn nội dung.'}>
       {museTask && <div className="modal-body"><MuseChatPanel key={museTask.kind + museTask.recordId}

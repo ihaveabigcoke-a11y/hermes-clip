@@ -1,5 +1,13 @@
-import { variantItems, type Production } from "./production.ts";
+import { variantItems, pendingTakeSelection, type Production } from "./production.ts";
 import type { LabRecord } from "./domain";
+import { sampleCheckState } from "./sample-check.ts";
+
+/** Non-throwing preflight for export views; the actual export keeps its strict domain gate. */
+export function variantExportStatus(p:Production,variantId:string) {
+  if(pendingTakeSelection(p)?.variantIds.includes(variantId))return {state:'waiting_take' as const,label:'Chờ chọn take',reason:'Duyệt kịch bản/video rồi chọn đủ phiên bản cho biến thể trước khi ghép.'};
+  try {variantItems(p,variantId);return {state:'ready' as const,label:'Sẵn sàng xuất gói',reason:''};}
+  catch(error){return {state:'blocked' as const,label:'Cần duyệt lại',reason:(error as Error).message};}
+}
 
 export function crc32(bytes:Uint8Array){let c=0xffffffff;for(const b of bytes){c^=b;for(let j=0;j<8;j++)c=(c>>>1)^((c&1)?0xedb88320:0);}return (c^0xffffffff)>>>0;}
 export function zipFiles(files:{name:string;bytes:Uint8Array}[]):Uint8Array {
@@ -16,9 +24,9 @@ export function buildManifest(p:Production,variantId:string,product:LabRecord){
   if(product.id!==p.productId||product.revision!==p.productRevision)throw new Error("Hồ sơ sản phẩm đã đổi. Đồng bộ và duyệt lại trước khi xuất.");
   const variant=p.variants.find(v=>v.id===variantId)!;
   const items=variantItems(p,variantId);
-  const media=items.map(({scene,take},index)=>({order:index+1,path:`media/${String(index+1).padStart(2,"0")}_${take.id}.${take.type==="video/webm"?"webm":"mp4"}`,sceneId:scene.id,sceneRevision:scene.revision,role:scene.role,attemptId:take.attemptId,takeId:take.id,assetId:take.assetId,sourceName:take.name,sha256:take.sha256,size:take.size,metadata:take.metadata,references:scene.references,prompt:scene.prompt,voice:scene.voice}));
+  const media=items.map(({scene,take},index)=>({order:index+1,path:`media/${String(index+1).padStart(2,"0")}_${take.id}.${take.type==="video/webm"?"webm":"mp4"}`,sceneId:scene.id,sceneRevision:scene.revision,role:scene.role,attemptId:take.attemptId,takeId:take.id,assetId:take.assetId,sourceName:take.name,sha256:take.sha256,size:take.size,metadata:take.metadata,references:scene.references,prompt:scene.prompt,overlayText:scene.overlayText??null,voice:scene.voice}));
   const refs=p.references.filter(r=>items.some(i=>i.scene.references.some(pin=>pin.id===r.id&&pin.version===r.version)));
-  return {schema_version:1,approval_scope:"internal",created_at:new Date().toISOString(),production_name:p.name,product:{id:product.id,revision:product.revision,name:product.data.name,sampleVerified:product.data.sampleVerified===true,sku:product.data.sku??"",claims:product.data.allowedClaims??"",invariants:product.data.invariants??""},variant,body:p.bodies.find(b=>b.id===variant.bodyId),aspect_ratio:items[0].scene.ratio,duration_seconds:items.reduce((n,i)=>n+(i.take.metadata.duration??0),0),media,references:refs,attempts:items.flatMap(i=>i.scene.attempts.filter(a=>a.id===i.take.attemptId)),render_status:"source_package_not_merged",usage_note:"Usage null means the cost of that attempt is unknown."};
+  return {schema_version:1,approval_scope:"internal",created_at:new Date().toISOString(),production_name:p.name,product:{id:product.id,revision:product.revision,name:product.data.name,sampleVerified:sampleCheckState(product.data)==="verified",sku:product.data.sku??"",claims:product.data.allowedClaims??"",invariants:product.data.invariants??""},variant,body:p.bodies.find(b=>b.id===variant.bodyId),aspect_ratio:items[0].scene.ratio,duration_seconds:items.reduce((n,i)=>n+(i.take.metadata.duration??0),0),media,references:refs,attempts:items.flatMap(i=>i.scene.attempts.filter(a=>a.id===i.take.attemptId)),render_status:"source_package_not_merged",usage_note:"Usage null means the cost of that attempt is unknown."};
 }
 export async function productionPackage(p:Production,variantId:string,product:LabRecord,signal:AbortSignal,onProgress:(s:string)=>void){
   const manifest=buildManifest(p,variantId,product),enc=new TextEncoder();

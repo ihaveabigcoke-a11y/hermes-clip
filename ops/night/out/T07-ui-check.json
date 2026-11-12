@@ -1,0 +1,34 @@
+{
+  "fixtureOnly": true,
+  "networkRequestsSent": 0,
+  "viewportChecks": [
+    {
+      "width": 1920,
+      "noPageOverflow": true
+    },
+    {
+      "width": 1366,
+      "noPageOverflow": true
+    },
+    {
+      "width": 800,
+      "noPageOverflow": true
+    },
+    {
+      "width": 390,
+      "noPageOverflow": true
+    }
+  ],
+  "writes": 1,
+  "checks": [
+    "expand/collapse six posts",
+    "null and zero",
+    "archive/QA filter + URL persistence",
+    "open archived product",
+    "select content",
+    "cancel archive writes nothing",
+    "confirm archive retains related records",
+    "archived product retains all six posts"
+  ],
+  "consoleErrors": []
+}

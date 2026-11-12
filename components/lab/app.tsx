@@ -62,6 +62,7 @@ import {
   type FieldDef,
 } from "./primitives";
 import { ProductArt } from "./art";
+import { currencyFields } from "./currency-fields";
 import ProductionStudio from "./production";
 import OperationsPanel from "./operations";
 import AssistantSettings from "./assistant-settings";
@@ -69,6 +70,11 @@ import MuseChatPanel from "./muse-chat";
 import { creativeDuration } from "@/lib/lab/production";
 import { desktopBridge } from "@/lib/lab/desktop-client";
 import { demoRecords } from "@/lib/lab/demo";
+import {productCardDetails, showWorkspaceBanner} from "@/lib/lab/ui-state";
+import { productStage } from "@/lib/lab/product-stage";
+import { productNextStep, latestProductProduction } from "@/lib/lab/product-next-step";
+import { sampleCheckState } from "@/lib/lab/sample-check";
+import { SampleCheckFields } from "./sample-check-fields";
 import {
   type LabRecord,
   type Kind,
@@ -81,6 +87,7 @@ import {
   classifyComment,
   formatMoney,
   productFinancials,
+  productMarginLabel,
   formatTime,
 } from "@/lib/lab/domain";
 const businessViews = new Set(["overview", "studio", "experiments", "results", "social", "landing"]);
@@ -139,17 +146,12 @@ const productFields: FieldDef[] = [
   },
   { name: "supplierUrl", label: "Link nguồn hàng", type: "url" },
   { name: "referenceUrl", label: "Link nội dung tham khảo", type: "url" },
-  {
-    name: "currency",
-    label: "Tiền tệ của sản phẩm",
-    type: "select",
-    options: ["USD", "VND", "GBP", "EUR"].map((v) => ({ value: v, label: v })),
-  },
+  ...currencyFields,
   { name: "price", label: "Giá bán dự kiến", type: "number" },
   { name: "cost", label: "Giá vốn / sản phẩm", type: "number" },
   { name: "shipping", label: "Chi phí giao hàng / đơn", type: "number" },
-  { name: "fees", label: "Phí thanh toán và nền tảng / đơn", type: "number" },
-  { name: "buffer", label: "Dự phòng lỗi và hoàn trả / đơn", type: "number" },
+  { name: "fees", label: "Phí thanh toán và nền tảng / đơn", type: "number", help: "Theo tiền tệ chung." },
+  { name: "buffer", label: "Dự phòng lỗi và hoàn trả / đơn", type: "number", help: "Theo tiền tệ chung." },
   {
     name: "proofUrl",
     label: "Link video hoặc bằng chứng đã kiểm",
@@ -400,6 +402,7 @@ export default function LabApp() {
       );
     if (demo) {
       const previous = samples.find((r) => r.id === id);
+      if (kind === 'product' && action === 'promote' && previous) return previous;
       if (previous && previous.revision !== revision)
         throw new ClientError("Dữ liệu mẫu đã thay đổi. Mở lại để chỉnh sửa.");
       let d = { ...data };
@@ -881,24 +884,9 @@ export default function LabApp() {
       </div>
     );
   }
-  function stage(p: LabRecord) {
-    const es = experiments.filter((e) => e.data.productId === p.id);
-    if (
-      es.some(
-        (e) =>
-          e.data.status === "running" ||
-          metrics.some((m) => m.data.experimentId === e.id),
-      )
-    )
-      return 3;
-    if (creatives.some((c) => c.data.productId === p.id)) return 2;
-    if (p.data.supplierUrl || p.data.sampleVerified || p.data.proofNotes)
-      return 1;
-    return 0;
-  }
   const pipeline = stageNames.map((name, i) => ({
     name,
-    items: products.filter((p) => stage(p) === i),
+    items: products.filter((p) => productStage(p, records) === i),
   }));
   function productVisual(p: LabRecord, cls = "") {
     const reference = records.filter(record => record.kind === 'production' && record.data.productId === p.id).flatMap(record => record.data.references ?? []).find(ref => ref.role === 'product');
@@ -920,6 +908,24 @@ export default function LabApp() {
   }
   function productCard(p: LabRecord) {
     const margin = unitMargin(p.data);
+    const details = productCardDetails(p, records);
+    const next = productNextStep(p, records);
+    const sampleState = sampleCheckState(p.data);
+    const openNextStep = () => {
+      if (next.actionView === "products") return openEditor("product", p);
+      const url = urlState(next.actionView, "", 1);
+      for (const key of ["production", "stage", "ops_id", "ig_tab", "ig_plan", "new_product"]) url.searchParams.delete(key);
+      if (next.actionView === "social") url.searchParams.set("ops_id", p.id);
+      else {
+        const latest = latestProductProduction(p, records);
+        if (latest) {
+          url.searchParams.set("production", latest.id);
+          url.searchParams.set("stage", next.stage);
+        } else url.searchParams.set("new_product", p.id);
+      }
+      history.pushState({}, "", url);
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    };
     return (
       <article className="product-card" key={p.id}>
         {productVisual(p)}
@@ -930,16 +936,18 @@ export default function LabApp() {
               tone={
                 p.data.archived
                   ? "neutral"
-                  : p.data.sampleVerified
+                  : sampleState === "verified"
                     ? "success"
                     : "warning"
               }
             >
               {p.data.archived
                 ? "Đang lưu trữ"
-                : p.data.sampleVerified
+                : sampleState === "verified"
                   ? "Đã kiểm mẫu sản phẩm"
-                  : "Chờ kiểm mẫu sản phẩm"}
+                  : sampleState === "legacy"
+                    ? "Đã kiểm mẫu (bản cũ) – cần xác nhận khớp video"
+                    : "Chờ kiểm mẫu sản phẩm"}
             </Badge>
           </div>
           <h3>
@@ -951,6 +959,8 @@ export default function LabApp() {
             {p.data.problem ||
               "Ghi vấn đề khách hàng để bắt đầu đánh giá sản phẩm."}
           </p>
+          <p className="product-card-summary">{details.costLabel} · {details.accountCount} tài khoản · {stageNames[details.stage]}</p>
+          <p className="product-card-summary" title={next.detail}>Bước tiếp theo: {next.title}</p>
           <div className="product-finance">
             <div>
               <span>Giá dự kiến</span>
@@ -959,13 +969,13 @@ export default function LabApp() {
             <div>
               <span>Biên trước acquisition</span>
               <strong className={margin !== null && margin > 0 ? "success-text" : "warning-text"}>
-                {margin === null ? "Chưa đủ dữ liệu" : formatMoney(margin, p.data.currency)}
+                {productMarginLabel(p.data)}
               </strong>
             </div>
           </div>
           <div className="product-card-footer">
-            <Button tone="neutral" onClick={() => openEditor("product", p)}>
-              Mở hồ sơ
+            <Button tone="neutral" onClick={openNextStep} title={next.detail} aria-label={`${next.title} · ${p.data.name}`}>
+              Tiếp tục
               <ArrowUpRight size={15} />
             </Button>
             <button
@@ -1058,8 +1068,8 @@ export default function LabApp() {
             : !r.data.archived &&
               (filter === "all" ||
                 (filter === "verified"
-                  ? r.data.sampleVerified
-                  : !r.data.sampleVerified))
+                  ? sampleCheckState(r.data) === "verified"
+                  : sampleCheckState(r.data) !== "verified"))
           : filter === "all" || r.data.status === filter,
       );
   }
@@ -1162,7 +1172,7 @@ export default function LabApp() {
   }
   function overview() {
     const leads = metrics.reduce((n, m) => n + m.data.leads, 0);
-    const needsProof = products.find((p) => !p.data.sampleVerified);
+    const needsProof = products.find((p) => sampleCheckState(p.data) !== "verified");
     const focus = !products.length
       ? {
           label: "BẮT ĐẦU MỘT VÒNG THỬ",
@@ -1243,7 +1253,7 @@ export default function LabApp() {
               </span>
             </div>
             <small>
-              {products.filter((p) => p.data.sampleVerified).length} đã kiểm
+              {products.filter((p) => sampleCheckState(p.data) === "verified").length} đã kiểm
               mẫu sản phẩm
             </small>
           </div>
@@ -1371,7 +1381,7 @@ export default function LabApp() {
             >
               <span>
                 <strong>
-                  {products.filter((p) => !p.data.sampleVerified).length} sản
+                  {products.filter((p) => sampleCheckState(p.data) !== "verified").length} sản
                   phẩm chờ bằng chứng
                 </strong>
                 <small>Kiểm mẫu sản phẩm trước khi chạy test.</small>
@@ -1433,18 +1443,26 @@ export default function LabApp() {
       </>
     );
   }
+  function workspaceNotice(productScreen = false) {
+    const visible = showWorkspaceBanner(records, demo, loading);
+    if (!productScreen && !visible) return null;
+    const storage = demo ? "Dữ liệu mẫu để xem thử." : desktopBridge() ? "Dữ liệu của bạn · lưu trên máy này." : "Dữ liệu của bạn · lưu riêng trên máy chủ.";
+    return <div className={productScreen ? "info-strip product-info" : "workspace-mode"}>
+      <div className="mode-label">
+        {demo ? <Sparkles size={15}/> : <ShieldCheck size={15}/>}
+        <span>{productScreen ? `${visible ? storage + " " : ""}Nguồn hàng, bằng chứng và chi phí theo sản phẩm.` : storage}</span>
+      </div>
+      {visible && <Button tone="neutral" onClick={() => switchMode(!demo)}>
+        {demo ? "Dùng dữ liệu của bạn" : "Khám phá bản mẫu"}<ArrowRight size={14}/>
+      </Button>}
+    </div>;
+  }
   function productsView() {
     const rows = filtered(allProducts),
       paged = pageRows(rows);
     return (
       <>
-        <div className="info-strip">
-          <ShieldCheck size={18} />
-          <span>
-            Hồ sơ sản phẩm giữ chung nguồn hàng, bằng chứng và bài toán lợi
-            nhuận.
-          </span>
-        </div>
+        {workspaceNotice(true)}
         {toolbar()}
         {rows.length ? (
           <>
@@ -2200,10 +2218,10 @@ export default function LabApp() {
         <main id="lab-main" tabIndex={-1}>
           <div className="page-heading" hidden={["research", "social", "landing", "accounts", "queue", "chat", "library"].includes(view)}>
             <div>
-              <div className="page-eyebrow">
+              {view !== "products" && <div className="page-eyebrow">
                 HERMES CLIP <span>/</span>{" "}
                 {demo ? "KHÔNG GIAN MẪU" : "KHÔNG GIAN RIÊNG TƯ"}
-              </div>
+              </div>}
               <h1>{view === "overview" ? "Bàn thử nghiệm" : label}</h1>
               <p>
                 {view === "overview"
@@ -2242,22 +2260,7 @@ export default function LabApp() {
               ) : null}
             </div>
           </div>
-          <div className="workspace-mode" hidden={!demo && ["accounts", "queue", "chat", "library"].includes(view)}>
-            <div className="mode-label">
-              <span className={demo ? "sample-spark" : "real-lock"}>
-                {demo ? <Sparkles size={15} /> : <ShieldCheck size={15} />}
-              </span>
-              <span>
-                {demo
-                  ? "Dữ liệu mẫu để xem thử các bước trong app."
-                  : desktopBridge() ? "Dữ liệu của bạn · lưu trên máy này." : "Dữ liệu của bạn · lưu riêng trên máy chủ."}
-              </span>
-            </div>
-            <button onClick={() => switchMode(!demo)}>
-              {demo ? "Dùng dữ liệu của bạn" : "Khám phá bản mẫu"}
-              <ArrowRight size={14} />
-            </button>
-          </div>
+          {view !== "products" && workspaceNotice()}
           {offline && (
             <div className="persistent-error" role="status">
               <Info size={18} />
@@ -2354,6 +2357,7 @@ export default function LabApp() {
             kind={editor.kind}
             initial={editor.initial}
             fields={fieldDefs()}
+            extra={editor.kind === "product" ? (values, change, errors) => <SampleCheckFields values={values} change={change} errors={errors} records={records}/> : undefined}
             onSave={saveEditor}
             onCancel={() => {
               setEditor(null);

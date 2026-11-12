@@ -97,6 +97,25 @@ test('subprocess preserves Vietnamese UTF-8 split across output chunks', async (
  const response = await runJson(process.execPath, ['-e', script]);
  assert.equal(response.result, text);
 });
+test('subprocess counts each stdout chunk once, not the accumulated output', async t => {
+ const original=Buffer.byteLength;let scanned=0,calls=0;
+ t.mock.method(Buffer,'byteLength',(value,encoding)=>{
+  if(encoding==='utf8'&&typeof value==='string'&&/^a+$/.test(value)){scanned+=value.length;calls++;}
+  return original(value,encoding);
+ });
+ const result=await runJson(process.execPath,['-e','let n=64;function write(){process.stdout.write("a".repeat(1024));if(--n)setTimeout(write,2);}write();'],{format:'text'});
+ assert.equal(result.length,64*1024);assert.ok(calls>1);assert.equal(scanned,64*1024);
+});
+test('stdout accepts exactly 4 MiB, rejects one extra byte and never raises the hard cap',async()=>{
+ const limit=4*1024*1024;
+ const script=bytes=>`process.stdout.write('a'.repeat(${bytes}));`;
+ assert.equal((await runJson(process.execPath,['-e',script(limit)],{format:'text'})).length,limit);
+ for(const maxBytes of [limit,limit*2])await assert.rejects(()=>runJson(process.execPath,['-e',script(limit+1)],{format:'text',maxBytes}),/giới hạn/);
+ const text='€'.repeat(1000),bytes=Buffer.byteLength(text);
+ const splitScript=`const b=Buffer.from(${JSON.stringify(text)});let n=0;function write(){process.stdout.write(b.subarray(n,n+97));n+=97;if(n<b.length)setImmediate(write);}write();`;
+ assert.equal(await runJson(process.execPath,['-e',splitScript],{format:'text',maxBytes:bytes}),text);
+ await assert.rejects(()=>runJson(process.execPath,['-e',splitScript],{format:'text',maxBytes:bytes-1}),/giới hạn/);
+});
 
 async function fixture(fn){const dir=await mkdtemp(join(tmpdir(),'lab-integrations-')),s=new Store(join(dir,'state.sqlite'));try{await fn(s,dir);}finally{s.close();await rm(dir,{recursive:true,force:true});}}
 test('research argv are bounded, read-only, channel-specific and never a shell',()=>fixture(async(s,dir)=>{const calls=[];const i=new Integrations(s,dir,async(cmd,args)=>{calls.push({cmd,args});return {ok:true,items:[{url:'https://example.com',text:'fixture'}]};});i.saveConfig({python:'python',reach:'agent-reach',montage:dir});const j=await i.research({projectId:'p',channel:'web',query:'phone bouncing $(touch no)'});assert.equal(calls[0].args[2],'phone bouncing $(touch no)');assert.ok(!calls[0].args.includes('--backend'));assert.equal(j.state,'done');assert.ok((await readFile(j.path,'utf8')).includes('unreviewed'));await i.research({projectId:'p',channel:'reddit',query:'running vest'});assert.deepEqual(calls[1].args.slice(-2),['--backend','public-web']);assert.equal(researchInput.safeParse({projectId:'p',channel:'tiktok',query:'x'}).success,false);}));

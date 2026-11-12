@@ -1,3 +1,5 @@
+import {ensureInstagramAiLabel} from './instagram-ai-label.mjs';
+
 const origin = 'https://www.instagram.com';
 const handlePattern = /^[a-zA-Z0-9._]{1,30}$/;
 const reserved = new Set(['accounts', 'direct', 'explore', 'reels', 'reel', 'p', 'stories', 'create']);
@@ -116,7 +118,8 @@ export class InstagramAdapter {
     const entered = await caption.evaluate(element => element.value ?? element.innerText);
     if (normalized(entered) !== normalized(job.snapshot.caption)) throw Error('Chú thích trong Instagram chưa khớp nội dung đã chọn.');
     await dialog.getByRole('button', {name: /^Share$|^Chia sẻ$/i}).waitFor({timeout: 30000});
-    return {beforeLinks: [...new Set(beforeLinks)], preparedAt: Date.now()};
+    const aiLabelCheck = await ensureInstagramAiLabel(page, job.snapshot.aiLabel);
+    return {beforeLinks: [...new Set(beforeLinks)], preparedAt: Date.now(), aiLabelCheck};
   }
 
   async publish(page, job, beforeShare) {
@@ -131,7 +134,11 @@ export class InstagramAdapter {
     };
     page.on('response', onResponse);
     try {
+      await ensureInstagramAiLabel(page, job.snapshot.aiLabel, {enable: false});
       await beforeShare();
+      // Re-read after the asynchronous account/workspace checks, immediately
+      // before the sole Share click. A changed/missing switch stops the job.
+      await ensureInstagramAiLabel(page, job.snapshot.aiLabel, {enable: false});
       await page.getByRole('dialog').last().getByRole('button', {name: /^Share$|^Chia sẻ$/i}).click();
       const deadline = Date.now() + 120000;
       while (Date.now() < deadline) {

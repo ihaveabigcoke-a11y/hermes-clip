@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "createdAt": "2026-11-11T22:00:00+07:00",
+  "source": "12 video tham khảo người dùng gửi ngày 11/11/2026. Phân tích từ frame (1,25 frame/giây) và đếm cắt cảnh bằng FFmpeg; CHƯA chép lời audio. Giá sản phẩm chưa có báo giá.",
+  "taxonomy": {
+    "roles": ["hook", "body", "cta"],
+    "beatKinds": ["problem", "versus_unbox", "result", "cta"],
+    "hookTypes": ["problem_label", "pov_share_bait", "do_not_show", "think_vs_actually", "authority_check", "audience_callout", "emotional_story"],
+    "ctaTypes": ["comment_keyword", "send_keyword_dm", "link_in_bio"]
+  },
+  "formulas": [
+    {
+      "id": "problem-vs-result-cta",
+      "name": "Vấn đề → Vs → Kết quả → CTA từ khóa",
+      "hookType": "problem_label",
+      "aspect": "9:16",
+      "durationSec": { "min": 10, "max": 18 },
+      "cuts": { "min": 3, "max": 9 },
+      "overlay": { "position": "top-center", "lines": 1, "changesPerBeat": true, "readableMuted": true },
+      "beats": [
+        { "kind": "problem", "role": "hook", "fromSec": 0, "toSec": 4, "label": "The problem", "goal": "Một thất bại nhìn thấy được: đêm tối suýt bị xe tông, đồ tự chế xấu, thú cưng không an toàn." },
+        { "kind": "versus_unbox", "role": "body", "fromSec": 4, "toSec": 8, "label": "Vs...", "goal": "Tay mở hộp hoặc lắp đặt, góc POV, thấy rõ sản phẩm thật." },
+        { "kind": "result", "role": "body", "fromSec": 8, "toSec": 15, "label": "The result", "goal": "Cảnh đắt nhất: kết quả nhìn thấy trong một khung hình (thường là ánh sáng ban đêm), quay 2–4 góc." },
+        { "kind": "cta", "role": "cta", "fromEndSec": 3, "toEndSec": 0, "label": "Comment \"{WORD}\" for the link", "goal": "Từ khóa khớp sản phẩm hoặc ngách; giữ cảnh kết quả làm nền." }
+      ],
+      "labelVariants": {
+        "problem": ["The problem", "The idea 🤮", "The risk", "The concept"],
+        "versus_unbox": ["Vs...", "VS..."],
+        "result": ["The result", "The solution"]
+      },
+      "ctaPatterns": ["Comment \"{WORD}\" for the link", "Comment \"{WORD}\" if you want one", "Send \"{WORD}\" if you want one"],
+      "fitProductTraits": ["visual_payoff_one_frame", "night_glow", "pet", "safety", "running", "cycling"],
+      "references": ["V2", "V3", "V4", "V5", "V6", "V8"],
+      "guardrails": ["Chỉ dựng hiệu ứng mà sản phẩm thật làm được.", "Hộp/thương hiệu trên bao bì phải là của mình hoặc trung tính."]
+    },
+    {
+      "id": "pov-share-bait",
+      "name": "POV gửi cho bạn bè (kéo chia sẻ)",
+      "hookType": "pov_share_bait",
+      "aspect": "9:16",
+      "durationSec": { "min": 10, "max": 15 },
+      "cuts": { "min": 3, "max": 6 },
+      "overlay": { "position": "top-center", "lines": 2, "changesPerBeat": false, "readableMuted": true },
+      "beats": [
+        { "kind": "problem", "role": "hook", "fromSec": 0, "toSec": 5, "label": "POV: you send this to your {GROUP} buddies", "goal": "Tình huống gây tò mò có nhân vật phụ phản ứng." },
+        { "kind": "versus_unbox", "role": "body", "fromSec": 5, "toSec": 8, "label": "", "goal": "Mở hộp POV ngắn." },
+        { "kind": "result", "role": "body", "fromSec": 8, "toSec": 13, "label": "", "goal": "Kết quả đẹp nhiều góc." },
+        { "kind": "cta", "role": "cta", "fromEndSec": 4, "toEndSec": 0, "label": "Comment \"{WORD}\" for the link", "goal": "CTA từ khóa." }
+      ],
+      "labelVariants": {},
+      "ctaPatterns": ["Comment \"{WORD}\" for the link"],
+      "fitProductTraits": ["hobby_group", "cycling", "running", "visual_payoff_one_frame"],
+      "references": ["V1"],
+      "guardrails": ["Nhân vật có thẩm quyền (cảnh sát) dễ bị hiểu là chứng thực; tránh ngụ ý cơ quan nhà nước xác nhận sản phẩm."]
+    },
+    {
+      "id": "do-not-show",
+      "name": "\"DO NOT show this to a {GROUP}\" (kéo chia sẻ)",
+      "hookType": "do_not_show",
+      "aspect": "9:16",
+      "durationSec": { "min": 12, "max": 16 },
+      "cuts": { "min": 5, "max": 9 },
+      "overlay": { "position": "top-center", "lines": 2, "changesPerBeat": false, "readableMuted": true },
+      "beats": [
+        { "kind": "versus_unbox", "role": "hook", "fromSec": 0, "toSec": 6, "label": "DO NOT show this to a {GROUP}...", "goal": "Lắp đặt cận cảnh, tay đeo găng." },
+        { "kind": "result", "role": "body", "fromSec": 6, "toSec": 15, "label": "", "goal": "Kết quả trên nhiều đối tượng khác nhau." }
+      ],
+      "labelVariants": {},
+      "ctaPatterns": ["Link in bio"],
+      "fitProductTraits": ["hobby_group", "visual_payoff_one_frame"],
+      "references": ["V7"],
+      "guardrails": ["Tránh sản phẩm lắp theo đời xe; đèn trước có màu có thể vướng luật giao thông."]
+    },
+    {
+      "id": "think-vs-actually",
+      "name": "\"What people think we sell vs what we actually sell\"",
+      "hookType": "think_vs_actually",
+      "aspect": "9:16",
+      "durationSec": { "min": 10, "max": 14 },
+      "cuts": { "min": 5, "max": 9 },
+      "overlay": { "position": "top-center", "lines": 2, "changesPerBeat": true, "readableMuted": true },
+      "beats": [
+        { "kind": "problem", "role": "hook", "fromSec": 0, "toSec": 5, "label": "What people think we sell", "goal": "Cảnh làm thủ công gây sốc hoặc tò mò." },
+        { "kind": "versus_unbox", "role": "body", "fromSec": 5, "toSec": 7, "label": "VS...", "goal": "Mở hộp." },
+        { "kind": "result", "role": "body", "fromSec": 7, "toSec": 10, "label": "What we actually sell", "goal": "Người mặc hoặc dùng sản phẩm ở bối cảnh đẹp." },
+        { "kind": "cta", "role": "cta", "fromEndSec": 2, "toEndSec": 0, "label": "Comment \"{WORD}\" to get yours!", "goal": "CTA từ khóa." }
+      ],
+      "labelVariants": {},
+      "ctaPatterns": ["Comment \"{WORD}\" to get yours!"],
+      "fitProductTraits": ["identity", "apparel"],
+      "references": ["V9"],
+      "guardrails": ["Hàng may mặc có rủi ro size và đổi trả."]
+    },
+    {
+      "id": "audience-callout",
+      "name": "Gọi đúng tệp khách: \"If you {DO X}, watch this\"",
+      "hookType": "audience_callout",
+      "aspect": "9:16",
+      "durationSec": { "min": 10, "max": 14 },
+      "cuts": { "min": 3, "max": 6 },
+      "overlay": { "position": "top-center", "lines": 2, "changesPerBeat": true, "readableMuted": true },
+      "beats": [
+        { "kind": "problem", "role": "hook", "fromSec": 0, "toSec": 2, "label": "If you {DO X}, watch this 👀", "goal": "Kết quả hoặc tình huống ngay giây đầu." },
+        { "kind": "versus_unbox", "role": "body", "fromSec": 2, "toSec": 6, "label": "", "goal": "Đeo hoặc lắp sản phẩm." },
+        { "kind": "result", "role": "body", "fromSec": 6, "toSec": 10, "label": "This is how you {BENEFIT}", "goal": "Dùng trong tình huống thật." },
+        { "kind": "cta", "role": "cta", "fromEndSec": 3, "toEndSec": 0, "label": "Would you try it? Comment \"{WORD}\"", "goal": "CTA từ khóa." }
+      ],
+      "labelVariants": {},
+      "ctaPatterns": ["Would you try it? Comment \"{WORD}\""],
+      "fitProductTraits": ["beauty", "routine", "visual_payoff_one_frame"],
+      "references": ["V11"],
+      "guardrails": []
+    },
+    {
+      "id": "emotional-story-pov",
+      "name": "Câu chuyện cảm xúc (CHỈ dạng POV, không lời chứng thực giả)",
+      "hookType": "emotional_story",
+      "aspect": "9:16",
+      "durationSec": { "min": 12, "max": 16 },
+      "cuts": { "min": 5, "max": 8 },
+      "overlay": { "position": "top-center", "lines": 3, "changesPerBeat": true, "readableMuted": true },
+      "beats": [
+        { "kind": "problem", "role": "hook", "fromSec": 0, "toSec": 4, "label": "POV: {SITUATION}", "goal": "Tình huống rủi ro có cảm xúc." },
+        { "kind": "versus_unbox", "role": "body", "fromSec": 4, "toSec": 7, "label": "", "goal": "Giới thiệu sản phẩm." },
+        { "kind": "result", "role": "body", "fromSec": 7, "toSec": 12, "label": "", "goal": "Sản phẩm hoạt động như mô tả thật." },
+        { "kind": "cta", "role": "cta", "fromEndSec": 2, "toEndSec": 0, "label": "Comment \"{WORD}\" if you want one", "goal": "CTA từ khóa." }
+      ],
+      "labelVariants": {},
+      "ctaPatterns": ["Comment \"{WORD}\" if you want one"],
+      "fitProductTraits": ["safety", "family", "senior", "pet"],
+      "references": ["V12"],
+      "guardrails": ["Video gốc dùng ngôi thứ nhất (\"My dad fell…\"); FTC cấm testimonial từ người không tồn tại, kể cả do AI tạo. Chỉ dùng dạng POV.", "Sản phẩm an toàn/y tế cần claim có bằng chứng."]
+    }
+  ],
+  "references": [
+    { "id": "V1", "product": "Đèn LED gầm xe đạp (hộp NIGHTRAZE)", "hookText": "POV: you send this to your Cycling Buddies..", "ctaText": "Comment \"bike\" for the link!!!", "durationSec": 13.4, "cuts": 4, "formulaId": "pov-share-bait", "notes": "Có cảnh sát; vệt neon tỏa từ xe nhiều khả năng là hiệu ứng AI vượt sản phẩm thật." },
+    { "id": "V2", "product": "Vest chạy bộ đựng điện thoại", "hookText": "The Problem ❌", "ctaText": "Comment RUN (theo tên file)", "durationSec": 16.1, "cuts": 3, "formulaId": "problem-vs-result-cta", "notes": "Nhãn 'The product ✅' thay cho 'Vs'." },
+    { "id": "V3", "product": "Đèn kẹp giày chạy bộ", "hookText": "The concept 🤢", "ctaText": "comment \"run\" if you want them", "durationSec": 12.5, "cuts": 7, "formulaId": "problem-vs-result-cta", "notes": "Kết quả trong sương mù ban đêm." },
+    { "id": "V4", "product": "Vòng halo cho chó mù", "hookText": "The idea 🤮", "ctaText": "Comment BLIND (theo tên file)", "durationSec": 14.0, "cuts": 3, "formulaId": "problem-vs-result-cta", "notes": "Đồ tự chế bằng bìa carton làm vấn đề." },
+    { "id": "V5", "product": "Bộ dây dắt + yếm + vòng cổ LED cho chó (hộp LumaWalk)", "hookText": "The problem😕", "ctaText": "Comment LED for the link", "durationSec": 14.3, "cuts": 9, "formulaId": "problem-vs-result-cta", "notes": "Xe suýt tông chó trong đêm." },
+    { "id": "V6", "product": "Ghế ô tô cho chó", "hookText": "The risk 🤮", "ctaText": "Send PAWS if you want one", "durationSec": 18.1, "cuts": 9, "formulaId": "problem-vs-result-cta", "notes": "CTA kéo DM trực tiếp; hàng cồng kềnh, ship đắt." },
+    { "id": "V7", "product": "Đèn pha ô tô kiểu mắt (Neonblink.store)", "hookText": "DO NOT show this to a CARGUY...", "ctaText": "Link in bio", "durationSec": 15.2, "cuts": 8, "formulaId": "do-not-show", "notes": "Lắp theo đời xe; nên tránh." },
+    { "id": "V8", "product": "Đèn hậu laser xe đạp", "hookText": "The problem... 😐⛔", "ctaText": "Comment \"LED\" if you want one", "durationSec": 16.8, "cuts": 6, "formulaId": "problem-vs-result-cta", "notes": "Hoa văn laser trên đường có thể bị phóng đại." },
+    { "id": "V9", "product": "Hoodie thêu vương miện gai", "hookText": "What people think we sell", "ctaText": "Comment \"JESUS\" to get yours!", "durationSec": 11.8, "cuts": 8, "formulaId": "think-vs-actually", "notes": "" },
+    { "id": "V10", "product": "Đai giữ trẻ em ngồi sau xe máy", "hookText": "(không thấy chữ trong frame lấy mẫu; cảnh sát kiểm tra)", "ctaText": "Comment SAFETY (theo tên file)", "durationSec": 10.5, "cuts": 5, "formulaId": "pov-share-bait", "notes": "Sản phẩm an toàn trẻ em, trách nhiệm cao." },
+    { "id": "V11", "product": "Tấm che mắt khi tắm (DryLid), tiếng Tây Ban Nha", "hookText": "Si te haces las cejas y las pestañas, mira esto 👀", "ctaText": "¿Lo probarías? Comenta \"QUIERO\"", "durationSec": 12.3, "cuts": 5, "formulaId": "audience-callout", "notes": "" },
+    { "id": "V12", "product": "Đồng hồ SOS cho người già (Senvia)", "hookText": "My dad fell and was left alone in the bathroom for 5 hours", "ctaText": "Comment \"HELP\" if you want one", "durationSec": 14.5, "cuts": 7, "formulaId": "emotional-story-pov", "notes": "Lời chứng thực ngôi thứ nhất; không sao chép dạng này." }
+  ],
+  "productTraits": {
+    "prefer": ["Kết quả thấy được trong một khung hình (phát sáng ban đêm, trước/sau)", "Ngách thú cưng, an toàn, chạy bộ, đạp xe", "Nhẹ, không phụ thuộc size hay đời xe", "Không mang thương hiệu", "Giá vốn + ship tới Mỹ ≤ 20 USD"],
+    "avoid": ["Lắp theo đời xe", "Hàng cồng kềnh", "Claim y tế/an toàn khó chứng minh", "Hàng có thương hiệu", "Size/đổi trả cao"],
+    "flagOnly": ["Pin lithium (giao chậm, phí cao hơn)", "Chất lỏng"]
+  },
+  "nicheHypotheses": [
+    "Yếm/dây dắt LED cho mèo dắt đi dạo hoặc cho ngựa (đổi đối tượng từ V5)",
+    "Đồ cho chó già, chó điếc (đổi tình huống từ V4)",
+    "Đèn an toàn cho xe lăn, xe tập đi người già, xe scooter trẻ em (đổi đối tượng từ V8)"
+  ]
+}

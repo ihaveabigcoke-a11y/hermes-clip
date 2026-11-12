@@ -2,6 +2,7 @@ import {readFile, realpath} from 'node:fs/promises';
 import {join, relative, isAbsolute} from 'node:path';
 import {createHash} from 'node:crypto';
 import {sessionCookie} from './server.mjs';
+import {instagramAiLabelMode} from '../src/instagram-ai-label.mjs';
 
 export class InstagramWorkspace {
   constructor(local, changed = () => {}) { this.local = local; this.changed = changed; }
@@ -74,6 +75,7 @@ export class InstagramWorkspace {
     return {planId, revision, name: plan.data.name, productId: product.id, accountId,
       accountRevision: account.revision, expectedHandle: account.data.handle || '', productionId: production.id, sceneId: scene.id, takeId: take.id,
       assetId, assetKey: asset.data.key, sha256: asset.data.sha256, path, caption: plan.data.caption,
+      aiLabel: instagramAiLabelMode(plan.data.aiLabel),
       duration: take.metadata.duration, width: take.metadata.width, height: take.metadata.height, ratio: scene.ratio, review: take.review};
   }
 
@@ -88,7 +90,8 @@ export class InstagramWorkspace {
 
   async revalidate(snapshot) {
     const current = await this.snapshot(snapshot);
-    if (current.accountRevision !== snapshot.accountRevision || current.sha256 !== snapshot.sha256 || current.caption !== snapshot.caption) {
+    if (current.accountRevision !== snapshot.accountRevision || current.sha256 !== snapshot.sha256 || current.caption !== snapshot.caption
+      || current.aiLabel !== instagramAiLabelMode(snapshot.aiLabel)) {
       throw Error('Hồ sơ hoặc nội dung đã thay đổi trong lúc chờ. Chọn lại nội dung cần đăng.');
     }
     return current;
@@ -101,7 +104,9 @@ export class InstagramWorkspace {
     if (!plan || plan.revision !== job.snapshot.revision) throw Error('Bài đã đăng, nhưng nội dung trong app đã đổi. Xem liên kết trong lịch sử đăng.');
     await this.request('/api/lab', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({
       kind: 'content_plan', id: plan.id, revision: plan.revision,
-      data: {...plan.data, accountId: job.snapshot.accountId, assetId: job.snapshot.assetId, status: 'published_browser', postUrl: job.postUrl},
+      // Keep the legacy "published via app" status for old readers; source is explicit.
+      data: {...plan.data, accountId: job.snapshot.accountId, assetId: job.snapshot.assetId, status: 'published_browser',
+        publishSource: job.snapshot.apiMode === 'api' ? 'api' : 'browser', postUrl: job.postUrl},
     })});
     this.changed();
   }

@@ -4,7 +4,44 @@ import {readFileSync} from 'node:fs';
 import {matchesQueueFilter, resolvedQueueFailures, queueAction, queueTone, groupQueueJobs} from '../lib/lab/queue-view.ts';
 import {sceneCategory, sceneKey, matchesMediaPeriod} from '../lib/lab/media-organization.ts';
 import {preferredMedia, mediaReview, mediaInstructions} from '../lib/lab/media-catalog.ts';
+import {canSaveSceneDraft, showWorkspaceBanner, productCardDetails} from '../lib/lab/ui-state.ts';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
+
+test('scene draft save requires a nonblank prompt and an available form', () => {
+  for (const prompt of ['', '   ', '\n\t\r', '\u00a0']) assert.equal(canSaveSceneDraft(prompt), false);
+  assert.equal(canSaveSceneDraft('  Show the product in natural light.\n'), true);
+  assert.equal(canSaveSceneDraft('A prompt', true), false);
+  assert.equal(canSaveSceneDraft('', true), false);
+});
+
+test('workspace invitation appears only after loading an empty workspace; demo keeps its exit', () => {
+  assert.equal(showWorkspaceBanner([], false, true), false);
+  assert.equal(showWorkspaceBanner([], true, true), false);
+  assert.equal(showWorkspaceBanner([], false, false), true);
+  const records = [{kind:'production', data:{}}];
+  assert.equal(showWorkspaceBanner(records, false, false), true);
+  records.push({kind:'product', data:{archived:true}});
+  assert.equal(showWorkspaceBanner(records, false, false), false, 'Archived products still belong to the workspace');
+  assert.equal(showWorkspaceBanner(records, true, false), true);
+  records[1].data.archived = false;
+  assert.equal(showWorkspaceBanner(records, false, false), false);
+});
+
+test('product card shows missing costs, real zero and separate currencies with linked accounts and T03 stage', () => {
+  const product = {id:'product', kind:'product', data:{currency:'USD', cost:null, shipping:null}};
+  assert.deepEqual(productCardDetails(product, []), {costLabel:'Vốn chưa biết + ship chưa biết', accountCount:0, stage:0});
+  const records = [
+    {kind:'social_account', data:{productId:product.id}},
+    {kind:'social_account', data:{productId:product.id, archived:true}},
+    {kind:'social_account', data:{productId:'other'}},
+    {kind:'production', data:{productId:product.id}},
+  ];
+  const details = productCardDetails({...product, data:{cost:36.5, costCurrency:'CNY', shipping:0, currency:'USD'}}, records);
+  assert.equal(details.accountCount, 1); assert.equal(details.stage, 2);
+  assert.match(details.costLabel, /36[,.]5/); assert.match(details.costLabel, /CNY|CN¥|¥/); assert.match(details.costLabel, /ship.*0/);
+  const old = productCardDetails({...product, data:{currency:'USD', cost:0, shipping:0, researchOrigin:'old', proofNotes:'cost chưa biết, hồ sơ tạm ghi 0; shipping chưa biết, hồ sơ tạm ghi 0'}}, []);
+  assert.equal(old.costLabel, 'Vốn chưa biết + ship chưa biết');
+});
 test('generated tokens match documented color values',()=>{const design=read('DESIGN.md'),css=read('app/lab-tokens.css');for(const match of design.matchAll(/^  ([\w-]+): ['"](#[a-fA-F0-9]{6})['"]$/gm))assert.ok(css.includes(`--lab-${match[1]}: ${match[2]};`));});
 test('private user scope and compare-and-swap exist on every record write',()=>{const s=read('lib/lab/server.ts');assert.ok(s.includes('getChatGPTUser()'));assert.ok(s.includes('owner_id=?'));assert.ok(s.includes('lab_records.revision=?'));});
 test('editing content clears approval server-side; approval checks proof and media',()=>{const s=read('app/api/lab/route.ts');assert.match(s,/b\.action\s*===\s*['"]approve['"]/);assert.ok(s.includes('productGate(p.data)'));assert.match(s,/if\s*\(!d\.mediaUrl\)/);assert.match(s,/d\.approvedAt\s*=\s*null/);});
@@ -147,4 +184,17 @@ test('library shows immutable prompt and reference bytes from the selected take 
   entry.scene.attempts = [{id:'other',snapshot:'{}'}, {id:'original-attempt',snapshot:JSON.stringify({prompt:'Archived attempt prompt'})}];
   assert.equal(mediaInstructions(entry).prompt,'Archived attempt prompt');
   assert.equal(mediaInstructions(entry).fromSnapshot,true);
+});
+
+test('library overlay follows the selected immutable snapshot, including unknown in legacy snapshots',()=>{
+  const entry=mediaEntry('overlay',1);
+  entry.scene.overlayText='Edited later';
+  entry.take.snapshot=JSON.stringify({prompt:'Original',overlayText:'The problem'});
+  assert.equal(mediaInstructions(entry).overlayText,'The problem');
+  entry.take.snapshot=JSON.stringify({prompt:'Old snapshot without overlay'});
+  assert.equal(mediaInstructions(entry).overlayText,undefined);
+  entry.take.snapshot=JSON.stringify({prompt:'Original',overlayText:null});
+  assert.equal(mediaInstructions(entry).overlayText,null);
+  delete entry.take.snapshot;
+  assert.equal(mediaInstructions(entry).overlayText,'Edited later');
 });

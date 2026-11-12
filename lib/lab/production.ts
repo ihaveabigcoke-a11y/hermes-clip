@@ -16,6 +16,9 @@ const referenceSchema = z.object({
   notes: text(2000), createdAt: z.number(),
 });
 const pinSchema = z.object({ id, version: z.number().int().positive() });
+export const overlayTextSchema = z.string().trim().max(60, "Chữ trên màn hình tối đa 60 ký tự.").refine(value => !/[\r\n]/.test(value), "Chữ trên màn hình chỉ một dòng.").nullable().optional();
+export const ctaKeywordSchema = z.string().trim().regex(/^[A-Z]{1,20}$/, "Từ khóa cần một từ tiếng Anh in hoa, tối đa 20 chữ cái.");
+const ctaFields = {ctaKeyword: ctaKeywordSchema.nullable().optional(), ctaText: text(200).nullable().optional()};
 const attemptSchema = z.object({
   id, requestId: id, sceneRevision: z.number().int().positive(),
   status: z.enum(["awaiting_provider", "cancelled", "manual_complete", "local_complete", "unknown"]),
@@ -34,6 +37,7 @@ export const sceneInputSchema = z.object({
   role: z.enum(["hook", "body", "cta"]).default("body"),
   mediaType: z.enum(["image", "video"]).default("video"),
   prompt: z.string().trim().min(1, "Điền prompt.").max(10000),
+  overlayText: overlayTextSchema,
   action: text(1000), camera: text(1000), voice: text(2000),
   ratio: z.enum(ratios).default("9:16"), duration: z.number().min(1).max(120).default(5),
   referenceIds: z.array(id).max(12).default([]),
@@ -42,11 +46,32 @@ const sceneSchema = sceneInputSchema.omit({ referenceIds: true }).extend({
   id, revision: z.number().int().positive(), references: z.array(pinSchema).max(12),
   storyboardApproved: z.boolean(), attempts: z.array(attemptSchema).max(50), takes: z.array(takeSchema).max(50),
 });
-const itemSchema = z.object({ sceneId: id, takeId: id });
+const approvedItemSchema = z.object({ sceneId: id, takeId: id });
+// A formula draft pins scenes first. Null never resolves to an arbitrary take.
+const itemSchema = approvedItemSchema.extend({takeId: id.nullable()});
 const bodySchema = z.object({ id, name: text(150), items: z.array(itemSchema).min(1).max(30), createdAt: z.number() });
 const variantSchema = z.object({
   id, name: z.string().trim().min(1).max(150), bodyId: id, hook: itemSchema.nullable(), cta: itemSchema.nullable(),
   locale: z.string().trim().min(2).max(40), caption: text(3000), createdAt: z.number(),
+  ...ctaFields,
+  formulaId: id.optional(), formulaVersion: z.number().int().positive().optional(),
+});
+export const formulaDraftInputSchema = z.object({
+  name: z.string().trim().min(1).max(150), formulaId: id, formulaVersion: z.number().int().positive(),
+  rows: z.array(sceneInputSchema).min(2).max(18), alternateHook: sceneInputSchema,
+  ctaKeyword: ctaKeywordSchema, ctaText: z.string().trim().min(1).max(200),
+}).superRefine((draft, ctx) => {
+  const rows = draft.rows, hook = rows[0], alternate = draft.alternateHook;
+  const total = rows.reduce((sum, row) => sum + row.duration, 0);
+  if (hook.role !== 'hook' || rows.filter(row => row.role === 'hook').length !== 1 || !rows.some(row => row.role === 'body') ||
+      rows.filter(row => row.role === 'cta').length > 1 || rows.some((row, i) => row.role === 'cta' && i !== rows.length - 1))
+    ctx.addIssue({code:'custom', message:'Công thức cần một mở đầu, nội dung chính và tối đa một CTA ở cuối.'});
+  if (total < 10 - 0.001 || total > 18 + 0.001 || [...rows, alternate].some(row => row.ratio !== '9:16' || row.mediaType !== 'video'))
+    ctx.addIssue({code:'custom', message:'Bản công thức cần video 9:16, tổng 10–18 giây.'});
+  if (alternate.role !== 'hook' || alternate.duration !== hook.duration || !hook.overlayText || !alternate.overlayText ||
+      (alternate.prompt === hook.prompt && alternate.overlayText === hook.overlayText) ||
+      JSON.stringify(alternate.referenceIds) !== JSON.stringify(hook.referenceIds))
+    ctx.addIssue({code:'custom', message:'Hai mở đầu cần khác nội dung, có chữ gợi ý, cùng thời lượng và tham chiếu.'});
 });
 export const measurementSchema = z.object({variantId:id,views:z.number().int().nonnegative().max(1e12),clicks:z.number().int().nonnegative().max(1e12),sessions:z.number().int().nonnegative().max(1e10),orders:z.number().int().nonnegative().max(1e10),delivered:z.number().int().nonnegative().max(1e10),returned:z.number().int().nonnegative().max(1e10),netRevenue:z.number().nonnegative().max(1e9),totalCosts:z.number().nonnegative().max(1e9),source:z.string().trim().min(3,"Ghi nguồn số liệu.").max(500),notes:text(2000)}).superRefine((v,c)=>{for(const [a,b] of [["orders","sessions"],["delivered","orders"],["returned","delivered"]] as const)if(v[a]>v[b])c.addIssue({code:"custom",path:[a],message:`${a} không được lớn hơn ${b}.`});});
 export const productionSchema = z.object({
@@ -104,7 +129,9 @@ export function takeGate(p: Production, s: Scene, t: Take) {
   return sceneGate(p, s) || (!s.storyboardApproved ? "Kịch bản chưa duyệt." : "") ||
     (t.sceneRevision !== s.revision ? "Phiên bản thuộc phiên bản cảnh cũ. Giữ lịch sử; thêm phiên bản cho phiên bản hiện tại." : "") || checkMedia(s, t).join(" ");
 }
-export function resolveItems(p: Production, items: {sceneId: string;takeId: string}[]) {
+export function resolveItems(p: Production, items: {sceneId: string;takeId: string|null}[]) {
+  // Check the whole timeline first: an earlier stale take must not hide an unselected pin.
+  if (items.some(i => i.takeId === null)) throw new ProductionError("Biến thể nháp: Chờ chọn take. Duyệt kịch bản/video rồi chọn phiên bản để ghép.");
   return items.map(i => {
     const s = p.scenes.find(s => s.id === i.sceneId), t = s?.takes.find(t => t.id === i.takeId);
     if (!s || !t || t.review !== "approved") throw new ProductionError("Có cảnh/phiên bản chưa được duyệt.");
@@ -118,17 +145,26 @@ export function variantItems(p: Production, variantId: string) {
   if(!v||!b)throw new ProductionError("Không tìm thấy biến thể hoặc nội dung chính.");
   return resolveItems(p,[...(v.hook?[v.hook]:[]),...b.items,...(v.cta?[v.cta]:[])]);
 }
+/** Selection only, never approval: old productions without draft pins have no pending selection. */
+export function pendingTakeSelection(p: Pick<Production,'bodies'|'variants'>) {
+  const bodyIds=(p.bodies??[]).filter(body=>body.items.some(item=>item.takeId===null)).map(body=>body.id);
+  const variantIds=(p.variants??[]).filter(variant=>bodyIds.includes(variant.bodyId)
+    ||variant.hook?.takeId===null||variant.cta?.takeId===null).map(variant=>variant.id);
+  return bodyIds.length||variantIds.length?{state:'waiting_take' as const,label:'Chờ chọn take',bodyIds,variantIds}:null;
+}
 const commandSchemas: Record<string, z.ZodTypeAny> = {
   reference: referenceSchema.omit({version:true,createdAt:true}),
   scene: sceneInputSchema.extend({ id }),
   import: z.object({rows:z.array(sceneInputSchema.extend({id})).min(1).max(30)}),
+  formula_draft: formulaDraftInputSchema,
+  pin_formula: z.object({bodyId:id, items:z.array(approvedItemSchema).min(1).max(30)}),
   storyboard: z.object({sceneId:id}), prepare: z.object({sceneId:id}), retry: z.object({sceneId:id}),
   pause: z.object({paused:z.boolean()}), cancel: z.object({sceneId:id,attemptId:id}),
   attach: z.object({sceneId:id,attemptId:id.nullable(),take:takeSchema.omit({id:true,attemptId:true,sceneRevision:true,review:true,notes:true,createdAt:true})}),
   worker_result: z.object({sceneId:id,productRevision:z.number().int().positive(),sceneRevision:z.number().int().positive(),jobId:id,providerId:text(200),take:takeSchema.omit({id:true,attemptId:true,sceneRevision:true,review:true,notes:true,createdAt:true})}),
   review: z.object({sceneId:id,takeId:id,review:z.enum(["approved","rejected"]),notes:text(2000)}),
-  body: z.object({name:z.string().trim().min(1).max(150),items:z.array(itemSchema).min(1).max(30)}),
-  variant: variantSchema.omit({id:true,createdAt:true}),
+  body: z.object({name:z.string().trim().min(1).max(150),items:z.array(approvedItemSchema).min(1).max(30)}),
+  variant: variantSchema.omit({id:true,createdAt:true}).extend({hook:approvedItemSchema.nullable(),cta:approvedItemSchema.nullable()}),
   export: z.object({variantId:id,filename:z.string().regex(/^[a-zA-Z0-9_.-]{1,180}$/),assetId:id.nullable(),kind:z.enum(["package","render"])}),
   sync_product: z.object({}),
   measurement: measurementSchema,
@@ -144,7 +180,7 @@ export function applyProduction(p0: Production, action: string, input: unknown, 
   const snapshotScene = (s: Scene) => JSON.stringify({
     productId:p.productId, productRevision:p.productRevision,
     sceneId:s.id, sceneRevision:s.revision, name:s.name, role:s.role,
-    prompt:s.prompt, action:s.action, camera:s.camera, voice:s.voice,
+    prompt:s.prompt, overlayText:s.overlayText, action:s.action, camera:s.camera, voice:s.voice,
     ratio:s.ratio, duration:s.duration, mediaType:s.mediaType,
     references:s.references.map(pin=>({...pin,assetId:p.references.find(r=>r.id===pin.id&&r.version===pin.version)?.assetId})),
   });
@@ -165,6 +201,31 @@ export function applyProduction(p0: Production, action: string, input: unknown, 
   else if(action==="import") {
     const ids=d.rows.map((r:any)=>r.id);if(new Set(ids).size!==ids.length||ids.some((v:string)=>p.scenes.some(s=>s.id===v)))throw new ProductionError("Lô có Scene ID trùng. Chưa lưu dòng nào.");
     d.rows.forEach(saveScene);
+  } else if(action==="formula_draft") {
+    const rows = [...d.rows, d.alternateHook].map((row:any, index:number) => ({...row, id:`${commandId}_s${index}`}));
+    if(rows.some((row:any)=>p.scenes.some(s=>s.id===row.id)))throw new ProductionError('Mã cảnh công thức đã tồn tại.');
+    rows.forEach(saveScene);
+    const pin = (row:any) => ({sceneId:row.id, takeId:null});
+    const bodyId = commandId+'_body', cta = rows.find((row:any)=>row.role==='cta');
+    p.bodies.push({id:bodyId,name:d.name,items:rows.filter((row:any)=>row.role==='body').map(pin),createdAt:now});
+    [rows[0],rows.at(-1)].forEach((hook:any,index:number)=>p.variants.push({
+      id:commandId+(index?'_b':'_a'),name:(d.name+(index?' · B':' · A')).slice(0,150),bodyId,
+      hook:pin(hook),cta:cta?pin(cta):null,locale:'en-US',caption:d.ctaText,
+      ctaKeyword:d.ctaKeyword,ctaText:d.ctaText,formulaId:d.formulaId,formulaVersion:d.formulaVersion,createdAt:now,
+    }));
+  } else if(action==="pin_formula") {
+    const b=p.bodies.find(body=>body.id===d.bodyId), variants=p.variants.filter(v=>v.bodyId===d.bodyId);
+    if(!b||variants.length!==2||variants.some(v=>!v.formulaId))throw new ProductionError('Chọn nhóm biến thể công thức.');
+    const pins=[...b.items,...variants.flatMap(v=>[...(v.hook?[v.hook]:[]),...(v.cta?[v.cta]:[])])];
+    const ids=new Set(pins.map(pin=>pin.sceneId));
+    if(pins.some(pin=>pin.takeId!==null))throw new ProductionError('Nhóm đã ghim phiên bản; giữ nguyên lịch sử, tạo nhóm mới để đổi video.');
+    if(d.items.length!==ids.size||new Set(d.items.map((i:any)=>i.sceneId)).size!==ids.size||d.items.some((i:any)=>!ids.has(i.sceneId)))
+      throw new ProductionError('Chọn đúng một video cho mỗi cảnh trong cả hai biến thể.');
+    const resolved=resolveItems(p,d.items);
+    if(new Set(resolved.map(item=>item.scene.ratio)).size!==1||b.items.some(i=>scene(i.sceneId).role!=='body')||
+       variants.some(v=>(v.hook&&scene(v.hook.sceneId).role!=='hook')||(v.cta&&scene(v.cta.sceneId).role!=='cta')))
+      throw new ProductionError('Vai trò hoặc tỷ lệ cảnh đã đổi. Tạo nhóm công thức mới.');
+    for(const pin of pins)pin.takeId=d.items.find((i:any)=>i.sceneId===pin.sceneId).takeId;
   } else if(action==="storyboard") {
     const s=scene(d.sceneId),why=sceneGate(p,s);if(why)throw new ProductionError(why);s.storyboardApproved=true;
   } else if(action==="prepare"||action==="retry") {
@@ -174,7 +235,7 @@ export function applyProduction(p0: Production, action: string, input: unknown, 
     if(s.attempts.some(a=>a.status==="unknown"))throw new ProductionError("Lượt tạo chưa rõ kết quả. Cần đối soát mã kết quả trước khi gửi lại.");
     if(action==="prepare" && s.attempts.some(a=>a.sceneRevision===s.revision && a.status==="awaiting_provider"))throw new ProductionError("Cảnh đã có tác vụ chờ API. Dùng Thêm lượt tạo nháp khi cần thử lại.");
     if(action==="retry"&&!s.attempts.length)throw new ProductionError("Chưa có lượt tạo để thử lại.");
-    s.attempts.push({id:commandId,requestId:commandId,sceneRevision:s.revision,status:"awaiting_provider",snapshot:JSON.stringify({productId:p.productId,productRevision:p.productRevision,sceneId:s.id,sceneRevision:s.revision,prompt:s.prompt,action:s.action,camera:s.camera,voice:s.voice,references:s.references.map(pin=>({...pin,assetId:p.references.find(r=>r.id===pin.id&&r.version===pin.version)!.assetId})),ratio:s.ratio,duration:s.duration,mediaType:s.mediaType,provider:providerAdapter.id,model:null}),providerJobId:"",usageUsd:null,createdAt:now});
+    s.attempts.push({id:commandId,requestId:commandId,sceneRevision:s.revision,status:"awaiting_provider",snapshot:JSON.stringify({productId:p.productId,productRevision:p.productRevision,sceneId:s.id,sceneRevision:s.revision,prompt:s.prompt,overlayText:s.overlayText,action:s.action,camera:s.camera,voice:s.voice,references:s.references.map(pin=>({...pin,assetId:p.references.find(r=>r.id===pin.id&&r.version===pin.version)!.assetId})),ratio:s.ratio,duration:s.duration,mediaType:s.mediaType,provider:providerAdapter.id,model:null}),providerJobId:"",usageUsd:null,createdAt:now});
   } else if(action==="pause")p.paused=d.paused;
   else if(action==="cancel") {
     const a=scene(d.sceneId).attempts.find(a=>a.id===d.attemptId);if(!a||a.status!=="awaiting_provider")throw new ProductionError("Chỉ hủy tác vụ nội bộ đang chờ API.");a.status="cancelled";

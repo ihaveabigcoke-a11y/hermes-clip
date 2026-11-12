@@ -6,14 +6,18 @@ export type InstagramProfile = {
   id: string; productId: string; name: string; handle: string; userId: string; session: string;
   open: boolean; busy: boolean; background: boolean; checkedAt: number | null; error: string;
   vpnEnabled: boolean; vpn: {state?: string}; proxy: {server: string; username: string; hasPassword: boolean};
+  apiMode?: 'browser' | 'api'; apiUserId?: string | null; hasApiToken?: boolean;
 };
 export type InstagramJob = {
   id: string; state: string; createdAt: number; updatedAt: number; handle: string; postUrl: string; error: string; syncError: string;
-  snapshot: {planId: string; accountId: string; productId: string; assetId: string; caption: string; name: string};
+  snapshot: {planId: string; accountId: string; productId: string; assetId: string; caption: string; name: string; aiLabel?: 'required' | 'off' | null; apiMode?: 'browser' | 'api'};
+  apiReceipt?: {containerId:string|null;mediaId:string|null;statusCode:string|null;phase:string};
+  attentionReason?: 'ai_label' | null;
   history: {at: number; state: string; note: string}[];
 };
 export type InstagramMetricState = {planId:string;state:string;failures:number;lastAttemptAt:number|null;lastSuccessAt:number|null;nextAttemptAt:number|null;error:string};
 export type InstagramStatus = {profiles: InstagramProfile[]; jobs: InstagramJob[]; active: string | null;
+  api?:{enabled:boolean;resumableEnabled:boolean};
   metrics?:{intervalMs:number;active:string|null;rows:InstagramMetricState[]}};
 
 export function useInstagramStatus(enabled: boolean) {

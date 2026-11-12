@@ -6,6 +6,7 @@ import {InstagramBrowsers} from './instagram-browser.mjs';
 import {InstagramAdapter, instagramPostUrl} from './instagram-adapter.mjs';
 import {validateMedia} from './media.mjs';
 import {InstagramMetrics} from './instagram-metrics.mjs';
+import {InstagramApiAdapter} from './instagram-api-adapter.mjs';
 
 const id = z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/);
 const publishInput = z.object({requestId: id, planId: id, revision: z.number().int().positive(), accountId: id, assetId: id});
@@ -13,11 +14,12 @@ const pendingStates = new Set(['queued', 'waiting_login']);
 const activeStates = new Set(['preparing', 'uploading', 'submitting']);
 
 export class InstagramPublisher {
-  constructor({store, root, browser, secret, workspace, adapter = new InstagramAdapter(), validate = validateMedia}) {
+  constructor({store, root, browser, secret, workspace, adapter = new InstagramAdapter(), validate = validateMedia, apiOptions = {}, apiAdapter = new InstagramApiAdapter({secret, ...apiOptions})}) {
     this.store = store;
     this.root = root;
     this.workspace = workspace;
     this.adapter = adapter;
+    this.apiAdapter = apiAdapter;
     this.validate = validate;
     this.browsers = new InstagramBrowsers({store, root, browser, secret});
     this.active = null;
@@ -27,7 +29,7 @@ export class InstagramPublisher {
     this.checks = new Map();
     this.metrics = new InstagramMetrics(this);
     for (const job of this.jobs()) {
-      if (job.state === 'submitting') this.update(job.id, {state: 'needs_attention', error: 'App đã đóng trong lúc đăng. Kiểm tra kết quả trước khi gửi tiếp.'});
+      if (job.state === 'submitting' || job.snapshot.apiMode === 'api' && job.apiReceipt && activeStates.has(job.state)) this.update(job.id, {state: 'needs_attention', error: 'App đã đóng trong lúc đăng. Kiểm tra kết quả trước khi gửi tiếp.'});
       else if (activeStates.has(job.state)) this.update(job.id, {state: 'failed', error: 'App đã đóng trước bước chia sẻ. Có thể thử lại lượt này.'});
     }
   }
@@ -51,7 +53,7 @@ export class InstagramPublisher {
     return {...job, snapshot};
   }
   status() {
-    return {profiles: this.browsers.status(), jobs: this.jobs().map(job => this.publicJob(job)), active: this.active, metrics:this.metrics.status()};
+    return {profiles: this.browsers.status(), jobs: this.jobs().map(job => this.publicJob(job)), active: this.active, metrics:this.metrics.status(), api:this.apiAdapter.status()};
   }
   start() {
     this.stopped = false;
@@ -69,6 +71,7 @@ export class InstagramPublisher {
   async pulse() {
     for (const profile of this.browsers.rows()) {
       if (this.stopped) return;
+      if (profile.apiMode === 'api') continue;
       if (this.browsers.contexts.has(profile.id) && (!profile.vpnEnabled || profile.vpn?.state === 'connected') && !this.browsers.busy.has(profile.id) && !this.browsers.opening.has(profile.id) && !this.browsers.pageOpening.has(profile.id)) {
         await this.check({id: profile.id}).catch(() => {});
       }
@@ -78,14 +81,18 @@ export class InstagramPublisher {
   }
   async saveProfile(payload) {
     const account = await this.workspace.account(id.parse(payload.id));
+    if (this.checks.has(account.id)) throw Error('Chờ kiểm tra tài khoản kết thúc trước khi sửa kết nối.');
     if (this.jobs().some(job => job.snapshot.accountId === account.id && (pendingStates.has(job.state) || activeStates.has(job.state)))) {
       throw Error('Hủy các lượt đang chờ của hồ sơ trước khi sửa kết nối.');
     }
-    return this.browsers.save(account, {vpnEnabled: payload.vpnEnabled, proxy: payload.proxy});
+    const options = Object.fromEntries(['vpnEnabled','proxy','apiMode','apiUserId','apiToken','clearApiToken']
+      .filter(key => payload[key] !== undefined).map(key => [key, payload[key]]));
+    return this.browsers.save(account, options);
   }
   async open({id: profileId}) {
     const account = await this.workspace.account(id.parse(profileId));
     if (!this.browsers.profile(profileId)) await this.browsers.save(account);
+    if (this.browsers.profile(profileId).apiMode === 'api') {await this.check({id:profileId}); return true;}
     if (this.browsers.busy.has(profileId)) {await this.browsers.visibility(profileId, true); return true;}
     await this.browsers.page(profileId);
     await this.browsers.visibility(profileId, true);
@@ -94,10 +101,16 @@ export class InstagramPublisher {
   }
   async check({id: profileId}) {
     id.parse(profileId);
+    if (this.browsers.saving.has(profileId)) throw Error('Chờ lưu cấu hình tài khoản hoàn tất.');
     if (this.checks.has(profileId)) return this.checks.get(profileId);
-    if (this.browsers.busy.has(profileId)) return this.browsers.profile(profileId);
+    if (this.browsers.busy.has(profileId)) return this.browsers.status().find(profile => profile.id === profileId);
     const pending = (async () => {
-      await this.workspace.account(profileId);
+      const account = await this.workspace.account(profileId);
+      if (this.browsers.profile(profileId)?.apiMode === 'api') {
+        const state = await this.apiAdapter.session(this.browsers.profile(profileId), account.data.handle);
+        this.browsers.update(profileId, {...state,checkedAt:Date.now(),error:''});
+        return state;
+      }
       const page = await this.browsers.page(profileId);
       const state = await this.adapter.session(page);
       const previous = this.browsers.profile(profileId);
@@ -128,6 +141,8 @@ export class InstagramPublisher {
     if (race) return this.publicJob(race);
     const now = Date.now();
     const profile = this.browsers.profile(input.accountId);
+    snapshot.apiMode = profile.apiMode ?? 'browser';
+    if (snapshot.apiMode === 'api') Object.assign(snapshot, {apiUserId:profile.apiUserId,apiConfigRevision:profile.apiConfigRevision ?? 0});
     const job = {id: randomUUID(), requestId: input.requestId, fingerprint, snapshot, state: 'queued',
       createdAt: now, updatedAt: now, userId: profile.userId, handle: profile.handle, beforeLinks: [],
       submittingAt: null, postUrl: '', error: '', syncError: '', proof: null,
@@ -153,11 +168,27 @@ export class InstagramPublisher {
     if (this.stopped || this.job(jobId).state === 'cancelled') return;
     this.browsers.busy.add(accountId);
     try {
+      if (this.job(jobId).snapshot.apiMode === 'api' && this.job(jobId).apiReceipt) throw Error('Lượt API đã có receipt; cần đối soát, không gửi lại.');
       this.update(jobId, {state: 'preparing', error: '', note: 'Đang kiểm tra tài khoản và file video.'});
       const snapshot = await this.workspace.revalidate(this.job(jobId).snapshot);
       const media = await this.validate(snapshot.path, {mediaType: 'video', ratio: snapshot.ratio, duration: snapshot.duration});
       if (media.sha256 !== snapshot.sha256) throw Error('Checksum video không khớp file đã chọn.');
       if (this.stopped) throw Error('App đang đóng. Lượt đăng dừng trước bước chia sẻ.');
+      if (this.job(jobId).snapshot.apiMode === 'api') {
+        const frozen = this.job(jobId).snapshot;
+        const beforePublish = async () => {
+          const profile = this.browsers.profile(accountId);
+          if (profile.apiMode !== 'api' || profile.apiUserId !== frozen.apiUserId || (profile.apiConfigRevision ?? 0) !== frozen.apiConfigRevision)
+            throw Error('Cấu hình API đã thay đổi từ lúc chọn lượt đăng.');
+          if (this.stopped) throw Error('App đang đóng; dừng lượt API.');
+          await this.workspace.revalidate(frozen);
+        };
+        await beforePublish();
+        const proof = await this.apiAdapter.publish({profile:this.browsers.profile(accountId),job:this.job(jobId),
+          update:patch => this.update(jobId,patch),beforePublish,stopped:() => this.stopped});
+        await this.complete(jobId,proof);
+        return;
+      }
       page = await this.browsers.page(accountId, true);
       const session = await this.adapter.session(page);
       const previous = this.browsers.profile(accountId);
@@ -188,9 +219,11 @@ export class InstagramPublisher {
     } catch (error) {
       const current = this.job(jobId);
       if (current.state !== 'cancelled' && current.state !== 'published') {
-        const uncertain = current.state === 'submitting' || current.state === 'needs_attention';
+        const aiLabelBlocked = error.code === 'INSTAGRAM_AI_LABEL_REQUIRED';
+        const uncertain = aiLabelBlocked || !!current.apiReceipt || current.state === 'submitting' || current.state === 'needs_attention';
         this.update(jobId, {state: uncertain ? 'needs_attention' : 'failed',
-          error: /locator\.|page\.|browserType\.|Timeout/.test(error.message)
+          ...(aiLabelBlocked ? {attentionReason: 'ai_label', aiLabelCheck: error.aiLabelCheck, submittingAt: null} : {}),
+          error: current.snapshot.apiMode === 'api' && !error.code ? 'Lượt Instagram API bị gián đoạn. Kiểm tra cấu hình hoặc đối soát receipt trước khi tiếp tục.' : /locator\.|page\.|browserType\.|Timeout/.test(error.message)
             ? 'Instagram chưa hoàn tất bước hiện tại. Mở trình duyệt để kiểm tra rồi dùng thao tác phù hợp trong app.' : error.message});
         if (page && !page.isClosed()) {
           const directory = join(this.root, 'instagram', 'diagnostics');
@@ -213,10 +246,19 @@ export class InstagramPublisher {
     const job = this.job(id.parse(jobId));
     if (job.state === 'published') {await this.workspace.syncPublished(job); this.update(jobId, {syncError: ''}); return this.publicJob(this.job(jobId));}
     if (job.state !== 'needs_attention') throw Error('Lượt này chưa cần đối soát sau khi chia sẻ.');
+    if (job.attentionReason === 'ai_label' && job.submittingAt == null) {
+      throw Error('Lượt này đã dừng trước Share vì nhãn AI. Cần đối soát/thao tác tay trên bản nháp; không có bài đã gửi để tự đối soát.');
+    }
     const accountId = job.snapshot.accountId;
     if (this.browsers.busy.has(accountId) || this.checks.has(accountId)) throw Error('Chờ thao tác của hồ sơ kết thúc.');
     this.browsers.busy.add(accountId);
     try {
+      if (job.snapshot.apiMode === 'api') {
+        const proof = await this.apiAdapter.reconcile(this.browsers.profile(accountId),job,patch => this.update(jobId,patch));
+        if (proof) await this.complete(jobId,proof);
+        else this.update(jobId,{error:'Cần đối soát receipt API. Chưa có media ID/bằng chứng đúng bài; không tự publish lại.'});
+        return this.publicJob(this.job(jobId));
+      }
       const page = await this.browsers.page(accountId, true);
       const proof = await this.adapter.reconcile(page, job);
       if (proof) await this.complete(jobId, proof);
@@ -226,7 +268,7 @@ export class InstagramPublisher {
   }
   retry({id: jobId}) {
     const job = this.job(id.parse(jobId));
-    if (job.state !== 'failed') throw Error('Chỉ thử lại khi lượt đã dừng trước bước chia sẻ.');
+    if (job.state !== 'failed' || job.apiReceipt) throw Error('Chỉ thử lại khi lượt đã dừng trước bước chia sẻ.');
     this.update(jobId, {state: 'queued', error: '', note: 'Đã đưa lượt đăng trở lại hàng chờ.'});
     this.drain();
     return this.publicJob(this.job(jobId));

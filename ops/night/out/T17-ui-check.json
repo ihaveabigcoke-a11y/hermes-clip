@@ -1,0 +1,31 @@
+{
+  "fixtureOnly": true,
+  "externalRequestsSent": 0,
+  "clipboard": "stub only",
+  "viewportChecks": [
+    {
+      "width": 1366,
+      "noPageOverflow": true
+    },
+    {
+      "width": 1920,
+      "noPageOverflow": true
+    }
+  ],
+  "writes": 4,
+  "checks": [
+    "landing default",
+    "export hook selection",
+    "invalid scheme and empty CTA rejected before save",
+    "save/reload",
+    "copy stored link",
+    "clipboard failure fallback",
+    "CAS failure preserves stored link",
+    "hook B and custom URL",
+    "unrelated edit retains UTM",
+    "matrix short text and full title",
+    "missing handle does not guess",
+    "unrelated records unchanged"
+  ],
+  "consoleErrors": []
+}

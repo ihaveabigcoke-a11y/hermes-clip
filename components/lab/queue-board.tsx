@@ -4,7 +4,7 @@ import {useEffect, useRef, useState} from 'react';
 import {Pause, Play, FileVideo, Image as ImageIcon} from 'lucide-react';
 import {uiCopy, reviewLabels} from '@/desktop/src/ui-copy.mjs';
 import {formatTime, type LabRecord} from '@/lib/lab/domain';
-import {groupQueueJobs, matchesQueueFilter, resolvedQueueFailures, queueAction, queueFilters, queueTone, type QueueFilter} from '@/lib/lab/queue-view';
+import {groupQueueJobs, matchesQueueFilter, resolvedQueueFailures, queueAction, queueFilters, queueTone, queueTakeSelections, type QueueFilter} from '@/lib/lab/queue-view';
 import {mediaCatalog, mediaReview} from '@/lib/lab/media-catalog';
 import {sceneKey, sceneCategory, matchesMediaPeriod, type MediaOrganization, type MediaScope, type MediaPeriod} from '@/lib/lab/media-organization';
 import {useDesktopPreference} from '@/lib/lab/use-desktop-preference';
@@ -59,6 +59,7 @@ export default function QueueBoard({status, records, projectId, busy, remainingC
   const resolvedFailures = resolvedQueueFailures(jobs);
   const catalog = mediaCatalog(records);
   const products = records.filter(record => record.kind === 'product');
+  const takeSelections = queueTakeSelections(records, projectId).filter(item=>productId==='all'||item.productId===productId);
   const categoryJobs = jobs.filter(job => category === 'all' || sceneCategory(organization.value, job.request.projectId, job.request.sceneId) === category);
   const scoped = categoryJobs.filter(job => {
     const profile = status?.profiles.find(profile => profile.id === job.profileId);
@@ -160,6 +161,7 @@ export default function QueueBoard({status, records, projectId, busy, remainingC
     {organization.error && <div role="alert" className="inline-error"><p>{organization.error}</p><Button tone="neutral" disabled={organization.pending} onClick={organization.retry}>Lưu lại phân loại</Button></div>}
     {message && !organization.pending && !organization.error && <p role="status">{message}</p>}
     {status?.storage?.blocked&&<p role="alert" className="inline-error">{status.storage.message}</p>}
+    {takeSelections.length>0&&<p className="info-panel">Chờ chọn take · {takeSelections.map(item=>item.name).join(' · ')}. Duyệt video rồi chọn đủ phiên bản trong Ghép và xuất.</p>}
     <div className="queue-controls">
       <div className="queue-dispatch">
         <Badge tone={status?.paused ? 'neutral' : 'success'}>{status?.paused ? 'Đã dừng giao mới' : 'Cho phép giao việc'}</Badge>
@@ -203,7 +205,7 @@ export default function QueueBoard({status, records, projectId, busy, remainingC
             <button type="button" className="queue-row-title" aria-pressed={selected?.id === job.id}
               aria-label={'Chi tiết ' + job.request.name} onClick={() => openDetails(job)}>
               {job.request.mediaType === 'video' ? <FileVideo size={19}/> : <ImageIcon size={19}/>}
-              <span><small>{products.find(product => product.id === job.request.productId)?.data.name ?? 'Sản phẩm đã lưu'}</small><strong title={job.request.name}>{job.request.name}</strong><small>{group.jobs.length} lượt tạo · {formatTime(job.createdAt)}<span className="queue-inline-profile"> · {status?.profiles.find(profile => profile.id === job.profileId)?.name ?? 'Chờ phân hồ sơ'}</span></small></span>
+              <span><small title={products.find(product => product.id === job.request.productId)?.data.name}>{products.find(product => product.id === job.request.productId)?.data.name ?? 'Sản phẩm đã lưu'}</small><strong title={job.request.name}>{job.request.name}</strong><small>{group.jobs.length} lượt tạo · {formatTime(job.createdAt)}<span className="queue-inline-profile"> · {status?.profiles.find(profile => profile.id === job.profileId)?.name ?? 'Chờ phân hồ sơ'}</span></small></span>
             </button>
             <span className="queue-row-profile">{status?.profiles.find(profile => profile.id === job.profileId)?.name ?? 'Chờ phân hồ sơ'}</span>
             <Badge tone={resultTone(job)}>{reviewLabel(job)}</Badge>

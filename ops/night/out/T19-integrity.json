@@ -1,0 +1,7 @@
+{
+  "unchangedExistingTestCases": 56,
+  "unchangedExistingAssertions": 543,
+  "assertionNormalization": "Only font fixture read path changed from local-dist URL to localUiFile(font); threshold and assertion retained.",
+  "identicalDefaultBuildFiles": 48,
+  "buildParity": "SHA-256 and file list identical between baseline and final redirected local:build outputs"
+}

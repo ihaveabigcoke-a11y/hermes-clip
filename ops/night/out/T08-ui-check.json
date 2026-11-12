@@ -1,0 +1,76 @@
+{
+  "fixtureOnly": true,
+  "realServices": false,
+  "checks": [
+    {
+      "screen": "preview",
+      "width": 1920,
+      "reviewActionsWithoutScroll": true
+    },
+    {
+      "screen": "preview",
+      "width": 1536,
+      "reviewActionsWithoutScroll": true
+    },
+    {
+      "screen": "preview",
+      "width": 1366,
+      "reviewActionsWithoutScroll": true
+    },
+    {
+      "screen": "preview",
+      "width": 800,
+      "reviewActionsWithoutScroll": true
+    },
+    {
+      "screen": "preview",
+      "width": 390,
+      "reviewActionsWithoutScroll": true
+    },
+    {
+      "screen": "review",
+      "cancelWrites": 0,
+      "rejectedSavedToFixture": true
+    },
+    {
+      "screen": "video-preview",
+      "width": 1920,
+      "reviewActionsWithoutScroll": true
+    },
+    {
+      "screen": "products",
+      "width": 1920,
+      "noOverflow": true
+    },
+    {
+      "screen": "products",
+      "width": 1366,
+      "noOverflow": true
+    },
+    {
+      "screen": "products",
+      "width": 800,
+      "noOverflow": true
+    },
+    {
+      "screen": "products",
+      "width": 390,
+      "noOverflow": true
+    },
+    {
+      "screen": "banner",
+      "empty": true,
+      "populated": false,
+      "demoExit": true,
+      "neutral": true
+    }
+  ],
+  "writes": [
+    {
+      "action": "review",
+      "review": "rejected"
+    }
+  ],
+  "errors": [],
+  "blocked": []
+}

@@ -51,6 +51,15 @@ test('Published synchronization preserves caption and chosen account/video, and 
   await workspace.syncPublished(job);assert.equal(calls,1);
 });
 
+test('API publication sync preserves the legacy status with explicit source and never copies credentials or raw receipt',async t=>{
+  const {workspace,input}=await fixture(t);const snapshot={...await workspace.snapshot(input),apiMode:'api'};
+  let saved;
+  workspace.request=async(_path,options)=>{saved=JSON.parse(options.body);return {};};
+  await workspace.syncPublished({snapshot,postUrl:'https://www.instagram.com/reel/api/',apiReceipt:{containerId:'200',mediaId:'300'}});
+  assert.equal(saved.data.status,'published_browser');assert.equal(saved.data.publishSource,'api');assert.equal(saved.data.caption,snapshot.caption);
+  assert.equal(saved.data.assetId,input.assetId);assert.equal(saved.data.apiReceipt,undefined);
+});
+
 test('Metrics synchronize one cumulative record with nullable values and refuse changed or older sources',async t=>{
  const {workspace,records}=await fixture(t);
  const postUrl='https://www.instagram.com/reel/abc/';
@@ -64,4 +73,22 @@ test('Metrics synchronize one cumulative record with nullable values and refuse 
  records[3].data.postUrl=postUrl;records.push({id:'social_metric_plan',kind:'social_metric',revision:1,data:{observedAt:'2026-11-12T09:00:00Z'}});
  await assert.rejects(workspace.saveMetrics(target,measurement),/mới hơn/);assert.equal(calls,1);
  records[1].data.archived=true;assert.deepEqual(await workspace.metricPlans(),[]);
+});
+
+test('AI label defaults to off for old plans, freezes explicit required and detects configuration changes', async t=>{
+  const {workspace,records,input}=await fixture(t);
+  const legacy=await workspace.snapshot(input);
+  assert.equal(legacy.aiLabel,'off');
+  records[3].data.aiLabel=null;
+  assert.equal((await workspace.snapshot(input)).aiLabel,'off');
+  const {aiLabel,...oldSnapshot}=legacy;
+  assert.equal((await workspace.revalidate(oldSnapshot)).aiLabel,'off');
+  records[3].data.aiLabel='required';
+  await assert.rejects(workspace.revalidate(legacy),/đã thay đổi/);
+  const required=await workspace.snapshot(input); assert.equal(required.aiLabel,'required');
+  assert.equal((await workspace.revalidate(required)).aiLabel,'required');
+  records[3].data.aiLabel='off';
+  await assert.rejects(workspace.revalidate(required),/đã thay đổi/);
+  records[3].data.aiLabel='invalid';
+  await assert.rejects(workspace.snapshot(input),error=>error.code==='INSTAGRAM_AI_LABEL_REQUIRED');
 });

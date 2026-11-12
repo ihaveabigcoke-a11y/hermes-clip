@@ -1,4 +1,9 @@
 import { z } from "zod";
+import { ctaKeywordSchema } from './production.ts';
+import { isHttpsLink } from './utm.ts';
+import { countKeywordComments, parseCommentPaste } from './keyword-comments.ts';
+
+export const commentKeywordSchema = z.string().trim().toUpperCase().pipe(ctaKeywordSchema);
 
 const identifier = z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/);
 const text = (max = 2000) => z.string().trim().max(max).default("");
@@ -11,6 +16,43 @@ export const sourceLink = z.string().trim().max(2048).refine(value => {
 const optionalLink = z.union([z.literal(""), sourceLink]).default("");
 const amount = z.number().finite().min(0).max(1e9).nullable().default(null);
 const count = z.number().int().min(0).max(1e12);
+export const candidateCurrencySchema = z.enum(["USD", "VND", "GBP", "EUR", "CNY"]);
+const nullableText = (max: number) => z.string().trim().max(max).nullable().default(null);
+const logisticsFlag = z.boolean().nullable().default(null);
+const observationStatus = z.enum(['ok', 'unavailable', 'blocked', 'failed']);
+const observedAt = z.string().datetime({offset: true});
+const observationFile = z.string().max(2048).nullable().default(null);
+export const usRetailSchema = z.object({
+  low: amount, high: amount,
+  currency: z.literal('USD').nullable().default(null),
+  sources: z.array(z.object({
+    url: sourceLink, title: nullableText(300), price: amount,
+    observedAt: observedAt.nullable().default(null),
+  })).max(4).default([]),
+}).superRefine((value, ctx) => {
+  if (value.low != null && value.high != null && value.low > value.high)
+    ctx.addIssue({code: 'custom', path: ['high'], message: 'Giá cao phải lớn hơn hoặc bằng giá thấp.'});
+});
+export const listingCheckSchema = z.object({
+  status: observationStatus, fetchedAt: observedAt,
+  title: nullableText(500), priceText: nullableText(500), currencyDetected: nullableText(20),
+  moqText: nullableText(500), shippingText: nullableText(500),
+  productCountOnPage: count.nullable().default(null), rawPath: observationFile,
+  productCountReliable: z.boolean().nullable().default(null), currencyNote: nullableText(500),
+  sourceUrl: sourceLink, warnings: z.array(z.string().max(1200)).max(6).default([]),
+  error: nullableText(1000),
+});
+const youtubeShortsSchema = z.object({
+  status: observationStatus, resultCount: z.number().int().min(1).max(10).nullable().default(null),
+  maxViews: count.nullable().default(null), newestPublishedAt: observedAt.nullable().default(null),
+  sourceUrl: sourceLink, observedAt, rawPath: observationFile,
+  matchType: z.literal('similar'), period: z.string().max(500), note: z.string().max(1200), error: nullableText(1000),
+});
+const webReferencesSchema = z.object({
+  status: observationStatus, links: z.array(sourceLink).min(1).max(5).nullable().default(null),
+  sourceUrl: sourceLink.nullable().default(null), observedAt, rawPath: observationFile,
+  query: z.string().max(300), note: z.string().max(1200), error: nullableText(1000),
+});
 
 export const candidateSchema = z.object({
   id: identifier,
@@ -24,13 +66,47 @@ export const candidateSchema = z.object({
   cost: amount,
   shipping: amount,
   price: amount,
-  currency: z.enum(["USD", "VND", "GBP", "EUR"]).default("USD"),
+  currency: candidateCurrencySchema.default("USD"),
+  // Missing/null overrides inherit the shared currency used by legacy batches.
+  costCurrency: candidateCurrencySchema.nullable().optional(),
+  shippingCurrency: candidateCurrencySchema.nullable().optional(),
+  usRetail: usRetailSchema.nullable().optional(),
+  ipNotes: nullableText(600),
+  verdict: z.enum(["try", "hold", "reject"]).nullable().default(null),
+  verdictReason: nullableText(1200),
+  matchType: z.enum(["exact_sku", "similar", "unknown"]).nullable().default(null),
+  visualPayoff: nullableText(1200),
+  aiFidelityRisks: z.array(z.string().trim().min(1).max(500)).max(12).default([]),
+  logisticsFlags: z.object({
+    battery: logisticsFlag, liquid: logisticsFlag, fragile: logisticsFlag,
+    sizeFit: logisticsFlag, vehicleFit: logisticsFlag, bulky: logisticsFlag, brandRisk: logisticsFlag,
+    ipRisk: z.boolean().nullable().optional(),
+  }).nullable().default(null),
+  competition: z.object({
+    activeAdsObserved: count.nullable().default(null),
+    similarReels30d: count.nullable().default(null),
+    observedAt: z.string().datetime({offset: true}).nullable().default(null),
+    sourceUrl: sourceLink.nullable().default(null),
+    note: nullableText(1200),
+    youtubeShorts: youtubeShortsSchema.nullable().optional(),
+    webReferences: webReferencesSchema.nullable().optional(),
+  }).superRefine((value, ctx) => {
+    if (value.activeAdsObserved !== null || value.similarReels30d !== null) {
+      for (const field of ["sourceUrl", "observedAt"] as const) {
+        if (!value[field]) ctx.addIssue({code: "custom", path: [field], message: "Số quan sát cần nguồn và thời điểm đọc."});
+      }
+    }
+  }).nullable().default(null),
+  listingCheck: listingCheckSchema.nullable().optional(),
+  qualityWarnings: z.array(z.enum(["shared_supplier_url"])).max(1).default([]),
   imageUrl: optionalLink,
   imageSourceUrl: optionalLink,
   marketEvidence: z.array(z.object({
     label: z.string().trim().min(1).max(100), value: z.number().finite().min(0).max(1e12),
     unit: z.string().trim().min(1).max(40), market: text(100), period: text(100),
     sourceUrl: sourceLink, observedAt: z.string().datetime(),
+    // Derived locally across the whole batch; absent in legacy records.
+    pageLevel: z.boolean().optional(),
   })).max(8).default([]),
   minimumOrder: z.number().int().positive().max(1e9).nullable().default(null),
   targetCustomer: text(500),
@@ -40,6 +116,7 @@ export const researchBatchSchema = z.object({
   name: z.string().trim().min(2).max(140),
   market: z.string().trim().min(2).max(100).default("United States"),
   locale: z.string().trim().min(2).max(40).default("en-US"),
+  maxLandedCostUsd: z.number().finite().positive().max(1e9).nullable().optional(),
   candidates: z.array(candidateSchema).max(10).default([]),
   selectedIds: z.array(identifier).max(3, "Mỗi đợt chọn tối đa 3 sản phẩm.").default([]),
   notes: text(20000),
@@ -67,8 +144,17 @@ export const contentPlanSchema = z.object({
   hook: text(600),
   script: text(6000),
   caption: text(2200),
+  ctaKeyword: z.preprocess(value => value === '' ? null : value, commentKeywordSchema.nullable().optional()),
+  landingBaseUrl: z.preprocess(value => value === '' ? null : value,
+    z.string().trim().max(2048).refine(isHttpsLink, 'Điền URL HTTPS hợp lệ, không chứa thông tin đăng nhập.').nullable().optional()),
+  utmLink: z.string().trim().max(8192).refine(isHttpsLink, 'Link UTM phải dùng HTTPS.').nullable().optional(),
+  utmHookId: z.string().trim().max(180).nullable().optional(),
+  // Missing/null keeps old records readable; the publishing snapshot resolves
+  // it to off (user default). Only explicit "required" turns on the label check.
+  aiLabel: z.enum(["required", "off"]).nullable().optional(),
   plannedDate: z.union([z.literal(""), z.string().date()]).default(""),
   status: z.enum(["draft", "planned", "published_manual", "published_browser"]).default("draft"),
+  publishSource: z.enum(['browser','api']).nullable().optional(),
   postUrl: optionalLink,
   notes: text(),
 }).superRefine((value, ctx) => {
@@ -93,12 +179,13 @@ export const socialMetricSchema = z.object({
   profileVisits: count.nullable(),
   linkClicks: count.nullable(),
   viewers: count.nullable().default(null),
+  reach: count.nullable().optional(),
   interactions: count.nullable().default(null),
   reelInteractions: count.nullable().default(null),
   accountsEngaged: count.nullable().default(null),
   profileActivity: count.nullable().default(null),
   follows: count.nullable().default(null),
-  source: z.enum(['manual', 'instagram_browser']).default('manual'),
+  source: z.enum(['manual', 'instagram_browser', 'api']).default('manual'),
   accountId: z.union([z.literal(''), identifier]).default(''),
   handle: z.string().regex(/^[a-zA-Z0-9._]{0,30}$/).default(''),
   insightsUrl: optionalLink,
@@ -106,6 +193,16 @@ export const socialMetricSchema = z.object({
   sourceUrl: sourceLink,
   notes: text(),
 });
+export const keywordCommentMeasurementSchema = z.object({
+  planId: identifier,
+  accountId: identifier,
+  sourceUrl: sourceLink,
+  source: z.literal('manual_paste'),
+  observedAt: z.string().datetime({offset: true}),
+  keyword: commentKeywordSchema,
+  inputFormat: z.enum(['text', 'username']).default('text'),
+  rawText: z.string().trim().min(1, 'Dán ít nhất một comment để lưu bản đo.').max(100000),
+}).transform(value => ({...value, ...countKeywordComments(parseCommentPaste(value.rawText, value.inputFormat), value.keyword)}));
 export const landingPageSchema = z.object({
   productId: identifier,
   headline: z.string().trim().min(2).max(160),
@@ -121,10 +218,29 @@ export const operationSchemas = {
   social_account: socialAccountSchema,
   content_plan: contentPlanSchema,
   social_metric: socialMetricSchema,
+  keyword_comment_measurement: keywordCommentMeasurementSchema,
   landing_page: landingPageSchema,
 };
 export type ResearchBatch = z.infer<typeof researchBatchSchema>;
 export type Candidate = z.infer<typeof candidateSchema>;
+
+export function candidateCurrency(candidate: Pick<Candidate, "currency" | "costCurrency" | "shippingCurrency">, field: "cost" | "shipping" | "price") {
+  if (field === "cost") return candidate.costCurrency ?? candidate.currency;
+  if (field === "shipping") return candidate.shippingCurrency ?? candidate.currency;
+  return candidate.currency;
+}
+
+type LandedCost =
+  | {amount: number; currency: Candidate["currency"]; reason: null}
+  | {amount: null; currency: null; reason: "khác tiền tệ" | "thiếu ship" | "thiếu giá vốn"};
+
+export function landedCost(candidate: Pick<Candidate, "cost" | "shipping" | "currency" | "costCurrency" | "shippingCurrency">): LandedCost {
+  if (candidate.shipping == null) return {amount: null, currency: null, reason: "thiếu ship"};
+  if (candidate.cost == null) return {amount: null, currency: null, reason: "thiếu giá vốn"};
+  const currency = candidateCurrency(candidate, "cost");
+  if (currency !== candidateCurrency(candidate, "shipping")) return {amount: null, currency: null, reason: "khác tiền tệ"};
+  return {amount: candidate.cost + candidate.shipping, currency, reason: null};
+}
 
 export function researchProductId(batchId: string, candidateId: string) {
   // Both IDs are generated once and reused for retries and duplicate clicks.

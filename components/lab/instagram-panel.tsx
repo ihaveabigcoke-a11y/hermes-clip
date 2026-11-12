@@ -8,23 +8,27 @@ import {useInstagramStatus, type InstagramJob, type InstagramProfile} from '@/li
 import {mediaCatalog, preferredMedia} from '@/lib/lab/media-catalog';
 import {useDesktopPreference} from '@/lib/lab/use-desktop-preference';
 import {type MediaOrganization} from '@/lib/lab/media-organization';
-import {instagramProductSummary,type SummaryMetric} from '@/lib/lab/instagram-summary';
 import {instagramStateLabels, instagramSessionLabels, contentPlanLabels, reviewLabels} from '@/desktop/src/ui-copy.mjs';
 import {profileInput} from '@/desktop/src/shared.mjs';
 import {Badge, Button, Empty, Modal, Pagination, RecordForm} from './primitives';
 import {MediaPlayer} from './media-preview';
 import InstagramMetrics from './instagram-metrics';
-import {ProductMetrics,MetricValue} from './instagram-overview';
-import {instagramMetricLabels} from '@/desktop/src/ui-copy.mjs';
+import {ProductMetrics,InstagramContentTable} from './instagram-overview';
+import InstagramKeywordComments from './instagram-keyword-comments';
+import PlanUtmLink from './plan-utm-link';
+import {instagramAccountContentRows} from '@/lib/lab/instagram-summary';
 
 type Props = {
   product: LabRecord; accounts: LabRecord[]; plans: LabRecord[]; records: LabRecord[]; demo: boolean; disabled: boolean;
   onAccount: (account?: LabRecord) => void; onPlan: (plan?: LabRecord) => void;
   onCreateProduction: (plan: LabRecord) => void;
+  onSaveComments: (id:string,data:Record<string,any>) => Promise<LabRecord>;
+  onSavePlan: (plan:LabRecord,data:Record<string,any>) => Promise<LabRecord>;
   notify: (text: string, tone?: string) => void;
 };
 const pendingStates = ['queued', 'waiting_login', 'preparing', 'uploading', 'submitting', 'needs_attention'];
 const configSchema = z.object({vpnEnabled: z.boolean(), server: z.string().max(300), username: z.string().max(200),
+  apiMode:z.enum(['browser','api']),apiUserId:z.string().regex(/^\d{1,40}$|^$/, 'Nhập mã tài khoản API bằng chữ số.'),apiToken:z.string().max(8192),clearApiToken:z.boolean(),
   password: z.string().max(300), clearPassword: z.boolean()}).superRefine((value, ctx) => {
   const result = profileInput.safeParse({name: 'Instagram', accountLabel: '', enabled: true, vpnEnabled: value.vpnEnabled,
     proxy: {server: value.server, username: value.username, password: value.password, clearPassword: value.clearPassword}});
@@ -38,7 +42,7 @@ function jobTone(job?: InstagramJob) {
   return 'neutral';
 }
 
-export default function InstagramPanel({product, accounts, plans, records, demo, disabled, onAccount, onPlan, onCreateProduction, notify}: Props) {
+export default function InstagramPanel({product, accounts, plans, records, demo, disabled, onAccount, onPlan, onCreateProduction, onSaveComments, onSavePlan, notify}: Props) {
   const live = useInstagramStatus(!demo);
   const organization = useDesktopPreference<MediaOrganization>('mediaOrganization', {});
   type Tab='overview'|'content'|'accounts'|'history';
@@ -48,7 +52,6 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
   useEffect(()=>{const restore=()=>updateTab(readTab());window.addEventListener('popstate',restore);return()=>window.removeEventListener('popstate',restore);},[]);
   const [page, setPage] = useState(1);
   const [historyPage, setHistoryPage] = useState(1);
-  const [overviewPage,setOverviewPage]=useState(1);
   const [selectedId, setSelectedId] = useState('');
   const [selection, setSelection] = useState<Record<string, {accountId?: string; assetId?: string}>>({});
   const [busy, setBusy] = useState(false);
@@ -72,13 +75,12 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
   const account = activeAccounts.find(account => account.id === accountId) ?? (!accountId ? activeAccounts[0] : undefined);
   const profile = live.status?.profiles.find(profile => profile.id === account?.id);
   const published = plan && (['published_browser', 'published_manual'].includes(plan.data.status) || latest?.state === 'published');
+  const commentPost = plan && instagramAccountContentRows(records,product.id,live.status?.jobs).find(post=>post.planIds.includes(plan.id));
   const pending = latest && pendingStates.includes(latest.state);
   const canPublish = !!plan && !!chosenMedia && !!account && !!plan.data.caption?.trim() && chosenMedia.take.review !== 'rejected'
     && !pending && !published && !disabled && !busy && !demo && !!live.status;
   const configProfile = live.status?.profiles.find(profile => profile.id === config?.id);
   const historyCurrentPage = Math.min(historyPage, Math.max(1, Math.ceil(jobs.length / 8)));
-  const summary=instagramProductSummary(records,product.id,live.status?.jobs);
-  const overviewCurrentPage=Math.min(overviewPage,Math.max(1,Math.ceil(summary.posts.length/10)));
   function openContent(id:string){setSelectedId(id);setPage(Math.max(1,Math.floor(plans.findIndex(p=>p.id===id)/8)+1));setTab('content');}
 
   async function action(method: string, payload: unknown, message = '') {
@@ -109,13 +111,16 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
       {job.state === 'waiting_login' && <Button disabled={busy || demo} onClick={() => act('instagramOpen', {id: job.snapshot.accountId})}>Đăng nhập để tiếp tục</Button>}
       {['queued', 'waiting_login'].includes(job.state) && <Button tone="neutral" disabled={busy || demo} onClick={() => act('instagramCancel', {id: job.id})}>Hủy lượt đăng</Button>}
       {job.state === 'failed' && <Button tone="neutral" disabled={busy || demo} onClick={() => act('instagramRetry', {id: job.id})}>Thử lại lượt đăng</Button>}
-      {job.state === 'needs_attention' && <Button disabled={busy || demo} onClick={() => act('instagramReconcile', {id: job.id})}>Kiểm tra kết quả</Button>}
+      {job.state === 'needs_attention' && (job.attentionReason === 'ai_label'
+        ? <Button disabled={busy || demo} onClick={() => act('instagramOpen', {id: job.snapshot.accountId})}>Mở trình duyệt kiểm tra nhãn AI</Button>
+        : <Button disabled={busy || demo} onClick={() => act('instagramReconcile', {id: job.id})}>Kiểm tra kết quả</Button>)}
       {job.state === 'published' && job.syncError && <Button tone="neutral" disabled={busy || demo} onClick={() => act('instagramReconcile', {id: job.id})}>Đồng bộ bài đã đăng</Button>}
       {job.postUrl && <a className="lab-button neutral" href={job.postUrl} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Xem trên Instagram</a>}
     </div>;
   }
   function profileStatus(profile?: InstagramProfile) {
     if (!profile) return 'Chưa đăng nhập';
+    if (profile.apiMode === 'api') return !live.status?.api?.enabled ? 'API đang tắt' : profile.session === 'signed_in' ? 'Đã xác minh API' : 'Chưa xác minh API';
     if (!profile.open) return profile.handle ? 'Phiên đã lưu trên máy' : 'Chưa đăng nhập';
     return instagramSessionLabels[profile.session] ?? 'Chưa xác nhận phiên';
   }
@@ -128,13 +133,7 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
       <button type="button" aria-pressed={tab==='history'} onClick={()=>setTab('history')}>Lượt đăng <span>{jobs.length}</span></button>
     </div>{tab==='content'&&<Button tone="neutral" disabled={disabled||busy} onClick={()=>onPlan()}><Plus size={16}/>Thêm nội dung</Button>}</div>
     {tab==='overview'&&<><ProductMetrics productId={product.id} records={records} status={live.status}/>
-      {!summary.posts.length?<Empty title="Chưa có bài đăng cho sản phẩm này" text={`${summary.drafts} nội dung chưa đăng. Số liệu sẽ tự xuất hiện sau khi có bài đăng.`} action={<Button tone="neutral" onClick={()=>setTab('content')}>Xem nội dung</Button>}/>:<div className="operations-table-scroll" role="region" aria-label="Bài đăng của sản phẩm" tabIndex={0}>
-        <table className="operations-comparison"><caption className="sr-only">Số liệu từng bài đăng của sản phẩm</caption><thead><tr><th scope="col">Bài đăng</th>{(['views','likes','comments','saves','shares'] as SummaryMetric[]).map(key=><th key={key} scope="col">{instagramMetricLabels[key]}</th>)}<th scope="col">Lần đo</th></tr></thead>
-          <tbody>{summary.posts.slice((overviewCurrentPage-1)*10,overviewCurrentPage*10).map(post=><tr key={post.plan.id}><th scope="row"><button type="button" className="comparison-name" onClick={()=>openContent(post.plan.id)}>{post.plan.data.name}</button><small>{accounts.find(a=>a.id===post.plan.data.accountId)?.data.name??'Hồ sơ đã lưu'}</small></th>
-            {(['views','likes','comments','saves','shares'] as SummaryMetric[]).map(key=><td key={key}><MetricValue metric={{value:post.metric?.data[key]??null,known:post.metric?.data[key]!=null?1:0,total:1,approximate:!!post.metric?.data.approximate?.includes(key)}}/></td>)}
-            <td>{post.metric?formatTime(Date.parse(post.metric.data.observedAt)):'Chưa đo'}<small>{live.status?.metrics?.rows.find(r=>post.planIds.includes(r.planId))?.error}</small></td></tr>)}</tbody>
-        </table></div>}
-      {summary.posts.length>10&&<Pagination page={overviewCurrentPage} total={summary.posts.length} size={10} onPage={setOverviewPage}/>}
+      <InstagramContentTable records={records} productId={product.id} status={live.status} onOpenPlan={openContent}/>
     </>}
     {tab==='accounts'&&<section className="instagram-accounts" aria-label="Tài khoản Instagram của sản phẩm">
       <header className="instagram-section-heading"><h2>Tài khoản của sản phẩm</h2><Button disabled={disabled || busy} onClick={() => onAccount()}><Plus size={16}/>Thêm hồ sơ</Button></header>
@@ -142,11 +141,11 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
         const profile = live.status?.profiles.find(profile => profile.id === account.id);
         return <article className="instagram-account-row" key={account.id}>
           <div className="instagram-account-identity"><strong>{account.data.name}</strong><span>{profile?.handle ? '@' + profile.handle : account.data.handle ? 'Username đã ghi · @' + account.data.handle : 'Đăng nhập để nhận diện tài khoản'}</span></div>
-          <div><Badge tone={profile?.open && profile.session === 'signed_in' ? 'success' : 'neutral'}>{account.data.archived ? 'Đã lưu trữ' : profileStatus(profile)}</Badge>
-            <small>{profile?.proxy.server ? 'Proxy riêng' : profile?.vpnEnabled !== false ? 'Touch VPN' : 'Kết nối trực tiếp'}{profile?.open && profile.vpnEnabled ? ' · ' + (profile.vpn?.state === 'connected' ? 'Đã bật' : 'Cần kiểm tra VPN') : ''}</small>
+          <div><Badge tone={(profile?.open || profile?.apiMode === 'api' && live.status?.api?.enabled) && profile?.session === 'signed_in' ? 'success' : 'neutral'}>{account.data.archived ? 'Đã lưu trữ' : profileStatus(profile)}</Badge>
+            <small>{profile?.apiMode === 'api' ? `Instagram API · ${live.status?.api?.enabled ? 'Đã bật cờ' : 'Đang tắt'}` : profile?.proxy.server ? 'Proxy riêng' : profile?.vpnEnabled !== false ? 'Touch VPN' : 'Kết nối trực tiếp'}{profile?.open && profile.vpnEnabled ? ' · ' + (profile.vpn?.state === 'connected' ? 'Đã bật' : 'Cần kiểm tra VPN') : ''}</small>
             {profile?.checkedAt && <small>Kiểm tra {formatTime(profile.checkedAt)}</small>}</div>
           <div className="button-row">
-            <Button tone="neutral" disabled={disabled || busy || demo || account.data.archived} onClick={() => act('instagramOpen', {id: account.id})}>{profile?.open ? 'Mở trình duyệt' : 'Đăng nhập'}</Button>
+            <Button tone="neutral" disabled={disabled || busy || demo || account.data.archived || profile?.apiMode === 'api' && !live.status?.api?.enabled} onClick={() => act('instagramOpen', {id: account.id})}>{profile?.apiMode === 'api' ? 'Kiểm tra API' : profile?.open ? 'Mở trình duyệt' : 'Đăng nhập'}</Button>
             {profile?.open && <Button tone="neutral" disabled={busy || profile.busy || demo} onClick={() => act('instagramCheck', {id: account.id})}>Kiểm tra phiên</Button>}
             {profile?.open && <Button tone="ghost" disabled={busy || profile.busy || demo} onClick={() => act('instagramClose', {id: account.id})}>Đóng</Button>}
             <Button tone="ghost" aria-label={'Cấu hình kết nối ' + account.data.name} disabled={disabled || busy || !!profile?.busy || demo} onClick={() => {setConfig(account); setDirty(false);}}><Settings2 size={17}/></Button>
@@ -179,32 +178,41 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
               {!account && <option value="">Chọn tài khoản</option>}{activeAccounts.map(account => <option key={account.id} value={account.id}>{account.data.name}{live.status?.profiles.find(profile => profile.id === account.id)?.handle ? ' · @' + live.status.profiles.find(profile => profile.id === account.id)!.handle : ''}</option>)}
             </select></label>
             <div><h3>{published ? 'Chú thích đã đăng' : 'Chú thích sẽ đăng'}</h3><p className="muse-chat-text instagram-caption">{fixedSnapshot?.caption ?? (plan.data.caption || 'Thêm chú thích trong Sửa nội dung.')}</p></div>
+            {!published && <small>Nhãn AI: {(fixedSnapshot ? fixedSnapshot.aiLabel : plan.data.aiLabel) === 'required' ? 'Bắt buộc bật trước Share' : 'Không gắn nhãn'}</small>}
             {chosenMedia && <small>{chosenMedia.scene.ratio} · {chosenMedia.take.metadata.duration}s · {reviewLabels[chosenMedia.take.review]}</small>}
             {!published && !pending && <><p>Video và chú thích bên trên sẽ được đăng lên tài khoản đã chọn.</p>
-              <Button disabled={!canPublish} onClick={publish}><Play size={16}/>{profile?.session === 'signed_in' ? 'Đăng video' : 'Đăng sau khi đăng nhập'}</Button></>}
+              <Button disabled={!canPublish || profile?.apiMode === 'api' && (!live.status?.api?.enabled || !live.status?.api?.resumableEnabled)} onClick={publish}><Play size={16}/>{profile?.apiMode === 'api' ? 'Đăng qua API' : profile?.session === 'signed_in' ? 'Đăng video' : 'Đăng sau khi đăng nhập'}</Button></>}
             {published && plan.data.postUrl && <a className="lab-button neutral" href={plan.data.postUrl} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Xem bài đã đăng</a>}
             {production && <a href={`?view=production&production=${encodeURIComponent(production.id)}`}>Mở dự án video</a>}
             {!production && <Button tone="neutral" disabled={disabled || demo || !(plan.data.hook || plan.data.script)} onClick={() => onCreateProduction(plan)}>Tạo dự án từ kịch bản</Button>}
           </div></div>
         {latest && <div className="instagram-job-status" aria-live="polite"><Badge tone={jobTone(latest)}>{instagramStateLabels[latest.state]}</Badge><p>{latest.error || latest.history.at(-1)?.note}</p>{latest.syncError && <p>{latest.syncError}</p>}{jobActions(latest)}</div>}
+        <PlanUtmLink key={plan.id + ':' + plan.revision} plan={plan} records={records} disabled={disabled || busy || !!pending} onSave={onSavePlan}/>
         {published && <InstagramMetrics record={records.find(record=>record.kind==='social_metric'&&record.data.planId===plan.id)}
           state={live.status?.metrics?.rows.find(row=>row.planId===plan.id)} disabled={disabled||busy||demo||!live.status}
           foreground={!!profile?.open&&!profile.background}
           onRefresh={()=>act('instagramRefreshMetrics',{planId:plan.id},'Đã cập nhật số liệu từ Instagram.')}
           onLogin={account?()=>act('instagramOpen',{id:account.id}):undefined}/>}
+        {published && commentPost && <InstagramKeywordComments key={plan.id} plan={plan} keyword={commentPost.plannedCtaKeyword??commentPost.ctaKeyword}
+          measurements={commentPost.keywordMeasurements} disabled={disabled||busy||!['published_manual','published_browser'].includes(plan.data.status)} onSave={onSaveComments}/>}
       </section>
     </div>}
     {tab === 'history' && <div className="instagram-history">{jobs.slice((historyCurrentPage - 1) * 8, historyCurrentPage * 8).map(job => <article className="production-card production-card-body" key={job.id}>
       <header><h3>{job.snapshot.name}</h3><Badge tone={jobTone(job)}>{instagramStateLabels[job.state]}</Badge></header>
       <p>{job.handle ? '@' + job.handle : accounts.find(account => account.id === job.snapshot.accountId)?.data.name} · {formatTime(job.createdAt)}</p>
+      {job.apiReceipt && <p>Receipt API · Container: {job.apiReceipt.containerId ?? 'Chưa nhận được mã'} · Media: {job.apiReceipt.mediaId ?? 'Chưa xác nhận'} · {job.apiReceipt.statusCode ?? 'Cần đối soát'}</p>}
       {(job.error || job.syncError) && <p role="status">{job.error || job.syncError}</p>}{jobActions(job)}
       <details><summary>Tiến trình và nội dung đã gửi</summary><p className="muse-chat-text">{job.snapshot.caption}</p><ol>{job.history.map((step, index) => <li key={index}><time>{formatTime(step.at)}</time> · {step.note}</li>)}</ol></details>
     </article>)}{!jobs.length && <Empty title="Chưa có lượt đăng" text="Chọn một nội dung và video để bắt đầu."/>}<Pagination page={historyCurrentPage} total={jobs.length} size={8} onPage={setHistoryPage}/></div>}
     <Modal open={!!config} title="Kết nối hồ sơ Instagram" description={config?.data.name} dirty={dirty} locked={busy} onClose={() => setConfig(null)}>
-      {config && <RecordForm kind="social_account" validation={configSchema} initial={{vpnEnabled: configProfile?.vpnEnabled ?? true, server: configProfile?.proxy.server ?? '', username: configProfile?.proxy.username ?? '', password: '', clearPassword: false}}
-        fields={[{name: 'vpnEnabled', label: 'Tự bật Touch VPN khi mở hồ sơ', type: 'checkbox'}, {name: 'server', label: 'Proxy riêng', placeholder: 'http://host:port hoặc socks5://host:port', help: 'Tắt Touch VPN khi dùng proxy riêng.', full: true},
+      {config && <RecordForm kind="social_account" validation={configSchema} initial={{apiMode:configProfile?.apiMode ?? 'browser',apiUserId:configProfile?.apiUserId ?? '',apiToken:'',clearApiToken:false,vpnEnabled: configProfile?.vpnEnabled ?? true, server: configProfile?.proxy.server ?? '', username: configProfile?.proxy.username ?? '', password: '', clearPassword: false}}
+        fields={[{name:'apiMode',label:'Cách kết nối',type:'select',options:[{value:'browser',label:'Trình duyệt (mặc định)'},{value:'api',label:'Instagram API (thử nghiệm)'}],help:live.status?.api?.enabled ? 'API đã bật cờ; cần tài khoản chuyên nghiệp và quyền Meta.' : 'API đang tắt ở cấp ứng dụng. Xem docs/INSTAGRAM-API.md trước khi bật.',full:true},
+          {name:'apiUserId',label:'Mã tài khoản Instagram API',help:'Mã user_id từ Instagram Login; không dùng mã phiên trình duyệt.'},
+          {name:'apiToken',label:'Token Instagram API',type:'password',help:configProfile?.hasApiToken ? 'Đã mã hóa token. Để trống để giữ token cũ.' : 'Token chỉ được lưu mã hóa trên máy.'},
+          {name:'clearApiToken',label:'Xóa token API đã lưu',type:'checkbox'},
+          {name: 'vpnEnabled', label: 'Tự bật Touch VPN khi mở hồ sơ', type: 'checkbox'}, {name: 'server', label: 'Proxy riêng', placeholder: 'http://host:port hoặc socks5://host:port', help: 'Tắt Touch VPN khi dùng proxy riêng. VPN/proxy này chỉ áp dụng cho trình duyệt.', full: true},
           {name: 'username', label: 'Tài khoản proxy'}, {name: 'password', label: 'Mật khẩu proxy', type: 'password', help: configProfile?.proxy.hasPassword ? 'Đã lưu mật khẩu. Để trống để giữ mật khẩu cũ.' : ''}, {name: 'clearPassword', label: 'Xóa mật khẩu proxy đã lưu', type: 'checkbox'}]}
-        onDirty={setDirty} onCancel={() => setConfig(null)} onSave={async value => {await action('instagramSaveProfile', {id: config.id, vpnEnabled: value.vpnEnabled, proxy: {server: value.server, username: value.username, password: value.password, clearPassword: value.clearPassword}}, 'Đã lưu kết nối hồ sơ.'); setDirty(false); setConfig(null);}}/>}
+        onDirty={setDirty} onCancel={() => setConfig(null)} onSave={async value => {await action('instagramSaveProfile', {id: config.id, apiMode:value.apiMode,apiUserId:value.apiUserId,apiToken:value.apiToken,clearApiToken:value.clearApiToken,vpnEnabled: value.vpnEnabled, proxy: {server: value.server, username: value.username, password: value.password, clearPassword: value.clearPassword}}, 'Đã lưu kết nối hồ sơ.'); setDirty(false); setConfig(null);}}/>}
       {configProfile?.open && <p className="info-panel">Đóng trình duyệt của hồ sơ trước khi lưu thay đổi kết nối.</p>}
     </Modal>
   </div>;

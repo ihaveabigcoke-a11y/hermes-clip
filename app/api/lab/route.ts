@@ -12,6 +12,8 @@ import {
 } from "@/lib/lab/server";
 import { kinds, productGate, type Kind } from "@/lib/lab/domain";
 import { researchProductId } from "@/lib/lab/operations";
+import { viralFormulaRecordId } from "@/lib/lab/viral-formulas";
+import { referenceDraftRecordId } from "@/lib/lab/viral-reference";
 export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   try {
@@ -57,7 +59,10 @@ export async function POST(request: Request) {
         "social_account",
         "content_plan",
         "social_metric",
+        "keyword_comment_measurement",
         "landing_page",
+        "viral_formula",
+        "reference_video_draft",
       ].includes(b.kind)
     )
       throw new ApiError(400, "Loại bản ghi không được hỗ trợ.");
@@ -65,6 +70,15 @@ export async function POST(request: Request) {
     let d = parsed(kind, b.data);
     let id = b.id;
     const revision = b.revision ?? 0;
+    if (kind === "reference_video_draft") id = referenceDraftRecordId({id:d.id});
+    if (kind === "viral_formula") {
+      // Append-only versions. Canonical IDs + save's CAS prevent concurrent
+      // requests or retries from overwriting an existing formula version.
+      if (revision !== 0)
+        throw new ApiError(409, "Giữ phiên bản đã lưu. Tăng version để lưu công thức thành bản mới.");
+      id = viralFormulaRecordId({id: d.id, version: d.version});
+      d.updatedAt = new Date().toISOString();
+    }
     if (kind === "settings") id = "workspace";
     if (kind === "product" && d.researchOrigin) {
       const {batchId, candidateId} = d.researchOrigin;
@@ -97,14 +111,26 @@ export async function POST(request: Request) {
       const previous = await getRecord(uid, id);
       if (previous && (previous.data.accountId !== d.accountId || previous.data.postUrl !== d.postUrl)) {
         const metric = await getRecord(uid, `social_metric_${id}`);
-        if (metric) throw new ApiError(422, "Bài đã có số liệu. Tạo nội dung mới để giữ đúng nguồn đo.");
+        const comments = await database().prepare("SELECT id FROM lab_records WHERE owner_id=? AND kind='keyword_comment_measurement' AND json_extract(data,'$.planId')=? LIMIT 1").bind(uid, id).first();
+        if (metric || comments) throw new ApiError(422, "Bài đã có số liệu. Tạo nội dung mới để giữ đúng nguồn đo.");
       }
+    }
+    if (kind === "keyword_comment_measurement") {
+      if (revision !== 0) throw new ApiError(409, "Giữ bản đo đã lưu. Dán comment để tạo bản đo mới.");
+      const plan = await getRecord(uid, d.planId);
+      if (plan?.kind !== 'content_plan' || !['published_manual', 'published_browser'].includes(plan.data.status))
+        throw new ApiError(422, "Ghi nhận bài đã đăng và URL trước khi dán comment.");
+      const account = await getRecord(uid, d.accountId);
+      if (d.accountId !== plan.data.accountId || d.sourceUrl !== plan.data.postUrl || account?.kind !== 'social_account' || account.data.productId !== plan.data.productId)
+        throw new ApiError(422, "Nguồn comment không khớp bài đăng hoặc tài khoản.");
+      // Source is a manual observation made now, independent of Insights.
+      d.observedAt = new Date().toISOString();
     }
     if (kind === "social_metric") {
       const plan = await getRecord(uid, d.planId);
       if (plan?.kind !== "content_plan" || !["published_manual", "published_browser"].includes(plan.data.status))
         throw new ApiError(422, "Ghi nhận bài đã đăng và URL trước khi cập nhật số liệu.");
-      if (d.source === 'instagram_browser' && (d.accountId !== plan.data.accountId || d.sourceUrl !== plan.data.postUrl || !d.handle))
+      if (['instagram_browser', 'api'].includes(d.source) && (d.accountId !== plan.data.accountId || d.sourceUrl !== plan.data.postUrl || !d.handle))
         throw new ApiError(422, "Nguồn số liệu không khớp bài đăng hoặc tài khoản.");
       id = `social_metric_${d.planId}`;
       const previous = await getRecord(uid, id);

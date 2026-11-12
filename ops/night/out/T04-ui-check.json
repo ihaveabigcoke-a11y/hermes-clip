@@ -1,0 +1,33 @@
+{
+  "fixtureOnly": true,
+  "networkRequestsSent": 0,
+  "viewport": "1920x1080",
+  "rowHeights": [
+    108.6875,
+    100.890625,
+    100.890625,
+    100.890625,
+    100.890625,
+    100.890625,
+    100.890625,
+    100.890625,
+    100.890625,
+    100.390625
+  ],
+  "maximumRowHeight": 108.6875,
+  "apiFixturePosts": 16,
+  "checks": [
+    "selection promotes",
+    "uncheck keeps profile",
+    "recheck deduplicates",
+    "max three",
+    "detail modal",
+    "filter keeps full coverage",
+    "lost promote response reconciles",
+    "failed promote repaired with same selection",
+    "launcher retry uses identical request",
+    "mobile horizontal table scroll",
+    "demo selection replays without CAS error or API mutation"
+  ],
+  "consoleErrors": []
+}

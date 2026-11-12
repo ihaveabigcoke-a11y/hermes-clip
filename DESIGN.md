@@ -133,7 +133,7 @@ ProductionStudio sở hữu bốn bước chính gồm Tạo & duyệt, Ảnh th
 
 ProductionDesk giữ prompt, chế độ và reference theo dự án và loại media. Chế độ Tự do nhận ảnh tùy chọn. Chuyển chế độ giữ ảnh đã chọn. Callback sau khi lưu reference chọn ảnh mới vào đúng nháp. Picker reference dùng asset ảnh có metadata và tối đa 8 MB. Nháp chat được giữ trong MuseChatPanel khi chuyển màn hình, polling dừng khi panel ẩn. Reload và Back/Forward đọc stage từ URL, chuyển menu media bắt đầu ở bước tương ứng.
 
-Layout sidebar desktop rộng 180 px với nhãn cùng hàng icon. Ở 390 px, menu chính cuộn ngang, nhóm kinh doanh mở thành hai cột, Cài đặt và Hướng dẫn vẫn truy cập được. Pane media có vùng cuộn riêng từ viewport 1100×600, các màn hình biểu mẫu khác giữ cuộn trang. Màu và font tiếp tục lấy từ token chuẩn hiện có.
+Layout sidebar desktop rộng 232 px sau T08 để nhãn hiện có cùng hàng icon. Ở 390 px, menu chính cuộn ngang, nhóm kinh doanh mở thành hai cột, Cài đặt và Hướng dẫn vẫn truy cập được. Pane media có vùng cuộn riêng từ viewport 1100×600, các màn hình biểu mẫu khác giữ cuộn trang. Màu và font tiếp tục lấy từ token chuẩn hiện có.
 
 Kiểm tra thực tế nằm trong checkpoint ux-review-20261110, runtime-verification.json và screenshots. Lượt này kiểm tra lưu nháp/reference trên bản sao SQLite và file media thật, đồng thời đối chiếu hash dữ liệu gốc. Các thao tác Muse mới có báo cáo nghiệm thu riêng khi thực hiện.
 
