@@ -26,3 +26,11 @@ test('T-017: matrix uses latest observedAt and distinguishes unknown from zero',
  const f=fixture(),draft=planHookDrafts(f.records,f.input)[0],rows=[{id:'old',kind:'social_metric',updatedAt:999,data:{planId:draft.id,observedAt:'2026-11-11T00:00:00Z',views:10,shares:4}},{id:'new',kind:'social_metric',updatedAt:1,data:{planId:draft.id,observedAt:'2026-11-12T00:00:00Z',views:null,shares:0}}];
  const m=latestPostSignals(rows,draft);assert.equal(m.views,null);assert.equal(m.shares,0);assert.equal(m.keywordComments,null);
 });
+
+test('T022 explicit latest unknown does not reuse older keyword or UTM totals',()=>{
+ const f=fixture(),plan=planHookDrafts(f.records,f.input)[0];plan.data.utmClicks=77;
+ const old={id:'comments',kind:'keyword_comment_measurement',updatedAt:1,data:{planId:plan.id,observedAt:'2026-11-11T00:00:00Z',matched:9}};
+ const latest={id:'latest',kind:'social_metric',updatedAt:2,data:{planId:plan.id,observedAt:'2026-11-12T00:00:00Z',keywordComments:null,utmClicks:null}};
+ assert.equal(latestPostSignals([old,latest],plan).keywordComments,null);assert.equal(latestPostSignals([old,latest],plan).utmClicks,null);
+ latest.data.keywordComments=0;latest.data.utmClicks=0;assert.equal(latestPostSignals([old,latest],plan).keywordComments,0);assert.equal(latestPostSignals([old,latest],plan).utmClicks,0);
+});

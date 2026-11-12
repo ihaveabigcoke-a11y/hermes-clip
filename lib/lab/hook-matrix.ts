@@ -62,8 +62,9 @@ const numberOrNull=(value:unknown)=>typeof value==='number'&&Number.isFinite(val
 export function latestPostSignals(records:readonly LabRecord[],plan:LabRecord) {
   const latest=(kind:string)=>records.filter(r=>r.kind===kind&&r.data.planId===plan.id&&Number.isFinite(Date.parse(r.data.observedAt))).sort((a,b)=>Date.parse(b.data.observedAt)-Date.parse(a.data.observedAt)||b.updatedAt-a.updatedAt||a.id.localeCompare(b.id))[0];
   const metric=latest('social_metric'),comments=latest('keyword_comment_measurement');
-  const keyword=comments&&(!metric||Date.parse(comments.data.observedAt)>Date.parse(metric.data.observedAt))?comments.data.matched:metric?.data.keywordComments??comments?.data.matched;
-  return {views:numberOrNull(metric?.data.views),keywordComments:numberOrNull(keyword),dms:numberOrNull(metric?.data.dms),shares:numberOrNull(metric?.data.shares),utmClicks:numberOrNull(metric?.data.utmClicks??plan.data.utmClicks),orders:numberOrNull(metric?.data.orders),observedAt:metric?.data.observedAt??comments?.data.observedAt??null};
+  const keyword=comments&&(!metric||Date.parse(comments.data.observedAt)>Date.parse(metric.data.observedAt))?comments.data.matched:metric&&Object.hasOwn(metric.data,'keywordComments')?metric.data.keywordComments:comments?.data.matched;
+  const clicks=metric&&Object.hasOwn(metric.data,'utmClicks')?metric.data.utmClicks:plan.data.utmClicks;
+  return {views:numberOrNull(metric?.data.views),keywordComments:numberOrNull(keyword),dms:numberOrNull(metric?.data.dms),shares:numberOrNull(metric?.data.shares),utmClicks:numberOrNull(clicks),orders:numberOrNull(metric?.data.orders),observedAt:metric?.data.observedAt??comments?.data.observedAt??null};
 }
 export function hookMatrix(records:readonly LabRecord[],productId:string,groupId:string) {
   const plans=records.filter(r=>r.kind==='content_plan'&&r.data.productId===productId&&r.data.comparison?.groupId===groupId);
