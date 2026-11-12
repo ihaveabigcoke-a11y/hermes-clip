@@ -1,5 +1,15 @@
 # Hermes Clip — bối cảnh và trạng thái (cập nhật 13/11/2026)
 
+## T-010/T-011 — mốc nghiệm thu 1 trong app (13/11/2026)
+
+Chỉ đạo trực tiếp mới nhất: Office nằm trong Hermes Clip, không dùng repo production-office; patch phòng ban chỉ tham khảo, không ghi live/snapshot.json. Một main agent CODEX-BOSS. T-010 4f759c3 đã có lựa chọn theo ngày VN, productKey tự gán, rank tự xếp và hàm thuần buildOfficeView. T-011 7007d08 thêm Tín hiệu & Phòng chờ, Phòng sản xuất và bộ đếm sidebar.
+
+Fixture hiển thị Hôm nay 3/3 · Đang triển khai 4. MP4 kỹ thuật mới đi qua ManualMedia local trên DB/profile kiểm riêng, unmatched → received; màn Tín hiệu đổi nhóm sau 4937 ms, giữ file nguồn. Đây là xử lý local thật, không phải dữ liệu hay dịch vụ/tài khoản người dùng. Typecheck; domain 213/213; API 28/28; desktop 477 pass / 1 skip OpenMontage / 0 fail; 13 ảnh T-011 ở 1366/1920. Luồng chọn T-010 kiểm lại đạt 4 ảnh.
+
+Báo cáo [T-011](../../ops/office/reports/T-011.md), bằng chứng outputs/T-011-acceptance. SHA/giờ build cuối ở STATUS văn phòng và build-result.json. Chưa Electron/AppData thật, tài khoản/dịch vụ thật, Flow/Gemini mới, Thùng rác thật. Không push/merge; **dừng trước T-012**, không tự tiếp tục các bước video trong brief.
+
+Các trạng thái bên dưới là lịch sử.
+
 ## T-009 — Codex tiếp quản bằng một main agent, nghiệm thu rea-video
 
 Yêu cầu trực tiếp ngày 13/11: Codex tự làm boss và hoàn tất các job trong `D:/agent-office/CODEX-BOSS-PROMPT.md`, chỉ **một main agent**. Không thuê worker, gọi `codex exec` để giao việc, spawn sub-agent hoặc chạy lại orchestrator. Các quy trình hai boss trong tài liệu ngày 12/11 là lịch sử. T-001 đến T-008 đã có commit; prompt cũ còn ghi T-006 chờ làm và 31 file WIP là lỗi thời. Khi tiếp quản, app ở `bd8aba9`, nhánh `main`, cây sạch, không có Electron đang chạy.
