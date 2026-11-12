@@ -12,6 +12,7 @@ const desktopEntries=[
   'components/lab/research-sources.tsx','components/lab/research-candidates.tsx',
   'components/lab/research-launcher.tsx','components/lab/viral-formulas.tsx',
   'components/lab/production-intelligence.tsx','components/lab/reference-video.tsx',
+  'components/lab/manual-media.tsx',
 ];
 
 function checkMode(mode){

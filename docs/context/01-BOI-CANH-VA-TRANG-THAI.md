@@ -1,5 +1,11 @@
 # Hermes Clip — bối cảnh và trạng thái (source cập nhật đến đêm 3, 12/11/2026)
 
+## Cập nhật T-002 — Muse tạm dừng, media manual (12/11/2026)
+
+Theo người dùng, tài khoản Muse bị khóa ngày 12/11. Source tại `D:/hermes-wt/T-002`, nhánh `codex/T-002-media-manual`, mặc định **Tạm dừng Muse** và nhà cung cấp **manual**. Giữ profile/phiên/job/receipt cũ; worker không mở profile, gửi chat/research/media hoặc đọc lại từ Muse khi tạm dừng. Thêm xuất gói prompt cho cảnh đã duyệt và hộp nhận file có ffprobe/checksum, phiên bản chờ duyệt, chống trùng và gắn cảnh tay. Các hướng dẫn dùng Muse bên dưới là trạng thái lịch sử, không phải yêu cầu chạy trong lúc tài khoản bị khóa.
+
+Chưa áp vào bản cài Windows. Typecheck/build output riêng đạt; 11 test T-002 đạt (MP4/PNG thật do FFmpeg tạo, dịch vụ Muse giả lập đếm 0 lời gọi). Ba suite chuẩn bị môi trường chặn `spawn EPERM`; Chrome IPC bị `Access is denied`, chưa có PNG 1366/1920. Chưa nghiệm thu Electron hoặc file tải thật từ Flow/Gemini. Xem [checkpoint T-002](../../ops/night/out/T-002.md) và [hướng dẫn manual](../MANUAL-MEDIA.md), không coi full suite/UI đã đạt.
+
 ## Cập nhật đêm 3 — tổng kết T20 (12/11/2026)
 
 Đối chiếu tại checkout `C:/HermesNight/hermes-clip`, nhánh `night-20261111`, HEAD `a5113d63f2982293961d893893d262c08af84caa`. Đây là source trong clone đêm; bản cài được nhận diện theo context là `C:/Users/ADMIN/Downloads/Product-Lab-Local/Product-Lab-Local`, chưa mở hoặc triển khai trong T20. Bằng chứng của bản cài ngày 11/11 ở các mục dưới vẫn là lịch sử.

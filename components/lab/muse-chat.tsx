@@ -175,7 +175,7 @@ export default function MuseChatPanel({projectId = 'general', demo = false, acti
     </aside>
     <div className="muse-conversation">
       <header><div><h2>{current ? 'Cuộc trò chuyện với Muse' : 'Cuộc trò chuyện mới'}</h2><small>{selectedProfile?.name || "Chưa có hồ sơ"} · {count}/{limit} lượt trong đợt</small></div>
-        {current?.providerUrl && <Button tone="neutral" disabled={unavailable || selectedProfile?.busy} onClick={() => void action(() => desktopBridge()!.museChatOpen({requestId: current.requestId}))}>Mở trong Chrome</Button>}
+        {current?.providerUrl && <Button tone="neutral" disabled={unavailable || status?.musePaused!==false || selectedProfile?.busy} onClick={() => void action(() => desktopBridge()!.museChatOpen({requestId: current.requestId}))}>Mở trong Chrome</Button>}
       </header>
       <div ref={historyBox} className="muse-chat-history" onScroll={() => {const el = historyBox.current; if (el) follow.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60;}}>
         {!conversation.length && <Empty title="Muse trong không gian làm việc của bạn" text="Chọn hội thoại để chat tiếp, hoặc nhập ý tưởng bên dưới."/>}
@@ -183,7 +183,7 @@ export default function MuseChatPanel({projectId = 'general', demo = false, acti
           <div className="muse-user-message"><small>Bạn · {profiles.find(profile => profile.id === chat.profileId)?.name ?? "Hồ sơ đã lưu"}{chat.createdAt ? ' · ' + formatTime(chat.createdAt) : ''}</small><details open={chat.prompt.length < 1200}><summary>Nội dung đã gửi</summary><p className="muse-chat-text">{chat.prompt}</p></details></div>
           <div className="muse-assistant-message"><h3>Muse</h3>{chat.response ? <MuseResponse text={chat.response}/> : <p role="status">{labels[chat.state]}</p>}
             {chat.error && <p className="inline-error">{chat.error}</p>}
-            {chat.state === 'needs_attention' && <Button tone="neutral" busy={busy} onClick={() => void run(chat.requestId)}>Đọc lại kết quả</Button>}
+            {chat.state === 'needs_attention' && <Button tone="neutral" busy={busy} disabled={status?.musePaused!==false} onClick={() => void run(chat.requestId)}>{status?.musePaused!==false?"Muse đang tạm dừng":"Đọc lại kết quả"}</Button>}
             {chat.state === 'done' && onResponse && <Button disabled={busy || applied.includes(chat.requestId)} onClick={() => void action(() => apply(chat))}>{applied.includes(chat.requestId) ? 'Đã áp dụng phản hồi' : responseLabel}</Button>}
           </div>
         </article>)}
@@ -200,7 +200,7 @@ export default function MuseChatPanel({projectId = 'general', demo = false, acti
         <div className="muse-composer-tools"><div className="segmented" aria-label="Chế độ Muse">
           <button type="button" aria-pressed={mode === 'chat'} onClick={() => setMode('chat')}>Chat AI</button>
           {studio && onCompose && <><button type="button" aria-pressed={mode === 'image'} onClick={() => setMode('image')}>Tạo ảnh</button><button type="button" aria-pressed={mode === 'video'} onClick={() => setMode('video')}>Tạo video</button></>}
-        </div><Button type="submit" busy={busy} disabled={unavailable || !prompt.trim() || prompt.length > 16000 || (mode === 'chat' ? pending || last?.state === 'needs_attention' || !selectedProfile?.enabled || !!selectedProfile.busy || count >= limit : !project)}><ArrowUp size={17}/>{mode === 'chat' ? 'Gửi Muse' : 'Mở bản nháp'}</Button></div>
+        </div><Button type="submit" busy={busy} disabled={unavailable || (mode==='chat'&&status?.musePaused!==false) || !prompt.trim() || prompt.length > 16000 || (mode === 'chat' ? pending || last?.state === 'needs_attention' || !selectedProfile?.enabled || !!selectedProfile.busy || count >= limit : !project)}><ArrowUp size={17}/>{mode === 'chat' ? (status?.musePaused!==false?'Muse đang tạm dừng':'Gửi Muse') : 'Mở bản nháp'}</Button></div>
         <small>{mode === 'chat' ? "Chat và tạo ảnh/video dùng chung 3 lượt/hồ sơ/đợt." : 'Chọn ảnh tham chiếu và duyệt bản nháp trong màn tạo nội dung.'}</small>
       </form>
     </div>

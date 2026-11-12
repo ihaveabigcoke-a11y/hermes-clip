@@ -8,7 +8,7 @@ import {Integrations} from '../src/integrations.mjs';
 import {startLocalServer,importModule} from './helpers/local-server.mjs';
 const {ResearchRunner}=await importModule('desktop/src/research-runner.mjs');
 async function fixture(run){
- const root=await mkdtemp(join(tmpdir(),'hermes-research-'));const store=new Store(join(root,'worker.sqlite'));
+ const root=await mkdtemp(join(tmpdir(),'hermes-research-'));const store=new Store(join(root,'worker.sqlite'));store.set('muse_paused',false);
  const local=await startLocalServer({root:join(root,'workspace'),seedPath:join(root,'no-seed.json')});
  const worker={store,root,profiles:()=>[{id:'profile',enabled:true,busy:false}],contexts:new Map(),active:new Map(),chatting:new Set()};
  const chats=new Map();let sends=0,recovers=0;

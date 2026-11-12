@@ -1,3 +1,4 @@
+import {museIsPaused,assertMuseAvailable} from './muse-pause.mjs';
 import {z} from 'zod';
 import {sessionCookie} from '../local/server.mjs';
 import {mergeMuseResearch,museTaskPrompt} from '../local-dist/server/lib/lab/muse-workflows.mjs';
@@ -17,7 +18,7 @@ export class ResearchRunner{
   }
   async records(){return (await this.request('/api/lab')).records;}
   async save(record){return (await this.request('/api/lab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(record)})).record;}
-  start(payload){
+  start(payload){assertMuseAvailable(this.store);
     const value=input.parse(payload);const existing=this.rows().find(r=>r.id===value.requestId);if(existing)return existing;
     if(this.stopped)throw Error('App đang đóng.');if(this.running||this.rows().some(r=>activeStates.includes(r.state)))throw Error('Một đợt đang nghiên cứu. Chờ kết quả trước khi bắt đầu đợt mới.');
     if(this.rows().length>=100)throw Error('Đã có 100 đợt. Sao lưu trước khi mở rộng lịch sử nghiên cứu.');
@@ -29,9 +30,9 @@ export class ResearchRunner{
     const row=this.update(value.requestId,{id:value.requestId,batchId:'research_'+value.requestId,profileId:profiles[0].id,query:value.query,maxLandedCostUsd:value.maxLandedCostUsd??null,state:'queued',createdAt:Date.now(),step:0,count:0,requestIds:[],error:'',target:10});
     this.launch(row.id);return row;
   }
-  launch(id){if(this.running||this.stopped)return;const promise=this.run(id).catch(error=>this.update(id,{state:'needs_attention',error:error.message})).finally(()=>{this.running=null;});this.running={id,promise};}
-  boot(){const row=this.rows().find(r=>activeStates.includes(r.state));if(row)this.launch(row.id);}
-  resume({id}){const row=this.rows().find(r=>r.id===id);if(!row||!['needs_attention','partial'].includes(row.state))throw Error('Chọn đợt cần kiểm tra.');if(this.running)throw Error('Chờ đợt hiện tại kết thúc.');this.update(id,{state:'queued',error:''});this.launch(id);return this.status();}
+  launch(id){if(this.running||this.stopped||museIsPaused(this.store))return;const promise=this.run(id).catch(error=>this.update(id,{state:'needs_attention',error:error.message})).finally(()=>{this.running=null;});this.running={id,promise};}
+  boot(){if(museIsPaused(this.store))return;const row=this.rows().find(r=>activeStates.includes(r.state));if(row)this.launch(row.id);}
+  resume({id}){assertMuseAvailable(this.store);const row=this.rows().find(r=>r.id===id);if(!row||!['needs_attention','partial'].includes(row.state))throw Error('Chọn đợt cần kiểm tra.');if(this.running)throw Error('Chờ đợt hiện tại kết thúc.');this.update(id,{state:'queued',error:''});this.launch(id);return this.status();}
   checkSources(id,record){
     try{this.sources?.enqueue(record);}catch(error){this.update(id,{sourceCheckError:error.message});}
     return record;
@@ -46,7 +47,7 @@ export class ResearchRunner{
       try{return this.checkSources(id,await this.save({...record,data}));}catch(error){if(error.status!==409||retry===3)throw error;}
     }
   }
-  async run(id){
+  async run(id){assertMuseAvailable(this.store);
     let row=this.rows().find(r=>r.id===id);const wasOpen=this.worker.contexts.has(row.profileId);
     try{
       this.update(id,{state:'running',error:''});
@@ -61,7 +62,7 @@ export class ResearchRunner{
       }
       row=this.update(id,{count:record.data.candidates.length});
       for(let step=row.step;step<3;step++){
-        if(this.stopped)return;
+        if(this.stopped||museIsPaused(this.store))return;
         if(record.data.candidates.length>=10)break;
         const requestId=row.requestIds[step]??('research_'+id+'_'+step);
         // Save intent before touching Muse. On restart, only the same receipt is

@@ -284,7 +284,7 @@ test('existing legacy reference assets gain metadata once while retaining user f
 });
 
 test('Muse login uses the chosen URL; changing domains disables an old flow instead of guessing a service',async()=>{
-  const root=await mkdtemp(join(tmpdir(),'product-lab-muse-url-')),store=new Store(join(root,'worker.sqlite'));
+  const root=await mkdtemp(join(tmpdir(),'product-lab-muse-url-')),store=new Store(join(root,'worker.sqlite'));store.set('muse_paused',false);
   try {
     const worker=new Worker(store,root,{},{});
     await assert.rejects(()=>worker.openProfile('profile1'),/Trang Muse/);

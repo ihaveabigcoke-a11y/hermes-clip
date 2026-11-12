@@ -118,8 +118,9 @@ export default function QueueBoard({status, records, projectId, busy, remainingC
   }
   function actionButton(job: DesktopJob) {
     const action = queueAction(job);
-    const disabled = busy || (action === 'start' && !canStart);
-    return <Button tone="neutral" disabled={disabled} onClick={() => void primaryAction(job)}>{actionLabels[action]}</Button>;
+    const museBlocked=status?.musePaused!==false&&['start','resume','recheckResult'].includes(action);
+    const disabled = museBlocked || busy || (action === 'start' && !canStart);
+    return <Button tone="neutral" disabled={disabled} onClick={() => void primaryAction(job)}>{museBlocked?'Muse đang tạm dừng':actionLabels[action]}</Button>;
   }
 
   function reviewLabel(job: DesktopJob) {
@@ -148,7 +149,7 @@ export default function QueueBoard({status, records, projectId, busy, remainingC
       }}><option value="content">{uiCopy.content}</option><option value="test">{uiCopy.test}</option></select></label>
     <QueueDetails key={selected.id} job={selected} label={reviewLabel(selected)} tone={resultTone(selected)}
     profileName={status?.profiles.find(profile => profile.id === selected.profileId)?.name ?? 'Chờ phân hồ sơ'}
-    busy={busy} onAction={onAction} onImport={onImport}
+    busy={busy} musePaused={status?.musePaused!==false} onAction={onAction} onImport={onImport}
     primary={queueAction(selected) !== 'result' && queueAction(selected) !== 'details' ? actionButton(selected) : null}/></>;
 
   return <section className="queue-board" aria-label="Tác vụ Muse">
@@ -228,8 +229,8 @@ export default function QueueBoard({status, records, projectId, busy, remainingC
   </section>;
 }
 
-function QueueDetails({job, label, tone, profileName, busy, primary, onAction, onImport}: {
-  job: DesktopJob; label: string; tone: 'neutral' | 'success' | 'danger' | 'warning'; profileName: string; busy: boolean; primary: React.ReactNode;
+function QueueDetails({job, label, tone, profileName, busy, musePaused, primary, onAction, onImport}: {
+  job: DesktopJob; label: string; tone: 'neutral' | 'success' | 'danger' | 'warning'; profileName: string; busy: boolean; musePaused:boolean; primary: React.ReactNode;
   onAction: Props['onAction']; onImport: Props['onImport'];
 }) {
   const [mediaError, setMediaError] = useState(false);
@@ -259,7 +260,7 @@ function QueueDetails({job, label, tone, profileName, busy, primary, onAction, o
       {primary}
       <a className="lab-button neutral" href={projectUrl}>Mở dự án</a>
       {job.uploadedAssetId && <a className="lab-button neutral" href={'?view=library&lib_asset=' + encodeURIComponent(job.uploadedAssetId)}>Xem trong Thư viện</a>}
-      {job.providerUrl && <Button tone="neutral" disabled={busy} onClick={() => onAction('openResult', {id: job.id})}>{uiCopy.openMuseResult}</Button>}
+      {job.providerUrl && <Button tone="neutral" disabled={busy||musePaused} onClick={() => onAction('openResult', {id: job.id})}>{musePaused?'Muse đang tạm dừng':uiCopy.openMuseResult}</Button>}
       {job.state === 'queued' && <Button tone="ghost" disabled={busy} onClick={() => onAction('cancel', {id: job.id})}>Hủy bản nháp</Button>}
       {(job.output || job.failedFilePath || job.diagnosticPath) && <Button tone="ghost" disabled={busy} onClick={() => onAction('reveal', {id: job.id})}>Mở vị trí file</Button>}
       {job.state === 'ready' && onImport && <Button disabled={busy} onClick={() => onImport(job)}>Nhập file vào dự án</Button>}

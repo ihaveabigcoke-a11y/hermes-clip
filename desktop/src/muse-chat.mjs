@@ -1,3 +1,4 @@
+import {assertMuseAvailable} from './muse-pause.mjs';
 import {createHash, randomUUID} from 'node:crypto';
 import {z} from 'zod';
 import {MuseAdapter} from './muse.mjs';
@@ -47,6 +48,7 @@ export class MuseChat {
   }
 
   async open(payload) {
+    assertMuseAvailable(this.store);
     const chat = this.get(id.parse(payload.requestId));
     if (!chat) throw Error('Không tìm thấy hội thoại.');
     const url = this.threadUrl(chat.providerUrl);
@@ -84,6 +86,7 @@ export class MuseChat {
   }
 
   beginSubmit(chat) {
+    assertMuseAvailable(this.store);
     this.store.db.exec('BEGIN IMMEDIATE');
     try {
       const batch = this.store.batch() ?? {id: randomUUID(), startedAt: Date.now(), perProfileLimit: 3, submittedByProfile: {}};
@@ -100,6 +103,7 @@ export class MuseChat {
   }
 
   async send(payload) {
+    assertMuseAvailable(this.store);
     const {attachments, ...value} = input.parse(payload);
     if (attachments?.length && value.parentId) throw Error('Chỉ đính kèm ảnh khi bắt đầu hội thoại mới.');
     const references = attachments?.length ? await checkedChatAttachments(this.worker.root, attachments) : [];
@@ -203,6 +207,7 @@ export class MuseChat {
   }
 
   async recover(payload) {
+    assertMuseAvailable(this.store);
     let chat = this.get(id.parse(payload.requestId));
     if (!chat) throw Error('Không tìm thấy hội thoại.');
     if (chat.state === 'done') return chat;

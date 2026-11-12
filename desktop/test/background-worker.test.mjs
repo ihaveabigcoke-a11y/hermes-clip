@@ -90,7 +90,7 @@ const request = sceneId => ({projectId: 'project', productId: 'product', product
   sceneRevision: 1, name: sceneId, mediaType: 'video', ratio: '9:16', duration: 10, prompt: 'Create product video', references: []});
 async function fixture(run) {
   const root = await mkdtemp(join(tmpdir(), 'background-worker-'));
-  const store = new Store(join(root, 'worker.sqlite'));
+  const store = new Store(join(root, 'worker.sqlite'));store.set('muse_paused',false);
   const worker = new Worker(store, root, {}, {}, () => 8 * 1024 ** 3);
   store.set('adapter', {enabled: true, startUrl: 'https://muse.ai/', resultIdAttribute: 'data-message-id'});
   const quota = {state: 'available', weeklyRemainingPercent: 50, additionalTokens: 0};

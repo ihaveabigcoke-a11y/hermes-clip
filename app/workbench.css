@@ -529,3 +529,17 @@ input::placeholder,textarea::placeholder { opacity:1; }
   .desk-job .job-thumbnail { width: 36px; height: 44px; }
   .desk-job .job-main { gap: 8px; }
 }
+
+/* Manual media uses the existing graphite–lime controls and typography. */
+.manual-media-tools { margin-bottom: 12px; }
+.manual-action-bar { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; padding: 12px; border: 1px solid var(--lab-border); border-radius: 10px; }
+.manual-provider { display: grid; gap: 6px; min-width: 0; font-size: 13px; }
+.manual-provider select { max-width: 100%; min-height: 36px; }
+.manual-settings .field { margin-block: 12px; }
+.manual-settings input[type="text"], .manual-settings input:not([type]) { width: 100%; }
+.manual-path { overflow-wrap: anywhere; padding: 8px 12px; }
+.manual-unmatched { margin-block: 10px; }
+.manual-unmatched-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 12px; }
+.manual-unmatched-row > span { flex: 1 1 260px; overflow-wrap: anywhere; }
+.manual-unmatched-row small { display: block; }
+.manual-unmatched-row select { max-width: 100%; }

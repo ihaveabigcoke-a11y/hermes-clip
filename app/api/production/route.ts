@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { env } from "cloudflare:workers";
 import { owner, body, getRecord, save, getSettings, ApiError, failure } from "@/lib/lab/server";
 import { applyProduction, newProduction, productionSchema, providerAdapter, variantItems, ProductionError, creativeDrafts } from "@/lib/lab/production";
 import { validationMessage } from "@/lib/lab/domain";
@@ -7,6 +8,7 @@ export async function POST(request: Request) {
   try {
     const uid=await owner(request),b=await body(request);
     const envelope=z.object({id:z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/),revision:z.number().int().nonnegative(),commandId:z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/),action:z.string().max(50),input:z.record(z.unknown())}).parse(b);
+    if(envelope.action==='media_provider'&&envelope.input.provider==='muse'&&(env as any).MUSE_PAUSED!==false)throw new ApiError(422,'Muse đang tạm dừng');
     const old=await getRecord(uid,envelope.id);
     if(["prepare","retry"].includes(envelope.action)&&(await getSettings(uid)).paused)throw new ApiError(422,"Lab đang tạm dừng giao việc.");
     if(old&&old.kind!=="production")throw new ApiError(409,"ID đã dùng cho dữ liệu khác.");
@@ -44,11 +46,11 @@ export async function POST(request: Request) {
       const product=await getRecord(uid,p.productId);
       if(!product||product.kind!=="product"||product.data.archived)throw new ApiError(422,"Sản phẩm không tồn tại hoặc đang lưu trữ. Khôi phục sản phẩm trước khi sửa dự án.");
       let input:any=envelope.input;
-      if(envelope.action==="reference"||envelope.action==="attach"||envelope.action==="worker_result"||(envelope.action==="export"&&input.assetId)) {
+      if(envelope.action==="reference"||envelope.action==="attach"||(envelope.action==="worker_result"||envelope.action==="manual_result")||(envelope.action==="export"&&input.assetId)) {
         const a=typeof input.assetId==="string"?await getRecord(uid,input.assetId):null;
         if(!a||a.kind!=="asset")throw new ApiError(422,"Chọn file đã tải trong workspace này.");
         if(envelope.action==="reference"&&!a.data.metadata)throw new ApiError(422,"Reference chưa đọc được kích thước. Dùng JPG/PNG/WebP hoặc MP4 đã kiểm tra.");
-        if(envelope.action==="attach"||envelope.action==="worker_result") {
+        if(envelope.action==="attach"||(envelope.action==="worker_result"||envelope.action==="manual_result")) {
           if(!a.data.metadata||!a.data.sha256)throw new ApiError(422,"File cũ chưa có metadata/hash. Tải lại file để kiểm tra trước khi gắn take.");
           input={sceneId:input.sceneId,attemptId:input.attemptId??null,sceneRevision:input.sceneRevision,productRevision:input.productRevision,jobId:input.jobId,providerId:input.providerId,take:{assetId:a.id,name:a.data.name,type:a.data.type,size:a.data.size,sha256:a.data.sha256,metadata:a.data.metadata}};
         }

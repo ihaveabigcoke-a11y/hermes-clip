@@ -1,3 +1,4 @@
+import {ManualMedia} from './manual-media.mjs';
 import {ResearchRunner} from './research-runner.mjs';
 import {maintainStorage,STORAGE_DEFAULTS} from './storage-policy.mjs';
 import {app,BrowserWindow,Menu,ipcMain,safeStorage,shell,screen} from 'electron';
@@ -50,6 +51,8 @@ async function startApplication() {
    if(!win.isDestroyed())win.webContents.send('product-lab:workspace-changed');
   };
  }
+ const manual=local?new ManualMedia({store,local,changed:()=>{if(!win.isDestroyed())win.webContents.send('product-lab:workspace-changed');}}):null;
+ if(manual)worker.validateMediaProvider=request=>manual.assertMuseScene(request);
  const integrations=new Integrations(store,root);
  const museChat = new MuseChat(worker);
  const research=local?new ResearchRunner({worker,chat:museChat,local,integrations,changed:()=>{if(!win.isDestroyed())win.webContents.send('product-lab:workspace-changed');}}):null;
@@ -60,6 +63,12 @@ async function startApplication() {
   workspace: new InstagramWorkspace(local, () => {if (!win.isDestroyed()) win.webContents.send('product-lab:workspace-changed');})}) : null;
  if(!integrations.config()){try{integrations.saveConfig(JSON.parse((await readFile(join(here,'../.integrations/config.json'),'utf8')).replace(/^\uFEFF/,'')));}catch{}}
  const calls={assistantSettings:()=>assistantSettings.status(),saveAssistantSettings:p=>assistantSettings.save(p),integrationStatus:()=>integrations.status(),saveIntegrations:p=>integrations.saveConfig(p),checkIntegrations:()=>integrations.doctor(),integrationResearch:p=>integrations.research(p),integrationAnalyze:p=>integrations.analyze(p),integrationFrames:p=>integrations.frames(p.id),integrationAnalyzeStructure:p=>integrations.analyzeStructure(p),integrationStructure:p=>integrations.structure(p),integrationYoutubeStatus:()=>integrations.youtubeStatus(),integrationAnalyzeYoutube:p=>integrations.analyzeYoutube(p),renderOpenMontage:async p=>{const job=await integrations.compose(p);return {...await integrations.output(job.id),jobId:job.id};},status:()=>({...worker.status(),storageMode:local?'local':'hosted'}),revealWorkspace:async()=>{if(!local)throw Error('Bản này đang dùng dữ liệu hosted.');await shell.openPath(local.root);return true;},saveProfile:p=>worker.saveProfile(p),openProfile:p=>worker.openProfile(p.id),openVpn:p=>worker.openVpn(p.id),closeProfile:p=>worker.closeProfile(p.id),checkProfile:p=>worker.checkProfile(p.id),checkAllProfiles:()=>worker.checkAllProfiles(),saveAdapter:p=>worker.saveAdapter(p),saveMuseConnection:p=>worker.saveMuseConnection(p),enqueue:p=>worker.enqueue(p),enqueueAndRun:p=>worker.enqueueAndRun(p),start:p=>worker.start(p),newBatch:()=>worker.newBatch(),pause:()=>worker.pause(),cancel:p=>worker.cancel(p.id),resume:p=>worker.resume(p.id),linkResult:p=>worker.linkResult(p),retry:p=>store.retry(p.id),output:p=>worker.output(p.id),acknowledge:p=>worker.acknowledge(p.id,p.assetId),render:p=>worker.render(p),reveal:p=>{const j=store.job(p.id),path=j.output?.path||j.failedFilePath||j.diagnosticPath;if(!path)throw Error('Chưa có file để mở.');shell.showItemInFolder(path);return true;}};
+ Object.assign(calls,{setMusePaused:p=>worker.setMusePaused(p)});
+ if(manual)Object.assign(calls,{
+  manualMediaStatus:()=>manual.status(),manualMediaConfigure:p=>manual.configure(p),
+  manualMediaExport:p=>manual.exportPack(p),manualMediaAssign:p=>manual.assign(p),
+  manualMediaOpen:async p=>{const path=await manual.waitForFiles(p);const error=await shell.openPath(path);if(error)throw Error(error);return path;},
+ });
  Object.assign(calls, {recheckResult: p => worker.recheckResult(p), openResult: p => worker.openResult(p), loadUiState: p => preferences.load(p), saveUiState: p => preferences.save(p), museChatList: p => museChat.list(p), museChatSend: p => sendMuseChat(museChat, integrations, p), museChatRecover: p => museChat.recover(p), museChatOpen: p => museChat.open(p), museChatPin: p => museChat.pin(p)});
  if(research)Object.assign(calls,{researchStatus:()=>research.status(),researchStart:p=>research.start(p),researchResume:p=>research.resume(p),researchCheckSources:p=>research.recheckSources(p),researchQueueSources:p=>research.queueSources(p),saveSourceCheckPreference:p=>integrations.saveSourceCheckPreference(p)});
  if (instagram) Object.assign(calls, {
@@ -73,9 +82,10 @@ async function startApplication() {
  for(const [method,call] of Object.entries(calls))ipcMain.handle('product-lab:'+method,async(event,payload)=>{try{assertSender(event.senderFrame?.url,event.senderFrame===event.sender.mainFrame&&event.sender===win.webContents,appOrigin);const value=await call(payload);return {ok:true,value};}catch(e){return {ok:false,error:e instanceof z.ZodError?e.issues.map(i=>i.message).join(' '):e.code||String(e.message).includes('browserType.')?safeMessage(e):e.message};}});
  win.webContents.session.setPermissionRequestHandler((_c,_p,cb)=>cb(false));win.webContents.setWindowOpenHandler(({url})=>{try{if(new URL(url).protocol==='https:')void shell.openExternal(url);}catch{}return {action:'deny'};});
  win.webContents.on('will-navigate',(event,url)=>{try{const u=new URL(url);if(!(u.origin===appOrigin||(!local&&u.protocol==='https:'&&(u.hostname==='chatgpt.com'||u.hostname==='auth.openai.com'||u.hostname.endsWith('.openai.com')))))event.preventDefault();}catch{event.preventDefault();}});
- app.on('second-instance',()=>{win.show();win.focus();});let quitting=false;app.on('before-quit',event=>{worker.pause();integrations.shutdown();if(local&&!quitting){event.preventDefault();quitting=true;void (async()=>{research?.shutdown();await instagram?.shutdown();await local.close();})().finally(()=>app.quit());}});app.on('window-all-closed',()=>app.quit());
+ app.on('second-instance',()=>{win.show();win.focus();});let quitting=false;app.on('before-quit',event=>{worker.pause();integrations.shutdown();if(local&&!quitting){event.preventDefault();quitting=true;void (async()=>{research?.shutdown();await manual?.close();await instagram?.shutdown();await local.close();})().finally(()=>app.quit());}});app.on('window-all-closed',()=>app.quit());
  if(local)await win.webContents.session.cookies.set({url:local.origin,name:sessionCookie,value:local.session,httpOnly:true,sameSite:'strict'});
  await win.loadURL(appOrigin+'/?view=production');
+ manual?.start();
  research?.boot();
  instagram?.start();
  const maintenance=setInterval(()=>void maintainStorage(root,store).catch(error=>console.warn('Storage maintenance:',error.message)),60*60*1000);maintenance.unref();
