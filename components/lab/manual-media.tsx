@@ -1,5 +1,6 @@
 "use client";
 import {useCallback, useEffect, useState} from 'react';
+import {MusePackageButton,MusePacingSettings} from './muse-package';
 import {desktopBridge, type DesktopStatus} from '@/lib/lab/desktop-client';
 import {useDesktopStatus} from '@/lib/lab/use-desktop-status';
 import {mediaProviders, mediaProviderDisabled, type MediaProvider} from '@/lib/lab/provider';
@@ -40,6 +41,7 @@ export function ManualMediaSettings({demo=false}:{demo?:boolean}) {
   async function act(action:()=>Promise<unknown>){setBusy(true);setError('');try{await action();await refresh();await manual.refresh();window.dispatchEvent(new Event('product-lab:workspace-changed'));}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
   return <section className="info-panel manual-settings" aria-label="Cài đặt nhà cung cấp media"><h3>Nhà cung cấp media</h3>
     <MuseSwitch demo={demo}/>
+    <MusePacingSettings demo={demo}/>
     {status?.compression&&<p data-testid="compression-settings">Tự nén file mới: bật (video &lt; 6 MB) · Đã tiết kiệm {(status.compression.savedBytes/1024**2).toLocaleString('vi-VN',{minimumFractionDigits:1,maximumFractionDigits:1})} MB<br/><small>Video trên 15 giây có thể vượt 6 MB để giữ chất lượng. Gốc mới trong Hộp nhận được đưa vào Thùng rác sau khi nhập và gắn cảnh thành công.</small></p>}
     <label className="field">Hộp nhận media<input aria-label="Đường dẫn Hộp nhận media" value={path} disabled={demo||busy} onChange={e=>{setPath(e.target.value);setDirty(true);}} placeholder="Đường dẫn thư mục trên máy"/></label>
     <Button tone="neutral" disabled={demo||busy||!dirty||!path.trim()||!manual.status} onClick={()=>void act(async()=>{await desktopBridge()!.manualMediaConfigure({inbox:path});setDirty(false);})}>Lưu hộp nhận media</Button>
@@ -56,6 +58,7 @@ export function ManualToolbar({projectId,production,paused,disabled,manual,onAct
     return route.provider==='manual'&&!route.blocked;
   };
   return <div className="manual-media-tools">
+    <MusePackageButton projectId={projectId} disabled={disabled||paused||busy}/>
     <div className="manual-action-bar">
       <ProviderSelect label="Nhà cung cấp cả dự án" value={production?.mediaProvider??'auto'} paused={paused} disabled={disabled||busy||!production} onChange={provider=>void act(()=>onAction('media_provider',{provider}))}/>
       <Button disabled={unavailable||!production?.scenes.some(scene=>scene.storyboardApproved&&canReceive(scene))} busy={busy} onClick={()=>void act(async()=>{const result=await desktopBridge()!.manualMediaExport({projectId});setMessage(`Đã xuất ${result.scenes.length} cảnh: ${result.path}`);})}>Xuất gói prompt</Button>

@@ -1,6 +1,7 @@
 import {registerNewRender} from './asset-compression.mjs';
 import {ProductDeployment} from './product-deployment.mjs';
 import {ManualMedia} from './manual-media.mjs';
+import {MusePackage} from './muse-package.mjs';
 import {ResearchRunner} from './research-runner.mjs';
 import {maintainStorage,STORAGE_DEFAULTS} from './storage-policy.mjs';
 import {app,BrowserWindow,Menu,ipcMain,safeStorage,shell,screen} from 'electron';
@@ -30,6 +31,8 @@ import {InstagramPublisher} from './instagram.mjs';
 import {bootInstagram} from './instagram-policy.mjs';
 import {InstagramWorkspace} from '../local/instagram-workspace.mjs';
 const here=dirname(fileURLToPath(import.meta.url));
+// A scoped live-Muse acceptance run must not boot unrelated installed queues.
+const museOnly=process.env.HERMES_MUSE_ONLY==='1';
 app.setPath('userData', process.env.PRODUCT_LAB_QA_USER_DATA || join(app.getPath('appData'),'product-lab-desktop'));
 app.setName('Hermes Clip');
 app.commandLine.appendSwitch('disk-cache-size',String(STORAGE_DEFAULTS.electronCacheBytes));
@@ -42,7 +45,7 @@ async function startApplication() {
  await app.whenReady();Menu.setApplicationMenu(null);const root=join(app.getPath('userData'),'worker');await mkdir(root,{recursive:true});
  const secret={async encrypt(text){if(!await safeStorage.isAsyncEncryptionAvailable())throw Error('Kho mã hóa hệ điều hành chưa sẵn sàng.');return Buffer.from(await safeStorage.encryptStringAsync(text)).toString('base64');},async decrypt(cipher){if(!await safeStorage.isAsyncEncryptionAvailable())throw Error('Kho mã hóa hệ điều hành chưa sẵn sàng.');return safeStorage.decryptStringAsync(Buffer.from(cipher,'base64'));}};
  const store=new Store(join(root,'worker.sqlite'));
- await maintainStorage(root,store);
+ if(!museOnly)await maintainStorage(root,store);
  const assistantSettings = new AssistantSettings(store, secret);
  const codexText = new CodexTextService({store, root, exchange:textExchange});
  const local=process.argv.includes('--hosted')?null:await startLocalServer({root:join(root,'workspace'),runtimeEnv:()=>assistantSettings.environment(),workerStore:store}),appOrigin=local?.origin??SITE;
@@ -90,6 +93,8 @@ async function startApplication() {
   return {...result,renderPlan:plan,preparedToken:local.registerPreparedMedia(result)};
  }});
  Object.assign(calls,{setMusePaused:p=>worker.setMusePaused(p)});
+ const musePackage=manual?new MusePackage({worker,manual,domain:await import('../local-dist/server/lib/lab/production.mjs')}):null;
+ Object.assign(calls,{museNightStatus:()=>worker.night.status(),beginMuseNight:()=>worker.night.begin(),saveMusePacing:p=>worker.night.configure(p),musePackagePreview:async p=>{if(!musePackage)throw Error('Cần workspace local.');return (await musePackage.preview(p)).public;},musePackageStart:async p=>{if(!musePackage)throw Error('Cần workspace local.');return musePackage.start(p);}});
  Object.assign(calls,{deleteProfile:p=>worker.deleteProfile(p)});
  if(deployments)Object.assign(calls,{deploymentStart:p=>deployments.start(p),deploymentStatus:()=>deployments.status(),deploymentResume:p=>deployments.resume(p),deploymentPause:p=>deployments.pause(p)});
  Object.assign(calls,{museChatSkipReconciliation:p=>museChat.skipReconciliation(p)});
@@ -122,11 +127,8 @@ async function startApplication() {
  app.on('second-instance',()=>{win.show();win.focus();});let quitting=false;app.on('before-quit',event=>{worker.pause();integrations.shutdown();if(local&&!quitting){event.preventDefault();quitting=true;void (async()=>{deployments?.shutdown();research?.shutdown();await manual?.close();await instagram?.shutdown();await local.close();})().finally(()=>app.quit());}});app.on('window-all-closed',()=>app.quit());
  if(local)await win.webContents.session.cookies.set({url:local.origin,name:sessionCookie,value:local.session,httpOnly:true,sameSite:'strict'});
  await win.loadURL(appOrigin+'/?view=production');
- manual?.start();
- research?.boot();
- deployments?.boot();
- bootInstagram(instagram);
- const maintenance=setInterval(()=>void maintainStorage(root,store).catch(error=>console.warn('Storage maintenance:',error.message)),60*60*1000);maintenance.unref();
+ if(!museOnly){manual?.start();research?.boot();deployments?.boot();bootInstagram(instagram);}
+ const maintenance=setInterval(()=>{if(!museOnly)void maintainStorage(root,store).catch(error=>console.warn('Storage maintenance:',error.message));},60*60*1000);maintenance.unref();
  app.once('before-quit',()=>clearInterval(maintenance));
- if(local)for(const job of store.jobs().filter(job=>job.state==='ready'&&!job.importedAt))void worker.importReady(job.id);
+ if(local&&!museOnly)for(const job of store.jobs().filter(job=>job.state==='ready'&&!job.importedAt))void worker.importReady(job.id);
 }

@@ -2,9 +2,10 @@ import {z} from 'zod';
 import {VIETNAM_TIME_ZONE,vietnamDay,type LabRecord} from './domain.ts';
 import {selectionEntries} from './daily-selection.ts';
 
-export const officeGroups={queued:'Hàng chờ',sending:'Đang gửi',generating:'Đang tạo',checking:'Kiểm / nhập',library:'Đã vào Thư viện',manual:'Chờ file tay',attention:'Cần đối soát',failed:'Lỗi',stopped:'Đã dừng',unmapped:'Chưa phân loại'} as const;
+export const officeGroups={queued:'Hàng chờ',sending:'Đang gửi',generating:'Đang tạo',checking:'Kiểm / nhập',library:'Đã vào Thư viện',manual:'Chờ file tay',attention:'Cần đối soát',failed:'Lỗi',stopped:'Đã dừng',refused:'Muse từ chối/giới hạn',unmapped:'Chưa phân loại'} as const;
 export type OfficeGroup=keyof typeof officeGroups;
-export function groupOf(run:{state:string;assetId?:string|null;importError?:unknown}) : OfficeGroup {
+export function groupOf(run:{state:string;assetId?:string|null;importError?:unknown;errorKind?:string}) : OfficeGroup {
+  if(run.errorKind==='refused')return 'refused';
   if(run.importError)return 'attention';
   if(['ready','received'].includes(run.state))return run.assetId?'library':'checking';
   if(run.state==='queued')return 'queued';
@@ -33,13 +34,13 @@ export function buildOfficeView(records:LabRecord[],workerStore:any=[],manual:an
   const projectOf=(id:any)=>projects.find(p=>p.id===id);
   const runs:any[]=[];
   function run(raw:any,kind:'media'|'compose',id:string,source:any,projectId:any,sceneId:any,variantId:any,assetId:any,takeId:any) {
-    const state=stateOf(raw.state),output=identifier(assetId),group=groupOf({state,assetId:output,importError:raw.importError});
+    const state=stateOf(raw.state),output=identifier(assetId),group=groupOf({state,assetId:output,importError:raw.importError,errorKind:raw.errorKind});
     const history=(raw.history??[{at:raw.createdAt,state}]).slice(-20).map((h:any)=>({at:iso(h.at),state:stateOf(h.state),note:note(stateOf(h.state),h.state===state?output:null)}));
     const updatedAt=iso(raw.updatedAt??raw.receivedAt??raw.finishedAt??raw.createdAt);
-    const lastEvent={at:updatedAt,note:raw.importError?'File đã tạo nhưng chưa nhập được. Mở lượt gốc để đối soát.':note(state,output)};
+    const lastEvent={at:updatedAt,note:group==='refused'?'Muse từ chối/giới hạn':raw.importError?'File đã tạo nhưng chưa nhập được. Mở lượt gốc để đối soát.':note(state,output)};
     if(!history.length||history.at(-1)?.state!==state||history.at(-1)?.at!==updatedAt)history.push({at:updatedAt,state,note:lastEvent.note});
     const project=projectOf(projectId);
-    runs.push({id,kind,productId:identifier(project?.data.productId??raw.request?.productId),productionId:identifier(projectId),sceneId:identifier(sceneId),variantId:identifier(variantId),provider:provider(source),state,group,createdAt:iso(raw.createdAt),updatedAt,lastEvent,history:history.slice(-20),needsAction:['attention','failed','manual','unmapped'].includes(group)?{reason:group==='attention'?(raw.importError?'File đã có nhưng chưa nhập được vào Thư viện.':state==='unmatched'?'File chưa khớp cảnh; cần gắn trong Hộp nhận media.':'Kết quả chưa rõ; đối soát trước khi tạo lại.'):group==='manual'?'Đang chờ file tải về được gắn vào cảnh.':group==='failed'?'Lượt kết thúc lỗi; mở tác vụ gốc để xem chi tiết.':'Trạng thái chưa có quy tắc phân loại.'}:null,outputs:{assetId:output,takeId:identifier(takeId)}});
+    runs.push({id,kind,productId:identifier(project?.data.productId??raw.request?.productId),productionId:identifier(projectId),sceneId:identifier(sceneId),variantId:identifier(variantId),provider:provider(source),state,group,createdAt:iso(raw.createdAt),updatedAt,lastEvent,history:history.slice(-20),needsAction:['attention','failed','manual','unmapped','refused'].includes(group)?{reason:group==='refused'?'Muse đã từ chối/giới hạn; dừng đêm này và dùng manual.':group==='attention'?(raw.importError?'File đã có nhưng chưa nhập được vào Thư viện.':state==='unmatched'?'File chưa khớp cảnh; cần gắn trong Hộp nhận media.':'Kết quả chưa rõ; đối soát trước khi tạo lại.'):group==='manual'?'Đang chờ file tải về được gắn vào cảnh.':group==='failed'?'Lượt kết thúc lỗi; mở tác vụ gốc để xem chi tiết.':'Trạng thái chưa có quy tắc phân loại.'}:null,outputs:{assetId:output,takeId:identifier(takeId)}});
   }
   for(const job of jobs) {
     const p=projectOf(job.request?.projectId),scene=p?.data.scenes?.find((s:any)=>s.id===job.request?.sceneId);

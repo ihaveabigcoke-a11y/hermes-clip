@@ -1,4 +1,5 @@
 import {museIsPaused,assertMuseAvailable,assertMuseNewTask,runMuseTask} from './muse-pause.mjs';
+import {MuseNight,assertMusePage,museFailureKind} from './muse-night.mjs';
 import {assertDiskSpace,diskStatus,storagePolicy,browserCacheArgs,trimProfileCaches} from './storage-policy.mjs';
 import {randomUUID,createHash} from 'node:crypto';
 import {mkdir,writeFile,readFile,stat,rename,unlink} from 'node:fs/promises';
@@ -20,9 +21,10 @@ export class Worker {
   closing = new Map();
   reclaimingMemory = false;
   memoryRecoveryAttempts = new Set();
-  constructor(store,root,browser,secret,memory=freemem){this.memory=memory;this.store=store;this.root=root;this.browser=browser;this.secret=secret;this.contexts=new Map();this.opening=new Map();this.bridges=new Map();this.active=new Map();this.paused=true;this.budget=0;this.approvedIds=[];this.maxConcurrent=1;this.attemptedProfiles=new Map();this.backgroundProfiles=new Set();this.store.recover();this.vpn=new TouchVpn(join(root,'extensions'));this.checking=new Map();this.connectingVpn=new Map();}
+  constructor(store,root,browser,secret,memory=freemem){this.memory=memory;this.store=store;this.night=new MuseNight(store);this.root=root;this.browser=browser;this.secret=secret;this.contexts=new Map();this.opening=new Map();this.bridges=new Map();this.active=new Map();this.paused=true;this.budget=0;this.approvedIds=[];this.maxConcurrent=1;this.attemptedProfiles=new Map();this.backgroundProfiles=new Set();this.store.recover();this.vpn=new TouchVpn(join(root,'extensions'));this.checking=new Map();this.connectingVpn=new Map();}
   async setMusePaused({paused}) {
     if (typeof paused !== 'boolean') throw Error('Chọn trạng thái tạm dừng Muse.');
+    if(!paused&&this.night.current()?.stopReason)this.night.assertRoom();
     this.store.set('muse_paused', paused);
     // Invalidate admissions waiting on I/O, but keep running jobs and their contexts.
     if (paused) this.pause();
@@ -405,6 +407,7 @@ export class Worker {
   }
   async start({count, maxConcurrent, jobIds}) {
     assertMuseNewTask(this.store);
+    if(this.night.current())this.night.assertRoom(count);
     const dispatchVersion = this.dispatchVersion;
     if (!Number.isInteger(count) || count < 1 || count > 30) throw Error('Mỗi lần chạy tối đa 30 tác vụ.');
     if (!this.config()?.enabled) throw Error('Luồng Muse chưa được bật.');
@@ -534,11 +537,13 @@ export class Worker {
       this.note(id, 'Browser Muse đang chạy nền.');
       if (this.store.get('profiles',[]).find(profile => profile.id === profileId)?.vpnEnabled) this.note(id,'Touch VPN đã kết nối trong profile.');
       const adapter = new MuseAdapter(this.config());
+      if(this.night.current())adapter.guard=()=>assertMusePage(page);
       const checkpoint = (state, patch = {}) => {
-        assertMuseAvailable(this.store, {jobId:id, profileId});
-        return state === 'submitting'
+        const transition=()=>{assertMuseAvailable(this.store, {jobId:id, profileId});return state === 'submitting'
           ? this.store.beginSubmit(id, profileId, {note: labels[state], ...patch})
-          : this.store.transition(id, state, {note: labels[state], ...patch});
+          : this.store.transition(id, state, {note: labels[state], ...patch});};
+        if(state==='submitting'&&this.night.current())return this.night.admit(id,()=>!museIsPaused(this.store)&&!this.paused).then(transition);
+        return transition();
       };
       if (!resume) {
         const profile = this.store.get('profiles', []).find(profile => profile.id === profileId);
@@ -583,11 +588,14 @@ export class Worker {
         note: 'Đã ghi file và giải mã toàn bộ; vẫn cần người duyệt nội dung.',
       });
       await this.importReady(id);
+      this.night.outcome(id);
       await this.measureQuota(profileId,context);
     } catch (error) {
+      const night=this.night.outcome(id,error);
+      if(this.night.current()){this.store.put({...this.store.job(id),errorKind:museFailureKind(error)});if(night.stopped||['MUSE_NIGHT_STOP','MUSE_NIGHT_LIMIT'].includes(error.code)){this.store.set('muse_paused',true);this.pause();}}
       const job = this.store.job(id);
       if(job.state==='preflight'&&error.code==='STORAGE_LOW'){this.store.transition(id,'queued',{note:error.message});this.paused=true;return;}
-      if (job.state === 'preflight' && ['MUSE_LOGIN_REQUIRED', 'MUSE_PROFILE_UNAVAILABLE', 'MUSE_VPN_REQUIRED', 'MUSE_QUOTA_EXHAUSTED', 'MUSE_QUOTA_UNCONFIRMED'].includes(error.code)) {
+      if (!this.night.current() && job.state === 'preflight' && ['MUSE_LOGIN_REQUIRED', 'MUSE_PROFILE_UNAVAILABLE', 'MUSE_VPN_REQUIRED', 'MUSE_QUOTA_EXHAUSTED', 'MUSE_QUOTA_UNCONFIRMED'].includes(error.code)) {
         if (!['MUSE_QUOTA_EXHAUSTED', 'MUSE_QUOTA_UNCONFIRMED'].includes(error.code)) this.profileHealth(profileId, error.code === 'MUSE_LOGIN_REQUIRED' ? 'login_required' : 'connection_error');
         this.store.transition(id, 'queued', {profileId: null, note: safeMessage(error) + ' Đang chọn profile khác.'});
         if (!this.paused) this.approvedIds.push(id);
@@ -675,7 +683,7 @@ export class Worker {
   linkResult({id,providerId,url}){const j=this.store.job(id);if(j.state!=='needs_attention'||!j.profileId)throw Error('Chỉ đối soát job đã bị gián đoạn.');if(!/^[a-zA-Z0-9_-]{1,200}$/.test(providerId)||(!this.config()||new URL(url).origin!==new URL(this.config().startUrl).origin||new URL(url).username||new URL(url).password))throw Error('Cần mã kết quả và URL Muse hợp lệ.');this.store.put({...j,providerId,providerUrl:url,history:[...j.history,{at:Date.now(),state:'needs_attention',note:'Người dùng chỉ định kết quả cũ để đối soát; chưa xác nhận file.'}]});return true;}
   cancel(id){const j=this.store.job(id);if(j.state!=='queued')throw Error('Chỉ hủy job chưa gửi. Chưa có xác nhận hủy từ Muse.');this.store.transition(id,'cancelled',{note:'Hủy nháp local, chưa có lượt gửi.'});return true;}
   diskStatus(){return diskStatus(this.root,storagePolicy(this.store));}
-  status(){return {storage:this.diskStatus(),version:'0.2.0',profiles:this.profiles(),jobs:this.store.jobs().map(j=>({...j,profileName:(this.store.get('profiles',[]).find(p=>p.id===j.profileId)??this.store.get('deleted_profiles',[]).find(p=>p.id===j.profileId))?.name,provider:j.provider??'muse',request:{...j.request,references:j.request.references.map(({path,...r})=>r)},label:j.importedAt?'Đã vào Thư viện':j.importError?'File đã tải · lỗi nhập':labels[j.state]})),paused:this.paused,active:this.active.size,budget:this.budget,batch:this.store.batch(),freeRamGb:Math.round(this.memory()/1024**3*10)/10,adapter:this.config(),connection:this.connection(),musePaused:museIsPaused(this.store),generationReady:!museIsPaused(this.store)&&!!this.config()?.enabled};}
+  status(){return {museNight:this.night.status(),storage:this.diskStatus(),version:'0.2.0',profiles:this.profiles(),jobs:this.store.jobs().map(j=>({...j,profileName:(this.store.get('profiles',[]).find(p=>p.id===j.profileId)??this.store.get('deleted_profiles',[]).find(p=>p.id===j.profileId))?.name,provider:j.provider??'muse',request:{...j.request,references:j.request.references.map(({path,...r})=>r)},label:j.importedAt?'Đã vào Thư viện':j.importError?'File đã tải · lỗi nhập':labels[j.state]})),paused:this.paused,active:this.active.size,budget:this.budget,batch:this.store.batch(),freeRamGb:Math.round(this.memory()/1024**3*10)/10,adapter:this.config(),connection:this.connection(),musePaused:museIsPaused(this.store),generationReady:!museIsPaused(this.store)&&!!this.config()?.enabled};}
   async output(id){const j=this.store.job(id);if(j.state!=='ready'||!j.output)throw Error('Chưa có file đã kiểm tra.');const bytes=new Uint8Array(await readFile(j.output.path));if(createHash('sha256').update(bytes).digest('hex')!==j.output.sha256)throw Error('File đã thay đổi sau kiểm tra.');return {bytes,name:j.output.name,type:j.request.mediaType==='video'?'video/mp4':({'.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.png':'image/png'}[extname(j.output.path)]||'image/png'),sha256:j.output.sha256};}
   acknowledge(id,assetId){if(!/^[a-zA-Z0-9_-]{1,120}$/.test(assetId))throw Error('Asset ID không hợp lệ.');this.store.put({...this.store.job(id),uploadedAssetId:assetId});return true;}
   async render(payload,ass=null){assertDiskSpace(this.root,256*1024**2,storagePolicy(this.store));const {z}=await import('zod');const d=z.object({ratio:z.enum(['9:16','16:9','1:1','4:3','3:4']),clips:z.array(z.object({bytes:z.instanceof(Uint8Array),sha256:z.string().regex(/^[a-f0-9]{64}$/),duration:z.number().positive().max(120)})).min(1).max(30)}).parse(payload);if(d.clips.reduce((n,c)=>n+c.bytes.length,0)>60*1024*1024)throw Error('Tổng nguồn tối đa 60 MB.');await toolchain();const id=randomUUID(),dir=join(this.root,'renders',id);await mkdir(dir,{recursive:true});const clips=[];for(const [i,c] of d.clips.entries()){if(createHash('sha256').update(c.bytes).digest('hex')!==c.sha256)throw Error('Nguồn dựng sai checksum.');const path=join(dir,`${i}.mp4`);await writeFile(path,c.bytes);await validateMedia(path,{mediaType:'video',ratio:d.ratio,duration:c.duration});clips.push({path,duration:c.duration,audio:await hasAudio(path)});}const path=join(dir,'output.mp4'),report=await renderClips(clips,d.ratio,path,{ass});for(const clip of clips)await unlink(clip.path);return {bytes:new Uint8Array(await readFile(path)),name:`render_${id}.mp4`,type:'video/mp4',path,...report};}

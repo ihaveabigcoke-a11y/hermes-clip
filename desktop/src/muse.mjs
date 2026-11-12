@@ -29,6 +29,7 @@ export class MuseAdapter {
   }
 
   async prepare(page, job) {
+    await this.guard?.();
     if (!await this.session(page)) {
       const error = new Error('Phiên Muse cần đăng nhập.');
       error.code = 'MUSE_LOGIN_REQUIRED';
@@ -110,6 +111,7 @@ export class MuseAdapter {
     let lastResponse = '';
     let completedAt = null;
     while (Date.now() < deadline) {
+      await this.guard?.();
       const ids = await cards.evaluateAll(
         (elements, attribute) => elements.map(element => element.getAttribute(attribute)).filter(Boolean),
         config.resultIdAttribute,
@@ -209,8 +211,10 @@ export class MuseAdapter {
       await page.goto(url.href, {waitUntil: 'domcontentloaded', timeout: 30000});
     }
     const loggedIn = page.locator(config.loggedIn);
-    if (this.chatMode) await loggedIn.waitFor({state: 'visible', timeout: 30000});
-    if (!await loggedIn.isVisible()) throw Error('Phiên Muse cần đăng nhập.');
+    try {
+      if (this.chatMode) await loggedIn.waitFor({state: 'visible', timeout: 30000});
+      if (!await loggedIn.isVisible()) throw Error('Login required');
+    } catch {throw Object.assign(Error('Phiên Muse cần đăng nhập.'),{code:'MUSE_LOGIN_REQUIRED'});}
     const exact = page.locator(`${config.resultCards}[${config.resultIdAttribute}=${JSON.stringify(job.providerId)}]`);
     await checkpoint('waiting');
     if (this.chatMode) await exact.scrollIntoViewIfNeeded({timeout: 30000});

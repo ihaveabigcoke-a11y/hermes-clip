@@ -2067,7 +2067,7 @@ export default function LabApp() {
           <section className="panel">
             {sectionTitle("Tạo ảnh và video với Muse", "Quản lý phiên đăng nhập và hạn mức tại Tài khoản.")}
             <p>Mở hồ sơ để đăng nhập Muse, kiểm tra VPN và đo hạn mức trước khi tạo ảnh hoặc video.</p>
-            <p>Mỗi tài khoản có tối đa 3 lần gửi tạo ảnh/video trong một đợt. Bắt đầu đợt mới tại Tài khoản khi các tác vụ đang chạy đã kết thúc.</p>
+              <p>Số lượt theo profile không giới hạn. Gói Muse giãn nhịp theo cài đặt và giữ hạn mức thực tế của dịch vụ.</p>
             <Button tone="neutral" onClick={() => navigate("accounts")}>Quản lý tài khoản Muse</Button>
             {settings.providerDocs && (
               <a
