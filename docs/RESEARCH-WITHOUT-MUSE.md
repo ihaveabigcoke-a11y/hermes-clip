@@ -1,12 +1,19 @@
 # Research và nội dung không cần Muse — T-003
 
-Source ngày 12/11/2026. Giữ Muse tạm dừng và media manual của T-002. Chưa triển khai build vào `desktop/local-dist`, chưa chạy Codex CLI thật.
+Source ngày 12/11/2026, cập nhật T-002b. Muse mặc định Tạm dừng; chưa triển khai build vào `desktop/local-dist`, chưa chạy Codex CLI thật.
+
+Nút **Bắt đầu bằng…** tự dùng Muse khi Muse sẵn sàng theo cùng hàm với thẻ kết nối; khi không sẵn sàng dùng Codex nếu đã bật trong Cài đặt, nếu không mở nhập JSON. Đây là lựa chọn mặc định lúc người dùng bấm, không tự chạy công cụ khi đổi công tắc. Các nút nhập JSON/CLI riêng vẫn giữ để người dùng chọn. Khi còn tác vụ Muse đang chạy hoặc chưa rõ kết quả, khóa chuyển provider, hiện **Cần đối soát** nếu kết quả chưa rõ; không tự gửi lại. Media dùng manual khi Muse không sẵn sàng; xem [hướng dẫn media](MANUAL-MEDIA.md).
+
+Kết quả mới lưu `provider` thực thi: `muse`, `codex`, `import:<tên>`; trường `source: import:<tên>` cũ vẫn giữ để tương thích. CLI ghi receipt local trạng thái chạy/xong/lỗi, không lưu credentials. Nội dung/landing lưu nguồn cùng bản nháp. Khi sửa hoặc thay JSON do CLI trả về, bản nhập được ghi nguồn import thay cho receipt CLI nguyên gốc.
+
+T-002b vòng 2: receipt research chỉ chặn đúng đợt đang nhập (`taskScope`/`batchId`); đợt khác không chặn Codex/JSON. Trong **Nghiên cứu → Kết quả Muse cần đối soát**, có thể chọn **Bỏ qua, không đối soát** cho run hoặc chat chưa rõ. Cảnh báo: **Kết quả Muse cũ chưa rõ; app sẽ không gửi lại**. Quyết định lưu bền (`reconciled: true`, `reconciliation: skipped`), không xóa nội dung/receipt hay reset quota, dùng được khi Muse tạm dừng. Bỏ qua run cũng bỏ qua các chat chưa rõ thuộc chính run đó; tác vụ đang chạy không được bỏ qua. App không tự chạy provider thay thế; người dùng chủ động nhập/chạy mới sau đó.
 
 ## Nhập JSON và copy prompt
 
 1. **Nghiên cứu**: nhập tiêu chí/ngách/trần vốn + ship, bấm **Copy prompt research**. Prompt dùng lại `museTaskPrompt`, theo số chỗ còn lại trong đợt. Dán vào công cụ đang dùng (Codex, Claude, Gemini Deep Research hoặc ChatGPT); không cần khóa API trong Hermes.
 2. Bấm **Nhập kết quả research**, ghi tên công cụ, dán JSON hoặc chọn file `.json` tối đa **384.000 byte**. Nhập đối tượng JSON, bỏ phần tóm tắt bên ngoài; chấp nhận JSON trong một khối Markdown. Lỗi nêu đường dẫn, ví dụ `candidates.0.shipping`.
 3. **Kiểm tra và nhập JSON** lưu vào đợt đang chọn, hoặc tạo đợt mới nếu chưa có đợt. Tối đa 10 ứng viên; không cắt danh sách để tự chọn. Nhập lại cùng tên sản phẩm + URL không thêm bản trùng; trường hợp cập nhật một ứng viên cũ, dùng **Sửa ứng viên**. Không tự chọn ba sản phẩm hoặc tạo hồ sơ từ import.
+   Kết quả nhập hiển thị số mới và số trùng, ví dụ **0 ứng viên mới, bỏ 9 trùng**; không ghi lại đợt nếu không có ứng viên mới.
 4. Nhận cả `{summary,candidates:[...]}` theo `researchResponse` và JSON một sản phẩm của skill `hermes-product-check`. `source` được ghi `import:<tên công cụ>`. Giữ null và mã tiền tệ; số tiền đã biết cần mã tiền tệ nguồn. `listingStatus` khác `single` bắt buộc vốn và ship là null. `not_found` được để URL null/trống, không bịa URL thay thế.
 5. JSON skill gốc được lưu trong `importMetadata.rawJson`, gồm cả `maxLandedForMarkup`, câu hỏi supplier hoặc trường mới chưa có trong app. Mở **Xem → JSON gốc từ công cụ nghiên cứu** để đọc. Cờ logistics có thể là object boolean/null hoặc danh sách tên cờ; cờ không nằm trong danh sách giữ chưa rõ. Giá bán lẻ nhận nguồn dạng object hoặc URL; nếu chỉ có URL, ngày/giá tại nguồn giữ null. Nhãn verdict/logistics hiển thị trên hàng ứng viên; listing nhập không được giả làm receipt kiểm nguồn tại máy.
 6. **Instagram → chọn sản phẩm** có **Nhập kết quả nội dung / Copy prompt nội dung**. **Trang giới thiệu → chọn sản phẩm** có các nút tương ứng cho landing. JSON hợp lệ mở biểu mẫu nháp của đúng sản phẩm để duyệt và lưu. Có thể gắn dự án video trong biểu mẫu nội dung; không tự sửa cảnh đã duyệt, đăng bài, xuất bản landing hay thêm điều khoản thương mại.

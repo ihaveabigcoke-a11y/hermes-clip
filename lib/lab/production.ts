@@ -20,12 +20,14 @@ export const overlayTextSchema = z.string().trim().max(60, "Chữ trên màn hì
 export const ctaKeywordSchema = z.string().trim().regex(/^[A-Z]{1,20}$/, "Từ khóa cần một từ tiếng Anh in hoa, tối đa 20 chữ cái.");
 const ctaFields = {ctaKeyword: ctaKeywordSchema.nullable().optional(), ctaText: text(200).nullable().optional()};
 const attemptSchema = z.object({
+  provider: z.enum(['muse','manual']).optional(),
   id, requestId: id, sceneRevision: z.number().int().positive(),
   status: z.enum(["awaiting_provider", "cancelled", "manual_complete", "local_complete", "unknown"]),
   snapshot: z.string().max(20000), providerJobId: text(200),
   usageUsd: z.number().nonnegative().nullable(), createdAt: z.number(),
 });
 const takeSchema = z.object({
+  provider: z.enum(['muse','manual']).optional(),
   id, attemptId: id.nullable(), assetId: id, name: text(150), type: text(80),
   sha256: z.string().regex(/^[a-f0-9]{64}$/), size: z.number().int().positive(),
   snapshot: z.string().max(20000).optional(),
@@ -164,7 +166,7 @@ const commandSchemas: Record<string, z.ZodTypeAny> = {
   storyboard: z.object({sceneId:id}), prepare: z.object({sceneId:id}), retry: z.object({sceneId:id}),
   pause: z.object({paused:z.boolean()}), cancel: z.object({sceneId:id,attemptId:id}),
   attach: z.object({sceneId:id,attemptId:id.nullable(),take:takeSchema.omit({id:true,attemptId:true,sceneRevision:true,review:true,notes:true,createdAt:true})}),
-  media_provider: z.object({sceneId:id.optional(),provider:mediaProviderSchema}),
+  media_provider: z.object({sceneId:id.optional(),provider:z.union([mediaProviderSchema,z.literal('auto')])}),
   manual_result: z.object({sceneId:id,sceneRevision:z.number().int().positive(),take:takeSchema.omit({id:true,attemptId:true,sceneRevision:true,review:true,notes:true,createdAt:true})}),
   worker_result: z.object({sceneId:id,productRevision:z.number().int().positive(),sceneRevision:z.number().int().positive(),jobId:id,providerId:text(200),take:takeSchema.omit({id:true,attemptId:true,sceneRevision:true,review:true,notes:true,createdAt:true})}),
   review: z.object({sceneId:id,takeId:id,review:z.enum(["approved","rejected"]),notes:text(2000)}),
@@ -204,15 +206,15 @@ export function applyProduction(p0: Production, action: string, input: unknown, 
     p.scenes.filter(s=>s.references.some(r=>r.id===d.id)).forEach(s=>{s.storyboardApproved=false;});
   } else if(action==="media_provider") {
     if(d.provider==='grok-cli'||d.provider==='fal')throw new ProductionError(d.provider==='fal'?'Trả phí, phải báo giá trước.':'Nhà cung cấp chưa kiểm.');
-    if(d.sceneId)scene(d.sceneId).mediaProvider=d.provider;
-    else {p.mediaProvider=d.provider;for(const row of p.scenes)delete row.mediaProvider;}
+    if(d.sceneId){if(d.provider==='auto')delete scene(d.sceneId).mediaProvider;else scene(d.sceneId).mediaProvider=d.provider;}
+    else {if(d.provider==='auto')delete p.mediaProvider;else p.mediaProvider=d.provider;}
   } else if(action==="manual_result") {
     const s=scene(d.sceneId);
     if((s.mediaProvider??p.mediaProvider??'manual')!=='manual')throw new ProductionError('Cảnh chưa chọn nhà cung cấp manual.');
     if(s.revision!==d.sceneRevision)throw new ProductionError('Cảnh đã đổi; kiểm lại trước khi gắn file.');
     const existing=p.scenes.find(row=>row.takes.some(t=>t.sha256===d.take.sha256));
     if(existing)throw new ProductionError('Checksum đã có trong dự án; không nhập lại.');
-    s.takes.push({...d.take,snapshot:snapshotScene(s),id:commandId,attemptId:null,sceneRevision:s.revision,review:'pending',notes:'Nhập từ Hộp nhận media · manual · '+checkMedia(s,d.take).join(' '),createdAt:now});
+    s.takes.push({...d.take,provider:"manual",snapshot:snapshotScene(s),id:commandId,attemptId:null,sceneRevision:s.revision,review:'pending',notes:'Nhập từ Hộp nhận media · manual · '+checkMedia(s,d.take).join(' '),createdAt:now});
   } else if(action==="scene")saveScene(d);
   else if(action==="import") {
     const ids=d.rows.map((r:any)=>r.id);if(new Set(ids).size!==ids.length||ids.some((v:string)=>p.scenes.some(s=>s.id===v)))throw new ProductionError("Lô có Scene ID trùng. Chưa lưu dòng nào.");
@@ -268,13 +270,13 @@ export function applyProduction(p0: Production, action: string, input: unknown, 
       return p0;
     }
     const aid=commandId+"_a";id.parse(aid);if(!s.storyboardApproved)throw new ProductionError("Duyệt kịch bản trước khi nhận kết quả tác vụ nền.");
-    s.attempts.push({id:aid,requestId:d.jobId,sceneRevision:s.revision,status:"local_complete",snapshot:JSON.stringify({...JSON.parse(snapshotScene(s)),source:"windows_worker_receipt"}),providerJobId:d.providerId,usageUsd:null,createdAt:now});
-    s.takes.push({...d.take,snapshot:snapshotScene(s),id:commandId,attemptId:aid,sceneRevision:s.revision,review:"pending",notes:"Nhận qua trên máy; máy chủ kiểm tra file, nội dung chờ người duyệt.",createdAt:now});
+    s.attempts.push({id:aid,requestId:d.jobId,sceneRevision:s.revision,status:"local_complete",provider:"muse",snapshot:JSON.stringify({...JSON.parse(snapshotScene(s)),source:"windows_worker_receipt"}),providerJobId:d.providerId,usageUsd:null,createdAt:now});
+    s.takes.push({...d.take,provider:"muse",snapshot:snapshotScene(s),id:commandId,attemptId:aid,sceneRevision:s.revision,review:"pending",notes:"Nhận qua trên máy; máy chủ kiểm tra file, nội dung chờ người duyệt.",createdAt:now});
   } else if(action==="attach") {
     const s=scene(d.sceneId),a=d.attemptId?s.attempts.find(a=>a.id===d.attemptId):null;
     if(d.attemptId&&!a)throw new ProductionError("Lượt tạo không thuộc cảnh.");
     if(a&&a.status!=="awaiting_provider")throw new ProductionError("Lượt tạo này không nhận thêm kết quả. Chọn lượt tạo chờ hoặc nhập thủ công.");
-    s.takes.push({...d.take,snapshot:a?.snapshot??snapshotScene(s),id:commandId,attemptId:a?.id??null,sceneRevision:a?.sceneRevision??s.revision,review:"pending",notes:"",createdAt:now});
+    s.takes.push({...d.take,provider:"manual",snapshot:a?.snapshot??snapshotScene(s),id:commandId,attemptId:a?.id??null,sceneRevision:a?.sceneRevision??s.revision,review:"pending",notes:"",createdAt:now});
     if(a)a.status="manual_complete";
   } else if(action==="review") {
     const s=scene(d.sceneId),t=s.takes.find(t=>t.id===d.takeId);if(!t)throw new ProductionError("Phiên bản không tồn tại.");

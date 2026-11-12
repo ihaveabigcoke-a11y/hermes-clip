@@ -33,7 +33,7 @@ export function parseMuseResponse(kind: Exclude<MuseTaskKind, 'analysis'>, text:
     if (kind === 'research') {
       const result = researchResponse.parse(value);
       // Import provenance belongs to the manual/CLI path, never a Muse receipt.
-      return {...result, candidates: result.candidates.map(({source: _source, listingStatus: _listing, importMetadata: _metadata, ...candidate}) => candidate)};
+      return {...result, candidates: result.candidates.map(({source: _source, listingStatus: _listing, importMetadata: _metadata, provider:_provider, ...candidate}) => ({...candidate,provider:'muse'}))};
     }
     return {research: researchResponse, content: contentResponse, landing: landingResponse}[kind].parse(value);
   } catch {

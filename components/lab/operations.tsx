@@ -18,7 +18,7 @@ import ViralFormulas from './viral-formulas';
 import {instagramProductSummary} from '@/lib/lab/instagram-summary';
 import {sampleCheckWarning} from '@/lib/lab/sample-check';
 import TextExchange from './text-exchange';
-import {parseTextExchange, mergeTextResearch} from '@/lib/lab/codex-exchange';
+import {parseTextExchange, importTextResearch} from '@/lib/lab/codex-exchange';
 import {researchBatchSchema} from '@/lib/lab/operations';
 import {useDesktopStatus} from '@/lib/lab/use-desktop-status';
 
@@ -145,7 +145,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
       return;
     }
     if (museTask.kind === 'analysis') return;
-    const draft = parseMuseResponse(museTask.kind, text) as Record<string, any>;
+    const draft = {...parseMuseResponse(museTask.kind, text),provider:'muse'} as Record<string, any>;
     if (museTask.kind === 'content') planForm(undefined, draft);
     else landingForm(draft);
     setMuseTask(null);
@@ -179,7 +179,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
     if (!chosen) return;
     const id = plan?.id ?? newId();
     show({title: plan ? "Sửa kế hoạch nội dung" : "Thêm kế hoạch nội dung", kind: "content_plan",
-      initial: plan ? {...plan.data, aiLabel: plan.data.aiLabel ?? 'off'} : {name: "", productId: chosen.id, accountId: accounts.find(account => !account.data.archived)?.id ?? "", productionId: "", hook: "", script: "", caption: "", plannedDate: "", status: "draft", postUrl: "", notes: "", aiLabel: 'off', ...draft},
+      initial: plan ? {...plan.data, aiLabel: plan.data.aiLabel ?? 'off'} : {provider:"manual",name: "", productId: chosen.id, accountId: accounts.find(account => !account.data.archived)?.id ?? "", productionId: "", hook: "", script: "", caption: "", plannedDate: "", status: "draft", postUrl: "", notes: "", aiLabel: 'off', ...draft},
       fields: [{name: "name", label: "Tên nội dung"},
         {name: "accountId", label: "Tài khoản", type: "select", options: [{value: "", label: "Gắn tài khoản sau"}, ...options(accounts.filter(account => !account.data.archived))]},
         {name: "productionId", label: "Dự án video", type: "select", options: [{value: "", label: "Chưa gắn dự án"}, ...options(records.filter(record => record.kind === "production" && record.data.productId === chosen.id))]},
@@ -205,7 +205,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
     if (!chosen) return;
     show({title: "Nội dung landing page tiếng Anh", kind: "landing_page",
       extra: () => sampleWarning ? <div className="advice-banner warning" role="status">{sampleWarning}</div> : null,
-      initial: {...(landing?.data ?? {productId: chosen.id, headline: chosen.data.name, description: "", benefits: "", limitations: "", imageAssetId: "", ctaLabel: "Learn more", ctaUrl: ""}), ...draft},
+      initial: {...(landing?.data ?? {provider:"manual",productId: chosen.id, headline: chosen.data.name, description: "", benefits: "", limitations: "", imageAssetId: "", ctaLabel: "Learn more", ctaUrl: ""}), ...draft},
       fields: [{name: "headline", label: "Tiêu đề chính", full: true}, {name: "description", label: "Mô tả tiếng Anh", type: "textarea", full: true},
         {name: "benefits", label: "Điểm nổi bật có bằng chứng · mỗi dòng một ý", type: "textarea", full: true},
         {name: "limitations", label: "Giới hạn và thông tin cần biết", type: "textarea", full: true},
@@ -263,28 +263,30 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
 
   const titles = {research: "Nghiên cứu sản phẩm", social: chosen?chosen.data.name:"Instagram · Tổng quan sản phẩm", landing: "Trang giới thiệu"};
   return <section className="operations-panel">
+    {musePaused&&<p className="field-help">Muse đang tạm dừng, bật lại ở Tài khoản Muse</p>}
     {view==='social'&&chosen&&<div><Button tone="ghost" onClick={()=>select('')}><ArrowLeft size={16}/>Tất cả sản phẩm</Button></div>}
     <header className="operations-heading"><div><h1>{titles[view]}</h1><p>{view === "research" ? "So sánh 10 ứng viên có nguồn, chọn 3 sản phẩm để thử." : view==='social'?'Theo dõi nội dung và kết quả theo sản phẩm.':chosen?.data.name}</p></div>{view === "research" && <Button tone="neutral" disabled={disabled} onClick={batchForm}>Tạo đợt nhập tay</Button>}</header>
-    {view==='research'&&<ResearchLauncher disabled={disabled||demo} onOpen={id=>{select(id);reload();}}
-      actions={(context,invalid)=><TextExchange key={chosen?.id ?? 'new'} kind="research" demo={demo} disabled={disabled || invalid}
+    {view==='research'&&<ResearchLauncher scope={chosen?.id} disabled={disabled||demo} onOpen={id=>{select(id);reload();}}
+      actions={(context,invalid,onMuse,previous)=><TextExchange scope={chosen?.id} onMuse={onMuse} previous={previous} key={chosen?.id ?? 'new'} kind="research" demo={demo} disabled={disabled || invalid}
         target={chosen ? 'Nhập vào đợt: '+chosen.data.name : 'Nhập vào đợt mới'}
         context={{...context, remainingSlots:10-(chosen?.data.candidates.length ?? 0), existing:chosen?.data.candidates.map((candidate:Candidate)=>candidate.name) ?? []}}
-        onApply={async (text,tool,importId)=>{
+        onApply={async (text,tool,importId,provider)=>{
           const result=parseTextExchange('research',text,tool), id=chosen?.id ?? 'import_'+importId;
           const batch=chosen?.data as ResearchBatch | undefined ?? researchBatchSchema.parse({name:'Research · '+tool,maxLandedCostUsd:context.maxLandedCostUsd});
-          const updated=mergeTextResearch(batch,result,importId);
-          await execute(()=>save('research_batch',id,updated,chosen?.revision ?? 0)); select(id);
+          const imported=importTextResearch(batch,{...result,candidates:result.candidates.map(candidate=>({...candidate,provider}))},importId);
+          if(imported.data!==batch){await execute(()=>save('research_batch',id,imported.data,chosen?.revision ?? 0));select(id);}
+          notify(imported.notice);return imported.notice;
         }}/>} />}
     {view === 'research' && <ViralFormulas records={records} disabled={disabled||demo} onSaveDraft={(draft,revision)=>persist('reference_video_draft','reference_video_draft_'+draft.id,draft,revision)} onSaveFormula={formula=>persist('viral_formula',`viral_formula_${formula.id}_v${formula.version}`,formula,0)}/>}
     {choices.length > 0 && view!=='social' && <div className="field operations-selector"><label htmlFor="operations-selection">{view === "research" ? "Đợt nghiên cứu" : "Sản phẩm"}</label><select id="operations-selection" value={chosen?.id ?? ""} disabled={busy} onChange={event => select(event.target.value)}>{choices.map(record => <option key={record.id} value={record.id}>{record.data.name}</option>)}</select></div>}
     {chosen && view !== 'research' && <div className="operations-toolbar">
-      <TextExchange key={view+chosen.id} kind={view==='social'?'content':'landing'} context={{product:chosen.data, metrics:instagramProductSummary(records,chosen.id)}}
-        target={'Sản phẩm: '+chosen.data.name} disabled={disabled} demo={demo} onApply={async (text,tool)=>{
-          if(view==='social') planForm(undefined,{...parseTextExchange('content',text,tool),notes:'Nguồn: import:'+tool});
-          else landingForm(parseTextExchange('landing',text,tool));
+      <TextExchange scope={'task_'+(view==='social'?'content':'landing')+'_'+chosen.id} onMuse={()=>openMuseTask(view==='social'?'content':'landing')} key={view+chosen.id} kind={view==='social'?'content':'landing'} context={{product:chosen.data, metrics:instagramProductSummary(records,chosen.id)}}
+        target={'Sản phẩm: '+chosen.data.name} disabled={disabled} demo={demo} onApply={async (text,tool,_importId,provider)=>{
+          if(view==='social') planForm(undefined,{...parseTextExchange('content',text,tool),provider,notes:'Nguồn: '+provider});
+          else landingForm({...parseTextExchange('landing',text,tool),provider});
           setDirty(true);
         }}/>
-      <Button disabled={musePaused || disabled || demo || !desktopBridge()} onClick={() => openMuseTask(view === 'social' ? 'content' : 'landing')}>Soạn nội dung bằng Muse</Button>
+
       <Button tone="neutral" disabled={musePaused || disabled || demo || !desktopBridge()} onClick={() => openMuseTask('analysis')}>Phân tích bằng Muse</Button>
     </div>}
     {error && <div className="inline-error" role="alert"><p>{error}</p><Button tone="ghost" onClick={reload}>Tải lại dữ liệu</Button></div>}
@@ -292,7 +294,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
       {sampleWarning && <div className="advice-banner warning" role="status">{sampleWarning}</div>}
       <div className="info-panel">Soạn trang tiếng Anh, xem trước và xuất HTML trên máy. Xuất bản, thu lead và nhận tiền đang chờ quyết định thương mại.</div>
       <div className="operations-toolbar"><Button disabled={disabled} onClick={() => landingForm()}>{landing ? "Sửa nội dung trang" : "Soạn landing page"}</Button><Button tone="neutral" disabled={disabled || !landing || demo} onClick={() => act(() => makeLanding(false))}><Eye size={16}/>Xem trước</Button><Button tone="neutral" disabled={disabled || !landing || demo} onClick={() => act(() => makeLanding(true))}><Download size={16}/>Xuất HTML trên máy</Button></div>
-      {landing && <article className="production-card production-card-body"><h2>{landing.data.headline}</h2><p>{landing.data.description}</p><Badge>Bản nháp trên máy</Badge><small>Cập nhật {formatTime(landing.updatedAt)}</small></article>}
+      {landing && <article className="production-card production-card-body"><h2>{landing.data.headline}</h2><p>{landing.data.description}</p><Badge>Bản nháp trên máy · {landing.data.provider??'Chưa ghi nguồn'}</Badge><small>Cập nhật {formatTime(landing.updatedAt)}</small></article>}
     </>}
     <Modal open={!!form} title={form?.title ?? ""} dirty={dirty} locked={busy} onClose={() => { setForm(null); setDirty(false); }}>
       {form && <RecordForm key={form.title + String(form.initial.id ?? "")} kind={form.kind} initial={form.initial} fields={form.fields} extra={form.extra} validation={form.validation ?? schemas[form.kind]} demo={demo} onDirty={setDirty} onCancel={() => setForm(null)} onSave={async value => { await execute(() => form.save(value)); setDirty(false); setForm(null); }}/>}</Modal>

@@ -55,6 +55,7 @@ const webReferencesSchema = z.object({
 });
 
 export const candidateSchema = z.object({
+  provider:z.string().regex(/^(muse|manual|codex|import:[^\r\n]{1,80})$/).optional(),
   id: identifier,
   name: z.string().trim().min(2).max(120),
   supplierUrl: optionalLink,
@@ -145,6 +146,7 @@ export const socialAccountSchema = z.object({
   archived: z.boolean().default(false),
 });
 export const contentPlanSchema = z.object({
+  provider:z.string().regex(/^(muse|manual|codex|import:[^\r\n]{1,80})$/).optional(),
   name: z.string().trim().min(2).max(150),
   productId: identifier,
   accountId: z.union([z.literal(""), identifier]).default(""),
@@ -213,6 +215,7 @@ export const keywordCommentMeasurementSchema = z.object({
   rawText: z.string().trim().min(1, 'Dán ít nhất một comment để lưu bản đo.').max(100000),
 }).transform(value => ({...value, ...countKeywordComments(parseCommentPaste(value.rawText, value.inputFormat), value.keyword)}));
 export const landingPageSchema = z.object({
+  provider:z.string().regex(/^(muse|manual|codex|import:[^\r\n]{1,80})$/).optional(),
   productId: identifier,
   headline: z.string().trim().min(2).max(160),
   description: z.string().trim().min(2).max(5000),

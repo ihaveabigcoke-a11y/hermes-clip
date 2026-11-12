@@ -126,3 +126,18 @@ test('manual Muse import can queue source checks using a saved batch ID and hono
  const record=(await runner.records()).find(r=>r.id==='manual_batch');assert.equal(record.data.candidates[0].listingCheck.status,'unavailable');
  assert.equal(await runner.queueSources({batchId:'manual_batch'}),null);assert.equal(calls,2);
 }));
+
+test('T-002b: research imports the running response after pause, but never sends the next turn',()=>fixture(async({runner,chat,store,counts})=>{
+  const send=chat.send;
+  chat.send=async payload=>{
+    const result=await send(payload),parsed=JSON.parse(result.response);
+    result.response=JSON.stringify({...parsed,candidates:parsed.candidates.slice(0,1)});
+    store.set('muse_paused',true);return result;
+  };
+  runner.start({requestId:'pause_response'});await runner.running.promise;
+  assert.equal(counts().sends,1);assert.equal(runner.rows()[0].state,'partial');assert.equal(runner.rows()[0].step,1);
+  assert.equal(runner.rows()[0].provider,'muse');
+  const batch=(await runner.records()).find(row=>row.id==='research_pause_response').data;
+  assert.equal(batch.candidates.length,1);assert.equal(batch.candidates[0].provider,'muse');
+  assert.throws(()=>runner.start({requestId:'blocked'}),{code:'MUSE_PAUSED'});
+}));

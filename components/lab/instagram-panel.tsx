@@ -168,7 +168,7 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
         </button></li>;
       })}</ul><Pagination page={currentPage} total={plans.length} size={8} onPage={value => {setPage(value); setSelectedId('');}}/></div>
       <section className="instagram-publish-detail" aria-label={'Nội dung ' + plan.data.name}>
-        <header className="instagram-section-heading"><h2>{plan.data.name}</h2><Button tone="neutral" disabled={disabled || busy} onClick={() => onPlan(plan)}>Sửa nội dung</Button></header>
+        <header className="instagram-section-heading"><h2>{plan.data.name}</h2><small>Nhà cung cấp: {plan.data.provider??'Chưa ghi nguồn'}</small><Button tone="neutral" disabled={disabled || busy} onClick={() => onPlan(plan)}>Sửa nội dung</Button></header>
         <div className="instagram-publish-columns"><div className="instagram-video-preview">{chosenMedia ? <MediaPlayer take={chosenMedia.take}/> : <Empty title="Chưa có video" text="Gắn dự án có video trong Sửa nội dung."/>}</div>
           <div className="instagram-publish-fields">
             <label className="field">Video sẽ đăng<select aria-label="Video sẽ đăng" value={chosenMedia?.take.assetId ?? ''} disabled={busy || !!pending || !!published || !media.length} onChange={event => choose('assetId', event.target.value)}>

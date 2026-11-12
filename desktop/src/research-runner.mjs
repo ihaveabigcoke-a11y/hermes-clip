@@ -1,4 +1,4 @@
-import {museIsPaused,assertMuseAvailable} from './muse-pause.mjs';
+import {museIsPaused,assertMuseNewTask} from './muse-pause.mjs';
 import {z} from 'zod';
 import {sessionCookie} from '../local/server.mjs';
 import {mergeMuseResearch,museTaskPrompt} from '../local-dist/server/lib/lab/muse-workflows.mjs';
@@ -11,14 +11,30 @@ export class ResearchRunner{
   constructor({worker,chat,local,integrations,changed=()=>{}}){this.worker=worker;this.store=worker.store;this.chat=chat;this.local=local;this.changed=changed;this.running=null;this.stopped=false;this.sources=integrations?new ResearchSources({integrations,records:()=>this.records(),save:r=>this.save(r),changed}):null;}
   rows(){return this.store.get('research_runs',[]);}
   status(){return {runs:this.rows(),active:this.running?.id??null};}
-  update(id,patch){const rows=this.rows();const row={...rows.find(r=>r.id===id),...patch,updatedAt:Date.now()};this.store.set('research_runs',[row,...rows.filter(r=>r.id!==id)]);this.changed();return row;}
+  skipReconciliation({id}){
+    const row=this.rows().find(run=>run.id===id);
+    if(!row||!['unknown','needs_attention'].includes(row.state))throw Error('Chọn đợt Muse có kết quả chưa rõ.');
+    if(this.running?.id===id)throw Error('Chờ đợt đang chạy kết thúc.');
+    if(row.reconciled)return this.status();
+    this.store.db.exec('BEGIN IMMEDIATE');
+    try{
+      for(const requestId of row.requestIds??[]){
+        const chat=this.chat.get(requestId);
+        if(chat?.projectId===row.batchId&&['unknown','needs_attention'].includes(chat.state))this.chat.skipReconciliation({requestId});
+      }
+      this.update(id,{reconciled:true,reconciliation:'skipped',reconciledAt:Date.now()});
+      this.store.db.exec('COMMIT');
+    }catch(error){this.store.db.exec('ROLLBACK');throw error;}
+    return this.status();
+  }
+  update(id,patch){const rows=this.rows();const row={...rows.find(r=>r.id===id),...patch,provider:'muse',updatedAt:Date.now()};this.store.set('research_runs',[row,...rows.filter(r=>r.id!==id)]);this.changed();return row;}
   async request(path,options={}){
     const response=await fetch(this.local.origin+path,{...options,headers:{Cookie:sessionCookie+'='+this.local.session,Origin:this.local.origin,...options.headers},signal:AbortSignal.timeout(30000)});
     const data=await response.json();if(!response.ok)throw Object.assign(Error(data.error||'Chưa lưu được nghiên cứu.'),{status:response.status});return data;
   }
   async records(){return (await this.request('/api/lab')).records;}
   async save(record){return (await this.request('/api/lab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(record)})).record;}
-  start(payload){assertMuseAvailable(this.store);
+  start(payload){assertMuseNewTask(this.store);
     const value=input.parse(payload);const existing=this.rows().find(r=>r.id===value.requestId);if(existing)return existing;
     if(this.stopped)throw Error('App đang đóng.');if(this.running||this.rows().some(r=>activeStates.includes(r.state)))throw Error('Một đợt đang nghiên cứu. Chờ kết quả trước khi bắt đầu đợt mới.');
     if(this.rows().length>=100)throw Error('Đã có 100 đợt. Sao lưu trước khi mở rộng lịch sử nghiên cứu.');
@@ -32,7 +48,7 @@ export class ResearchRunner{
   }
   launch(id){if(this.running||this.stopped||museIsPaused(this.store))return;const promise=this.run(id).catch(error=>this.update(id,{state:'needs_attention',error:error.message})).finally(()=>{this.running=null;});this.running={id,promise};}
   boot(){if(museIsPaused(this.store))return;const row=this.rows().find(r=>activeStates.includes(r.state));if(row)this.launch(row.id);}
-  resume({id}){assertMuseAvailable(this.store);const row=this.rows().find(r=>r.id===id);if(!row||!['needs_attention','partial'].includes(row.state))throw Error('Chọn đợt cần kiểm tra.');if(this.running)throw Error('Chờ đợt hiện tại kết thúc.');this.update(id,{state:'queued',error:''});this.launch(id);return this.status();}
+  resume({id}){assertMuseNewTask(this.store);const row=this.rows().find(r=>r.id===id);if(row?.reconciled)throw Error('Đã bỏ qua kết quả Muse cũ; app sẽ không gửi lại.');if(!row||!['needs_attention','partial'].includes(row.state))throw Error('Chọn đợt cần kiểm tra.');if(this.running)throw Error('Chờ đợt hiện tại kết thúc.');this.update(id,{state:'queued',error:''});this.launch(id);return this.status();}
   checkSources(id,record){
     try{this.sources?.enqueue(record);}catch(error){this.update(id,{sourceCheckError:error.message});}
     return record;
@@ -47,8 +63,9 @@ export class ResearchRunner{
       try{return this.checkSources(id,await this.save({...record,data}));}catch(error){if(error.status!==409||retry===3)throw error;}
     }
   }
-  async run(id){assertMuseAvailable(this.store);
+  async run(id){assertMuseNewTask(this.store);
     let row=this.rows().find(r=>r.id===id);const wasOpen=this.worker.contexts.has(row.profileId);
+    if(row.reconciled)throw Error('Đã bỏ qua kết quả Muse cũ; app sẽ không gửi lại.');
     try{
       this.update(id,{state:'running',error:''});
       let record=(await this.records()).find(r=>r.id===row.batchId);
@@ -62,8 +79,10 @@ export class ResearchRunner{
       }
       row=this.update(id,{count:record.data.candidates.length});
       for(let step=row.step;step<3;step++){
-        if(this.stopped||museIsPaused(this.store))return;
         if(record.data.candidates.length>=10)break;
+        if(this.stopped||museIsPaused(this.store)){
+          this.update(id,{state:'partial',error:'Muse đang tạm dừng. Kết quả lượt vừa chạy đã được lưu; chưa gửi lượt tiếp theo.'});return;
+        }
         const requestId=row.requestIds[step]??('research_'+id+'_'+step);
         // Save intent before touching Muse. On restart, only the same receipt is
         // read/reconciled; an uncertain submission never gets a new request ID.
@@ -82,7 +101,7 @@ export class ResearchRunner{
           const parentId=step?row.requestIds[step-1]:null;
           result=await this.chat.send({requestId,profileId:row.profileId,projectId:row.batchId,prompt,parentId});
         }
-        while(result.state==='needs_attention'&&result.errorCode==='MUSE_CHAT_TIMEOUT'&&(row.recoveries??0)<3&&!this.stopped){
+        while(result.state==='needs_attention'&&result.errorCode==='MUSE_CHAT_TIMEOUT'&&(row.recoveries??0)<3&&!this.stopped&&!museIsPaused(this.store)){
           row=this.update(id,{recoveries:(row.recoveries??0)+1});result=await this.chat.recover({requestId});
         }
         if(result.state!=='done')throw Error(result.error||'Muse chưa xác nhận kết quả. Đọc lại đợt để đối soát.');

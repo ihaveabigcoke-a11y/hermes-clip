@@ -1,4 +1,5 @@
 "use client";
+import {resolveProvider} from '@/desktop/src/provider-routing.mjs';
 import {uiCopy, sceneRoleLabels, attemptLabels} from '@/desktop/src/ui-copy.mjs';
 import {referenceRoleLabels} from '@/lib/lab/production';
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -105,7 +106,9 @@ export default function ProductionStudio({records,demo,offline,paused,onRecord,r
     const sceneId = existing?.id ?? input.id;
     const scene = current.data.scenes.find((scene: Scene) => scene.id === sceneId);
     if (!scene?.storyboardApproved || scene.revision !== saved.revision) throw new ClientError('Duyệt phiên bản hiện tại của cảnh trước khi chạy.');
-    if ((scene.mediaProvider??current.data.mediaProvider??'manual')!=='muse') throw new ClientError('Cảnh manual: xuất gói prompt rồi nhập file qua Hộp nhận media.');
+    const routing=resolveProvider({kind:'media',status:worker,selection:scene.mediaProvider??current.data.mediaProvider,previous:worker.jobs.filter(job=>job.request.projectId===current.id&&job.request.sceneId===scene.id).map(job=>({provider:job.provider??'muse',state:job.state}))});
+    if(routing.blocked)throw new ClientError(routing.reason);
+    if (routing.provider!=='muse') throw new ClientError('Cảnh manual: xuất gói prompt rồi nhập file qua Hộp nhận media.');
     const references = [];
     const signal = AbortSignal.timeout(120000);
     for (const pin of scene.references) {

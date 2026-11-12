@@ -1,4 +1,6 @@
 import {spawn} from 'node:child_process';
+import {resolveProvider, textProviderReceipts} from './provider-routing.mjs';
+import {randomUUID} from 'node:crypto';
 import {access, mkdir, mkdtemp, rm} from 'node:fs/promises';
 import {constants} from 'node:fs';
 import {delimiter, join, resolve, isAbsolute} from 'node:path';
@@ -108,7 +110,17 @@ export class CodexTextService {
     if (this.busy) throw Error('Một lượt Codex CLI đang chạy. Chờ kết quả trước khi gửi tiếp.');
     if (Buffer.byteLength(JSON.stringify(input)) > finalLimit) throw Error('Dữ liệu prompt vượt 384 KB.');
     const {kind, context} = this.exchange.textTaskRequest.parse(input);
+    const scope = context.taskScope ?? context.batchId;
+    if (scope !== undefined && (typeof scope !== 'string' || !scope || scope.length > 240)) throw Error('Scope tác vụ không hợp lệ.');
+    const chats = scope && this.store.db?.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='muse_chats'").get()
+      ? this.store.db.prepare('SELECT project_id,body FROM muse_chats WHERE project_id IN (?,?)').all(scope, kind === 'research' ? 'task_research_' + scope : scope).map(row => ({...JSON.parse(row.body),projectId:row.project_id})) : [];
+    const previous = textProviderReceipts({kind, scope, runs:kind === 'research' ? this.store.get('research_runs',[]) : [], chats});
+    const routing=resolveProvider({kind,selection:'codex',previous});
+    if(routing.blocked)throw Error(routing.reason);
     this.busy = true;
+    const receipt={id:randomUUID(),provider:'codex',kind,scope:scope??null,state:'running',createdAt:Date.now()};
+    const record=patch=>this.store.set('codex_text_receipts',[{...receipt,...patch},...this.store.get('codex_text_receipts',[]).filter(row=>row.id!==receipt.id)].slice(0,500));
+    record({});
     let directory;
     try {
       const executable = await this.resolveExecutable(this.status().executable);
@@ -117,7 +129,8 @@ export class CodexTextService {
       const text = await this.run({prompt:this.exchange.textTaskPrompt(kind, context), executable, cwd:directory});
       // Both entry paths use the same validation; invalid output never reaches persistence.
       this.exchange.parseTextExchange(kind, text, 'Codex CLI');
-      return {text, source:'import:Codex CLI'};
-    } finally { this.busy = false; if (directory) await rm(directory, {recursive:true, force:true, maxRetries:5, retryDelay:100}); }
+      record({state:'done',finishedAt:Date.now()});
+      return {text, source:'import:Codex CLI',provider:'codex',receiptId:receipt.id};
+    } catch(error){record({state:'failed',finishedAt:Date.now()});throw error;} finally { this.busy = false; if (directory) await rm(directory, {recursive:true, force:true, maxRetries:5, retryDelay:100}); }
   }
 }

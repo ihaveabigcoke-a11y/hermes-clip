@@ -244,3 +244,17 @@ test('background research can finish after two minutes without resubmission',asy
  const page={url:()=>row.providerUrl,locator:selector=>({evaluateAll:async()=>selector.includes('assistant')?(now>=180000?[{id:'final',media:false,text:'Research result'}]:[]):[{id:'user'}]}),getByRole:()=>({isVisible:async()=>now<180000}),waitForTimeout:async ms=>{now+=ms;}};
  const result=await chat.readResponse(page,row);assert.equal(result.state,'done');assert.ok(now>180000);assert.equal(store.batch(),null);
 });
+
+for(const pauseAt of ['prepare','waiting'])test('T-002b: in-flight chat finishes at '+pauseAt+' while new chat remains blocked',async t=>{
+  const {chat,worker,store,request,counts}=fixture(t);
+  if(pauseAt==='prepare')t.mock.method(MuseAdapter.prototype,'prepare',async()=>{await worker.setMusePaused({paused:true});});
+  const original=chat.readResponse;
+  t.mock.method(chat,'readResponse',async(page,row)=>{
+    if(pauseAt==='waiting')await worker.setMusePaused({paused:true});
+    await assert.rejects(chat.send({...request,requestId:'blocked'}),{code:'MUSE_PAUSED'});
+    return original(page,row);
+  });
+  const result=await chat.send(request);
+  assert.equal(result.state,'done');assert.equal(result.provider,'muse');assert.equal(counts.clicks,1);
+  assert.equal(store.batch().submittedByProfile.profile,1);assert.equal(chat.list({projectId:'general'}).length,1);
+});

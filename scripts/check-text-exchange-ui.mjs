@@ -59,6 +59,8 @@ try {
   });
   await context.addInitScript(()=>{
     localStorage.setItem('product-lab-mode','real');window.__providerCalls={muse:0,codex:0};window.__copied='';
+    window.__researchRuns=[{id:'old_run',batchId:'other_batch',state:'needs_attention',count:0,step:0,error:'Fixture uncertain',createdAt:1}];
+    window.__museChats=[];
     Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.__copied=text;}}});
     const preferences={};
     window.productLabDesktop={
@@ -67,8 +69,11 @@ try {
       codexTextSettings:async()=>({enabled:false,executable:''}),
       codexTextRun:async()=>{window.__providerCalls.codex++;throw Error('CLI fixture stays off');},
       assistantSettings:async()=>({}),integrationStatus:async()=>({jobs:[],config:null}),
-      researchStatus:async()=>({runs:[]}),instagramStatus:async()=>({profiles:[],jobs:[],active:null,metrics:{rows:[]}}),
-      museChatSend:async()=>{window.__providerCalls.muse++;throw Error('Must not call Muse');},museChatList:async()=>[],
+      researchStatus:async()=>({runs:window.__researchRuns}),instagramStatus:async()=>({profiles:[],jobs:[],active:null,metrics:{rows:[]}}),
+      researchSkipReconciliation:async({id})=>{window.__researchRuns=window.__researchRuns.map(row=>row.id===id?{...row,reconciled:true}:row);},
+      museChatSkipReconciliation:async({requestId})=>{window.__museChats=window.__museChats.map(row=>row.requestId===requestId?{...row,reconciled:true}:row);},
+      museChatSend:async()=>{window.__providerCalls.muse++;throw Error('Must not call Muse');},
+      museChatList:async({projectId}={})=>window.__museChats.filter(row=>!projectId||row.projectId===projectId),
     };
   });
   const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
@@ -91,6 +96,12 @@ try {
   await page.getByRole('button',{name:'Kiểm tra và nhập JSON',exact:true}).click();
   await page.locator('.research-candidate-table tbody tr').nth(9).waitFor();
   const batch=records.find(r=>r.id==='fixture_batch').data;assert.equal(batch.candidates.length,10);assert.deepEqual(batch.selectedIds,[]);
+  const beforeReplay=writes.length;
+  await page.getByRole('button',{name:'Nhập kết quả research',exact:true}).click();
+  await page.getByLabel('Dán JSON',{exact:true}).fill(JSON.stringify({...researchResult,candidates:researchResult.candidates.slice(1)}));
+  await page.getByRole('button',{name:'Kiểm tra và nhập JSON',exact:true}).click();
+  await page.getByText('0 ứng viên mới, bỏ 9 trùng',{exact:true}).first().waitFor();
+  assert.equal(writes.length,beforeReplay,'replay must not save unchanged research');
   assert.equal(batch.candidates[1].cost,null);assert.equal(batch.candidates[0].costCurrency,'CNY');
   for(const [width,height] of [[1366,768],[1920,1080]]){
     await page.setViewportSize({width,height});await page.evaluate(()=>window.scrollTo(0,0));
@@ -107,14 +118,35 @@ try {
   await page.getByRole('dialog').getByRole('button',{name:/^Lưu/}).click();
   await page.getByRole('dialog').waitFor({state:'hidden'});
   assert.equal(records.find(r=>r.kind==='content_plan').data.productId,'product_b');
+  assert.equal(records.find(r=>r.kind==='content_plan').data.provider,'import:Codex');
   await page.goto('http://127.0.0.1:4174/?view=landing&ops_id=product_b');
   await page.getByRole('button',{name:'Nhập kết quả landing',exact:true}).click();
+  await page.getByLabel('Công cụ tạo JSON',{exact:true}).fill('Gemini Deep Research');
   await page.getByLabel('Dán JSON',{exact:true}).fill(JSON.stringify(landingResult));
   await page.getByRole('button',{name:'Kiểm tra và nhập JSON',exact:true}).click();
   await page.getByRole('dialog').filter({hasText:'Nội dung landing page tiếng Anh'}).waitFor();
   await page.getByRole('dialog').getByRole('button',{name:/^Lưu/}).click();await page.getByRole('dialog').waitFor({state:'hidden'});
   assert.equal(records.find(r=>r.kind==='landing_page').data.productId,'product_b');
+  assert.equal(records.find(r=>r.kind==='landing_page').data.provider,'import:Gemini Deep Research');
+  await page.reload();
+  await page.getByText('Bản nháp trên máy · import:Gemini Deep Research',{exact:true}).waitFor();
+  // T-002b A: only the selected batch blocks JSON; skip is usable while paused.
+  await page.goto('http://127.0.0.1:4174/?view=research&ops_id=fixture_batch');
+  const importResearch=page.getByRole('button',{name:'Nhập kết quả research',exact:true});
+  await importResearch.waitFor();
+  await page.waitForFunction(()=>[...document.querySelectorAll('button')].some(button=>button.textContent==='Nhập kết quả research'&&!button.disabled));
+  await page.evaluate(()=>{window.__researchRuns=[{...window.__researchRuns[0],batchId:'fixture_batch'}];window.dispatchEvent(new Event('product-lab:workspace-changed'));});
+  await page.waitForFunction(()=>[...document.querySelectorAll('button')].some(button=>button.textContent==='Nhập kết quả research'&&button.disabled));
+  await page.getByText('Kết quả Muse cũ chưa rõ; app sẽ không gửi lại',{exact:true}).waitFor();
+  await page.getByRole('button',{name:'Bỏ qua, không đối soát',exact:true}).click();
+  await page.waitForFunction(()=>[...document.querySelectorAll('button')].some(button=>button.textContent==='Nhập kết quả research'&&!button.disabled));
+  assert.equal(await page.evaluate(()=>window.__researchRuns[0].reconciled),true);
+  await page.evaluate(()=>{window.__museChats=[{requestId:'unknown_chat',projectId:'task_research_fixture_batch',state:'needs_attention'}];window.dispatchEvent(new Event('product-lab:workspace-changed'));});
+  await page.waitForFunction(()=>[...document.querySelectorAll('button')].some(button=>button.textContent==='Nhập kết quả research'&&button.disabled));
+  await page.getByRole('button',{name:'Bỏ qua, không đối soát',exact:true}).click();
+  await page.waitForFunction(()=>[...document.querySelectorAll('button')].some(button=>button.textContent==='Nhập kết quả research'&&!button.disabled));
+  assert.equal(await page.evaluate(()=>window.__museChats[0].reconciled),true);
   assert.deepEqual(await page.evaluate(()=>window.__providerCalls),{muse:0,codex:0});assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
-  const report={fixtureOnly:true,networkRequestsToProviders:0,measurements,errors,checks:['JSON file/paste and field errors','ten candidates; null/CNY preserved; none selected','verdict/logistics badges','Codex off and Muse paused','content/landing bound to product B as drafts']};
+  const report={fixtureOnly:true,networkRequestsToProviders:0,measurements,errors,checks:['JSON file/paste and field errors','ten candidates; null/CNY preserved; none selected','verdict/logistics badges','Codex off and Muse paused','content/landing bound to product B with import:<tool> after reload','duplicate research shows 0 new and correct skipped count without saving','scope-specific run/chat reconciliation; explicit skip works while Muse paused']};
   await writeFile(join(out,'T-003-ui.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report));
 }finally{await browser?.close();processHandle.kill();closeSync(chromeLog);}

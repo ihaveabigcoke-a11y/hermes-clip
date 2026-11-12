@@ -1,5 +1,17 @@
 # Hermes Clip — bối cảnh và trạng thái (source cập nhật đến đêm 3, 12/11/2026)
 
+## Cập nhật T-002b vòng 2 — sửa theo duyệt A–F (12/11/2026)
+
+Giới hạn chặn Codex/JSON theo đúng scope/đợt research; có Bỏ qua, không đối soát cho run/chat trên Nghiên cứu, lưu bền và không gửi lại kết quả cũ. Pause xóa quyền duyệt hàng chờ, job đang chạy vẫn hoàn tất; bật lại cần bấm Chạy/start. Quyền tiếp tục gắn job/profile và thu hồi sau khi hoàn tất, timer không được dùng cho profile/job khác. Nhập research báo số mới/trùng; landing đã lưu import:<tool>, bổ sung kiểm UI. Test nhãn AI bỏ timeout riêng 180 ms để dùng mặc định app 3 giây, không đổi app/assertion. Chi tiết test, blocker sandbox và cách chạy tiếp ở [báo cáo vòng 2](../../ops/office/reports/T-002b.md). Không triển khai bản cài, không dữ liệu/dịch vụ thật, không commit.
+
+## Cập nhật source T-002b — công tắc Muse và tự chọn nhà cung cấp (12/11/2026)
+
+Sửa trực tiếp app chính trên main, không đổi nhánh/commit. Công tắc Muse ở đầu Tài khoản và Cài đặt, mặc định Tạm dừng, bật có xác nhận. Tạm dừng chặn tác vụ mới; media/chat đang chạy tiếp tục và nhập kết quả. Bỏ đóng context/route chặn HTTP/serviceWorkers:block của T-002. Research lưu lượt đang chạy rồi dừng trước lượt tiếp theo.
+
+Một resolver dùng chung theo ready của thẻ kết nối: Muse sẵn sàng → mặc định Muse; không sẵn sàng → media manual, text Codex đã bật hoặc nhập JSON. Lựa chọn cảnh ưu tiên hơn dự án/tự động. Job Muse chưa rõ kết quả giữ Cần đối soát, không chuyển worker; lưu/hiện provider thực thi. Không xóa màn/bảng/file Muse hay reset quota. Hành vi đóng context trong mục T-002 lịch sử bên dưới đã được thay thế.
+
+Typecheck/build riêng outputs/T-002b-build đạt; 74 test tập trung đạt. Full suite còn spawn EPERM; Chrome IPC Access is denied nên chưa có 12 PNG. Script fixture đã sẵn. Chưa áp vào bản cài/dữ liệu thật, chưa gọi Muse/Codex/Instagram/API trả phí. Xem [báo cáo T-002b](../../ops/office/reports/T-002b.md) và [hướng dẫn](../MANUAL-MEDIA.md) trước chạy tiếp.
+
 ## Cập nhật source T-003 — JSON và Codex CLI cho research/nội dung (12/11/2026)
 
 Sửa trực tiếp checkout app chính trên `main`, không đổi nhánh/commit. Research có nhập JSON/file (gồm JSON một sản phẩm từ `hermes-product-check`) và copy prompt trung lập. Content/landing nhập thành nháp đúng sản phẩm. Giữ null, nguồn, tiền tệ và metadata gốc của skill; không tự chọn sản phẩm. Codex CLI tùy chọn mặc định tắt, không shell, có timeout/giới hạn đầu ra; chỉ kiểm bằng fixture, **chưa chạy CLI thật**. Muse vẫn mặc định tạm dừng, media manual T-002 giữ nguyên.

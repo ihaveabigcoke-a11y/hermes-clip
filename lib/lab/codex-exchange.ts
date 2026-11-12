@@ -148,7 +148,7 @@ export function parseTextExchange(kind: TextTaskKind, text: string, tool: string
     }
   });
   if (issues.length) throw fieldError(new z.ZodError(issues));
-  return {...parsed, candidates: parsed.candidates.map(candidate => ({...candidate, source: `import:${name}`}))};
+  return {...parsed, candidates: parsed.candidates.map(candidate => ({...candidate, source: `import:${name}`,provider:`import:${name}`}))};
 }
 
 export function mergeTextResearch(batch: ResearchBatch, result: z.infer<typeof researchResponse>, importId: string): ResearchBatch {
@@ -167,4 +167,11 @@ export function mergeTextResearch(batch: ResearchBatch, result: z.infer<typeof r
     candidates: annotateResearchQuality([...batch.candidates, ...additions]),
     notes: `[${additions[0].source}]\n${result.summary}\n\n${batch.notes}`,
   });
+}
+
+export function importTextResearch(batch: ResearchBatch, result: z.infer<typeof researchResponse>, importId: string) {
+  const data = mergeTextResearch(batch, result, importId);
+  const added = data.candidates.length - batch.candidates.length;
+  const skipped = result.candidates.length - added;
+  return {data, notice: `${added} ứng viên mới, bỏ ${skipped} trùng`};
 }

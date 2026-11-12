@@ -1,3 +1,5 @@
+import {resolveProvider} from './provider-routing.mjs';
+import {museIsPaused} from './muse-pause.mjs';
 import {createHash, randomUUID} from 'node:crypto';
 import {mkdir, readdir, readFile, writeFile, rename, stat, lstat, copyFile, unlink} from 'node:fs/promises';
 import {join, resolve, isAbsolute, extname, basename} from 'node:path';
@@ -7,7 +9,6 @@ import {assertDiskSpace, storagePolicy} from './storage-policy.mjs';
 
 const types = {'.mp4':'video/mp4', '.webm':'video/webm', '.png':'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.webp':'image/webp'};
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
-const provider = (project, scene) => scene.mediaProvider ?? project.mediaProvider ?? 'manual';
 const pad = value => String(value).padStart(2, '0');
 const stamp = date => `${date.getFullYear()}${pad(date.getMonth()+1)}${pad(date.getDate())}-${pad(date.getHours())}${pad(date.getMinutes())}`;
 
@@ -61,14 +62,28 @@ export class ManualMedia {
     return response;
   }
   async records() {return (await (await this.request('/api/lab')).json()).records;}
-  async assertMuseScene(request) {
+  route(project, scene, projectId) {
+    return resolveProvider({kind:'media', selection:scene.mediaProvider??project.mediaProvider,
+      status:{musePaused:museIsPaused(this.store),generationReady:!!this.store.get('adapter')?.enabled,
+        profiles:this.store.get('profiles',[]),batch:this.store.batch()},
+      previous:[...this.store.jobs().filter(job=>job.request.projectId===projectId&&job.request.sceneId===scene.id)
+        .map(job=>({provider:job.provider??'muse',state:job.state})),
+        ...scene.attempts.filter(attempt=>attempt.status==='unknown').map(()=>({provider:'muse',state:'unknown'}))]});
+  }
+  async assertMuseScene(request, {admitted=false}={}) {
     const row=this.catalog(await this.records()).find(row=>row.project.id===request.projectId&&row.scene.id===request.sceneId&&!row.archived);
-    if(!row||provider(row.project.data,row.scene)!=='muse')throw Error('Cảnh chưa chọn nhà cung cấp Muse.');
+    if(!row)throw Error('Không tìm thấy cảnh.');
+    const selected=row.scene.mediaProvider??row.project.data.mediaProvider;
+    if(admitted&&selected&&selected!=='muse')throw Error('Cảnh đã đổi nhà cung cấp; chưa gửi Muse.');
+    if(!admitted){const route=this.route(row.project.data,row.scene,row.project.id);
+      if(route.blocked)throw Error(route.reason);
+      if(route.provider!=='muse')throw Error('Cảnh chưa chọn nhà cung cấp Muse.');}
     if(!row.scene.storyboardApproved||row.scene.revision!==request.sceneRevision||row.product.revision!==request.productRevision||row.project.data.productRevision!==request.productRevision)throw Error('Cảnh hoặc sản phẩm đã đổi; duyệt lại trước khi gửi Muse.');
   }
   inbox() {return this.store.get('manual_inbox', join(this.local.root, 'media-inbox'));}
   receipts() {return this.store.get('manual_receipts', []);}
   saveReceipt(receipt) {
+    receipt={...receipt,provider:'manual'};
     this.store.set('manual_receipts', [...this.receipts().filter(row=>row.sha256!==receipt.sha256), receipt]);
     this.changed(); return receipt;
   }
@@ -92,7 +107,8 @@ export class ManualMedia {
   async status() {
     const rows=this.catalog(await this.records()), exports=this.store.get('manual_exports', {}), receipts=this.receipts();
     return {inbox:this.inbox(), scenes:rows.map(({project,scene,code,productCode})=>({projectId:project.id,sceneId:scene.id,code,productCode,
-      state:receipts.some(row=>row.state==='received'&&row.projectId===project.id&&row.sceneId===scene.id&&row.sceneRevision===scene.revision)?'Đã nhận':
+      provider:this.route(project.data,scene,project.id).provider,
+      state:this.route(project.data,scene,project.id).blocked?this.route(project.data,scene,project.id).reason:receipts.some(row=>row.state==='received'&&row.projectId===project.id&&row.sceneId===scene.id&&row.sceneRevision===scene.revision)?'Đã nhận':
         exports[code]?.revision===scene.revision ? (exports[code].waiting?'Chờ file':'Đã xuất') : 'Chờ xuất prompt',
       exportedPath:exports[code]?.path ?? null})),
       unmatched:receipts.filter(row=>row.state!=='received'), errors:[...this.errors].map(([name,message])=>({name,message}))};
@@ -104,7 +120,7 @@ export class ManualMedia {
   });}
   exportPack({projectId, sceneIds}, date=this.now()) {return this.exclusive(async()=>{
     const records=await this.records();
-    const rows=this.catalog(records).filter(row=>row.project.id===projectId&&!row.archived&&row.scene.storyboardApproved&&provider(row.project.data,row.scene)==='manual'&&(!sceneIds?.length||sceneIds.includes(row.scene.id)));
+    const rows=this.catalog(records).filter(row=>row.project.id===projectId&&!row.archived&&row.scene.storyboardApproved&&this.route(row.project.data,row.scene,row.project.id).provider==='manual'&&!this.route(row.project.data,row.scene,row.project.id).blocked&&(!sceneIds?.length||sceneIds.includes(row.scene.id)));
     if (!rows.length) throw Error('Duyệt ít nhất một cảnh manual trước khi xuất prompt.');
     if (rows.some(row=>row.product.revision!==row.project.data.productRevision)) throw Error('Đồng bộ phiên bản sản phẩm trước khi xuất prompt.');
     const base=join(this.local.root,'exports','prompt-packs'); await mkdir(base,{recursive:true});
@@ -134,7 +150,7 @@ export class ManualMedia {
         !references.length?'No reference images supplied.':'Preserve the product appearance from the supplied reference images.',
         `Save the downloaded file as ${code}-take1.mp4 (or ${code}-take1.png for an image).`].filter(Boolean).join('\n\n');
       await writeFile(join(staging,`${code}.txt`),prompt+'\n',{flag:'wx'});
-      exports[code]={revision:scene.revision,path:destination,waiting:false,at:date.getTime()};
+      exports[code]={provider:'manual',revision:scene.revision,path:destination,waiting:false,at:date.getTime()};
     }
     await writeFile(join(staging,'README-VI.txt'),[
       'GÓI PROMPT MANUAL — HERMES CLIP', `Mã sản phẩm: ${rows[0].productCode}`, `Dự án: ${rows[0].project.data.name}`,
@@ -180,10 +196,13 @@ export class ManualMedia {
     }
     for(let attempt=0;attempt<4;attempt++) {
       const row=this.catalog(await this.records()).find(row=>row.project.id===projectId&&row.scene.id===sceneId&&!row.archived);
-      if (!row || provider(row.project.data,row.scene)!=='manual') throw Error('Chọn cảnh manual của sản phẩm đang hoạt động.');
+      if(!row)throw Error('Chọn cảnh manual của sản phẩm đang hoạt động.');
       const commandId='manual_'+sha256;
       const existing=row.project.data.scenes.find(scene=>scene.takes.some(take=>take.sha256===sha256));
       if(existing && existing.id!==sceneId)throw Error('Checksum đã thuộc cảnh khác.');
+      if(!existing){const route=this.route(row.project.data,row.scene,row.project.id);
+        if(route.blocked)throw Error(route.reason);
+        if(route.provider!=='manual')throw Error('Chọn cảnh manual của sản phẩm đang hoạt động.');}
       // Save exact intent first. Recovery never attaches a changed scene silently.
       if(receipt.intent&&(receipt.intent.projectId!==projectId||receipt.intent.sceneId!==sceneId||receipt.intent.sceneRevision!==row.scene.revision))throw Error('Cảnh đã đổi sau khi bắt đầu nhập. Kiểm lại phiên bản trước khi gắn.');
       receipt=this.saveReceipt({...receipt,intent:{projectId,sceneId,sceneRevision:row.scene.revision}});
@@ -212,8 +231,9 @@ export class ManualMedia {
       }
       const probe=await probeManualMedia(snapshot), name=basename(path);
       const matched=rows.filter(row=>!row.archived&&new RegExp(`(^|[^a-z0-9])${row.code}([^a-z0-9]|$)`,'i').test(name));
-      const target=matched.length===1&&provider(matched[0].project.data,matched[0].scene)==='manual'?matched[0]:null;
-      let receipt=this.saveReceipt({sha256,name,sourcePath:path,state:'unmatched',...probe,createdAt:Date.now(),assetId:null});
+      const target=matched.length===1&&this.route(matched[0].project.data,matched[0].scene,matched[0].project.id).provider==='manual'&&!this.route(matched[0].project.data,matched[0].scene,matched[0].project.id).blocked?matched[0]:null;
+      let receipt=this.saveReceipt({sha256,name,sourcePath:path,state:'unmatched',...probe,
+        error:matched.length===1?this.route(matched[0].project.data,matched[0].scene,matched[0].project.id).reason:'',createdAt:Date.now(),assetId:null});
       const form=new FormData(); form.append('commandId','manual_'+sha256); form.append('file',new File([bytes],name,{type:probe.type}));
       const asset=await (await this.request('/api/assets',{method:'POST',body:form})).json();
       if(asset.sha256!==sha256)throw Error('Checksum sau nhập không khớp.');

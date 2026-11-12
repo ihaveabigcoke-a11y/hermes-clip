@@ -110,6 +110,9 @@ test('manual watcher survives changing/invalid files, respects provider selectio
   const two=(await scene('two')).code;await clip(`${two}-muse.mp4`,{color:'yellow'});await media.scan();await media.scan();
   assert.equal((await media.status()).unmatched.length,1);
   await command('media_provider',{provider:'manual'});
+  assert.equal((await media.records()).find(row=>row.id==='project_fixture').data.scenes.find(row=>row.id==='two').mediaProvider,'muse');
+  // A scene's explicit choice wins over the project default until reset by the user.
+  await command('media_provider',{sceneId:'two',provider:'auto'});
   assert.equal((await media.records()).find(row=>row.id==='project_fixture').data.scenes.find(row=>row.id==='two').mediaProvider,undefined);
   const imagePath=join(media.inbox(),`${two}-image.png`);
   execFileSync('ffmpeg',['-y','-v','error','-f','lavfi','-i','color=c=white:s=90x160','-frames:v','1',imagePath],{windowsHide:true,stdio:'inherit'});
@@ -145,4 +148,33 @@ test('running inbox monitor discovers a dropped MP4 in the configured folder wit
   assert.equal(f.media.receipts()[0].state,'received');assert.equal(f.media.receipts()[0].sceneId,'one');
   assert.ok((await stat(path)).isFile());
   await f.media.close();
+});
+
+test('T-002b: unresolved Muse job blocks manual export and attach; no fallback take is created',async t=>{
+  const f=await fixture(t),{media,store,scene,clip}=f;
+  const code=(await scene('one')).code;
+  const job=store.enqueue({projectId:'project_fixture',productId:'product_fixture',sceneId:'one',sceneRevision:1,references:[]},'uncertain').job;
+  store.put({...job,state:'needs_attention'});
+  assert.equal((await scene('one')).state,'Cần đối soát');
+  await assert.rejects(media.exportPack({projectId:'project_fixture'}));
+  await clip(code+'-unknown.mp4');await media.scan();await media.scan();
+  const receipt=media.receipts()[0];assert.equal(receipt.state,'unmatched');assert.equal(receipt.provider,'manual');
+  await assert.rejects(media.attach(receipt.sha256,'project_fixture','one'),/Cần đối soát/);
+  const project=(await media.records()).find(row=>row.id==='project_fixture');
+  assert.equal(project.data.scenes[0].takes.length,0);assert.equal(store.jobs().length,1);
+  await assert.rejects(media.request('/api/production',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:project.id,revision:project.revision,commandId:'bypass',action:'manual_result',input:{sceneId:'one',sceneRevision:1,assetId:receipt.assetId}})}),/Cần đối soát/);
+});
+
+test('T-002b A: unknown Muse job for scene X cannot block manual scene Y',async t=>{
+  const {media,store,command}=await fixture(t);
+  await command('storyboard',{sceneId:'two'});
+  const job=store.enqueue({projectId:'project_fixture',sceneId:'one',references:[]},'scene_x').job;
+  store.put({...job,state:'needs_attention'});
+  const project=(await media.records()).find(row=>row.id==='project_fixture');
+  assert.equal(media.route(project.data,project.data.scenes[0],project.id).reason,'Cần đối soát');
+  assert.equal(media.route(project.data,project.data.scenes[1],project.id).blocked,false);
+  const pack=await media.exportPack({projectId:project.id,sceneIds:['two']});
+  assert.equal(media.route(project.data,project.data.scenes[1],project.id).provider,'manual');
+  assert.equal(Object.values(store.get('manual_exports')).find(row=>row.path===pack.path).provider,'manual');
+  assert.equal((await readdir(pack.path)).filter(name=>name.endsWith('.txt')&&name!=='README-VI.txt').length,1);
 });

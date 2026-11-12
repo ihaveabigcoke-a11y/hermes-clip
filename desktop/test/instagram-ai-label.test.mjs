@@ -51,12 +51,14 @@ async function fixture(t, control, options) {
   const requests = [];
   await context.route('**/*', route => {requests.push(route.request().url()); return route.abort();});
   const page = await context.newPage();
-  page.setDefaultTimeout(1500);
+  page.setDefaultTimeout(10000);
   await page.setContent(html(control, options));
   t.after(async () => {await context.close(); assert.deepEqual(requests, [], 'fixture must not request any network URL');});
   return page;
 }
-const check = (page, mode = 'required', options = {}) => ensureInstagramAiLabel(page, mode, {timeoutMs: 180, ...options});
+// Use the app's 3000 ms budget: 180 ms also limited Playwright's actionability
+// wait for two animation frames, which can exceed that under full-suite load.
+const check = (page, mode = 'required', options = {}) => ensureInstagramAiLabel(page, mode, options);
 const blocked = (reason) => error => {
   assert.equal(error.code, 'INSTAGRAM_AI_LABEL_REQUIRED');
   assert.equal(error.aiLabelCheck.status, 'blocked');

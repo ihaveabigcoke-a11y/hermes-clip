@@ -14,7 +14,7 @@ import MuseResponse from './muse-response';
 
 export type Chat = {
   requestId: string; profileId: string; projectId: string; prompt: string;
-  response: string; state: string; error: string | null; providerUrl: string | null;
+  provider?:'muse'; response: string; state: string; error: string | null; providerUrl: string | null;
   parentId?: string | null; createdAt?: number; updatedAt?: number; pinned?: boolean;
 };
 const labels: Record<string, string> = {
@@ -174,6 +174,7 @@ export default function MuseChatPanel({projectId = 'general', demo = false, acti
       </div>
     </aside>
     <div className="muse-conversation">
+      {status?.musePaused!==false&&<p className="field-help">Muse đang tạm dừng, bật lại ở Tài khoản Muse</p>}
       <header><div><h2>{current ? 'Cuộc trò chuyện với Muse' : 'Cuộc trò chuyện mới'}</h2><small>{selectedProfile?.name || "Chưa có hồ sơ"} · {count}/{limit} lượt trong đợt</small></div>
         {current?.providerUrl && <Button tone="neutral" disabled={unavailable || status?.musePaused!==false || selectedProfile?.busy} onClick={() => void action(() => desktopBridge()!.museChatOpen({requestId: current.requestId}))}>Mở trong Chrome</Button>}
       </header>
@@ -181,7 +182,7 @@ export default function MuseChatPanel({projectId = 'general', demo = false, acti
         {!conversation.length && <Empty title="Muse trong không gian làm việc của bạn" text="Chọn hội thoại để chat tiếp, hoặc nhập ý tưởng bên dưới."/>}
         {conversation.map(chat => <article className="muse-message" key={chat.requestId}>
           <div className="muse-user-message"><small>Bạn · {profiles.find(profile => profile.id === chat.profileId)?.name ?? "Hồ sơ đã lưu"}{chat.createdAt ? ' · ' + formatTime(chat.createdAt) : ''}</small><details open={chat.prompt.length < 1200}><summary>Nội dung đã gửi</summary><p className="muse-chat-text">{chat.prompt}</p></details></div>
-          <div className="muse-assistant-message"><h3>Muse</h3>{chat.response ? <MuseResponse text={chat.response}/> : <p role="status">{labels[chat.state]}</p>}
+          <div className="muse-assistant-message"><h3>Muse</h3><small>Nhà cung cấp: muse</small>{chat.response ? <MuseResponse text={chat.response}/> : <p role="status">{labels[chat.state]}</p>}
             {chat.error && <p className="inline-error">{chat.error}</p>}
             {chat.state === 'needs_attention' && <Button tone="neutral" busy={busy} disabled={status?.musePaused!==false} onClick={() => void run(chat.requestId)}>{status?.musePaused!==false?"Muse đang tạm dừng":"Đọc lại kết quả"}</Button>}
             {chat.state === 'done' && onResponse && <Button disabled={busy || applied.includes(chat.requestId)} onClick={() => void action(() => apply(chat))}>{applied.includes(chat.requestId) ? 'Đã áp dụng phản hồi' : responseLabel}</Button>}

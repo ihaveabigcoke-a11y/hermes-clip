@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseTextExchange, mergeTextResearch, textTaskPrompt, exchangeByteLimit} from '../lib/lab/codex-exchange.ts';
+import {parseTextExchange, mergeTextResearch, importTextResearch, textTaskPrompt, exchangeByteLimit} from '../lib/lab/codex-exchange.ts';
 import {researchBatchSchema} from '../lib/lab/operations.ts';
 import {skillProduct, researchResult, contentResult, landingResult} from './fixtures/text-exchange.mjs';
 
@@ -57,4 +57,16 @@ test('T-003: shared content/landing schemas reject wrong fields; prompts preserv
     const prompt=textTaskPrompt(kind,{productId:'selected_product',remainingSlots:7});
     assert.match(prompt,/selected_product/);assert.doesNotMatch(prompt,/\bMuse\b/);
   }
+});
+
+test('T-002b E: research import notice reports zero/mixed duplicates and empty results accurately',()=>{
+  const result=parseTextExchange('research',JSON.stringify({...researchResult,candidates:researchResult.candidates.slice(0,2)}),'Claude');
+  const batch=researchBatchSchema.parse({name:'Import counts'});
+  const first=importTextResearch(batch,result,'first');assert.equal(first.notice,'2 ứng viên mới, bỏ 0 trùng');
+  const duplicate=importTextResearch(first.data,result,'duplicate');
+  assert.equal(duplicate.notice,'0 ứng viên mới, bỏ 2 trùng');assert.equal(duplicate.data,first.data);
+  const mixed=importTextResearch(first.data,{...result,candidates:[result.candidates[0],{...result.candidates[1],name:'Different candidate'}]},'mixed');
+  assert.equal(mixed.notice,'1 ứng viên mới, bỏ 1 trùng');assert.equal(mixed.data.candidates.length,3);
+  const empty=importTextResearch(batch,{summary:'No reliable sources',candidates:[]},'empty');
+  assert.equal(empty.notice,'0 ứng viên mới, bỏ 0 trùng');assert.equal(empty.data,batch);
 });

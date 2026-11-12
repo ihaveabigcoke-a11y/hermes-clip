@@ -239,7 +239,8 @@ function QueueDetails({job, label, tone, profileName, busy, musePaused, primary,
     + '&production=' + encodeURIComponent(job.request.projectId) + '&stage=scenes&desk_scene=' + encodeURIComponent(job.request.sceneId);
   const assetUrl = job.uploadedAssetId ? '/api/assets/' + encodeURIComponent(job.uploadedAssetId) : '';
   return <div className="queue-detail-body">
-    <h3>{job.request.name}</h3>
+    <h3>{job.request.name}</h3><p>Nhà cung cấp: {job.provider??'muse'}</p>
+    {musePaused&&<p className="field-help">Muse đang tạm dừng, bật lại ở Tài khoản Muse</p>}
     <Badge tone={tone}>{label}</Badge>
     {assetUrl && job.state === 'ready' && <div className="queue-result">
       {mediaError ? <p role="alert">Chưa đọc được file. Mở vị trí file để kiểm tra bản lưu trên máy.</p>

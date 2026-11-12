@@ -2,8 +2,9 @@
 import {useEffect, useRef, useState} from 'react';
 import {Button} from './primitives';
 import {desktopBridge, type DesktopStatus} from '@/lib/lab/desktop-client';
+import {musePauseHelp} from './muse-switch';
 
-export default function WorkerActivity({status, projectId, error}: {status: DesktopStatus | null; projectId?: string; error: string}) {
+export default function WorkerActivity({status, projectId, error, showMuseStatus=true}: {status: DesktopStatus | null; projectId?: string; error: string; showMuseStatus?: boolean}) {
   const [actionError, setActionError] = useState('');
   const [opening, setOpening] = useState(false);
   const log = useRef<HTMLOListElement>(null);
@@ -24,6 +25,8 @@ export default function WorkerActivity({status, projectId, error}: {status: Desk
     finally {setOpening(false);}
   }
   return <section className="worker-activity" aria-label="Nhật ký chạy Muse">
+    {showMuseStatus&&<><p role="status">{status.musePaused!==false?'Muse: đang tạm dừng':'Muse: đang bật'}</p>
+    {status.musePaused!==false&&<p className="field-help">{musePauseHelp}</p>}</>}
     <details>
       <summary><strong>Nhật ký chạy</strong><span>{last?.note ?? 'Sẵn sàng nhận prompt.'}</span></summary>
       <ol ref={log} role="log" aria-label="Tiến trình tác vụ · giờ Việt Nam" aria-live="polite" aria-relevant="additions"
@@ -36,7 +39,7 @@ export default function WorkerActivity({status, projectId, error}: {status: Desk
     </details>
     {status.profiles.some(profile => profile.health === 'login_required') && <div className="worker-login-actions">
       {status.profiles.filter(profile => profile.health === 'login_required').map(profile =>
-        <Button key={profile.id} tone="neutral" busy={opening} onClick={() => void showProfile(profile.id)}>Đăng nhập Muse · {profile.name}</Button>)}
+        <Button key={profile.id} tone="neutral" busy={opening} title={status.musePaused!==false?musePauseHelp:undefined} disabled={status.musePaused!==false} onClick={() => void showProfile(profile.id)}>Đăng nhập Muse · {profile.name}</Button>)}
     </div>}
     {(error || actionError) && <p role="alert" className="inline-error">{error || actionError}</p>}
   </section>;

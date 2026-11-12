@@ -1,3 +1,4 @@
+import {resolveProvider} from '@/desktop/src/provider-routing.mjs';
 import { z } from "zod";
 import { env } from "cloudflare:workers";
 import { owner, body, getRecord, save, getSettings, ApiError, failure } from "@/lib/lab/server";
@@ -14,6 +15,13 @@ export async function POST(request: Request) {
     if(old&&old.kind!=="production")throw new ApiError(409,"ID đã dùng cho dữ liệu khác.");
     if(old?.data.receipts.includes(envelope.commandId))return Response.json({record:old,deduplicated:true});
     if((old?.revision??0)!==envelope.revision)throw new ApiError(409,"Dự án đã thay đổi. Tải lại trước khi lưu; bản nháp vẫn được giữ.");
+    if(envelope.action==='manual_result'&&old){
+      const scene=old.data.scenes.find((row:any)=>row.id===envelope.input.sceneId),status=(env as any).MUSE_STATUS;
+      if(scene){const routing=resolveProvider({kind:'media',status,selection:scene.mediaProvider??old.data.mediaProvider,
+        previous:[...(status?.jobs??[]).filter((job:any)=>job.request.projectId===old.id&&job.request.sceneId===scene.id).map((job:any)=>({provider:job.provider??'muse',state:job.state})),
+          ...scene.attempts.filter((row:any)=>row.status==='unknown').map(()=>({provider:'muse',state:'unknown'}))]});
+        if(routing.blocked||routing.provider!=='manual')throw new ApiError(422,routing.reason||'Cảnh chưa chọn nhà cung cấp manual.');}
+    }
     let p;
     if(envelope.action==="create") {
       if(old)throw new ApiError(409,"Dự án đã tồn tại.");

@@ -1,4 +1,4 @@
-import {assertMuseAvailable} from './muse-pause.mjs';
+import {assertMuseAvailable,assertMuseNewTask,runMuseTask} from './muse-pause.mjs';
 import {createHash, randomUUID} from 'node:crypto';
 import {z} from 'zod';
 import {MuseAdapter} from './muse.mjs';
@@ -47,8 +47,16 @@ export class MuseChat {
     return this.save({...chat, pinned: value.pinned});
   }
 
+  skipReconciliation(payload) {
+    const chat = this.get(id.parse(payload.requestId));
+    if (!chat || !['unknown', 'needs_attention'].includes(chat.state)) throw Error('Chọn hội thoại Muse có kết quả chưa rõ.');
+    if (this.worker.chatting.has(chat.profileId)) throw Error('Chờ hội thoại đang chạy kết thúc.');
+    if (chat.reconciled) return chat;
+    return this.save({...chat, reconciled:true, reconciliation:'skipped', reconciledAt:Date.now()});
+  }
+
   async open(payload) {
-    assertMuseAvailable(this.store);
+    assertMuseNewTask(this.store);
     const chat = this.get(id.parse(payload.requestId));
     if (!chat) throw Error('Không tìm thấy hội thoại.');
     const url = this.threadUrl(chat.providerUrl);
@@ -68,7 +76,7 @@ export class MuseChat {
   }
 
   save(chat) {
-    const value = {...chat, updatedAt: Date.now()};
+    const value = {...chat, provider:'muse', updatedAt: Date.now()};
     this.store.db.prepare('INSERT INTO muse_chats VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET body=excluded.body')
       .run(value.requestId, value.projectId, JSON.stringify(value));
     return value;
@@ -86,7 +94,7 @@ export class MuseChat {
   }
 
   beginSubmit(chat) {
-    assertMuseAvailable(this.store);
+    assertMuseAvailable(this.store, {jobId:chat.requestId, profileId:chat.profileId});
     this.store.db.exec('BEGIN IMMEDIATE');
     try {
       const batch = this.store.batch() ?? {id: randomUUID(), startedAt: Date.now(), perProfileLimit: 3, submittedByProfile: {}};
@@ -103,7 +111,11 @@ export class MuseChat {
   }
 
   async send(payload) {
-    assertMuseAvailable(this.store);
+    assertMuseNewTask(this.store);
+    const value = input.parse(payload);
+    return runMuseTask(this.store, {jobId:value.requestId, profileId:value.profileId}, () => this.sendAdmitted(value));
+  }
+  async sendAdmitted(payload) {
     const {attachments, ...value} = input.parse(payload);
     if (attachments?.length && value.parentId) throw Error('Chỉ đính kèm ảnh khi bắt đầu hội thoại mới.');
     const references = attachments?.length ? await checkedChatAttachments(this.worker.root, attachments) : [];
@@ -207,7 +219,13 @@ export class MuseChat {
   }
 
   async recover(payload) {
-    assertMuseAvailable(this.store);
+    assertMuseNewTask(this.store);
+    const chat = this.get(id.parse(payload.requestId));
+    if (!chat) throw Error('Không tìm thấy hội thoại.');
+    if (chat.reconciled) throw Error('Đã bỏ qua kết quả Muse cũ; app sẽ không gửi lại.');
+    return runMuseTask(this.store, {jobId:chat.requestId, profileId:chat.profileId}, () => this.recoverAdmitted(payload));
+  }
+  async recoverAdmitted(payload) {
     let chat = this.get(id.parse(payload.requestId));
     if (!chat) throw Error('Không tìm thấy hội thoại.');
     if (chat.state === 'done') return chat;

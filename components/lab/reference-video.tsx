@@ -140,6 +140,7 @@ export function ReferenceMuseAnalysis({jobId, structure, caption, fileName, form
   const blocked=disabled||busy||loading||!api?.museChatSend;
   const cannotSend=status?.musePaused!==false||blocked||pending||uncertain||!selected||selected.busy||count>=3;
   return <div>
+    {status?.musePaused!==false&&<p className="field-help">Muse đang tạm dừng, bật lại ở Tài khoản Muse</p>}
     <label className="field">Profile Muse<select aria-label="Profile Muse phân tích" disabled={blocked||pending||uncertain} value={selectedId} onChange={e=>setProfileId(e.target.value)}>
       {!profiles.length&&<option value="">Chưa có profile đang bật</option>}
       {profiles.map(p=><option key={p.id} value={p.id}>{p.name} · {status?.batch?.submittedByProfile[p.id]??0}/3 lượt</option>)}

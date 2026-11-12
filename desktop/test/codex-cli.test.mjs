@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 import {mkdtemp,mkdir,rm} from 'node:fs/promises';
 import {resolve,join} from 'node:path';
+import {Store} from '../src/store.mjs';
 import {EventEmitter} from 'node:events';
 import {PassThrough} from 'node:stream';
 import {runCodexText,resolveCodexExecutable,CodexTextService} from '../src/codex-cli.mjs';
@@ -81,4 +82,44 @@ test('T-003: service defaults off, validates all task kinds, rejects bad output 
       assert.equal(saved.text,JSON.stringify(result));
     }
   } finally {await rm(root,{recursive:true,force:true});}
+});
+
+test('T-002b: uncertain Muse research cannot be resent through Codex',async()=>{
+  const values=new Map([['codex_text_enabled',true],['research_runs',[{id:'old',batchId:'research_same',state:'needs_attention',provider:'muse'}]]]);
+  const store={get:(key,fallback)=>values.get(key)??fallback,set:(key,value)=>values.set(key,value)};
+  let calls=0;const service=new CodexTextService({store,root:'outputs/T-002b-fixture',exchange,run:async()=>{calls++;},resolveExecutable:async()=>{calls++;}});
+  await assert.rejects(service.execute({kind:'research',context:{query:'Fixture',taskScope:'research_same'}}),/Cần đối soát/);
+  assert.equal(calls,0);assert.equal(values.has('codex_text_receipts'),false);
+});
+
+test('T-002b A: Codex research only blocks the imported scope; skipped and non-Muse runs do not block',async t=>{
+  await mkdir('outputs',{recursive:true});const root=await mkdtemp(resolve('outputs/T-002b-research-scope-'));
+  const store=new Store(':memory:');t.after(async()=>{store.close();await rm(root,{recursive:true,force:true});});
+  store.set('codex_text_enabled',true);
+  store.set('research_runs',[{id:'old',batchId:'old_batch',state:'needs_attention'}]);
+  let calls=0;const service=new CodexTextService({store,root,exchange,resolveExecutable:async()=>fixture,run:async()=>{calls++;return JSON.stringify(researchResult);}});
+  await service.execute({kind:'research',context:{taskScope:'new_batch'}});assert.equal(calls,1);
+  await service.execute({kind:'research',context:{}});assert.equal(calls,2);
+  for(const context of [{taskScope:'old_batch'},{batchId:'old_batch'}])await assert.rejects(service.execute({kind:'research',context}),/Cần đối soát/);
+  assert.equal(calls,2);
+  store.set('research_runs',[{id:'old',batchId:'old_batch',state:'needs_attention',reconciled:true}]);
+  await service.execute({kind:'research',context:{taskScope:'old_batch'}});assert.equal(calls,3);
+  store.set('research_runs',[{id:'old',taskScope:'old_batch',state:'needs_attention',provider:'codex'}]);
+  await service.execute({kind:'research',context:{taskScope:'old_batch'}});assert.equal(calls,4);
+  store.set('research_runs',[{id:'old',taskScope:'old_batch',state:'needs_attention'}]);
+  await assert.rejects(service.execute({kind:'research',context:{taskScope:'old_batch'}}),/Cần đối soát/);
+  service.run=async()=>{calls++;return JSON.stringify(landingResult);};
+  await service.execute({kind:'landing',context:{taskScope:'old_batch'}});assert.equal(calls,5);
+});
+
+test('T-002b: content reconciliation is scoped; a different product can run and records codex provenance',async t=>{
+  await mkdir('outputs',{recursive:true});const root=await mkdtemp(resolve('outputs/T-002b-text-scope-'));
+  const store=new Store(':memory:');t.after(async()=>{store.close();await rm(root,{recursive:true,force:true});});
+  store.set('codex_text_enabled',true);store.db.exec('CREATE TABLE muse_chats(id TEXT PRIMARY KEY, project_id TEXT, body TEXT)');
+  store.db.prepare('INSERT INTO muse_chats VALUES(?,?,?)').run('unknown','task_content_productA',JSON.stringify({state:'needs_attention'}));
+  let calls=0;const service=new CodexTextService({store,root,exchange,resolveExecutable:async()=>fixture,run:async()=>{calls++;return JSON.stringify({name:'Fixture content',hook:'Hook',script:'Script',caption:''});}});
+  await assert.rejects(service.execute({kind:'content',context:{taskScope:'task_content_productA'}}),/Cần đối soát/);assert.equal(calls,0);
+  const result=await service.execute({kind:'content',context:{taskScope:'task_content_productB'}});
+  assert.equal(calls,1);assert.equal(result.provider,'codex');
+  const receipt=store.get('codex_text_receipts')[0];assert.equal(receipt.provider,'codex');assert.equal(receipt.state,'done');assert.equal(receipt.scope,'task_content_productB');
 });
