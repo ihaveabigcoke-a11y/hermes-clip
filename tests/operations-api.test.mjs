@@ -3,6 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {call} from './runtime-fixture.mjs';
 import {analysisResponse,structureFor,analysisReferences} from './fixtures/formula-analysis.mjs';
+import {skillProduct,contentResult,landingResult} from './fixtures/text-exchange.mjs';
 const lab=await importApiModule('app/api/lab/route.ts');
 const production=await importApiModule('app/api/production/route.ts');
 const {emptyProduct,productFromCandidate,unitMargin,productMarginLabel}=await importApiModule('lib/lab/domain.ts');
@@ -17,6 +18,33 @@ async function save(kind, id, data, revision = 0, who = 'ops-owner', action = 's
   const response = await call(lab.POST, request);
   return {status: response.status, ...await response.json()};
 }
+
+test('T-003: imported research survives API round-trip with metadata/null/currencies and no automatic selection',async()=>{
+  const {parseTextExchange,mergeTextResearch}=await importApiModule('lib/lab/codex-exchange.ts');
+  const {researchBatchSchema}=await importApiModule('lib/lab/operations.ts');
+  const result=parseTextExchange('research',JSON.stringify(skillProduct),'Claude');
+  const batch=mergeTextResearch(researchBatchSchema.parse({name:'T-003 fixture'}),result,'fixture');
+  const saved=await save('research_batch','t003_batch',batch,0,'t003-owner');
+  assert.equal(saved.status,200);assert.equal(saved.record.data.candidates.length,1);
+  const candidate=saved.record.data.candidates[0];
+  assert.equal(candidate.costCurrency,'CNY');assert.equal(candidate.shipping,null);assert.equal(candidate.source,'import:Claude');
+  assert.deepEqual(JSON.parse(candidate.importMetadata.rawJson),skillProduct);assert.deepEqual(saved.record.data.selectedIds,[]);
+  const invalid={...saved.record.data,candidates:[{...candidate,listingStatus:'showroom'}]};
+  assert.equal((await save('research_batch','t003_batch',invalid,1,'t003-owner')).status,422);
+  const rows=(await (await call(lab.GET,new Request('https://qa.invalid/api/lab',{headers:{'oai-authenticated-user-id':'t003-owner','oai-authenticated-user-email':'t003-owner@example.invalid'}}))).json()).records;
+  assert.deepEqual(rows.find(row=>row.id==='t003_batch'),saved.record);
+  assert.equal(rows.some(row=>row.kind==='product'),false);
+});
+
+test('T-003: imported content and landing persist only for the selected product as drafts',async()=>{
+  const {parseTextExchange}=await importApiModule('lib/lab/codex-exchange.ts');
+  const who='t003-copy';
+  for(const id of ['t003_product_a','t003_product_b'])assert.equal((await save('product',id,{...emptyProduct,name:id},0,who)).status,200);
+  const content=await save('content_plan','t003_plan',{...parseTextExchange('content',JSON.stringify(contentResult),'Codex'),productId:'t003_product_b'},0,who);
+  assert.equal(content.status,200);assert.equal(content.record.data.productId,'t003_product_b');assert.equal(content.record.data.status,'draft');assert.equal(content.record.data.productionId,'');
+  const landing=await save('landing_page','landing_t003_product_b',{...parseTextExchange('landing',JSON.stringify(landingResult),'Gemini'),productId:'t003_product_b'},0,who);
+  assert.equal(landing.status,200);assert.equal(landing.record.data.productId,'t003_product_b');assert.equal(landing.record.data.ctaUrl,'');
+});
 
 test('API measurements round-trip with null/zero and require the same account and permalink as browser measurements',async()=>{
   const who='api-adapter-owner';

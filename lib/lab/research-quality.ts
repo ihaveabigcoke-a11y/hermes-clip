@@ -34,7 +34,7 @@ export function annotateResearchQuality(candidates: Candidate[]): Candidate[] {
     }
   });
   const annotated = candidates.map(candidate => {
-    const shared = (suppliers.get(sourceKey(candidate.supplierUrl))?.size ?? 0) >= 2;
+    const shared = !!candidate.supplierUrl && (suppliers.get(sourceKey(candidate.supplierUrl))?.size ?? 0) >= 2;
     const qualityWarnings: Candidate['qualityWarnings'] = shared ? ['shared_supplier_url'] : [];
     let changed = shared !== (candidate.qualityWarnings ?? []).includes('shared_supplier_url');
     const marketEvidence = (candidate.marketEvidence ?? []).map(metric => {

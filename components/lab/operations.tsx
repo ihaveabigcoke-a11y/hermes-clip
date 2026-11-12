@@ -17,6 +17,10 @@ import {ProductCheckFields} from './product-check-fields';
 import ViralFormulas from './viral-formulas';
 import {instagramProductSummary} from '@/lib/lab/instagram-summary';
 import {sampleCheckWarning} from '@/lib/lab/sample-check';
+import TextExchange from './text-exchange';
+import {parseTextExchange, mergeTextResearch} from '@/lib/lab/codex-exchange';
+import {researchBatchSchema} from '@/lib/lab/operations';
+import {useDesktopStatus} from '@/lib/lab/use-desktop-status';
 
 type Props = {
   view: "research" | "social" | "landing";
@@ -46,6 +50,8 @@ const candidateFormSchema = candidateSchema.extend(Object.fromEntries(["price", 
 ])));
 
 export default function OperationsPanel({view, records, demo, offline, persist, notify, reload}: Props) {
+  const {status: desktopStatus} = useDesktopStatus();
+  const musePaused = desktopStatus?.musePaused !== false;
   const [selected, setSelected] = useState(() => new URL(location.href).searchParams.get("ops_id") ?? "");
   const [page, setPage] = useState(1);
   const [form, setForm] = useState<FormSpec | null>(null);
@@ -234,12 +240,12 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
   }
 
   function researchView(): ReactNode {
-    if (!chosen) return <Empty title="Chưa có đợt nghiên cứu" text="Bấm Bắt đầu nghiên cứu để Muse tìm nguồn, hoặc tạo đợt nhập tay từ nút phía trên."/>;
+    if (!chosen) return <Empty title="Chưa có đợt nghiên cứu" text="Copy prompt research rồi nhập JSON; app sẽ tạo đợt mới. Hoặc tạo đợt nhập tay từ nút phía trên."/>;
     const batch = chosen.data as ResearchBatch;
     return <>
       <div className="operations-toolbar"><Badge>{batch.candidates.length}/10 ứng viên</Badge><Badge>{batch.selectedIds.length}/3 đã chọn</Badge>
         <Button tone="neutral" disabled={disabled || batch.candidates.length >= 10} onClick={() => candidateForm()}><Plus size={16}/>Thêm ứng viên</Button>
-        <Button tone="neutral" disabled={disabled || demo || !desktopBridge() || batch.candidates.length >= 10} onClick={() => openMuseTask("research")}><Search size={16}/>{batch.candidates.length>=10?'Đã đủ 10 ứng viên':'Nghiên cứu bằng Muse'}</Button>
+        <Button tone="neutral" disabled={musePaused || disabled || demo || !desktopBridge() || batch.candidates.length >= 10} onClick={() => openMuseTask("research")}><Search size={16}/>{batch.candidates.length>=10?'Đã đủ 10 ứng viên':'Nghiên cứu bằng Muse'}</Button>
       </div>
       <ResearchCandidates key={chosen.id} record={chosen} records={records} disabled={disabled} onEdit={candidateForm}
         onSelect={(candidate,checked)=>act(()=>selectCandidate(candidate,checked))}/>
@@ -259,12 +265,27 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
   return <section className="operations-panel">
     {view==='social'&&chosen&&<div><Button tone="ghost" onClick={()=>select('')}><ArrowLeft size={16}/>Tất cả sản phẩm</Button></div>}
     <header className="operations-heading"><div><h1>{titles[view]}</h1><p>{view === "research" ? "So sánh 10 ứng viên có nguồn, chọn 3 sản phẩm để thử." : view==='social'?'Theo dõi nội dung và kết quả theo sản phẩm.':chosen?.data.name}</p></div>{view === "research" && <Button tone="neutral" disabled={disabled} onClick={batchForm}>Tạo đợt nhập tay</Button>}</header>
-    {view==='research'&&<ResearchLauncher disabled={disabled||demo} onOpen={id=>{select(id);reload();}}/>}
+    {view==='research'&&<ResearchLauncher disabled={disabled||demo} onOpen={id=>{select(id);reload();}}
+      actions={(context,invalid)=><TextExchange key={chosen?.id ?? 'new'} kind="research" demo={demo} disabled={disabled || invalid}
+        target={chosen ? 'Nhập vào đợt: '+chosen.data.name : 'Nhập vào đợt mới'}
+        context={{...context, remainingSlots:10-(chosen?.data.candidates.length ?? 0), existing:chosen?.data.candidates.map((candidate:Candidate)=>candidate.name) ?? []}}
+        onApply={async (text,tool,importId)=>{
+          const result=parseTextExchange('research',text,tool), id=chosen?.id ?? 'import_'+importId;
+          const batch=chosen?.data as ResearchBatch | undefined ?? researchBatchSchema.parse({name:'Research · '+tool,maxLandedCostUsd:context.maxLandedCostUsd});
+          const updated=mergeTextResearch(batch,result,importId);
+          await execute(()=>save('research_batch',id,updated,chosen?.revision ?? 0)); select(id);
+        }}/>} />}
     {view === 'research' && <ViralFormulas records={records} disabled={disabled||demo} onSaveDraft={(draft,revision)=>persist('reference_video_draft','reference_video_draft_'+draft.id,draft,revision)} onSaveFormula={formula=>persist('viral_formula',`viral_formula_${formula.id}_v${formula.version}`,formula,0)}/>}
     {choices.length > 0 && view!=='social' && <div className="field operations-selector"><label htmlFor="operations-selection">{view === "research" ? "Đợt nghiên cứu" : "Sản phẩm"}</label><select id="operations-selection" value={chosen?.id ?? ""} disabled={busy} onChange={event => select(event.target.value)}>{choices.map(record => <option key={record.id} value={record.id}>{record.data.name}</option>)}</select></div>}
     {chosen && view !== 'research' && <div className="operations-toolbar">
-      <Button disabled={disabled || demo || !desktopBridge()} onClick={() => openMuseTask(view === 'social' ? 'content' : 'landing')}>Soạn nội dung bằng Muse</Button>
-      <Button tone="neutral" disabled={disabled || demo || !desktopBridge()} onClick={() => openMuseTask('analysis')}>Phân tích bằng Muse</Button>
+      <TextExchange key={view+chosen.id} kind={view==='social'?'content':'landing'} context={{product:chosen.data, metrics:instagramProductSummary(records,chosen.id)}}
+        target={'Sản phẩm: '+chosen.data.name} disabled={disabled} demo={demo} onApply={async (text,tool)=>{
+          if(view==='social') planForm(undefined,{...parseTextExchange('content',text,tool),notes:'Nguồn: import:'+tool});
+          else landingForm(parseTextExchange('landing',text,tool));
+          setDirty(true);
+        }}/>
+      <Button disabled={musePaused || disabled || demo || !desktopBridge()} onClick={() => openMuseTask(view === 'social' ? 'content' : 'landing')}>Soạn nội dung bằng Muse</Button>
+      <Button tone="neutral" disabled={musePaused || disabled || demo || !desktopBridge()} onClick={() => openMuseTask('analysis')}>Phân tích bằng Muse</Button>
     </div>}
     {error && <div className="inline-error" role="alert"><p>{error}</p><Button tone="ghost" onClick={reload}>Tải lại dữ liệu</Button></div>}
     {view === "research" ? researchView() : view === "social" ? socialView() : !chosen ? <Empty title="Cần hồ sơ sản phẩm" text="Thêm sản phẩm trước khi soạn landing page."/> : <>

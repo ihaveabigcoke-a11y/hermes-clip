@@ -1,12 +1,12 @@
 "use client";
-import {useEffect,useRef,useState} from 'react';
+import {useEffect,useRef,useState,type ReactNode} from 'react';
 import {Search,RefreshCw} from 'lucide-react';
 import {useDesktopStatus} from '@/lib/lab/use-desktop-status';
 import {desktopBridge} from '@/lib/lab/desktop-client';
 import {buildResearchQuery,defaultResearchCriteria,defaultResearchExclusions} from '@/lib/lab/research-view';
 import {Button,Badge} from './primitives';
 type Run={id:string;batchId:string;state:string;count:number;step:number;error:string;sourceCheckError?:string;createdAt:number};
-export default function ResearchLauncher({disabled,onOpen}:{disabled:boolean;onOpen:(id:string)=>void}){
+export default function ResearchLauncher({disabled,onOpen,actions}:{disabled:boolean;onOpen:(id:string)=>void;actions?:(context:Record<string,unknown>,invalid:boolean)=>ReactNode}){
  const {status:workerStatus}=useDesktopStatus();
  const musePaused=workerStatus?.musePaused!==false;
  const [runs,setRuns]=useState<Run[]>([]),[error,setError]=useState(''),[busy,setBusy]=useState(false);
@@ -31,7 +31,8 @@ export default function ResearchLauncher({disabled,onOpen}:{disabled:boolean;onO
    <label className="field">Ngách hoặc đối tượng<input value={niche} maxLength={180} placeholder="Ví dụ: night runners, pet owners" onChange={e=>setNiche(e.target.value)} disabled={fieldsDisabled}/></label>
    <label className="field">Loại trừ<textarea rows={2} value={exclusions} maxLength={300} onChange={e=>setExclusions(e.target.value)} disabled={fieldsDisabled}/></label>
   </div>
-  <p>Nội dung gửi Muse bằng tiếng Anh. Mặc định loại pin lithium lớn, chất lỏng, hàng có thương hiệu và hàng theo đời xe. {query&&`${query.length}/1500 ký tự sau khi ghép.`}</p>
+  {actions?.({query, maxLandedCostUsd:Number(maximum), market:'United States', locale:'en-US'},!!queryError)}
+  <p>Prompt bằng tiếng Anh. Mặc định loại pin lithium lớn, chất lỏng, hàng có thương hiệu và hàng theo đời xe. {query&&`${query.length}/1500 ký tự sau khi ghép.`}</p>
   {queryError&&<p className="inline-error" role="alert">{queryError}</p>}
   {request.current&&error&&<p>Yêu cầu chưa rõ kết quả. Bấm lại để đối soát cùng mã và tiêu chí; không tạo lượt mới.</p>}
   <p>Muse chạy nền, tìm tối đa 10 ứng viên có nguồn cho thị trường Mỹ và tự lưu kết quả. Giữ app mở và máy thức; có thể chuyển sang màn khác. Tối đa 3 lượt mỗi hồ sơ trong một đợt.</p>

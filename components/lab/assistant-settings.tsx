@@ -4,6 +4,7 @@ import {z} from "zod";
 import {Button, Badge, Modal, RecordForm, api} from "./primitives";
 import {desktopBridge} from "@/lib/lab/desktop-client";
 import {formatTime} from "@/lib/lab/domain";
+import {CodexTextSettings} from './text-exchange';
 
 const validation = z.object({model: z.string().trim().max(120).regex(/^[a-zA-Z0-9._/-]*$/),
   dailyLimit: z.number().int().min(0).max(20), apiKey: z.string().trim().max(500), clearKey: z.boolean()});
@@ -25,7 +26,7 @@ export default function AssistantSettings({demo}: {demo: boolean}) {
     }
     return () => { live = false; };
   }, [demo]);
-  return <section className="production-card production-card-body">
+  return <><CodexTextSettings demo={demo}/><section className="production-card production-card-body">
     <header><h3>Gemini viết kịch bản</h3><Badge tone={proof?.connected ? "success" : "warning"}>{proof?.connected ? "Đã nhận kết quả" : status?.configured ? "Đã cấu hình · chờ kiểm chứng" : "Chưa cấu hình"}</Badge></header>
     <p>{status?.model || "Chọn model và giới hạn lượt/ngày để sử dụng."}{status?.dailyLimit > 0 && ` · ${status.dailyLimit} lượt/ngày`}</p>
     {proof?.verifiedAt && <p>Kết quả gần nhất {formatTime(proof.verifiedAt)}</p>}
@@ -48,5 +49,5 @@ export default function AssistantSettings({demo}: {demo: boolean}) {
           } finally { setBusy(false); }
         }}/>
     </Modal>
-  </section>;
+  </section></>;
 }

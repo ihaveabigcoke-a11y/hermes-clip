@@ -6,7 +6,7 @@ export const museTaskKinds = ['research', 'content', 'landing', 'analysis'] as c
 export type MuseTaskKind = typeof museTaskKinds[number];
 export type MuseResponse = {requestId: string; response: string; providerUrl: string | null; profileId: string};
 
-const researchResponse = z.object({
+export const researchResponse = z.object({
   summary: z.string().trim().max(8000),
   // Provider text must not impersonate local Agent Reach receipts.
   candidates: z.array(candidateSchema.omit({id: true, listingCheck: true, qualityWarnings: true}).transform(candidate => {
@@ -17,11 +17,11 @@ const researchResponse = z.object({
     return {...sanitized, competition};
   })).max(10),
 }).strict();
-const contentResponse = z.object({
+export const contentResponse = z.object({
   name: z.string().trim().min(2).max(150), hook: z.string().trim().min(1).max(600),
   script: z.string().trim().min(1).max(6000), caption: z.string().trim().max(2200),
 }).strict();
-const landingResponse = z.object({
+export const landingResponse = z.object({
   headline: z.string().trim().min(2).max(160), description: z.string().trim().min(2).max(5000),
   benefits: z.string().trim().max(3000), limitations: z.string().trim().max(3000),
 }).strict();
@@ -30,6 +30,11 @@ export function parseMuseResponse(kind: Exclude<MuseTaskKind, 'analysis'>, text:
   const cleaned = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
   try {
     const value = JSON.parse(cleaned);
+    if (kind === 'research') {
+      const result = researchResponse.parse(value);
+      // Import provenance belongs to the manual/CLI path, never a Muse receipt.
+      return {...result, candidates: result.candidates.map(({source: _source, listingStatus: _listing, importMetadata: _metadata, ...candidate}) => candidate)};
+    }
     return {research: researchResponse, content: contentResponse, landing: landingResponse}[kind].parse(value);
   } catch {
     throw Error('Phản hồi Muse chưa đúng cấu trúc. Gửi tiếp để yêu cầu sửa JSON rồi áp dụng lại.');

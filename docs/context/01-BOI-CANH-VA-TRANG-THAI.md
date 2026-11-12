@@ -1,5 +1,11 @@
 # Hermes Clip — bối cảnh và trạng thái (source cập nhật đến đêm 3, 12/11/2026)
 
+## Cập nhật source T-003 — JSON và Codex CLI cho research/nội dung (12/11/2026)
+
+Sửa trực tiếp checkout app chính trên `main`, không đổi nhánh/commit. Research có nhập JSON/file (gồm JSON một sản phẩm từ `hermes-product-check`) và copy prompt trung lập. Content/landing nhập thành nháp đúng sản phẩm. Giữ null, nguồn, tiền tệ và metadata gốc của skill; không tự chọn sản phẩm. Codex CLI tùy chọn mặc định tắt, không shell, có timeout/giới hạn đầu ra; chỉ kiểm bằng fixture, **chưa chạy CLI thật**. Muse vẫn mặc định tạm dừng, media manual T-002 giữ nguyên.
+
+Build kiểm riêng `outputs/T-003-build`, không ghi `desktop/local-dist` hoặc mở AppData/SQLite/profile thật. Typecheck và build đã đạt; full suite/PNG còn blocker sandbox (spawn EPERM, Chrome IPC Access is denied). Xem [báo cáo T-003](../../ops/office/reports/T-003.md) cho số test cuối và [cách dùng/chạy tiếp](../RESEARCH-WITHOUT-MUSE.md). Không coi source này là bản cài đã được nghiệm thu.
+
 ## Cập nhật T-002 — Muse tạm dừng, media manual (12/11/2026)
 
 Theo người dùng, tài khoản Muse bị khóa ngày 12/11. Source tại `D:/hermes-wt/T-002`, nhánh `codex/T-002-media-manual`, mặc định **Tạm dừng Muse** và nhà cung cấp **manual**. Giữ profile/phiên/job/receipt cũ; worker không mở profile, gửi chat/research/media hoặc đọc lại từ Muse khi tạm dừng. Thêm xuất gói prompt cho cảnh đã duyệt và hộp nhận file có ffprobe/checksum, phiên bản chờ duyệt, chống trùng và gắn cảnh tay. Các hướng dẫn dùng Muse bên dưới là trạng thái lịch sử, không phải yêu cầu chạy trong lúc tài khoản bị khóa.

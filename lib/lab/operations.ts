@@ -57,7 +57,10 @@ const webReferencesSchema = z.object({
 export const candidateSchema = z.object({
   id: identifier,
   name: z.string().trim().min(2).max(120),
-  supplierUrl: sourceLink,
+  supplierUrl: optionalLink,
+  source: z.string().regex(/^import:[^\r\n]{1,80}$/).optional(),
+  listingStatus: z.enum(['single', 'showroom', 'not_found', 'blocked']).optional(),
+  importMetadata: z.object({rawJson: z.string().max(384000)}).optional(),
   supplierCountry: text(80),
   evidenceUrl: optionalLink,
   evidenceNotes: z.string().trim().min(1, "Ghi điều đã kiểm tra tại nguồn.").max(3000),
@@ -121,6 +124,12 @@ export const researchBatchSchema = z.object({
   selectedIds: z.array(identifier).max(3, "Mỗi đợt chọn tối đa 3 sản phẩm.").default([]),
   notes: text(20000),
 }).superRefine((value, ctx) => {
+  value.candidates.forEach((candidate, index) => {
+    if (!candidate.supplierUrl && candidate.listingStatus !== 'not_found')
+      ctx.addIssue({code:'custom',path:['candidates',index,'supplierUrl'],message:'Cần URL nguồn HTTPS; chỉ not_found được để trống.'});
+    if (candidate.listingStatus && candidate.listingStatus !== 'single') for (const field of ['cost','shipping'] as const)
+      if (candidate[field] !== null) ctx.addIssue({code:'custom',path:['candidates',index,field],message:'Listing chưa phải single: số tiền phải là null.'});
+  });
   if (new Set(value.candidates.map(candidate => candidate.id)).size !== value.candidates.length)
     ctx.addIssue({code: "custom", path: ["candidates"], message: "ID ứng viên bị trùng."});
   if (new Set(value.selectedIds).size !== value.selectedIds.length || value.selectedIds.some(id => !value.candidates.some(candidate => candidate.id === id)))

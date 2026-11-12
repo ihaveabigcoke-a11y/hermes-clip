@@ -7,6 +7,8 @@ import {Store} from '../desktop/src/store.mjs';
 import {Integrations,integrationConfig,researchInput} from '../desktop/src/integrations.mjs';
 import {enablePortableMediaTools} from '../desktop/src/runtime-tools.mjs';
 import {codexExchangeSchema,exchangeByteLimit} from '../lib/lab/codex-exchange.ts';
+// App text tasks and scripted callers share one shell-free Codex CLI runner.
+export {runCodexText, resolveCodexExecutable} from '../desktop/src/codex-cli.mjs';
 
 const id=z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/);
 const localPath=z.string().min(1).max(2000).refine(value=>!/[\0\r\n]/.test(value),'Invalid file path.');
