@@ -16,7 +16,7 @@ import {referenceChatAttachments} from '../src/muse-chat-attachments.mjs';
 const run = promisify(execFile), sha = bytes => createHash('sha256').update(bytes).digest('hex');
 async function fixture(t) {
   const outputs=resolve('outputs');await mkdir(outputs,{recursive:true});
-  const root=await mkdtemp(join(outputs,'t22-fixture-')),store=new Store(':memory:');
+  const root=await mkdtemp(join(outputs,'t22-fixture-')),store=new Store(':memory:');store.set('muse_paused',false);
   t.after(async()=>{store.close();assert.ok(root.startsWith(join(outputs,'t22-fixture-')));await rm(root,{recursive:true,force:true});});
   const dir=join(root,'integrations','sample');await mkdir(dir,{recursive:true});await mkdir(join(root,'references'));
   const paths=[join(dir,'sparse.jpg'),join(dir,'dense.png')];

@@ -36,7 +36,7 @@ test('startup cleanup preserves active/recent/referenced/unknown files and SQLit
  for(const file of [active,recent,join(root,'outputs','unknown.tmp'),join(root,'worker.sqlite')])assert.equal(await readFile(file,'utf8'),'keep');
 }));
 test('low disk pauses queued dispatch without altering submitted receipts',()=>fixture(async root=>{
- const store=new Store(join(root,'worker.sqlite'));try{
+ const store=new Store(join(root,'worker.sqlite'));store.set('muse_paused',false);try{
  const worker=new Worker(store,root,{},{});const request={references:[]};
  const q=store.enqueue(request,'q').job,s=store.enqueue(request,'s').job;store.put({...s,state:'submitted',providerId:'remote-receipt'});
  worker.diskStatus=()=>({blocked:true,message:'Ổ đĩa thiếu dung lượng'});worker.paused=false;worker.approvedIds=[q.id];worker.tick();

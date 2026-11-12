@@ -42,7 +42,9 @@ export const sceneInputSchema = z.object({
   ratio: z.enum(ratios).default("9:16"), duration: z.number().min(1).max(120).default(5),
   referenceIds: z.array(id).max(12).default([]),
 });
+export const mediaProviderSchema = z.enum(["manual", "muse", "grok-cli", "fal"]);
 const sceneSchema = sceneInputSchema.omit({ referenceIds: true }).extend({
+  mediaProvider: mediaProviderSchema.optional(),
   id, revision: z.number().int().positive(), references: z.array(pinSchema).max(12),
   storyboardApproved: z.boolean(), attempts: z.array(attemptSchema).max(50), takes: z.array(takeSchema).max(50),
 });
@@ -75,6 +77,7 @@ export const formulaDraftInputSchema = z.object({
 });
 export const measurementSchema = z.object({variantId:id,views:z.number().int().nonnegative().max(1e12),clicks:z.number().int().nonnegative().max(1e12),sessions:z.number().int().nonnegative().max(1e10),orders:z.number().int().nonnegative().max(1e10),delivered:z.number().int().nonnegative().max(1e10),returned:z.number().int().nonnegative().max(1e10),netRevenue:z.number().nonnegative().max(1e9),totalCosts:z.number().nonnegative().max(1e9),source:z.string().trim().min(3,"Ghi nguồn số liệu.").max(500),notes:text(2000)}).superRefine((v,c)=>{for(const [a,b] of [["orders","sessions"],["delivered","orders"],["returned","delivered"]] as const)if(v[a]>v[b])c.addIssue({code:"custom",path:[a],message:`${a} không được lớn hơn ${b}.`});});
 export const productionSchema = z.object({
+  mediaProvider: mediaProviderSchema.optional(),
   schemaVersion: z.literal(1), name: z.string().trim().min(1).max(150), productId: id,
   productRevision: z.number().int().positive(), creativeId: text(120),
   contentPlanId: id.optional(), contentPlanRevision: z.number().int().positive().optional(),
@@ -161,6 +164,8 @@ const commandSchemas: Record<string, z.ZodTypeAny> = {
   storyboard: z.object({sceneId:id}), prepare: z.object({sceneId:id}), retry: z.object({sceneId:id}),
   pause: z.object({paused:z.boolean()}), cancel: z.object({sceneId:id,attemptId:id}),
   attach: z.object({sceneId:id,attemptId:id.nullable(),take:takeSchema.omit({id:true,attemptId:true,sceneRevision:true,review:true,notes:true,createdAt:true})}),
+  media_provider: z.object({sceneId:id.optional(),provider:mediaProviderSchema}),
+  manual_result: z.object({sceneId:id,sceneRevision:z.number().int().positive(),take:takeSchema.omit({id:true,attemptId:true,sceneRevision:true,review:true,notes:true,createdAt:true})}),
   worker_result: z.object({sceneId:id,productRevision:z.number().int().positive(),sceneRevision:z.number().int().positive(),jobId:id,providerId:text(200),take:takeSchema.omit({id:true,attemptId:true,sceneRevision:true,review:true,notes:true,createdAt:true})}),
   review: z.object({sceneId:id,takeId:id,review:z.enum(["approved","rejected"]),notes:text(2000)}),
   body: z.object({name:z.string().trim().min(1).max(150),items:z.array(approvedItemSchema).min(1).max(30)}),
@@ -197,6 +202,17 @@ export function applyProduction(p0: Production, action: string, input: unknown, 
     const previous=p.references.filter(r=>r.id===d.id);
     p.references.push({...d,version:Math.max(0,...previous.map(r=>r.version))+1,createdAt:now});
     p.scenes.filter(s=>s.references.some(r=>r.id===d.id)).forEach(s=>{s.storyboardApproved=false;});
+  } else if(action==="media_provider") {
+    if(d.provider==='grok-cli'||d.provider==='fal')throw new ProductionError(d.provider==='fal'?'Trả phí, phải báo giá trước.':'Nhà cung cấp chưa kiểm.');
+    if(d.sceneId)scene(d.sceneId).mediaProvider=d.provider;
+    else {p.mediaProvider=d.provider;for(const row of p.scenes)delete row.mediaProvider;}
+  } else if(action==="manual_result") {
+    const s=scene(d.sceneId);
+    if((s.mediaProvider??p.mediaProvider??'manual')!=='manual')throw new ProductionError('Cảnh chưa chọn nhà cung cấp manual.');
+    if(s.revision!==d.sceneRevision)throw new ProductionError('Cảnh đã đổi; kiểm lại trước khi gắn file.');
+    const existing=p.scenes.find(row=>row.takes.some(t=>t.sha256===d.take.sha256));
+    if(existing)throw new ProductionError('Checksum đã có trong dự án; không nhập lại.');
+    s.takes.push({...d.take,snapshot:snapshotScene(s),id:commandId,attemptId:null,sceneRevision:s.revision,review:'pending',notes:'Nhập từ Hộp nhận media · manual · '+checkMedia(s,d.take).join(' '),createdAt:now});
   } else if(action==="scene")saveScene(d);
   else if(action==="import") {
     const ids=d.rows.map((r:any)=>r.id);if(new Set(ids).size!==ids.length||ids.some((v:string)=>p.scenes.some(s=>s.id===v)))throw new ProductionError("Lô có Scene ID trùng. Chưa lưu dòng nào.");

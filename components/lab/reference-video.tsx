@@ -138,7 +138,7 @@ export function ReferenceMuseAnalysis({jobId, structure, caption, fileName, form
     finally {running.current=false;onBusy(false);if(live.current)setBusy(false);}
   }
   const blocked=disabled||busy||loading||!api?.museChatSend;
-  const cannotSend=blocked||pending||uncertain||!selected||selected.busy||count>=3;
+  const cannotSend=status?.musePaused!==false||blocked||pending||uncertain||!selected||selected.busy||count>=3;
   return <div>
     <label className="field">Profile Muse<select aria-label="Profile Muse phân tích" disabled={blocked||pending||uncertain} value={selectedId} onChange={e=>setProfileId(e.target.value)}>
       {!profiles.length&&<option value="">Chưa có profile đang bật</option>}
@@ -147,10 +147,10 @@ export function ReferenceMuseAnalysis({jobId, structure, caption, fileName, form
     <p>Tốn 1 lượt Muse · gửi sheet thưa và sheet dày đầu tiên. Kết quả chỉ điền để bạn duyệt, chưa lưu.</p>
     {(structure.contactSheets?.dense.length??0)>1&&<p>Video có nhiều sheet dày; chữ/CTA ngoài sheet đầu tiên cần kiểm thêm.</p>}
     {!structure.contactSheets?.dense.length&&<p>Phân tích lại MP4 để có sheet dày trước khi gửi Muse.</p>}
-    <Button disabled={cannotSend||!structure.contactSheets?.dense.length} busy={busy} onClick={()=>void run('send')}>Phân tích bằng Muse</Button>
+    <Button disabled={cannotSend||!structure.contactSheets?.dense.length} busy={busy} onClick={()=>void run('send')}>{status?.musePaused!==false?'Muse đang tạm dừng':'Phân tích bằng Muse'}</Button>
     {parseFailed&&<Button tone="neutral" disabled={cannotSend||chat?.profileId!==selectedId} onClick={()=>void run('repair')}>Gửi tiếp yêu cầu sửa JSON</Button>}
     {parseFailed&&<p>Sửa JSON tốn thêm 1 lượt Muse trong cùng hội thoại.</p>}
-    {(chat||uncertain)&&<Button tone="neutral" disabled={blocked} onClick={()=>void run('read')}>Đọc lại kết quả</Button>}
+    {(chat||uncertain)&&<Button tone="neutral" disabled={blocked||status?.musePaused!==false} onClick={()=>void run('read')}>{status?.musePaused!==false?'Muse đang tạm dừng':'Đọc lại kết quả'}</Button>}
     {busy&&<p role="status">Đang chờ phản hồi Muse…</p>}
     {chat?.state==='needs_attention'&&<p>Cần đối soát hội thoại trước khi gửi tiếp. Đọc lại kết quả không gửi prompt mới.</p>}
     {chat?.state==='failed'&&<p>Gửi chưa bắt đầu · chưa tính lượt cho yêu cầu này.</p>}

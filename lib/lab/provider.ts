@@ -29,3 +29,14 @@ export const disconnectedAdapter: GenerationAdapter = {
   async cancel(){throw new ProviderNotConnected();},
   async usage(){return {usd:null,source:null};},
 };
+
+export const mediaProviders = [
+  {id:'manual', label:'Manual · Flow / Gemini / Grok'},
+  {id:'muse', label:'Muse'},
+  {id:'grok-cli', label:'Grok CLI · chưa kiểm'},
+  {id:'fal', label:'fal · trả phí, phải báo giá trước'},
+] as const;
+export type MediaProvider = typeof mediaProviders[number]['id'];
+export function mediaProviderDisabled(provider: MediaProvider, musePaused: boolean) {
+  return provider === 'grok-cli' || provider === 'fal' || (provider === 'muse' && musePaused);
+}

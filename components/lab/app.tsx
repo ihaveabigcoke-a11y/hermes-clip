@@ -65,6 +65,7 @@ import { ProductArt } from "./art";
 import { currencyFields } from "./currency-fields";
 import ProductionStudio from "./production";
 import OperationsPanel from "./operations";
+import {ManualMediaSettings} from './manual-media';
 import AssistantSettings from "./assistant-settings";
 import MuseChatPanel from "./muse-chat";
 import { creativeDuration } from "@/lib/lab/production";
@@ -2034,7 +2035,7 @@ export default function LabApp() {
           </Button>
         </div>
         <MuseConnectionStrip onNavigate={navigate} />
-        <AssistantSettings demo={demo}/>
+        <ManualMediaSettings demo={demo}/><AssistantSettings demo={demo}/>
         <div className="connection-grid">
           {[
             {

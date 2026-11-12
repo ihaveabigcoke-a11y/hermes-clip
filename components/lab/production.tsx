@@ -91,6 +91,7 @@ export default function ProductionStudio({records,demo,offline,paused,onRecord,r
     if (paused || p.paused) throw new ClientError('Mở lại giao việc trước khi chạy Muse.');
     if (product.revision !== p.productRevision) throw new ClientError('Đồng bộ hồ sơ sản phẩm trước khi chạy.');
     const worker = await bridge.status();
+    if (worker.musePaused!==false) throw new ClientError('Muse đang tạm dừng');
     if (!worker.generationReady) throw new ClientError('Thiết lập luồng Muse trong Tài khoản trước khi chạy.');
     if (!worker.profiles.some(profile => profile.enabled)) throw new ClientError("Thêm hồ sơ và đăng nhập Muse trong Tài khoản.");
     const saved = existing ?? p.scenes.find(scene => scene.id === input.id);
@@ -104,6 +105,7 @@ export default function ProductionStudio({records,demo,offline,paused,onRecord,r
     const sceneId = existing?.id ?? input.id;
     const scene = current.data.scenes.find((scene: Scene) => scene.id === sceneId);
     if (!scene?.storyboardApproved || scene.revision !== saved.revision) throw new ClientError('Duyệt phiên bản hiện tại của cảnh trước khi chạy.');
+    if ((scene.mediaProvider??current.data.mediaProvider??'manual')!=='muse') throw new ClientError('Cảnh manual: xuất gói prompt rồi nhập file qua Hộp nhận media.');
     const references = [];
     const signal = AbortSignal.timeout(120000);
     for (const pin of scene.references) {

@@ -37,7 +37,7 @@ test('Muse controls disclose cost and review-only behavior; no profile or receip
   const {ReferenceMuseAnalysis}=await importModule('components/lab/reference-video.tsx');let calls=0;
   const html=renderToStaticMarkup(React.createElement(ReferenceMuseAnalysis,{jobId:'fixture',structure:structureFor(),caption:'',fileName:'',formulas:viralFormulas,
     disabled:false,onBusy:()=>calls++,onResponse:()=>calls++}));
-  for(const text of ['Phân tích bằng Muse','Tốn 1 lượt Muse','Kết quả chỉ điền để bạn duyệt, chưa lưu','Chưa có profile đang bật'])assert.ok(html.includes(text),text);
+  for(const text of ['Muse đang tạm dừng','Tốn 1 lượt Muse','Kết quả chỉ điền để bạn duyệt, chưa lưu','Chưa có profile đang bật'])assert.ok(html.includes(text),text);
   assert.match(html,/<button[^>]*disabled/);assert.equal(calls,0);
 });
 

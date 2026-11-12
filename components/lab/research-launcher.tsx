@@ -1,11 +1,14 @@
 "use client";
 import {useEffect,useRef,useState} from 'react';
 import {Search,RefreshCw} from 'lucide-react';
+import {useDesktopStatus} from '@/lib/lab/use-desktop-status';
 import {desktopBridge} from '@/lib/lab/desktop-client';
 import {buildResearchQuery,defaultResearchCriteria,defaultResearchExclusions} from '@/lib/lab/research-view';
 import {Button,Badge} from './primitives';
 type Run={id:string;batchId:string;state:string;count:number;step:number;error:string;sourceCheckError?:string;createdAt:number};
 export default function ResearchLauncher({disabled,onOpen}:{disabled:boolean;onOpen:(id:string)=>void}){
+ const {status:workerStatus}=useDesktopStatus();
+ const musePaused=workerStatus?.musePaused!==false;
  const [runs,setRuns]=useState<Run[]>([]),[error,setError]=useState(''),[busy,setBusy]=useState(false);
  const [criteria,setCriteria]=useState(defaultResearchCriteria),[maximum,setMaximum]=useState('20'),[niche,setNiche]=useState(''),[exclusions,setExclusions]=useState(defaultResearchExclusions);
  const lock=useRef(false),request=useRef<{requestId:string;query:string;maxLandedCostUsd:number}|null>(null);
@@ -22,7 +25,7 @@ export default function ResearchLauncher({disabled,onOpen}:{disabled:boolean;onO
  const fieldsDisabled=disabled||busy||active||!!request.current;
  return <section className="research-launcher" aria-label="Bắt đầu nghiên cứu sản phẩm">
   <div className="research-start-row"><label className="field">Tiêu chí nghiên cứu<textarea rows={3} value={criteria} maxLength={1500} onChange={e=>setCriteria(e.target.value)} disabled={fieldsDisabled}/></label>
-   <Button busy={busy} disabled={disabled||busy||active||!!queryError} onClick={start}><Search size={17}/>Bắt đầu nghiên cứu</Button></div>
+   <Button busy={busy} disabled={musePaused||disabled||busy||active||!!queryError} onClick={start}><Search size={17}/>{musePaused?'Muse đang tạm dừng':'Bắt đầu nghiên cứu'}</Button></div>
   <div className="research-structured-fields">
    <label className="field">Giá vốn + ship tối đa (USD)<input type="number" min="0.01" max="1000000000" step="0.01" value={maximum} onChange={e=>setMaximum(e.target.value)} disabled={fieldsDisabled}/></label>
    <label className="field">Ngách hoặc đối tượng<input value={niche} maxLength={180} placeholder="Ví dụ: night runners, pet owners" onChange={e=>setNiche(e.target.value)} disabled={fieldsDisabled}/></label>
@@ -33,7 +36,7 @@ export default function ResearchLauncher({disabled,onOpen}:{disabled:boolean;onO
   {request.current&&error&&<p>Yêu cầu chưa rõ kết quả. Bấm lại để đối soát cùng mã và tiêu chí; không tạo lượt mới.</p>}
   <p>Muse chạy nền, tìm tối đa 10 ứng viên có nguồn cho thị trường Mỹ và tự lưu kết quả. Giữ app mở và máy thức; có thể chuyển sang màn khác. Tối đa 3 lượt mỗi hồ sơ trong một đợt.</p>
   {latest&&<div className="research-run-progress" role="status"><Badge tone={latest.state==='done'?'success':'neutral'}>{states[latest.state]??latest.state}</Badge><span>{latest.count}/10 sản phẩm · {latest.step}/3 lượt hoàn tất</span><progress max={10} value={latest.count} aria-label="Số ứng viên đã lưu"/>
-   <Button tone="ghost" onClick={()=>onOpen(latest.batchId)}>Xem kết quả</Button>{['needs_attention','partial'].includes(latest.state)&&<Button tone="neutral" disabled={busy||active} onClick={recover}><RefreshCw size={15}/>Đọc lại kết quả</Button>}</div>}
+   <Button tone="ghost" onClick={()=>onOpen(latest.batchId)}>Xem kết quả</Button>{['needs_attention','partial'].includes(latest.state)&&<Button tone="neutral" disabled={musePaused||busy||active} onClick={recover}><RefreshCw size={15}/>Đọc lại kết quả</Button>}</div>}
   {(error||latest?.error)&&<p className="inline-error" role="alert">{error||latest?.error}</p>}
   {latest?.sourceCheckError&&<p className="inline-error">Kết quả Muse đã lưu, chưa xếp được tác vụ kiểm nguồn: {latest.sourceCheckError}. Mở đợt rồi bấm Kiểm lại nguồn.</p>}
  </section>;

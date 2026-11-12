@@ -6,7 +6,7 @@ import {MuseChat} from '../src/muse-chat.mjs';
 import {MuseAdapter} from '../src/muse.mjs';
 
 function fixture(t) {
-  const store = new Store(':memory:');
+  const store = new Store(':memory:');store.set('muse_paused',false);
   t.after(() => store.close());
   store.set('profiles', [{id: 'profile', enabled: true, proxy: {server: ''}}]);
   store.set('adapter', {enabled: true, startUrl: 'https://muse.ai/', resultIdAttribute: 'data-message-id', submitName: 'Send'});
@@ -190,7 +190,7 @@ test('Muse chat blocks unknown quota and reserves no attempt', async t => {
 });
 
 test('Muse chat reader waits for completed stable text and excludes old responses', async t => {
-  const store = new Store(':memory:');
+  const store = new Store(':memory:');store.set('muse_paused',false);
   t.after(() => store.close());
   const chat = new MuseChat(new Worker(store, 'fixture', {}, {}));
   let now = 0;
@@ -210,7 +210,7 @@ test('Muse chat reader waits for completed stable text and excludes old response
 });
 
 test('Muse research waits through browser tool presentations and reads only the final written answer',async t=>{
- const store=new Store(':memory:');t.after(()=>store.close());
+ const store=new Store(':memory:');store.set('muse_paused',false);t.after(()=>store.close());
  const chat=new MuseChat(new Worker(store,'fixture',{},{}));let now=0;
  t.mock.method(Date,'now',()=>now);
  const row={requestId:'browser-research',profileId:'p',projectId:'g',state:'waiting',oldAssistantIds:[],oldUserIds:[],providerUrl:'https://muse.ai/thread/research'};chat.save(row);
@@ -225,7 +225,7 @@ test('Muse research waits through browser tool presentations and reads only the 
 });
 
 test('Muse research does not accept a tool card as the answer and still blocks actual generated media',async t=>{
- const store=new Store(':memory:');t.after(()=>store.close());
+ const store=new Store(':memory:');store.set('muse_paused',false);t.after(()=>store.close());
  const chat=new MuseChat(new Worker(store,'fixture',{},{}));let now=0;
  t.mock.method(Date,'now',()=>now);
  const row={requestId:'tool-only',profileId:'p',projectId:'g',state:'waiting',oldAssistantIds:[],oldUserIds:[],providerUrl:'https://muse.ai/thread/research'};chat.save(row);
@@ -238,7 +238,7 @@ test('Muse research does not accept a tool card as the answer and still blocks a
 });
 
 test('background research can finish after two minutes without resubmission',async t=>{
- const store=new Store(':memory:');t.after(()=>store.close());const chat=new MuseChat(new Worker(store,'fixture',{},{}));let now=0;
+ const store=new Store(':memory:');store.set('muse_paused',false);t.after(()=>store.close());const chat=new MuseChat(new Worker(store,'fixture',{},{}));let now=0;
  t.mock.method(Date,'now',()=>now);
  const row={requestId:'long-research',profileId:'p',projectId:'research_background',state:'waiting',oldAssistantIds:[],oldUserIds:[],providerUrl:'https://muse.ai/thread/long'};chat.save(row);
  const page={url:()=>row.providerUrl,locator:selector=>({evaluateAll:async()=>selector.includes('assistant')?(now>=180000?[{id:'final',media:false,text:'Research result'}]:[]):[{id:'user'}]}),getByRole:()=>({isVisible:async()=>now<180000}),waitForTimeout:async ms=>{now+=ms;}};

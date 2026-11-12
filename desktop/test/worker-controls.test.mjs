@@ -55,7 +55,7 @@ test('result reconciliation links a late file and keeps failures recoverable', t
 
 async function fixture(run) {
   const root = await mkdtemp(join(tmpdir(), 'hermes-controls-'));
-  const store = new Store(join(root, 'worker.sqlite'));
+  const store = new Store(join(root, 'worker.sqlite'));store.set('muse_paused',false);
   const worker = new Worker(store, root, {}, {}, () => 8 * 1024 ** 3);
   store.set('adapter', {enabled: true});
   store.set('profiles', [{id: 'profile', enabled: true, proxy: {}}]);

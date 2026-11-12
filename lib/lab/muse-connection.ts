@@ -4,6 +4,7 @@ export function museConnectionSummary(status: DesktopStatus | null, available: b
   if (!available) return {state: 'desktop_required', title: "Mở Hermes Clip trên máy để kết nối Muse", description: "Hồ sơ và quá trình tạo media chạy trong ứng dụng trên máy.", action: 'Xem kết nối', view: 'settings'};
   if (error) return {state: 'unavailable', title: 'Chưa đọc được trạng thái Muse', description: error, action: 'Kiểm tra tài khoản', view: 'accounts'};
   if (!status) return {state: 'loading', title: 'Đang kiểm tra kết nối Muse', description: "Đang đọc phiên đăng nhập và cấu hình tác vụ nền.", action: 'Xem tài khoản', view: 'accounts'};
+  if (status.musePaused!==false) return {state:'paused',title:'Muse đang tạm dừng',description:'Dùng manual để xuất prompt và nhận file từ Flow/Gemini hoặc Grok.',action:'Cài đặt media',view:'settings'};
   if (!status.generationReady) return {state: 'setup', title: 'Cần hoàn tất cấu hình Muse', description: 'Mở cài đặt để kiểm tra luồng tạo và tải media.', action: 'Cấu hình Muse', view: 'settings'};
   const enabled = status.profiles.filter(profile => profile.enabled);
   if (!enabled.length) return {state: 'profile_required', title: "Thêm hoặc bật hồ sơ Muse", description: "Mỗi hồ sơ lưu riêng phiên đăng nhập và Touch VPN.", action: "Quản lý hồ sơ", view: 'accounts'};

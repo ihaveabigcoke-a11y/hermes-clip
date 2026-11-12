@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {museConnectionSummary} from '../../lib/lab/muse-connection.ts';
 
 const profile = {enabled: true, health: 'ready', session: 'signed_in', quota: {state: 'available', weeklyRemainingPercent: 76}, open: false};
-const status = {generationReady: true, profiles: [profile]};
+const status = {musePaused:false, generationReady: true, profiles: [profile]};
 
 test('Studio reports a connected Muse profile even when its browser is closed', () => {
   const summary = museConnectionSummary(status, true);

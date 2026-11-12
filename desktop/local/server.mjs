@@ -30,7 +30,7 @@ export async function startLocalServer({root, uiDir=join(here,'../local-dist/ui'
   };
   const thumbnails=new ThumbnailCache(root,db,filePath,storagePolicy(workerStore));
   const writes=new Map();
-  const localEnv={DB:{
+  const localEnv={get MUSE_PAUSED(){return workerStore?.get('muse_paused',true)!==false;},DB:{
     prepare(sql){const statement=db.prepare(sql);return {bind(...params){return {async first(){return statement.get(...params)??null;},async all(){return {results:statement.all(...params)};},async run(){return {meta:{changes:Number(statement.run(...params).changes)}};}};}};},
     async batch(statements) {
       db.exec('BEGIN IMMEDIATE');
