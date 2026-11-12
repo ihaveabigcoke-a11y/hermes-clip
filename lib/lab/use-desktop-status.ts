@@ -2,7 +2,7 @@
 import {useCallback, useEffect, useState} from 'react';
 import {desktopBridge, type DesktopStatus} from './desktop-client';
 
-export function useDesktopStatus(active = true) {
+export function useDesktopStatus(active = true, poll = true) {
   const [status, setStatus] = useState<DesktopStatus | null>(null);
   const [error, setError] = useState('');
   const refresh = useCallback(async () => {
@@ -24,7 +24,7 @@ export function useDesktopStatus(active = true) {
       }
     };
     void update();
-    const timer = setInterval(update, 1500);
+    const timer = poll ? setInterval(update, 1500) : undefined;
     window.addEventListener('product-lab:workspace-changed', update);
     document.addEventListener('visibilitychange', update);
     return () => {
@@ -33,6 +33,6 @@ export function useDesktopStatus(active = true) {
       window.removeEventListener('product-lab:workspace-changed', update);
       document.removeEventListener('visibilitychange', update);
     };
-  }, [active]);
+  }, [active, poll]);
   return {status, error, refresh};
 }

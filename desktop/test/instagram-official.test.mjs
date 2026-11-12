@@ -103,6 +103,87 @@ test('T-004: unknown follow never sends link, known false blocked; exact and typ
   const f=await fixture(t);await f.publisher.comments.saveRule({...f.payload,requireFollow:true});await f.publisher.comments.tick();
   assert.equal(f.calls.some(c=>c.path.endsWith('/messages')),false);assert.equal(f.publisher.comments.rows()[0].state,'follow_unknown');
 });
+test('T-002c r2: saving a rule reconsiders follow_unknown once; follow defaults true and no duplicate DM after resend/restart',async t=>{
+  const f=await fixture(t),comments=f.publisher.comments;
+  const {requireFollow,...defaultPayload}=f.payload;
+  await comments.saveRule(defaultPayload);assert.equal(comments.rules()[0].requireFollow,true);
+  await comments.tick();const before=structuredClone(comments.rows()[0]);assert.equal(before.state,'follow_unknown');
+  assert.equal(f.calls.filter(c=>c.path.endsWith('/messages')).length,0);
+  f.advance(COMMENTS_INTERVAL);await comments.tick();assert.deepEqual(comments.rows()[0],before,'poll alone must not re-evaluate');
+  const oldRule=comments.rules()[0];await comments.saveRule(f.payload);
+  assert.equal(comments.rules()[0].revision,oldRule.revision+1);assert.deepEqual(comments.rows()[0],before,'save preserves receipt until the next poll');
+  await comments.tick();assert.equal(comments.rows()[0].state,'sent');
+  assert.equal(comments.rows()[0].commentAt,before.commentAt);assert.equal(f.calls.filter(c=>c.path.endsWith('/messages')).length,1);
+  await comments.saveRule(f.payload);await comments.tick();f.advance(COMMENTS_INTERVAL);await comments.tick();
+  f.publisher.comments=new InstagramComments(f.publisher,{now:f.now});await f.publisher.comments.tick();
+  assert.equal(f.calls.filter(c=>c.path.endsWith('/messages')).length,1);
+});
+test('T-002c r2: saved rule still requiring follow or a different CTA cannot send an old comment',async t=>{
+  const f=await fixture(t),comments=f.publisher.comments;
+  await comments.saveRule({...f.payload,requireFollow:true});await comments.tick();
+  const first=comments.rows()[0],oldRule=comments.rules()[0];
+  await comments.saveRule({...f.payload,requireFollow:true,template:'Updated copy {link}'});
+  assert.equal(comments.rules()[0].approvedAt,oldRule.approvedAt,'fixture saves in the same millisecond');
+  assert.equal(comments.allowed(oldRule),false,'revision invalidates an in-flight older rule even at the same timestamp');
+  await comments.tick();assert.equal(comments.rows()[0].state,'follow_unknown');
+  assert.equal(comments.rows()[0].ruleRevision,first.ruleRevision+1);
+  await comments.saveRule({...f.payload,keyword:'SHOP'});const before=structuredClone(comments.rows());await comments.tick();
+  assert.deepEqual(comments.rows(),before);assert.equal(f.calls.filter(c=>c.path.endsWith('/messages')).length,0);
+});
+test('T-002c r2: original comment age cannot be reset by saving the rule or a fresh API timestamp',async t=>{
+  for(const age of [7*86400000-1,7*86400000,8*86400000])await t.test(String(age),async t=>{
+    const f=await fixture(t),comments=f.publisher.comments;
+    await comments.saveRule({...f.payload,requireFollow:true});await comments.tick();const original=comments.rows()[0].commentAt;
+    f.advance(age-1000);await comments.saveRule(f.payload);await comments.tick();
+    assert.equal(comments.rows()[0].state,age<7*86400000?'sent':'expired');assert.equal(comments.rows()[0].commentAt,original);
+    assert.equal(f.calls.filter(c=>c.path.endsWith('/messages')).length,age<7*86400000?1:0);
+  });
+});
+test('T-002c r2: saving another rule never changes a follow_unknown receipt from the first rule',async t=>{
+  const f=await fixture(t),comments=f.publisher.comments;
+  await comments.saveRule({...f.payload,requireFollow:true});await comments.tick();const before=structuredClone(comments.rows());
+  f.records.push({...f.records[2],id:'other_plan'});
+  f.store.set('instagram_jobs',[...f.publisher.jobs(),{id:'other_post',state:'published',snapshot:{planId:'other_plan',accountId:'account',productId:'product'},postUrl:f.records[2].data.postUrl,apiReceipt:{mediaId:'301'}}]);
+  await comments.saveRule({...f.payload,planId:'other_plan'});await comments.tick();
+  assert.deepEqual(comments.rows(),before);assert.equal(f.calls.filter(c=>c.path.endsWith('/messages')).length,0);
+});
+test('T-002c r2: saved rule cannot reconsider sending/sent/uncertain/error receipts or suspicious follow_unknown attempts',async t=>{
+  for(const patch of [{state:'sending'},{state:'sent',messageId:'existing'},{state:'needs_attention'},
+    {state:'error'},{state:'follow_unknown',attemptedAt:1},{state:'follow_unknown',messageId:'existing'}])await t.test(JSON.stringify(patch),async t=>{
+    const f=await fixture(t),comments=f.publisher.comments;
+    await comments.saveRule({...f.payload,requireFollow:true});await comments.tick();
+    comments.update('501',patch);const before=structuredClone(comments.rows());
+    await comments.saveRule(f.payload);await comments.tick();
+    assert.deepEqual(comments.rows(),before);assert.equal(f.calls.filter(c=>c.path.endsWith('/messages')).length,0);
+  });
+});
+test('T-002c r2: reconsideration keeps emergency stop, rate limits and synchronous duplicate claim',async t=>{
+  const f=await fixture(t),comments=f.publisher.comments;
+  await comments.saveRule({...f.payload,requireFollow:true});await comments.tick();
+  await comments.saveRule(f.payload);comments.emergencyStop();
+  const before=structuredClone(comments.rows());await comments.tick();assert.deepEqual(comments.rows(),before);
+  assert.equal(f.calls.filter(c=>c.path.endsWith('/messages')).length,0);
+  await comments.saveRule(f.payload);
+  f.store.set('instagram_dm_backoff',{account:f.now()+60000});
+  const comment={id:'501',text:'LINK',timestamp:new Date(f.now()-1000).toISOString()};
+  let sends=0;const release=Promise.withResolvers(),client={privateReply:async()=>{sends++;await release.promise;return {messageId:'mid.once'};}};
+  await comments.process(comments.rules()[0],comment,client);assert.equal(comments.rows()[0].state,'rate_wait');assert.equal(sends,0);
+  f.advance(60001);
+  const pending=comments.process(comments.rules()[0],comment,client);
+  assert.equal(comments.rows()[0].state,'sending');assert.equal(sends,1);
+  await comments.process(comments.rules()[0],comment,client);assert.equal(sends,1);
+  release.resolve();await pending;assert.equal(comments.rows()[0].state,'sent');
+  await comments.process(comments.rules()[0],comment,client);assert.equal(sends,1);
+});
+test('T-002c r2: legacy follow_unknown receipt is eligible only after explicit rule save',async t=>{
+  const f=await fixture(t),comments=f.publisher.comments;
+  await comments.saveRule({...f.payload,requireFollow:true});await comments.tick();
+  f.store.set('instagram_dm_rules',comments.rules().map(({revision,...row})=>row));
+  f.store.set('instagram_comment_replies',comments.rows().map(({ruleRevision,...row})=>row));
+  const before=structuredClone(comments.rows());f.advance(COMMENTS_INTERVAL);await comments.tick();assert.deepEqual(comments.rows(),before);
+  await comments.saveRule(f.payload);await comments.tick();
+  assert.equal(comments.rows()[0].state,'sent');assert.equal(f.calls.filter(c=>c.path.endsWith('/messages')).length,1);
+});
 test('T-004: uncertain response and restarted sending receipt are never retried; token errors and rate limits sanitized',async t=>{
   for(const mode of ['uncertain','expired','rate'])await t.test(mode,async t=>{
     const f=await fixture(t);f.setMode(mode);await f.publisher.comments.saveRule(f.payload);await f.publisher.comments.tick();

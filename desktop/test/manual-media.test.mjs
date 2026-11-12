@@ -222,13 +222,14 @@ test('T-002c G (c): a skipped old job without providerId can never be resumed or
   const {Worker}=await import('../src/worker.mjs');
   let launches=0;
   const worker=new Worker(store,media.local.root,{launchPersistentContext:async()=>{launches++;throw Error('Must not open Muse');}},{});
+  worker.readProductionRecord=async id=>(await media.records()).find(row=>row.kind==='production'&&row.id===id);
   store.set('profiles',[{id:'one',enabled:true,proxy:{server:''}}]);
   const old=store.enqueue({projectId:'project_fixture',sceneId:'one',references:[]},'old_skip').job;
   store.put({...old,state:'needs_attention',profileId:'one'});
   const p=(await media.records()).find(row=>row.id==='project_fixture');
   await media.request('/api/production',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:p.id,revision:p.revision,commandId:'skip_c',action:'skip_reconciliation',input:{sceneId:'one'}})});
   await worker.setMusePaused({paused:false});
-  await assert.rejects(worker.resume(old.id),/Thiếu mã kết quả/);
-  await assert.rejects(worker.recheckResult({id:old.id}));
+  await assert.rejects(worker.resume(old.id),{message:'Đã bỏ qua kết quả Muse cũ; app sẽ không gửi lại.'});
+  await assert.rejects(worker.recheckResult({id:old.id}),{message:'Đã bỏ qua kết quả Muse cũ; app sẽ không gửi lại.'});
   assert.equal(launches,0);assert.equal(store.job(old.id).state,'needs_attention');
 });

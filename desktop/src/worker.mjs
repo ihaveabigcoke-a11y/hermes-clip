@@ -9,6 +9,7 @@ import {validateMedia,toolchain,renderClips,hasAudio} from './media.mjs';
 import {MuseAdapter} from './muse.mjs';
 import {TouchVpn,TOUCH_VPN_ID} from './touch-vpn.mjs';
 import {readMuseQuota,museQuotaExhausted} from './muse-quota.mjs';
+import {mediaProviderReceipts} from './provider-routing.mjs';
 export class Worker {
   validateOutput = validateMedia;
   checkToolchain = toolchain;
@@ -281,6 +282,7 @@ export class Worker {
   }
 
   async recheckResult({id}) {
+    await this.assertJobNotSkipped(id);
     assertMuseNewTask(this.store);
     const job = this.store.job(id);
     const profileId = job.profileId;
@@ -479,6 +481,8 @@ export class Worker {
     }
   }
   async run(id, profileId, resume = false) {
+    const check = this.assertJobNotSkipped(id);
+    if (check) await check;
     return runMuseTask(this.store, {jobId:id, profileId}, () => this.runAdmitted(id, profileId, resume));
   }
   async runAdmitted(id, profileId, resume) {
@@ -595,7 +599,28 @@ export class Worker {
     this.imports.set(id, pending);
     try { await pending; } finally { this.imports.delete(id); }
   }
+  assertJobNotSkipped(id) {
+    let job;
+    try { job = this.store.job(id); }
+    catch (error) { assertMuseNewTask(this.store); throw error; }
+    if ((job.provider ?? 'muse') !== 'muse' || !['needs_attention', 'unknown'].includes(job.state)) return;
+    // Local production records are authoritative; never infer this decision from job history.
+    return (async () => {
+      if (!this.readProductionRecord) throw Error('Chưa đọc được cảnh để kiểm tra quyết định bỏ qua đối soát.');
+      const project = await this.readProductionRecord(job.request.projectId);
+      const scene = project?.data.scenes.find(row => row.id === job.request.sceneId);
+      if (!scene) throw Error('Không tìm thấy cảnh để kiểm tra quyết định bỏ qua đối soát.');
+      if (mediaProviderReceipts({jobs:[job], scene, projectId:project.id})[0]?.reconciled) {
+        throw Error('Đã bỏ qua kết quả Muse cũ; app sẽ không gửi lại.');
+      }
+    })();
+  }
+  async retry(id) {
+    await this.assertJobNotSkipped(id);
+    return this.store.retry(id);
+  }
   async resume(id) {
+    await this.assertJobNotSkipped(id);
     assertMuseNewTask(this.store);
     const job = this.store.job(id);
     if (this.chatting.has(job.profileId)) throw Error('Chờ chat Muse kết thúc trước khi tiếp tục job.');

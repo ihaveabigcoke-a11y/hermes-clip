@@ -181,6 +181,7 @@ test('resume cannot call submit and keeps original result ID', () => fixture(asy
   w.run = async (id, p, resume) => {
     seen = {id, p, resume, providerId: s.job(id).providerId};
   };
+  w.readProductionRecord=async id=>({id,data:{scenes:[{id:job().sceneId}]}});
   await w.resume(j.id);
   assert.deepEqual(seen, {id: j.id, p: 'p', resume: true, providerId: 'same-id'});
 }));
@@ -193,6 +194,7 @@ test('resume reserves concurrency and profile checks before changing the existin
   store.transition(queued.id, 'submitted', {profileId: 'profile', providerId: 'existing', providerUrl: 'https://muse.ai/thread/existing'});
   const worker = new Worker(store, dir, {}, {}, () => 8 * 1024 ** 3);
   let calls = 0;
+  worker.readProductionRecord=async id=>({id,data:{scenes:[{id:job().sceneId}]}});
   worker.run = async (_id, _profile, resume) => { assert.equal(resume, true); calls++; };
   worker.checking.set('profile', Promise.resolve());
   await assert.rejects(worker.resume(queued.id), /kiểm tra/);
@@ -279,6 +281,7 @@ test('resuming an existing provider result keeps the submission count', () => fi
   store.beginSubmit(queued.id, 'one');
   store.transition(queued.id, 'submitted', {providerId: 'existing', providerUrl: 'https://muse.ai/thread/existing'});
   const worker = new Worker(store, dir, {}, {}, () => 8 * 1024 ** 3);
+  worker.readProductionRecord=async id=>({id,data:{scenes:[{id:job().sceneId}]}});
   worker.run = async (_id, _profile, resume) => assert.equal(resume, true);
   await worker.resume(queued.id);
   assert.equal(store.batch().submittedByProfile.one, 1);

@@ -78,7 +78,8 @@ export class InstagramComments {
     if(Buffer.byteLength(rule.template.replaceAll('{link}',link))>1000)throw Error('Mẫu DM và link vượt 1000 byte.');
     const stored={...rule,productId:context.product.id,accountId:context.account.id,mediaId:context.mediaId,
       postUrl:context.plan.data.postUrl,link,accountRevision:context.account.revision,planRevision:context.plan.revision,
-      apiConfigRevision:context.profile.apiConfigRevision,approvedAt:this.now()};
+      apiConfigRevision:context.profile.apiConfigRevision,approvedAt:this.now(),
+      revision:(this.rules().find(row=>row.planId===rule.planId)?.revision??0)+1};
     this.p.store.set('instagram_dm_rules',[...this.rules().filter(row=>row.planId!==rule.planId),stored]);
     if(rule.enabled)this.p.store.set('instagram_dm_stopped',false);
     this.nextPoll=0;return this.status();
@@ -115,7 +116,8 @@ export class InstagramComments {
     return {plan,account,product,profile,mediaId};
   }
   allowed(rule){return !this.p.stopped && this.p.store.get('instagram_dm_stopped',true)===false
-    && this.rules().some(current=>current.planId===rule.planId&&current.enabled&&current.approvedAt===rule.approvedAt);}
+    && this.rules().some(current=>current.planId===rule.planId&&current.enabled&&current.approvedAt===rule.approvedAt
+      &&(current.revision??0)===(rule.revision??0));}
   tick(){
     if(this.running)return this.running;
     if(this.p.stopped||this.now()<this.nextPoll||this.p.store.get('instagram_dm_stopped',true)!==false)return;
@@ -155,12 +157,20 @@ export class InstagramComments {
   async process(rule,comment,client){
     if(!this.allowed(rule)||!/^\d{1,40}$/.test(comment.id)||!matchCta(comment.text,rule.keyword))return;
     const existing=this.rows().find(row=>row.commentId===comment.id);
-    if(existing&&!['rate_wait'].includes(existing.state))return existing;
+    if(existing){
+      // Saving a rule authorizes a fresh evaluation, never a resend. Legacy rows
+      // have revision 0; the next explicit save advances their rule to revision 1.
+      if(existing.planId!==rule.planId||existing.accountId!==rule.accountId||existing.productId!==rule.productId)return existing;
+      const reconsider=existing.state==='follow_unknown'&&existing.attemptedAt==null&&!existing.messageId
+        &&(existing.ruleRevision??0)!==(rule.revision??0);
+      if(existing.state!=='rate_wait'&&!reconsider)return existing;
+    }
     // Synchronous claim before the first await makes concurrent duplicate deliveries harmless.
     const base={planId:rule.planId,productId:rule.productId,accountId:rule.accountId,keyword:rule.keyword,
-      commentAt:comment.timestamp,matchedAt:existing?.matchedAt??this.now(),state:'matched',error:''};
+      ruleRevision:rule.revision??0,commentAt:existing?.commentAt??comment.timestamp,
+      matchedAt:existing?.matchedAt??this.now(),state:'matched',error:''};
     this.update(comment.id,base);
-    const created=Date.parse(comment.timestamp);
+    const created=Date.parse(base.commentAt);
     if(!Number.isFinite(created)||created>this.now()+60000||this.now()-created>=7*86400000)
       return this.update(comment.id,{state:'expired',error:'Comment thiếu thời gian hợp lệ hoặc quá cửa sổ private reply 7 ngày.'});
     // Polling does not establish messaging consent to query a user profile. Unknown

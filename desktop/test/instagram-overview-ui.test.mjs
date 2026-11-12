@@ -42,6 +42,9 @@ test('overview renders profile/link columns, hidden-product switch and the fixed
   const props={products,records,demo:true,onOpen(){}};
   const html=render(Overview,props);
   for(const label of ['Vào profile','Bấm link','Hiện sản phẩm đã lưu trữ','So sánh hook chỉ có ý nghĩa trong cùng tài khoản, cùng từ khóa CTA.'])assert.ok(html.includes(label),label);
+  assert.match(html,/Cuộn ngang để xem DM đã gửi, Click UTM, Cập nhật và Chi tiết/);
+  assert.match(html,/class="operations-table-scroll instagram-overview-scroll"/);
+  assert.match(html,/aria-describedby="instagram-scroll-help"/);
   assert.match(html,/role="switch"/);assert.match(html,/aria-expanded="false"/);
   assert.doesNotMatch(html,/Archived fixture|QA fixture/);
   assert.match(html,/<strong>1<\/strong> sản phẩm/);
@@ -74,7 +77,9 @@ test('social route passes archived products to overview and opens their stored c
   const {records,product}=instagramOverviewFixture();product.data.archived=true;
   const props={view:'social',records,demo:true,offline:false,persist:async()=>{throw Error('Read-only render');},notify(){},reload(){}};
   globalThis.location={href:'http://fixture.invalid/?view=social&ig_showArchived=true'};
-  assert.match(render(OperationsPanel,props),/Fixture product/);
+  const overview=render(OperationsPanel,props);
+  assert.match(overview,/Fixture product/);
+  assert.doesNotMatch(overview,/Muse đang tạm dừng, bật lại ở Tài khoản Muse/);
   globalThis.location.href+='&ops_id='+product.id;
   const detail=render(OperationsPanel,props);
   assert.match(detail,/instagram-content-table/);assert.match(detail,/Account 3/);assert.match(detail,/Bấm link/);

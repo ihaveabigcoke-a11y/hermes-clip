@@ -7,6 +7,7 @@ import {useDesktopStatus} from '@/lib/lab/use-desktop-status';
 import {resolveProvider, textProviderReceipts, type ProviderReceipt} from '@/desktop/src/provider-routing.mjs';
 
 const labels = {research: 'research', content: 'nội dung', landing: 'landing'};
+const providerLabels: Record<string, string> = {muse:'Muse', codex:'Codex CLI', 'import:json':'Nhập JSON', manual:'Manual'};
 async function readReceipts(kind: TextTaskKind, scope?: string) {
   if (!scope) return [];
   const bridge = desktopBridge();
@@ -17,25 +18,28 @@ async function readReceipts(kind: TextTaskKind, scope?: string) {
   ]);
   return textProviderReceipts({kind, scope, chats:[...(chats ?? []), ...(legacyChats ?? [])], runs:runs?.runs ?? []});
 }
+export function subscribeTextReceipts(kind: TextTaskKind, scope: string | undefined, onRead: (rows: ProviderReceipt[]) => void, onError: () => void) {
+  let live=true;
+  async function read(){
+    try {const rows=await readReceipts(kind,scope);if(live)onRead(rows);}
+    catch {if(live)onError();}
+  }
+  void read();
+  window.addEventListener('product-lab:workspace-changed',read);
+  return()=>{live=false;window.removeEventListener('product-lab:workspace-changed',read);};
+}
 export default function TextExchange({kind, context, target, disabled, demo, onApply, onMuse, scope, previous=[]}: {
   kind: TextTaskKind; context: Record<string, unknown>; target: string; disabled: boolean; demo: boolean;
   scope?:string; previous?:ProviderReceipt[]; onMuse?:()=>void|Promise<void>;
   onApply: (text: string, tool: string, importId: string, provider: string) => Promise<string | void>;
 }) {
-  const {status}=useDesktopStatus(!demo);
+  const {status}=useDesktopStatus(!demo, false);
   const [receipts,setReceipts]=useState<ProviderReceipt[]>([]),[receiptError,setReceiptError]=useState('');
   const [loadedScope,setLoadedScope]=useState<string|undefined>();
   const [origin,setOrigin]=useState<string>('');
-  useEffect(()=>{
-    let live=true;
-    async function read(){try{
-      const rows=await readReceipts(kind,scope);
-      if(live){setReceipts(rows);setLoadedScope(scope);setReceiptError('');}
-    }catch{if(live)setReceiptError('Chưa đọc được receipt Muse; chờ đối soát trước khi giao việc.');}}
-    void read();const timer=setInterval(read,1500);
-    window.addEventListener('product-lab:workspace-changed',read);
-    return()=>{live=false;clearInterval(timer);window.removeEventListener('product-lab:workspace-changed',read);};
-  },[kind,scope]);
+  useEffect(()=>subscribeTextReceipts(kind,scope,rows=>{
+    setReceipts(rows);setLoadedScope(scope);setReceiptError('');
+  },()=>setReceiptError('Chưa đọc được receipt Muse; chờ đối soát trước khi giao việc.')),[kind,scope]);
   const [open, setOpen] = useState(false), [text, setText] = useState(''), [tool, setTool] = useState('Codex');
   const [error, setError] = useState(''), [notice, setNotice] = useState(''), [busy, setBusy] = useState(false), [enabled, setEnabled] = useState(false);
   const lock = useRef(false), live = useRef(true), importId = useRef(crypto.randomUUID());
@@ -65,9 +69,9 @@ export default function TextExchange({kind, context, target, disabled, demo, onA
   }
   return <div className="text-exchange">
     {onMuse&&<Button disabled={blocked||busy||demo} onClick={()=>void action(async()=>{
-      if(routing.provider==='muse')await onMuse();else if(routing.provider==='codex')await runCodex();else setOpen(true);
+      if(routing.provider==='muse'){await checkReceipts();await onMuse();}else if(routing.provider==='codex')await runCodex();else setOpen(true);
     })}>{routing.provider==='muse'?'Bắt đầu bằng Muse':routing.provider==='codex'?'Bắt đầu bằng Codex':'Bắt đầu bằng nhập JSON'}</Button>}
-    <p role="status">Mặc định: {routing.provider}{routing.blocked?` · ${routing.reason}`:''}{receiptError&&` · ${receiptError}`}</p>
+    <p role="status">Mặc định: {providerLabels[routing.provider] ?? routing.provider}{routing.blocked?` · ${routing.reason}`:''}{receiptError&&` · ${receiptError}`}</p>
     <div className="button-row">
       <Button tone="neutral" disabled={blocked || busy} onClick={() => {setOpen(true); setError('');}}>Nhập kết quả {labels[kind]}</Button>
       <Button tone="neutral" disabled={disabled || busy} onClick={() => void action(async () => {await navigator.clipboard.writeText(textTaskPrompt(kind, context)); setNotice('Đã copy prompt ' + labels[kind] + '.');})}>Copy prompt {labels[kind]}</Button>

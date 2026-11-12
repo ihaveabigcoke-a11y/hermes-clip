@@ -31,6 +31,10 @@ Job Muse unknown/needs_attention hiện **Cần đối soát** và không chuy�
 
 Chặn media chỉ áp dụng đúng dự án/cảnh của job, không chặn cảnh khác. Với research/chat, chặn đúng scope đang nhập. Màn Nghiên cứu có **Bỏ qua, không đối soát** cho kết quả Muse chưa rõ, dùng được khi Muse tạm dừng: giữ receipt và kết quả cũ, lưu quyết định bỏ qua, không gửi lại run/chat cũ. Xem [nhập research](RESEARCH-WITHOUT-MUSE.md).
 
+T-002c: màn **Tạo video** cũng có **Bỏ qua, không đối soát** cho cảnh Cần đối soát (commit `ab94531`). Quyết định lưu `scene.museReconciledAt`, không sửa job, receipt, attempt hoặc take. Worker đọc record production qua HTTP local trước `resume`, `recheckResult`, `run` và `retry` của job Muse chưa rõ. Job tạo tại/trước mốc bị từ chối với **Đã bỏ qua kết quả Muse cũ; app sẽ không gửi lại.**, kể cả có `providerId` hoặc Muse đang bật. Job sau mốc và cảnh/dự án khác không bị mốc này chặn; các kiểm tra phiên/quota/tạm dừng vẫn giữ nguyên. Không đọc được cảnh thì dừng thao tác. Thao tác đã nhận trước pause vẫn được hoàn tất.
+
+Khối nhập kết quả hiển thị nhãn Muse / Codex CLI / Nhập JSON / Manual. Receipt đọc khi mount/đổi scope, khi có `product-lab:workspace-changed`, và ngay trước chạy/nhập; không polling 1,5 giây trong TextExchange. Chi tiết kiểm và script ảnh fixture T-002c: [checkpoint](../ops/office/reports/T-002c.md).
+
 ## Kiểm thử an toàn trong checkout
 
 Không mở bản cài hoặc dùng AppData thật. Tất cả test manual dùng thư mục tạm, SQLite fixture và MP4/PNG tổng hợp bằng FFmpeg.

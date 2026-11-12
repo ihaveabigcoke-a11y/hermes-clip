@@ -1,5 +1,19 @@
 # Hermes Clip — bối cảnh và trạng thái (source cập nhật đến đêm 3, 12/11/2026)
 
+## T-002c vòng 2 — cập nhật sau nghiệm thu baseline
+
+Boss xác nhận vòng 1 ngoài sandbox: typecheck exit 0, domain 204/204, API 26/26, desktop 402 pass/0 fail, build đạt. Giữ nguyên logic/UI app vòng 1. Vòng 2 sửa script ảnh để xử lý textarea có JSON điền sẵn, resume fake clock và ghi chẩn đoán trước/sau; Chrome trong sandbox vẫn bị IPC Access is denied, chưa có kết luận DOM/PNG mới.
+
+Theo quyết định người dùng 12/11, lưu quy tắc DM bật/được duyệt tăng revision và cho poll lại: chỉ `follow_unknown` chưa có dấu vết gửi, đúng quy tắc và còn dưới 7 ngày được xét lại theo CTA/follow/mẫu mới. Giữ requireFollow=true mặc định, d1b57b1, chống trùng theo commentId, rate limit và tắt khẩn cấp. Timestamp gốc không bị gia hạn; sending/sent/needs_attention/error không gửi lại. 66 test Instagram API/official fixture đạt; typecheck/build riêng đạt. Xem [báo cáo vòng 2](../../ops/office/reports/T-002c.md) cho giới hạn và kiểm tiếp.
+
+## Cập nhật T-002c phần còn lại — chặn job Muse cũ và chỉnh UI (12/11/2026)
+
+Sửa trực tiếp checkout app chính trên `main`, chưa commit/triển khai bản build thật. Giữ `ab94531`: bỏ qua theo cảnh lưu mốc, job/receipt/history không bị sửa. Worker đọc record production qua API local và từ chối resume/recheckResult/run/retry của job Muse unknown/needs_attention tại hoặc trước mốc, kể cả có providerId. Job mới hơn/cảnh khác không bị mốc cũ chặn. Giữ mặc định tạm dừng và quyền hoàn tất tác vụ đã nhận trước pause.
+
+TextExchange dùng nhãn tiếng Việt, bỏ polling receipt và polling trạng thái riêng của component; đọc receipt theo mount/sự kiện và trước chạy/nhập. Instagram ghim cột Sản phẩm, thêm thanh cuộn ngang và hướng dẫn cuộn; bỏ chú thích Muse khỏi đầu OperationsPanel. Theme/font giữ nguyên.
+
+Typecheck và build riêng `outputs/T-002c-build` đạt; 65 test tập trung và 7 test hồi quy phục hồi đạt (fixture). Full suite còn blocker spawn EPERM; Chrome IPC Access is denied nên **chưa có PNG 1366/1920 và chưa nghiệm thu bố cục thực tế**. Script `scripts/check-t002c-ui.mjs` sẵn cho boss chạy ngoài sandbox. Không gọi Muse/Codex/Instagram thật hoặc truy cập dữ liệu bản cài. Xem [checkpoint T-002c](../../ops/office/reports/T-002c.md) cho đủ lệnh, số pass/fail và giới hạn.
+
 ## Cập nhật T-004 — Instagram Login và comment → DM (12/11/2026)
 
 Sửa trực tiếp app chính trên `main`, tag `before-T-004`, không commit/đổi nhánh/PR. Mặc định dùng adapter API T18 mở rộng; token mã hóa bằng safeStorage, cấu hình theo tài khoản ở Cài đặt. Trình duyệt Instagram mặc định tắt, thiếu/null cũng tắt, chỉ bật tay sau cảnh báo; main dùng boot API riêng. Giữ profile/job/receipt và Muse Bật/Tạm dừng, routing T-002b.

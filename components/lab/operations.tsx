@@ -264,7 +264,6 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
 
   const titles = {research: "Nghiên cứu sản phẩm", social: chosen?chosen.data.name:"Instagram · Tổng quan sản phẩm", landing: "Trang giới thiệu"};
   return <section className="operations-panel">
-    {musePaused&&<p className="field-help">Muse đang tạm dừng, bật lại ở Tài khoản Muse</p>}
     {view==='social'&&chosen&&<div><Button tone="ghost" onClick={()=>select('')}><ArrowLeft size={16}/>Tất cả sản phẩm</Button></div>}
     <header className="operations-heading"><div><h1>{titles[view]}</h1><p>{view === "research" ? "So sánh 10 ứng viên có nguồn, chọn 3 sản phẩm để thử." : view==='social'?'Theo dõi nội dung và kết quả theo sản phẩm.':chosen?.data.name}</p></div>{view === "research" && <Button tone="neutral" disabled={disabled} onClick={batchForm}>Tạo đợt nhập tay</Button>}</header>
     {view==='research'&&<ResearchLauncher scope={chosen?.id} disabled={disabled||demo} onOpen={id=>{select(id);reload();}}

@@ -92,7 +92,8 @@ export default function InstagramOverview({products,records,demo,onOpen}:{produc
     </div>
     {live.error&&<div role="alert" className="inline-error"><p>{live.error} Số liệu đã lưu vẫn được giữ.</p><Button tone="neutral" onClick={live.refresh}><RefreshCw size={16}/>Kiểm tra kết nối</Button></div>}
     {!products.length?<Empty title="Chưa có sản phẩm" text="Vào Nghiên cứu, chọn ứng viên rồi tạo hồ sơ sản phẩm."/>:!filtered.length?<Empty title="Không có sản phẩm phù hợp" text="Đổi từ khóa hoặc bộ lọc để xem lại danh sách." action={<Button tone="neutral" onClick={()=>change({query:'',filter:'all'})}>Xóa bộ lọc</Button>}/>:<>
-    <div className="operations-table-scroll" role="region" aria-label="Bảng tổng quan Instagram theo sản phẩm" tabIndex={0}>
+    <p className="instagram-scroll-hint" id="instagram-scroll-help">Cuộn ngang để xem DM đã gửi, Click UTM, Cập nhật và Chi tiết →</p>
+    <div className="operations-table-scroll instagram-overview-scroll" role="region" aria-label="Bảng tổng quan Instagram theo sản phẩm" aria-describedby="instagram-scroll-help" tabIndex={0}>
       <table className="operations-comparison instagram-overview-table"><caption className="sr-only">Số liệu cộng dồn theo sản phẩm, gộp mọi hồ sơ và không tính trùng bài đăng.</caption>
         <thead><tr><th scope="col">Sản phẩm</th><th scope="col">Bài đăng</th>{instagramTableMetricKeys.map(key=><th scope="col" key={key}>{instagramMetricLabels[key]}</th>)}<th scope="col">Comment CTA (API)</th><th scope="col">DM đã gửi</th><th scope="col">Click UTM</th><th scope="col">Cập nhật</th><th scope="col">Chi tiết</th></tr></thead>
         <tbody>{filtered.slice((page-1)*10,page*10).map(row=><Fragment key={row.product.id}><tr>
