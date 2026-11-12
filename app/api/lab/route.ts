@@ -17,6 +17,7 @@ import { referenceDraftRecordId } from "@/lib/lab/viral-reference";
 import {env} from 'cloudflare:workers';
 import {buildOfficeView} from '@/lib/lab/office-view';
 import {dailySelectionInput} from '@/lib/lab/daily-selection';
+import {metricImportInput} from '@/lib/lab/metric-import';
 import {hookDraftInput} from '@/lib/lab/hook-matrix';
 export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
@@ -54,6 +55,11 @@ export async function POST(request: Request) {
   try {
     const uid = await owner(request);
     const b = await body(request);
+    if(b.action==='import_social_metrics'){
+      const input=metricImportInput.safeParse(b.input);if(!input.success)throw new ApiError(422,'Kiểm lại các dòng số liệu, nguồn và thời điểm đo.');
+      if(!(env as any).IMPORT_SOCIAL_METRICS)throw new ApiError(503,'Nhập bảng số liệu cần desktop local.');
+      try{return Response.json({records:(env as any).IMPORT_SOCIAL_METRICS(uid,input.data)});}catch(error){throw new ApiError(409,(error as Error).message);}
+    }
     if(b.action==='create_hook_drafts') {
       const input=hookDraftInput.safeParse(b.input);
       if(!input.success)throw new ApiError(422,'Chọn nhóm hook, tài khoản và landing HTTPS hợp lệ.');
@@ -161,7 +167,8 @@ export async function POST(request: Request) {
       if (previous && (previous.data.accountId !== d.accountId || previous.data.postUrl !== d.postUrl)) {
         const metric = await getRecord(uid, `social_metric_${id}`);
         const comments = await database().prepare("SELECT id FROM lab_records WHERE owner_id=? AND kind='keyword_comment_measurement' AND json_extract(data,'$.planId')=? LIMIT 1").bind(uid, id).first();
-        if (metric || comments) throw new ApiError(422, "Bài đã có số liệu. Tạo nội dung mới để giữ đúng nguồn đo.");
+        const imported = await database().prepare("SELECT id FROM lab_records WHERE owner_id=? AND kind='social_metric' AND json_extract(data,'$.planId')=? LIMIT 1").bind(uid,id).first();
+        if (metric || comments || imported) throw new ApiError(422, "Bài đã có số liệu. Tạo nội dung mới để giữ đúng nguồn đo.");
       }
     }
     if (kind === "keyword_comment_measurement") {
@@ -176,6 +183,8 @@ export async function POST(request: Request) {
       d.observedAt = new Date().toISOString();
     }
     if (kind === "social_metric") {
+      if(d.importBatchId)throw new ApiError(422,'Bản đo nhập lô chỉ được tạo qua xem trước bảng.');
+      const oldInput=await getRecord(uid,id);if(oldInput?.data.importBatchId)throw new ApiError(409,'Giữ lịch sử bản đo nhập lô.');
       const plan = await getRecord(uid, d.planId);
       if (plan?.kind !== "content_plan" || !["published_manual", "published_browser"].includes(plan.data.status))
         throw new ApiError(422, "Ghi nhận bài đã đăng và URL trước khi cập nhật số liệu.");

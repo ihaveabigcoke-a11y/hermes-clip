@@ -32,10 +32,21 @@ export async function startLocalServer({root, uiDir=join(here,'../local-dist/ui'
   const thumbnails=new ThumbnailCache(root,db,filePath,storagePolicy(workerStore));
   const writes=new Map();
   const selectionDomain=await import(pathToFileURL(join(dirname(resolve(routesPath)), 'lib/lab/daily-selection.mjs')).href);
+  const metricDomain=await import(pathToFileURL(join(dirname(resolve(routesPath)), 'lib/lab/metric-import.mjs')).href);
   const hookDomain=await import(pathToFileURL(join(dirname(resolve(routesPath)), 'lib/lab/hook-matrix.mjs')).href);
   const decodeOffice=row=>({id:row.id,kind:row.kind,data:JSON.parse(row.data),revision:row.revision,createdAt:row.created_at,updatedAt:row.updated_at});
   const compression=assetCompression();
   const localEnv={
+    IMPORT_SOCIAL_METRICS(uid,input){
+      db.exec('BEGIN IMMEDIATE');
+      try{
+        const records=db.prepare('SELECT * FROM lab_records WHERE owner_id=?').all(uid).map(decodeOffice);
+        const rows=metricDomain.planMetricImport(records,input,Date.now());
+        const put=db.prepare('INSERT INTO lab_records (owner_id,id,kind,data,revision,created_at,updated_at) VALUES(?,?,?,?,?,?,?)');
+        for(const r of rows)if(!records.some(old=>old.id===r.id))put.run(uid,r.id,r.kind,JSON.stringify(r.data),r.revision,r.createdAt,r.updatedAt);
+        db.exec('COMMIT');return rows;
+      }catch(error){db.exec('ROLLBACK');throw error;}
+    },
     CREATE_HOOK_DRAFTS(uid,input){
       db.exec('BEGIN IMMEDIATE');
       try {

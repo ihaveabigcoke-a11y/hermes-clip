@@ -193,6 +193,7 @@ export const contentPlanSchema = z.object({
   }
 });
 export const socialMetricSchema = z.object({
+  sourceLabel:z.string().trim().max(300).optional(),importBatchId:z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/).optional(),
   keywordComments:count.nullable().optional(),dms:count.nullable().optional(),utmClicks:count.nullable().optional(),orders:count.nullable().optional(),
   planId: identifier,
   observedAt: z.string().datetime({offset: true}),
