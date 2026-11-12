@@ -28,7 +28,7 @@ export function previewMetrics(text:string,records:readonly LabRecord[]):MetricP
  rows.forEach((cells,index)=>{const line=parsed.lines[index+1];if(cells.length!==keys.length){result.errors.push(`Dòng ${line}: số cột không khớp. Với CSV, đặt số 1,234 trong dấu nháy kép.`);return;}
   const value=Object.fromEntries(keys.map((key,i)=>[key,cells[i].trim()]));const plan=records.find(r=>r.kind==='content_plan'&&r.id===value.planId);let failed=false;
   if(!plan||!['published_manual','published_browser'].includes(plan.data.status)||!plan.data.postUrl){result.errors.push(`Dòng ${line}: bài đăng không tồn tại hoặc chưa ghi URL đã đăng.`);return;}
-  const unique=plan.id+':'+value.observedAt;if(seen.has(unique)){result.errors.push(`Dòng ${line}: trùng bài và thời điểm trong lô.`);return;}seen.add(unique);
+  const unique=plan.id+':'+Date.parse(value.observedAt);if(seen.has(unique)){result.errors.push(`Dòng ${line}: trùng bài và thời điểm trong lô.`);return;}seen.add(unique);
   const data:Record<string,any>={planId:plan.id,planRevision:plan.revision,observedAt:value.observedAt,sourceLabel:value.sourceLabel};for(const key of metricColumns)try{data[key]=metricNumber(value[key]??'');}catch(e){result.errors.push(`Dòng ${line} · ${metricLabels[key]}: ${(e as Error).message}`);failed=true;}
   const checked=metricImportRow.safeParse(data);if(!checked.success){if(!failed)result.errors.push(`Dòng ${line}: kiểm thời điểm ISO có múi giờ và nguồn (ít nhất 2 ký tự).`);}else if(!failed)result.rows.push(checked.data);
  });
@@ -38,7 +38,7 @@ export function previewMetrics(text:string,records:readonly LabRecord[]):MetricP
 export function planMetricImport(records:readonly LabRecord[],raw:unknown,now=Date.now()):LabRecord[]{
  const input=metricImportInput.parse(raw),seen=new Set<string>();
  const result=input.rows.map((row,i)=>{
-  const key=row.planId+':'+row.observedAt;if(seen.has(key))throw Error(`Dòng ${i+2}: trùng bài và thời điểm trong lô.`);seen.add(key);
+  const key=row.planId+':'+Date.parse(row.observedAt);if(seen.has(key))throw Error(`Dòng ${i+2}: trùng bài và thời điểm trong lô.`);seen.add(key);
   const plan=records.find(r=>r.id===row.planId&&r.kind==='content_plan');if(!plan||!['published_manual','published_browser'].includes(plan.data.status)||!plan.data.postUrl)throw Error(`Dòng ${i+2}: chưa có bài đã đăng.`);
   if(plan.revision!==row.planRevision)throw Error(`Dòng ${i+2}: bài đã thay đổi. Xem trước lại.`);
   const data=socialMetricSchema.parse({...row,source:'manual',accountId:plan.data.accountId??'',sourceUrl:plan.data.postUrl,profileVisits:null,linkClicks:null,notes:row.sourceLabel,importBatchId:input.batchId});

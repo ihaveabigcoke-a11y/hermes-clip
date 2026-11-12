@@ -17,3 +17,13 @@ test('T019 append import preserves prior records and replay IDs; stale preview f
  const rows=planMetricImport(records,input,10);assert.equal(rows[0].data.views,123);assert.equal(rows[0].data.sourceLabel,'Insights');assert.equal(rows[0].data.importBatchId,'b');assert.deepEqual(planMetricImport([...records,...rows],input,20),rows);
  assert.throws(()=>planMetricImport([{...records[0],revision:2}],input),/thay đổi/);assert.throws(()=>planMetricImport([...records,...rows],{...input,rows:[{...p.rows[0],views:321}]}),/Mã lô/);
 });
+
+test('T022a CSV BOM/CRLF and embedded quotes preserve content and physical error line',()=>{
+ const text='\uFEFFBài đăng,Thời điểm,Nguồn,Lượt xem\r\np,2026-11-13T00:00:00Z,"Insights ""copy""\nsecond line","1,234"\r\np,2026-11-14T00:00:00Z,Insights,-1';
+ const result=previewMetrics(text,records);assert.equal(result.rows.length,1);assert.equal(result.rows[0].sourceLabel,'Insights "copy"\nsecond line');assert.equal(result.rows[0].views,1234);assert.match(result.errors[0],/Dòng 4/);
+});
+test('T022a equivalent observation instants cannot be duplicated inside a batch',()=>{
+ const text='planId,observedAt,source,views\np,2026-11-13T00:00:00Z,Insights,1\np,2026-11-13T07:00:00+07:00,Insights,1';
+ assert.match(previewMetrics(text,records).errors.join(' '),/trùng bài và thời điểm/);
+ const row=previewMetrics(text.split('\n').slice(0,2).join('\n'),records).rows[0];assert.throws(()=>planMetricImport(records,{batchId:'same_instant',rows:[row,{...row,observedAt:'2026-11-13T07:00:00+07:00'}]}),/trùng bài và thời điểm/);
+});

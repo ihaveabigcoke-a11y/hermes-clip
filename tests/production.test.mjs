@@ -34,6 +34,12 @@ test('T-012: MP4 status requires verified render, asset and hash',()=>{
  p.renderPlans[0].segments[0].inSec+=.1;assert.notEqual(variantExportStatus(p,id).label,'Đã xuất MP4');assert.equal(p.exports.length,1,'old render preserved');
 });
 
+test('T022a invalid overlay and duplicate hook commands leave saved cuts and variants intact',()=>{
+ const f=renderFixture(),before=structuredClone(f.production),bad=structuredClone(f.plan);bad.overlays[0].toSec=renderDuration(bad)+.1;
+ assert.throws(()=>f.apply('render_plan',bad));assert.deepEqual(f.production,before);
+ assert.throws(()=>f.apply('hook_variants',{productionId:'render_project',sourceVariantId:f.sourceVariantId,hooks:[f.pin('hook1'),f.pin('hook1'),f.pin('hook2')]}),/khác nhau/);assert.deepEqual(f.production,before);
+});
+
 test('T-007: v2 persists shot metadata, separate generation groups, caption placement, snapshots and export manifest',()=>{
   const formula=viralFormulasV2.find(f=>f.resultStyle==='story_cards');
   let p=newProduction('V2','product1',1),n=0;

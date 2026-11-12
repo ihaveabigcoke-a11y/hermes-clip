@@ -34,3 +34,7 @@ test('T022 explicit latest unknown does not reuse older keyword or UTM totals',(
  assert.equal(latestPostSignals([old,latest],plan).keywordComments,null);assert.equal(latestPostSignals([old,latest],plan).utmClicks,null);
  latest.data.keywordComments=0;latest.data.utmClicks=0;assert.equal(latestPostSignals([old,latest],plan).keywordComments,0);assert.equal(latestPostSignals([old,latest],plan).utmClicks,0);
 });
+test('T022a matrix preserves all nine coordinates with one missing draft as unknown',()=>{
+ const f=fixture(),plans=planHookDrafts(f.records,f.input),missing=plans.pop();const matrix=hookMatrix([...f.records,...plans],'matrix_product','matrix_batch');
+ assert.equal(matrix.cells.length,9);const cell=matrix.cells.find(c=>c.variantId===missing.data.variantId&&c.accountId===missing.data.accountId);assert.equal(cell.plan,undefined);assert.equal(cell.signals.orders,null);assert.equal(cell.signals.utmClicks,null);assert.equal(matrix.cells.filter(c=>c.plan).length,8);
+});
