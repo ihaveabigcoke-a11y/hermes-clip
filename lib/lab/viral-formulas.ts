@@ -1,5 +1,6 @@
 import { z } from "zod";
 import seed from "./viral-formulas.seed.json" with { type: "json" };
+import {timedOverlaySchema} from './production.ts';
 
 // Taxonomy v1 is fixed. Future MP4/frame/OCR/Muse analysis must classify into
 // these values, then propose a new formula version for the user to review.
@@ -17,7 +18,14 @@ export const formulaProductTraits = [
 const text = z.string().trim().min(1).max(3000);
 const id = z.string().regex(/^[a-zA-Z0-9_-]{1,80}$/, "ID chỉ gồm chữ, số, dấu gạch ngang hoặc gạch dưới.");
 const second = z.number().finite().min(-3600).max(3600);
+export const formulaShotSchema=z.object({
+  duration:z.number().min(1).max(2.5),camera:text,subjects:text,setting:text,action:text,ending:text,lighting:text,
+});
 const beatFields = {
+  shots:z.array(formulaShotSchema).min(1).max(6).optional(),
+  phase:z.enum(['hook','unbox','result','feature_tour']).optional(),
+  situation:z.string().max(1000).optional(),
+  overlay:timedOverlaySchema.optional(),
   kind: z.enum(formulaTaxonomy.beatKinds),
   role: z.enum(formulaTaxonomy.roles),
   label: z.string().max(1000),
@@ -42,10 +50,22 @@ export const formulaBeatSchema = z.object({
 const range = z.object({min: z.number().finite().nonnegative(), max: z.number().finite().nonnegative()})
   .refine(value => value.min <= value.max, "Khoảng tối thiểu không được lớn hơn tối đa.");
 export const viralFormulaSchema = z.object({
+  storyboardVersion:z.literal(2).optional(),
+  pacingSource:z.object({samples:z.array(z.string().regex(/^V(?:0[1-9]|1[0-2])$/)).min(1).max(12),timing:z.literal('adapted'),notes:text}).optional(),
+  situationExamples:z.array(text).min(1).max(20).optional(),
+  resultStyle:z.enum(['spectacle','subject_after','feature_tour','story_cards']).optional(),
+  usCues:z.array(text).max(10).optional(),
+  ctaPlacement:z.enum(['overlay','caption']).optional(),
+  ctaTiming:z.object({fromEndSec:z.number().min(4).max(6),toEndSec:z.literal(0)}).optional(),
+  storyCards:z.array(text).length(5).optional(),
+  metadata:z.object({dramatization:z.literal(true).optional()}).optional(),
   id,
   name: text,
   beats: z.array(formulaBeatSchema).min(1).max(40),
   overlay: z.object({
+    color:z.literal('white').optional(),outline:z.literal('black').optional(),
+    heightPercent:z.object({min:z.literal(5),max:z.literal(6)}).optional(),
+    transition:z.literal('hard-cut').optional(),
     position: z.enum(["top-center", "center", "bottom-center"]),
     lines: z.number().int().min(1).max(6),
     changesPerBeat: z.boolean(),
@@ -94,6 +114,8 @@ function beatFieldsFor(beat: z.infer<z.ZodObject<typeof beatFields>>) {
   return {kind: beat.kind, role: beat.role, label: beat.label, goal: beat.goal};
 }
 const seedEnvelopeSchema = z.object({
+  formulasV2:z.array(viralFormulaSchema).length(6).optional(),
+  storyboardMeasurements:z.object({source:text,sampleCount:z.literal(12),durationSec:range,cutsPerMinute:z.number().positive(),shotSeconds:z.number().positive(),shotsTypical:z.number().int().positive(),shotsObserved:range,musicBpm:range,ctaOverlayCount:z.number().int().nonnegative(),ctaCaptionCount:z.number().int().nonnegative(),cutTiming:z.literal('content'),voice:z.literal(false)}).optional(),
   version: z.number().int().positive(),
   createdAt: z.string().datetime({offset: true}),
   source: text,
@@ -118,7 +140,8 @@ export function parseViralFormulaSeed(input: unknown) {
   const referenceIds = new Set(parsed.references.map(reference => reference.id));
   if (formulaIds.size !== formulas.length || referenceIds.size !== parsed.references.length)
     throw new Error("ID công thức hoặc video tham khảo bị trùng.");
-  for (const formula of formulas) {
+  if(parsed.formulasV2&&(new Set(parsed.formulasV2.map(f=>f.id)).size!==parsed.formulasV2.length||parsed.formulasV2.some(f=>f.version!==2||f.storyboardVersion!==2||!formulaIds.has(f.id))))throw Error('Seed v2 cần phiên bản 2 của từng công thức v1, không trùng ID.');
+  for (const formula of [...formulas,...(parsed.formulasV2??[])]) {
     if (formula.references.some(reference => !referenceIds.has(reference)))
       throw new Error(`Công thức ${formula.id} tham chiếu video không tồn tại.`);
   }
@@ -139,6 +162,7 @@ function freeze<T>(value: T): T {
 freeze(formulaTaxonomy);
 export const viralFormulaSeed = freeze(parseViralFormulaSeed(seed));
 export const viralFormulas = viralFormulaSeed.formulas;
+export const viralFormulasV2 = viralFormulaSeed.formulasV2??[];
 export const referenceVideos = viralFormulaSeed.references;
 export function validateFormula(input: unknown) {
   return viralFormulaSchema.safeParse(input);
@@ -151,7 +175,7 @@ type FormulaRecord = {id: string; kind: string; data: unknown};
 // Workspace wins on the exact (id, version) pair. Old versions remain intact;
 // consumers select the highest version per id, independent of record order.
 export function formulaVersions(records: readonly FormulaRecord[] = []): ViralFormula[] {
-  const versions = new Map(viralFormulas.map(formula => [viralFormulaRecordId(formula), formula]));
+  const versions = new Map([...viralFormulas,...viralFormulasV2].map(formula => [viralFormulaRecordId(formula), formula]));
   for (const record of records) {
     if (record.kind !== "viral_formula") continue;
     const parsed = validateFormula(record.data);
@@ -162,6 +186,12 @@ export function formulaVersions(records: readonly FormulaRecord[] = []): ViralFo
 export function workspaceFormulas(records: readonly FormulaRecord[] = []): ViralFormula[] {
   const latest = new Map<string, ViralFormula>();
   for (const formula of formulaVersions(records)) if (!latest.has(formula.id)) latest.set(formula.id, formula);
+  const saved=new Map<string,ViralFormula>();
+  for(const record of records) {
+    const parsed=record.kind==='viral_formula'?validateFormula(record.data):null;
+    if(parsed?.success&&record.id===viralFormulaRecordId(parsed.data)&&(!saved.has(parsed.data.id)||saved.get(parsed.data.id)!.version<parsed.data.version))saved.set(parsed.data.id,parsed.data);
+  }
+  for(const [id,formula] of saved)latest.set(id,formula);
   return [...latest.values()];
 }
 

@@ -91,7 +91,9 @@ test('formula composer includes saved versions, keyword entry and draft-only con
   assert.match(html,/Saved English formula · v3 · Gợi ý/);
   assert.match(html,/User formula · v3/);
   assert.match(html,/Từ khóa CTA · một từ tiếng Anh in hoa/);
-  assert.match(html,/value="LINK"/);
+  assert.doesNotMatch(html,/value="LINK"/);
+  assert.match(html,/id="formula-keyword"[^>]*required/);
+  for(const label of ["Vị trí CTA","Tên bao bì","Chữ trên hộp","Tình huống mở đầu"])assert.ok(html.includes(label));
   assert.match(html,/Soạn hai mở đầu A\/B/);
   assert.match(html,/Chỉ lưu cảnh nháp, chưa duyệt hoặc gửi Muse/);
   assert.match(html,/<select[^>]*disabled/);assert.match(html,/<button[^>]*disabled/);
@@ -99,7 +101,7 @@ test('formula composer includes saved versions, keyword entry and draft-only con
 });
 
 test('formula viewer shows beats, relative CTA, all references and guardrails without edit or network controls', () => {
-  const html = render([]);
+  const html = render(viralFormulas.map(data=>({id:viralFormulaRecordId(data),kind:"viral_formula",data})));
   assert.match(html, /Công thức video/);
   assert.match(html, /6 công thức/);
   assert.match(html, /0–4 giây từ đầu video/);
@@ -110,6 +112,14 @@ test('formula viewer shows beats, relative CTA, all references and guardrails wi
   for (let n = 1; n <= 12; n++) assert.match(html, new RegExp(`<summary>V${n} ·`));
   assert.doesNotMatch(html, /<(button|input|textarea|form|img|video|iframe)\b/);
   assert.doesNotMatch(html, /<details[^>]*\bopen\b/);
+});
+test('T-007: default library exposes six v2 formulas, measured pacing and no keyword default',()=>{
+  const html=render([]);
+  assert.equal((html.match(/Phiên bản 2/g)??[]).length,6);
+  for(const text of ['41 cắt/phút','1,5 giây/shot','trắng viền đen','Thẻ chuyện hư cấu','Tour tính năng'])assert.ok(html.includes(text),text);
+  const composer=renderToStaticMarkup(React.createElement(FormulaDraftPanel,{records:[],production:newProduction('Fixture','p',1),product:{traits:['pet']},disabled:false,onDrafts:async()=>{throw Error('No save while rendering');}}));
+  assert.match(composer,/id="formula-keyword"[^>]*value=""/);assert.doesNotMatch(composer,/value="LINK"/);
+  assert.match(composer,/PAWS/);assert.match(html,/The idea 🤢/);assert.doesNotMatch(composer,/AI label|AI-generated/);
 });
 test('formula viewer prefers saved version, escapes user text and labels missing reference data', () => {
   const custom = {...viralFormulas[0], name: '<script>fixture</script>', version: 2, updatedAt: null, references: ['missing']};

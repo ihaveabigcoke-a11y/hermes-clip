@@ -122,6 +122,21 @@ export class ManualMedia {
     const rows=this.catalog(records).filter(row=>row.project.id===projectId&&!row.archived&&row.scene.storyboardApproved&&this.route(row.project.data,row.scene,row.project.id).provider==='manual'&&!this.route(row.project.data,row.scene,row.project.id).blocked&&(!sceneIds?.length||sceneIds.includes(row.scene.id)));
     if (!rows.length) throw Error('Duyệt ít nhất một cảnh manual trước khi xuất prompt.');
     if (rows.some(row=>row.product.revision!==row.project.data.productRevision)) throw Error('Đồng bộ phiên bản sản phẩm trước khi xuất prompt.');
+    const units=new Map();
+    for(const row of rows.filter(row=>row.scene.storyboardVersion===2)) {
+      const s=row.scene;
+      if(!s.packaging?.brandName?.trim())throw Error('Chưa đặt tên bao bì.');
+      if(!s.packaging?.boxText?.trim()||!s.situation?.trim()||!s.ctaKeyword?.trim())throw Error('Điền chữ trên hộp, tình huống mở đầu và từ khóa CTA trước khi xuất.');
+      if(!s.generationUnit||!s.overlay||!s.constraints||!s.setting)throw Error('Shot thiếu mốc chữ đè hoặc nhóm tạo.');
+      const key=s.generationUnit.id;
+      units.set(key,[...(units.get(key)||[]),row]);
+    }
+    for(const group of units.values()) {
+      group.sort((a,b)=>a.scene.fromSec-b.scene.fromSec);
+      const unit=group[0].scene.generationUnit;
+      const expected=rows[0].project.data.scenes.filter(s=>s.generationUnit?.id===unit.id);
+      if(expected.length!==group.length||group[0].scene.fromSec!==unit.fromSec||group.at(-1).scene.toSec!==unit.toSec||unit.toSec-unit.fromSec>8||group.some((r,i)=>r.scene.setting!==group[0].scene.setting||JSON.stringify(r.scene.generationUnit)!==JSON.stringify(unit)||['references','constraints','packaging'].some(key=>JSON.stringify(r.scene[key])!==JSON.stringify(group[0].scene[key]))||(i>0&&r.scene.fromSec!==group[i-1].scene.toSec)))throw Error('Duyệt và chọn đủ shot liên tiếp cùng bối cảnh, tham chiếu, bao bì và giới hạn của nhóm tạo trước khi xuất.');
+    }
     const base=join(this.local.root,'exports','prompt-packs'); await mkdir(base,{recursive:true});
     const destination=join(base,`${rows[0].productCode}-${stamp(date)}`);
     try {await stat(destination); throw Error('Đã có gói trong phút này. Giữ gói cũ; xuất lại vào phút tiếp theo.');} catch(error) {if(error.code!=='ENOENT')throw error;}
@@ -145,14 +160,33 @@ export class ManualMedia {
         try {if(compressed.type==='image/webp'&&compressed.path!==original){name=`${code}-ref-${index+1}.webp`;const target=join(staging,name);if(target===original)await writeFile(target,await readFile(compressed.path));else {await copyFile(compressed.path,target);await unlink(original);}}}finally{await compressed.cleanup();}
         references.push(`${name} | role: ${ref.role} | ${ref.notes||ref.name}`);
       }
-      const prompt=[`Scene: ${code}`, 'Create a vertical 9:16 video, exactly 8 seconds. Use English for all dialogue and on-screen text.',
+      const prompt=[`Scene: ${code}`, scene.storyboardVersion===2?`Editing shot: ${scene.duration} seconds. Generate the matching UNIT file, then trim this shot using timeline.json.`:'Create a vertical 9:16 video, exactly 8 seconds. Use English for all dialogue and on-screen text.',
         scene.mediaType==='image'?'First create a vertical 9:16 reference image; use it for the 8-second video if needed.':'',
         scene.prompt, scene.action&&`Action: ${scene.action}`, scene.camera&&`Camera: ${scene.camera}`, scene.voice&&`Audio: ${scene.voice}`,
-        scene.overlayText&&`On-screen text: ${scene.overlayText}`, 'Reference images:', ...references,
+        scene.storyboardVersion===2?`Editing overlay (global seconds): ${JSON.stringify(scene.overlay)}\nConstraints:\n${scene.constraints.join('\n')}`:scene.overlayText&&`On-screen text: ${scene.overlayText}`, 'Reference images:', ...references,
         !references.length?'No reference images supplied.':'Preserve the product appearance from the supplied reference images.',
         `Save the downloaded file as ${code}-take1.mp4 (or ${code}-take1.png for an image).`].filter(Boolean).join('\n\n');
       await writeFile(join(staging,`${code}.txt`),prompt+'\n',{flag:'wx'});
       exports[code]={provider:'manual',revision:scene.revision,path:destination,waiting:false,at:date.getTime()};
+    }
+    if(units.size) {
+      const timeline=[];
+      for(const [index,group] of [...units.values()].entries()) {
+        const name=`${rows[0].productCode}-UNIT-${pad(index+1)}`,unit=group[0].scene.generationUnit;
+        const shots=group.map(({scene,code})=>({code,sceneId:scene.id,sceneRevision:scene.revision,fromSec:scene.fromSec,toSec:scene.toSec,
+          trimFromSec:Number((scene.fromSec-unit.fromSec).toFixed(3)),trimToSec:Number((scene.toSec-unit.fromSec).toFixed(3)),duration:scene.duration,
+          overlay:scene.overlay,ctaOverlay:scene.ctaOverlay,packaging:scene.packaging,metadata:scene.metadata,
+          ffmpegArgs:['-n','-i',`${name}.mp4`,'-ss',String(Number((scene.fromSec-unit.fromSec).toFixed(3))),'-t',String(scene.duration),'-map','0:v:0','-an','-c:v','libx264','-pix_fmt','yuv420p',`${code}-take1.mp4`]}));
+        timeline.push({file:`${name}.mp4`,unit,shots});
+        await writeFile(join(staging,`${name}.txt`),[
+          'Create one vertical 9:16 video, exactly 8 seconds. Silent visual sequence with hard cuts at the specified offsets.',
+          `Use the reference images listed in ${group[0].code}.txt. Keep the same setting and subjects throughout this unit.`,
+          ...group.map(({scene},i)=>`SHOT ${i+1}: ${shots[i].trimFromSec}–${shots[i].trimToSec}s\n${scene.prompt}`),
+          `Hold the last end frame from ${unit.toSec-unit.fromSec}s to 8s; this tail is discarded in editing.`,
+          'Constraints:',...group[0].scene.constraints,`Download as ${name}.mp4. Trim using timeline.json before placing scene clips in the inbox.`,
+        ].join('\n\n')+'\n',{flag:'wx'});
+      }
+      await writeFile(join(staging,'timeline.json'),JSON.stringify({version:2,overlayStyle:{color:'white',outline:'black',heightPercent:[5,6],position:'top-center',lines:[1,2],transition:'hard-cut'},units:timeline},null,2)+'\n',{flag:'wx'});
     }
     await writeFile(join(staging,'README-VI.txt'),[
       'GÓI PROMPT MANUAL — HERMES CLIP', `Mã sản phẩm: ${rows[0].productCode}`, `Dự án: ${rows[0].project.data.name}`,
@@ -165,6 +199,10 @@ export class ManualMedia {
       '7. File chưa khớp mã nằm ở Chưa gắn cảnh. Chọn đúng cảnh trong app để gắn tay.',
       '8. Xem lại nội dung, tỷ lệ/thời lượng trước khi duyệt và ghép. Gói này yêu cầu 8 giây; thông số cảnh cũ không tự thay đổi.',
       'App không tự gửi prompt hay điều khiển trang web. Muse đang được tạm dừng mặc định.',
+      ...(units.size?['KỊCH BẢN V2: tạo từng file UNIT (8 giây, nhiều shot). timeline.json có mốc cắt tương đối và ffmpegArgs cho từng mã cảnh.',
+        'Không chép file UNIT nguyên vào Hộp nhận. Cắt bằng FFmpeg/OpenMontage đúng thời lượng từng shot, bỏ phần giữ khung cuối, rồi nhập các file mã cảnh.',
+        'Chữ đè trong timeline.json dùng mốc toàn video, thêm khi dựng: trắng viền đen, cao 5–6% khung, giữa trên, vào/ra cứng. CTA thay nhãn ở các shot cuối; caption giữ trong biến thể.',
+        'Mở đầu B dùng nhóm tạo riêng, chỉ thay shot đầu; các shot tiếp theo dùng chung.']:[]),
     ].join('\n')+'\n',{flag:'wx'});
     // A complete pack becomes visible in one rename; existing packs are never overwritten.
     await rename(staging,destination); this.store.set('manual_exports',exports); this.changed();

@@ -11,6 +11,43 @@ import {runMediaTool,probeMedia} from '../src/compress.mjs';
 import {startLocalServer, importModule} from './helpers/local-server.mjs';
 
 const {emptyProduct}=await importModule('lib/lab/domain.ts');
+test('T-007: manual export groups approved v2 shots and maps exact cuts; missing packaging or partial group blocks export',async t=>{
+  const f=await fixture(t);
+  const {formulaStoryboard}=await importModule('lib/lab/formula-storyboard.ts');
+  const {viralFormulasV2}=await importModule('lib/lab/viral-formulas.ts');
+  const {newProduction}=await importModule('lib/lab/production.ts');
+  const formula=viralFormulasV2[0],draft=formulaStoryboard({},newProduction('V2','product_fixture',1),formula,{ctaKeyword:'BIKE',situation:formula.situationExamples[0],packaging:{brandName:'FIXTURE',boxText:'Night Kit'}});
+  let project=await f.command('formula_draft',draft);
+  const ids=project.data.scenes.filter(s=>s.storyboardVersion===2).map(s=>s.id);
+  for(const sceneId of ids)await f.command('storyboard',{sceneId});
+  await assert.rejects(f.media.exportPack({projectId:project.id,sceneIds:ids.slice(1)},new Date(2026,10,12,23,1)),/đủ shot/);
+  const pack=await f.media.exportPack({projectId:project.id,sceneIds:ids},new Date(2026,10,12,23,2));
+  const timeline=JSON.parse(await readFile(join(pack.path,'timeline.json'),'utf8'));
+  assert.equal(timeline.units.length,4);assert.equal(timeline.units.flatMap(u=>u.shots).length,12);
+  for(const group of timeline.units) {
+    const prompt=await readFile(join(pack.path,group.file.replace('.mp4','.txt')),'utf8');
+    assert.match(prompt,/exactly 8 seconds/);assert.match(prompt,/Constraints:/);assert.doesNotMatch(prompt,/narration|neutral handling|AI label|AI-generated/i);
+    assert.equal(group.shots[0].trimFromSec,0);
+    for(const shot of group.shots) {
+      assert.equal(Number((shot.trimToSec-shot.trimFromSec).toFixed(3)),shot.duration);
+      assert.equal(shot.duration,project.data.scenes.find(s=>s.id===shot.sceneId).duration);
+      assert.ok(shot.duration>=1&&shot.duration<=2.5);
+      assert.ok(shot.trimToSec<=8);assert.equal(shot.packaging.brandName,'FIXTURE');
+      assert.equal(shot.ffmpegArgs.at(-1),shot.code+'-take1.mp4');
+      assert.match(await readFile(join(pack.path,shot.code+'.txt'),'utf8'),/Editing overlay/);
+    }
+  }
+  assert.equal(timeline.overlayStyle.transition,'hard-cut');
+  // Probe/cut synthetic media with the same argument array emitted in the pack.
+  const group=timeline.units[0],source=join(f.root,group.file),clip=join(f.root,'cut.mp4');
+  await runMediaTool('ffmpeg',['-y','-v','error','-f','lavfi','-i','color=c=blue:s=90x160:r=30','-t','8','-c:v','libx264','-pix_fmt','yuv420p',source]);
+  const args=[...group.shots[1].ffmpegArgs];args[2]=source;args[args.length-1]=clip;
+  await runMediaTool('ffmpeg',args);assert.equal(group.shots[1].duration,1.2);assert.equal((await probeMedia(clip)).duration,group.shots[1].duration);
+  const records=await f.media.records();const damaged=structuredClone(records);
+  delete damaged.find(r=>r.id===project.id).data.scenes.find(s=>s.id===ids[0]).packaging;
+  f.media.records=async()=>damaged;
+  await assert.rejects(f.media.exportPack({projectId:project.id,sceneIds:ids},new Date(2026,10,12,23,3)),/Chưa đặt tên bao bì/);
+});
 async function fixture(t) {
   const root=await mkdtemp(join(tmpdir(),'hermes-t002-'));
   const store=new Store(join(root,'worker.sqlite'));

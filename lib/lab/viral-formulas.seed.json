@@ -155,5 +155,1466 @@
     "Yếm/dây dắt LED cho mèo dắt đi dạo hoặc cho ngựa (đổi đối tượng từ V5)",
     "Đồ cho chó già, chó điếc (đổi tình huống từ V4)",
     "Đèn an toàn cho xe lăn, xe tập đi người già, xe scooter trẻ em (đổi đối tượng từ V8)"
-  ]
+  ],
+  "formulasV2": [
+    {
+      "id": "problem-vs-result-cta",
+      "name": "Vấn đề → Vs → Kết quả → CTA từ khóa",
+      "hookType": "problem_label",
+      "aspect": "9:16",
+      "durationSec": {
+        "min": 14.3,
+        "max": 14.3
+      },
+      "cuts": {
+        "min": 10,
+        "max": 10
+      },
+      "overlay": {
+        "position": "top-center",
+        "lines": 2,
+        "changesPerBeat": true,
+        "readableMuted": true,
+        "color": "white",
+        "outline": "black",
+        "heightPercent": {
+          "min": 5,
+          "max": 6
+        },
+        "transition": "hard-cut"
+      },
+      "beats": [
+        {
+          "kind": "problem",
+          "role": "hook",
+          "phase": "hook",
+          "label": "The idea 🤢",
+          "goal": "Show ONE specific failed DIY attempt or near-miss that reads in one second. Fictional. No injury, no blood, no collision shown.",
+          "fromSec": 0,
+          "toSec": 3.5,
+          "timeOrigin": "start",
+          "situation": "A runner tapes a phone flashlight to a shoe; the loose tape flaps as the foot lifts.",
+          "shots": [
+            {
+              "duration": 1,
+              "camera": "Eye-level medium shot; short lateral slide",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Establish the specific awkward attempt in one readable frame.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            },
+            {
+              "duration": 1.2,
+              "camera": "Low-angle close-up; gentle push-in",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Move closer to the visible failed detail; the observer reacts.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            },
+            {
+              "duration": 1.3,
+              "camera": "Overhead detail; quick controlled tilt",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Reveal the subject stopping to rethink the attempt.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            }
+          ],
+          "overlay": {
+            "text": "The idea 🤢",
+            "emoji": "🤢",
+            "fromSec": 0,
+            "toSec": 3.5,
+            "position": "top-center",
+            "lines": 1
+          }
+        },
+        {
+          "kind": "versus_unbox",
+          "role": "body",
+          "phase": "unbox",
+          "label": "Vs…",
+          "goal": "Reveal named packaging and the actual product in three distinct views.",
+          "fromSec": 3.5,
+          "toSec": 7.3,
+          "timeOrigin": "start",
+          "shots": [
+            {
+              "duration": 1.4,
+              "camera": "Low-angle close-up; gentle push-in",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Show the named box in the same setting; turn the front toward camera.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            },
+            {
+              "duration": 1,
+              "camera": "Overhead detail; quick controlled tilt",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Lift the lid and reveal the actual product and its parts.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            },
+            {
+              "duration": 1.4,
+              "camera": "Wide three-quarter view; lateral tracking",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Fit or set up the product using the approved reference.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            }
+          ],
+          "overlay": {
+            "text": "Vs…",
+            "emoji": "",
+            "fromSec": 3.5,
+            "toSec": 7.3,
+            "position": "top-center",
+            "lines": 1
+          }
+        },
+        {
+          "kind": "result",
+          "role": "body",
+          "phase": "result",
+          "label": "The result 😍❤️",
+          "goal": "Show the product's real function at maximum visual scale, supported by approved product facts.",
+          "fromSec": 7.3,
+          "toSec": 14.3,
+          "timeOrigin": "start",
+          "shots": [
+            {
+              "duration": 1,
+              "camera": "Wide eye-level group reveal; slow push-in",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Reveal the real product function at wide visual scale, angle 1; the group shares the visible result.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            },
+            {
+              "duration": 1.5,
+              "camera": "Low-angle wide tracking shot",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Reveal the real product function at wide visual scale, angle 2; the group shares the visible result.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            },
+            {
+              "duration": 1.2,
+              "camera": "High-angle wide arc around the group",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Reveal the real product function at wide visual scale, angle 3; the group shares the visible result.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            },
+            {
+              "duration": 1.8,
+              "camera": "Wide reverse angle; gentle pull-back",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Reveal the real product function at wide visual scale, angle 4; the group shares the visible result.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            },
+            {
+              "duration": 1.5,
+              "camera": "Wide profile tracking shot along the group",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Reveal the real product function from a new wide angle, view 5; keep the group reaction visible.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            }
+          ],
+          "overlay": {
+            "text": "The result 😍❤️",
+            "emoji": "😍❤️",
+            "fromSec": 7.3,
+            "toSec": 14.3,
+            "position": "top-center",
+            "lines": 1
+          }
+        }
+      ],
+      "labelVariants": {
+        "problem": [
+          "The idea 🤢",
+          "The problem… 😳"
+        ],
+        "versus_unbox": [
+          "Vs…"
+        ],
+        "result": [
+          "The result 😍❤️"
+        ]
+      },
+      "ctaPatterns": [
+        "Comment \"{WORD}\" for the link",
+        "Comment \"{WORD}\" if you want one",
+        "Send \"{WORD}\" if you want one"
+      ],
+      "fitProductTraits": [
+        "visual_payoff_one_frame",
+        "night_glow",
+        "pet",
+        "safety",
+        "running",
+        "cycling"
+      ],
+      "references": [
+        "V2",
+        "V3",
+        "V4",
+        "V5",
+        "V6",
+        "V8"
+      ],
+      "guardrails": [
+        "Chỉ dựng hiệu ứng mà sản phẩm thật làm được; kiểm theo ảnh và chức năng đã duyệt.",
+        "Tình huống hư cấu, không chấn thương, không lời chứng thực ngôi thứ nhất.",
+        "Không ngụ ý cơ quan nhà nước chứng nhận."
+      ],
+      "version": 2,
+      "updatedAt": "2026-11-12T00:00:00Z",
+      "storyboardVersion": 2,
+      "resultStyle": "spectacle",
+      "situationExamples": [
+        "A runner tapes a phone flashlight to a shoe; the loose tape flaps as the foot lifts.",
+        "A cyclist balances a flashlight on the handlebar; it tilts down before the bike moves."
+      ],
+      "ctaPlacement": "overlay",
+      "ctaTiming": {
+        "fromEndSec": 4.5,
+        "toEndSec": 0
+      },
+      "usCues": [
+        "suburban homes",
+        "stadium"
+      ],
+      "pacingSource": {
+        "samples": [
+          "V05"
+        ],
+        "timing": "adapted",
+        "notes": "V05: bộ LED thú cưng, 14,3 giây trong thư viện v1; dùng cấu trúc vấn đề → mở hộp → spectacle của số đo 12 mẫu. Nhịp 3/3/5 shot và CTA 9,8–14,3 giây là bản điều chỉnh, không phải mốc cắt đo lại. Số cắt v1 là dữ liệu lấy mẫu lịch sử; không dùng làm số shot đo chính xác."
+      }
+    },
+    {
+      "id": "pov-share-bait",
+      "name": "POV gửi cho bạn bè (kéo chia sẻ)",
+      "hookType": "pov_share_bait",
+      "aspect": "9:16",
+      "durationSec": {
+        "min": 13.3,
+        "max": 13.3
+      },
+      "cuts": {
+        "min": 8,
+        "max": 8
+      },
+      "overlay": {
+        "position": "top-center",
+        "lines": 2,
+        "changesPerBeat": false,
+        "readableMuted": true,
+        "color": "white",
+        "outline": "black",
+        "heightPercent": {
+          "min": 5,
+          "max": 6
+        },
+        "transition": "hard-cut"
+      },
+      "beats": [
+        {
+          "kind": "problem",
+          "role": "hook",
+          "phase": "hook",
+          "label": "POV: send this to your cycling buddies 🚲",
+          "goal": "Show ONE specific failed DIY attempt or near-miss that reads in one second. Fictional. No injury, no blood, no collision shown.",
+          "fromSec": 0,
+          "toSec": 2.4,
+          "timeOrigin": "start",
+          "situation": "Two cyclists compare a phone taped to a handlebar; the phone points at the ground.",
+          "shots": [
+            {
+              "duration": 1,
+              "camera": "Eye-level medium shot; short lateral slide",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Establish the specific awkward attempt in one readable frame.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            },
+            {
+              "duration": 1.4,
+              "camera": "Low-angle close-up; gentle push-in",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Move closer to the visible failed detail; the observer reacts.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            }
+          ],
+          "overlay": {
+            "text": "POV: send this to your cycling buddies 🚲",
+            "emoji": "🚲",
+            "fromSec": 0,
+            "toSec": 2.4,
+            "position": "top-center",
+            "lines": 1
+          }
+        },
+        {
+          "kind": "versus_unbox",
+          "role": "body",
+          "phase": "unbox",
+          "label": "Vs…",
+          "goal": "Reveal named packaging and the actual product in three distinct views.",
+          "fromSec": 2.4,
+          "toSec": 6,
+          "timeOrigin": "start",
+          "shots": [
+            {
+              "duration": 1.2,
+              "camera": "Low-angle close-up; gentle push-in",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Show the named box in the same setting; turn the front toward camera.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            },
+            {
+              "duration": 1.3,
+              "camera": "Overhead detail; quick controlled tilt",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Lift the lid and reveal the actual product and its parts.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            },
+            {
+              "duration": 1.1,
+              "camera": "Wide three-quarter view; lateral tracking",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Fit or set up the product using the approved reference.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            }
+          ],
+          "overlay": {
+            "text": "Vs…",
+            "emoji": "",
+            "fromSec": 2.4,
+            "toSec": 6,
+            "position": "top-center",
+            "lines": 1
+          }
+        },
+        {
+          "kind": "result",
+          "role": "body",
+          "phase": "result",
+          "label": "The result 😍❤️",
+          "goal": "Show the product's real function at maximum visual scale, supported by approved product facts.",
+          "fromSec": 6,
+          "toSec": 13.3,
+          "timeOrigin": "start",
+          "shots": [
+            {
+              "duration": 1.4,
+              "camera": "Wide eye-level group reveal; slow push-in",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Reveal the real product function at wide visual scale, angle 1; the group shares the visible result.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            },
+            {
+              "duration": 2,
+              "camera": "Low-angle wide tracking shot",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Reveal the real product function at wide visual scale, angle 2; the group shares the visible result.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            },
+            {
+              "duration": 1.8,
+              "camera": "High-angle wide arc around the group",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Reveal the real product function at wide visual scale, angle 3; the group shares the visible result.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            },
+            {
+              "duration": 2.1,
+              "camera": "Wide reverse angle; gentle pull-back",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Reveal the real product function at wide visual scale, angle 4; the group shares the visible result.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            }
+          ],
+          "overlay": {
+            "text": "The result 😍❤️",
+            "emoji": "😍❤️",
+            "fromSec": 6,
+            "toSec": 13.3,
+            "position": "top-center",
+            "lines": 1
+          }
+        }
+      ],
+      "labelVariants": {
+        "problem": [
+          "POV: send this to your cycling buddies 🚲",
+          "The problem… 😳"
+        ],
+        "versus_unbox": [
+          "Vs…"
+        ],
+        "result": [
+          "The result 😍❤️"
+        ]
+      },
+      "ctaPatterns": [
+        "Comment \"{WORD}\" for the link"
+      ],
+      "fitProductTraits": [
+        "hobby_group",
+        "cycling",
+        "running",
+        "visual_payoff_one_frame"
+      ],
+      "references": [
+        "V1"
+      ],
+      "guardrails": [
+        "Chỉ dựng hiệu ứng mà sản phẩm thật làm được; kiểm theo ảnh và chức năng đã duyệt.",
+        "Tình huống hư cấu, không chấn thương, không lời chứng thực ngôi thứ nhất.",
+        "Không ngụ ý cơ quan nhà nước chứng nhận."
+      ],
+      "version": 2,
+      "updatedAt": "2026-11-12T00:00:00Z",
+      "storyboardVersion": 2,
+      "resultStyle": "spectacle",
+      "situationExamples": [
+        "Two cyclists compare a phone taped to a handlebar; the phone points at the ground.",
+        "A runner holds a phone flashlight in a sock; the sock slips before the first step."
+      ],
+      "ctaPlacement": "overlay",
+      "ctaTiming": {
+        "fromEndSec": 5.9,
+        "toEndSec": 0
+      },
+      "usCues": [
+        "suburban homes",
+        "stadium"
+      ],
+      "pacingSource": {
+        "samples": [
+          "V01"
+        ],
+        "timing": "adapted",
+        "notes": "V01: NIGHTRAZE/Cycling Buddies. Đề ghi mẫu CTA bike 7,4–13,1 giây trên clip 13,3 giây; v1 lưu 13,4 giây. Chọn tổng 13,3 giây theo đề, điều chỉnh nhịp 2/3/4 shot và kéo CTA đến hết 13,3 giây; chưa đo lại mốc từng shot. Số cắt v1 là dữ liệu lấy mẫu lịch sử; không dùng làm số shot đo chính xác."
+      }
+    },
+    {
+      "id": "do-not-show",
+      "name": "\"DO NOT show this to a {GROUP}\" (kéo chia sẻ)",
+      "hookType": "do_not_show",
+      "aspect": "9:16",
+      "durationSec": {
+        "min": 14,
+        "max": 14
+      },
+      "cuts": {
+        "min": 8,
+        "max": 8
+      },
+      "overlay": {
+        "position": "top-center",
+        "lines": 2,
+        "changesPerBeat": false,
+        "readableMuted": true,
+        "color": "white",
+        "outline": "black",
+        "heightPercent": {
+          "min": 5,
+          "max": 6
+        },
+        "transition": "hard-cut"
+      },
+      "beats": [
+        {
+          "kind": "problem",
+          "role": "hook",
+          "phase": "hook",
+          "label": "DO NOT show this to dog people 🐾",
+          "goal": "Show ONE specific failed DIY attempt or near-miss that reads in one second. Fictional. No injury, no blood, no collision shown.",
+          "fromSec": 0,
+          "toSec": 3.5,
+          "timeOrigin": "start",
+          "situation": "A dog wears a floppy cardboard visibility halo; it folds over as the owner reaches for the leash.",
+          "shots": [
+            {
+              "duration": 1,
+              "camera": "Eye-level medium shot; short lateral slide",
+              "subjects": "One dog and one owner; the owner watches with relief",
+              "setting": "A fenced US suburban yard at dusk",
+              "action": "Establish the specific awkward attempt in one readable frame.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            },
+            {
+              "duration": 1.2,
+              "camera": "Low-angle close-up; gentle push-in",
+              "subjects": "One dog and one owner; the owner watches with relief",
+              "setting": "A fenced US suburban yard at dusk",
+              "action": "Move closer to the visible failed detail; the observer reacts.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            },
+            {
+              "duration": 1.3,
+              "camera": "Overhead detail; quick controlled tilt",
+              "subjects": "One dog and one owner; the owner watches with relief",
+              "setting": "A fenced US suburban yard at dusk",
+              "action": "Reveal the subject stopping to rethink the attempt.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            }
+          ],
+          "overlay": {
+            "text": "DO NOT show this to dog people 🐾",
+            "emoji": "🐾",
+            "fromSec": 0,
+            "toSec": 3.5,
+            "position": "top-center",
+            "lines": 1
+          }
+        },
+        {
+          "kind": "versus_unbox",
+          "role": "body",
+          "phase": "unbox",
+          "label": "Vs…",
+          "goal": "Reveal named packaging and the actual product in three distinct views.",
+          "fromSec": 3.5,
+          "toSec": 7.5,
+          "timeOrigin": "start",
+          "shots": [
+            {
+              "duration": 1.4,
+              "camera": "Low-angle close-up; gentle push-in",
+              "subjects": "One dog and one owner; the owner watches with relief",
+              "setting": "A fenced US suburban yard at dusk",
+              "action": "Show the named box in the same setting; turn the front toward camera.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            },
+            {
+              "duration": 1.1,
+              "camera": "Overhead detail; quick controlled tilt",
+              "subjects": "One dog and one owner; the owner watches with relief",
+              "setting": "A fenced US suburban yard at dusk",
+              "action": "Lift the lid and reveal the actual product and its parts.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            },
+            {
+              "duration": 1.5,
+              "camera": "Wide three-quarter view; lateral tracking",
+              "subjects": "One dog and one owner; the owner watches with relief",
+              "setting": "A fenced US suburban yard at dusk",
+              "action": "Fit or set up the product using the approved reference.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            }
+          ],
+          "overlay": {
+            "text": "Vs…",
+            "emoji": "",
+            "fromSec": 3.5,
+            "toSec": 7.5,
+            "position": "top-center",
+            "lines": 1
+          }
+        },
+        {
+          "kind": "result",
+          "role": "body",
+          "phase": "result",
+          "label": "The result 😍❤️",
+          "goal": "Show the product's real function at maximum visual scale, supported by approved product facts.",
+          "fromSec": 7.5,
+          "toSec": 14,
+          "timeOrigin": "start",
+          "shots": [
+            {
+              "duration": 2.1,
+              "camera": "Overhead detail; quick controlled tilt",
+              "subjects": "One dog and one owner; the owner watches with relief",
+              "setting": "A fenced US suburban yard at dusk",
+              "action": "Show the dog settled beside its owner with the real product in use.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            },
+            {
+              "duration": 2.4,
+              "camera": "Wide three-quarter view; lateral tracking",
+              "subjects": "One dog and one owner; the owner watches with relief",
+              "setting": "A fenced US suburban yard at dusk",
+              "action": "Close on the relaxed face; the owner smiles in the background.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            },
+            {
+              "duration": 2,
+              "camera": "Ground-level wide shot; slow arc",
+              "subjects": "One dog and one owner; the owner watches with relief",
+              "setting": "A fenced US suburban yard at dusk",
+              "action": "Show the same calm subject from a low side angle.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            }
+          ],
+          "overlay": {
+            "text": "The result 😍❤️",
+            "emoji": "😍❤️",
+            "fromSec": 7.5,
+            "toSec": 14,
+            "position": "top-center",
+            "lines": 1
+          }
+        }
+      ],
+      "labelVariants": {
+        "problem": [
+          "DO NOT show this to dog people 🐾",
+          "The problem… 😳"
+        ],
+        "versus_unbox": [
+          "Vs…"
+        ],
+        "result": [
+          "The result 😍❤️"
+        ]
+      },
+      "ctaPatterns": [
+        "Link in bio"
+      ],
+      "fitProductTraits": [
+        "hobby_group",
+        "visual_payoff_one_frame"
+      ],
+      "references": [
+        "V7",
+        "V4"
+      ],
+      "guardrails": [
+        "Chỉ dựng hiệu ứng mà sản phẩm thật làm được; kiểm theo ảnh và chức năng đã duyệt.",
+        "Tình huống hư cấu, không chấn thương, không lời chứng thực ngôi thứ nhất.",
+        "Không ngụ ý cơ quan nhà nước chứng nhận."
+      ],
+      "version": 2,
+      "updatedAt": "2026-11-12T00:00:00Z",
+      "storyboardVersion": 2,
+      "resultStyle": "subject_after",
+      "situationExamples": [
+        "A dog wears a floppy cardboard visibility halo; it folds over as the owner reaches for the leash.",
+        "A dog approaches the closed driveway gate as distant car headlights sweep across it; the owner holds the leash."
+      ],
+      "ctaPlacement": "overlay",
+      "ctaTiming": {
+        "fromEndSec": 4.4,
+        "toEndSec": 0
+      },
+      "usCues": [
+        "suburban homes",
+        "stadium"
+      ],
+      "pacingSource": {
+        "samples": [
+          "V04",
+          "V07"
+        ],
+        "timing": "adapted",
+        "notes": "V04: vòng halo cho chó, 14 giây, DIY bằng bìa; dùng cho tình huống và subject_after. V07 cung cấp kiểu hook do-not-show, không coi đèn ô tô là mẫu subject_after. Nhịp 3/3/3 và CTA 9,6–14 giây là bản điều chỉnh; CTA V04 chỉ có trong tên file ở dữ liệu v1. Số cắt v1 là dữ liệu lấy mẫu lịch sử; không dùng làm số shot đo chính xác."
+      }
+    },
+    {
+      "id": "think-vs-actually",
+      "name": "\"What people think we sell vs what we actually sell\"",
+      "hookType": "think_vs_actually",
+      "aspect": "9:16",
+      "durationSec": {
+        "min": 11.8,
+        "max": 11.8
+      },
+      "cuts": {
+        "min": 7,
+        "max": 7
+      },
+      "overlay": {
+        "position": "top-center",
+        "lines": 2,
+        "changesPerBeat": true,
+        "readableMuted": true,
+        "color": "white",
+        "outline": "black",
+        "heightPercent": {
+          "min": 5,
+          "max": 6
+        },
+        "transition": "hard-cut"
+      },
+      "beats": [
+        {
+          "kind": "problem",
+          "role": "hook",
+          "phase": "hook",
+          "label": "What people think we sell 🤔",
+          "goal": "Show ONE specific failed DIY attempt or near-miss that reads in one second. Fictional. No injury, no blood, no collision shown.",
+          "fromSec": 0,
+          "toSec": 2.2,
+          "timeOrigin": "start",
+          "situation": "A runner holds a homemade foil reflector; the crumpled foil folds shut in one hand.",
+          "shots": [
+            {
+              "duration": 1,
+              "camera": "Eye-level medium shot; short lateral slide",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Establish the specific awkward attempt in one readable frame.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            },
+            {
+              "duration": 1.2,
+              "camera": "Low-angle close-up; gentle push-in",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Move closer to the visible failed detail; the observer reacts.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            }
+          ],
+          "overlay": {
+            "text": "What people think we sell 🤔",
+            "emoji": "🤔",
+            "fromSec": 0,
+            "toSec": 2.2,
+            "position": "top-center",
+            "lines": 1
+          }
+        },
+        {
+          "kind": "versus_unbox",
+          "role": "body",
+          "phase": "unbox",
+          "label": "Vs…",
+          "goal": "Reveal named packaging and the actual product in three distinct views.",
+          "fromSec": 2.2,
+          "toSec": 5.8,
+          "timeOrigin": "start",
+          "shots": [
+            {
+              "duration": 1,
+              "camera": "Low-angle close-up; gentle push-in",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Show the named box in the same setting; turn the front toward camera.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            },
+            {
+              "duration": 1.2,
+              "camera": "Overhead detail; quick controlled tilt",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Lift the lid and reveal the actual product and its parts.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            },
+            {
+              "duration": 1.4,
+              "camera": "Wide three-quarter view; lateral tracking",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Fit or set up the product using the approved reference.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            }
+          ],
+          "overlay": {
+            "text": "Vs…",
+            "emoji": "",
+            "fromSec": 2.2,
+            "toSec": 5.8,
+            "position": "top-center",
+            "lines": 1
+          }
+        },
+        {
+          "kind": "result",
+          "role": "body",
+          "phase": "result",
+          "label": "What we actually sell 😍❤️",
+          "goal": "Show the product's real function at maximum visual scale, supported by approved product facts.",
+          "fromSec": 5.8,
+          "toSec": 11.8,
+          "timeOrigin": "start",
+          "shots": [
+            {
+              "duration": 1.6,
+              "camera": "Wide eye-level group reveal; slow push-in",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Reveal the real product function at wide visual scale, angle 1; the group shares the visible result.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            },
+            {
+              "duration": 2.1,
+              "camera": "Low-angle wide tracking shot",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Reveal the real product function at wide visual scale, angle 2; the group shares the visible result.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            },
+            {
+              "duration": 2.3,
+              "camera": "High-angle wide arc around the group",
+              "subjects": "Three adult participants using the product; a fourth friend watches with visible delight",
+              "setting": "A quiet US suburban stadium path at night",
+              "action": "Reveal the real product function at wide visual scale, angle 3; the group shares the visible result.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Night; practical product light and soft ambient street lighting."
+            }
+          ],
+          "overlay": {
+            "text": "What we actually sell 😍❤️",
+            "emoji": "😍❤️",
+            "fromSec": 5.8,
+            "toSec": 11.8,
+            "position": "top-center",
+            "lines": 1
+          }
+        }
+      ],
+      "labelVariants": {
+        "problem": [
+          "What people think we sell 🤔",
+          "The problem… 😳"
+        ],
+        "versus_unbox": [
+          "Vs…"
+        ],
+        "result": [
+          "What we actually sell 😍❤️"
+        ]
+      },
+      "ctaPatterns": [
+        "Comment \"{WORD}\" to get yours!"
+      ],
+      "fitProductTraits": [
+        "identity",
+        "apparel"
+      ],
+      "references": [
+        "V9"
+      ],
+      "guardrails": [
+        "Chỉ dựng hiệu ứng mà sản phẩm thật làm được; kiểm theo ảnh và chức năng đã duyệt.",
+        "Tình huống hư cấu, không chấn thương, không lời chứng thực ngôi thứ nhất.",
+        "Không ngụ ý cơ quan nhà nước chứng nhận."
+      ],
+      "version": 2,
+      "updatedAt": "2026-11-12T00:00:00Z",
+      "storyboardVersion": 2,
+      "resultStyle": "spectacle",
+      "situationExamples": [
+        "A runner holds a homemade foil reflector; the crumpled foil folds shut in one hand.",
+        "A cyclist tries a phone taped to a helmet; the tape peels as the helmet is lifted."
+      ],
+      "ctaPlacement": "overlay",
+      "ctaTiming": {
+        "fromEndSec": 4.4,
+        "toEndSec": 0
+      },
+      "usCues": [
+        "suburban homes",
+        "stadium"
+      ],
+      "pacingSource": {
+        "samples": [
+          "V09"
+        ],
+        "timing": "adapted",
+        "notes": "V09: What people think / What we actually sell, 11,8 giây. Giữ tổng và chuyển tương phản sang spectacle với 3 góc kết quả. Nhịp 2/3/3, CTA 7,4–11,8 giây là đề xuất áp dụng; không suy hoodie có chức năng phát sáng. Số cắt v1 là dữ liệu lấy mẫu lịch sử; không dùng làm số shot đo chính xác."
+      }
+    },
+    {
+      "id": "audience-callout",
+      "name": "Gọi đúng tệp khách: \"If you {DO X}, watch this\"",
+      "hookType": "audience_callout",
+      "aspect": "9:16",
+      "durationSec": {
+        "min": 16.1,
+        "max": 16.1
+      },
+      "cuts": {
+        "min": 12,
+        "max": 12
+      },
+      "overlay": {
+        "position": "top-center",
+        "lines": 2,
+        "changesPerBeat": true,
+        "readableMuted": true,
+        "color": "white",
+        "outline": "black",
+        "heightPercent": {
+          "min": 5,
+          "max": 6
+        },
+        "transition": "hard-cut"
+      },
+      "beats": [
+        {
+          "kind": "problem",
+          "role": "hook",
+          "phase": "hook",
+          "label": "If you run, watch this 🏃",
+          "goal": "Show ONE specific failed DIY attempt or near-miss that reads in one second. Fictional. No injury, no blood, no collision shown.",
+          "fromSec": 0,
+          "toSec": 3.5,
+          "timeOrigin": "start",
+          "situation": "A runner stuffs a phone into a loose shirt pocket; it slides into the waiting hand.",
+          "shots": [
+            {
+              "duration": 1,
+              "camera": "Eye-level medium shot; short lateral slide",
+              "subjects": "One adult runner; one training partner observes from the bench",
+              "setting": "A US stadium running track and its adjacent bench",
+              "action": "Establish the specific awkward attempt in one readable frame.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            },
+            {
+              "duration": 1.2,
+              "camera": "Low-angle close-up; gentle push-in",
+              "subjects": "One adult runner; one training partner observes from the bench",
+              "setting": "A US stadium running track and its adjacent bench",
+              "action": "Move closer to the visible failed detail; the observer reacts.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            },
+            {
+              "duration": 1.3,
+              "camera": "Wide profile tracking shot along the group",
+              "subjects": "One adult runner; one training partner observes from the bench",
+              "setting": "A US stadium running track and its adjacent bench",
+              "action": "Reveal the subject stopping to rethink the specific failed attempt.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            }
+          ],
+          "overlay": {
+            "text": "If you run, watch this 🏃",
+            "emoji": "🏃",
+            "fromSec": 0,
+            "toSec": 3.5,
+            "position": "top-center",
+            "lines": 1
+          }
+        },
+        {
+          "kind": "versus_unbox",
+          "role": "body",
+          "phase": "unbox",
+          "label": "Vs…",
+          "goal": "Reveal named packaging and the actual product in three distinct views.",
+          "fromSec": 3.5,
+          "toSec": 6.1,
+          "timeOrigin": "start",
+          "shots": [
+            {
+              "duration": 1.4,
+              "camera": "Low-angle close-up; gentle push-in",
+              "subjects": "One adult runner; one training partner observes from the bench",
+              "setting": "A US stadium running track and its adjacent bench",
+              "action": "Show the named box in the same setting; turn the front toward camera.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            },
+            {
+              "duration": 1.2,
+              "camera": "Overhead detail; quick controlled tilt",
+              "subjects": "One adult runner; one training partner observes from the bench",
+              "setting": "A US stadium running track and its adjacent bench",
+              "action": "Lift the lid and reveal the actual product and its parts.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            }
+          ],
+          "overlay": {
+            "text": "Vs…",
+            "emoji": "",
+            "fromSec": 3.5,
+            "toSec": 6.1,
+            "position": "top-center",
+            "lines": 1
+          }
+        },
+        {
+          "kind": "versus_unbox",
+          "role": "body",
+          "phase": "feature_tour",
+          "label": "The details 👀",
+          "goal": "Show one real feature per shot, from approved product references.",
+          "fromSec": 6.1,
+          "toSec": 11.1,
+          "timeOrigin": "start",
+          "shots": [
+            {
+              "duration": 1.1,
+              "camera": "Eye-level close-up; short lateral slide",
+              "subjects": "One adult runner; one training partner observes from the bench",
+              "setting": "A US stadium running track and its adjacent bench",
+              "action": "Show feature 1 as one visible detail from the approved references: front construction.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            },
+            {
+              "duration": 1.4,
+              "camera": "Overhead detail; controlled tilt",
+              "subjects": "One adult runner; one training partner observes from the bench",
+              "setting": "A US stadium running track and its adjacent bench",
+              "action": "Show feature 2 as one visible detail from the approved references: fastening detail.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            },
+            {
+              "duration": 1.2,
+              "camera": "Side medium shot; slow tracking",
+              "subjects": "One adult runner; one training partner observes from the bench",
+              "setting": "A US stadium running track and its adjacent bench",
+              "action": "Show feature 3 as one visible detail from the approved references: side profile.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            },
+            {
+              "duration": 1.3,
+              "camera": "Low three-quarter close-up; gentle arc",
+              "subjects": "One adult runner; one training partner observes from the bench",
+              "setting": "A US stadium running track and its adjacent bench",
+              "action": "Show feature 4 as one visible detail from the approved references: fit adjustment.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            }
+          ],
+          "overlay": {
+            "text": "The details 👀",
+            "emoji": "👀",
+            "fromSec": 6.1,
+            "toSec": 11.1,
+            "position": "top-center",
+            "lines": 1
+          }
+        },
+        {
+          "kind": "versus_unbox",
+          "role": "body",
+          "phase": "feature_tour",
+          "label": "The details 👀",
+          "goal": "Show one real feature per shot, from approved product references.",
+          "fromSec": 11.1,
+          "toSec": 16.1,
+          "timeOrigin": "start",
+          "shots": [
+            {
+              "duration": 1,
+              "camera": "Eye-level close-up; short lateral slide",
+              "subjects": "One adult runner; one training partner observes from the bench",
+              "setting": "A US stadium running track and its adjacent bench",
+              "action": "Show feature 5 as one visible detail from the approved references: rear construction.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            },
+            {
+              "duration": 1.5,
+              "camera": "Overhead detail; controlled tilt",
+              "subjects": "One adult runner; one training partner observes from the bench",
+              "setting": "A US stadium running track and its adjacent bench",
+              "action": "Show feature 6 as one visible detail from the approved references: movement while worn.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            },
+            {
+              "duration": 1.2,
+              "camera": "Side medium shot; slow tracking",
+              "subjects": "One adult runner; one training partner observes from the bench",
+              "setting": "A US stadium running track and its adjacent bench",
+              "action": "Show feature 7 as one visible detail from the approved references: strap attachment detail.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            },
+            {
+              "duration": 1.3,
+              "camera": "Low three-quarter close-up; gentle arc",
+              "subjects": "One adult runner; one training partner observes from the bench",
+              "setting": "A US stadium running track and its adjacent bench",
+              "action": "Show feature 8 as one visible detail from the approved references: edge finish.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            }
+          ],
+          "overlay": {
+            "text": "The details 👀",
+            "emoji": "👀",
+            "fromSec": 11.1,
+            "toSec": 16.1,
+            "position": "top-center",
+            "lines": 1
+          }
+        }
+      ],
+      "labelVariants": {
+        "problem": [
+          "If you run, watch this 🏃",
+          "The problem… 😳"
+        ],
+        "versus_unbox": [
+          "Vs…"
+        ],
+        "result": [
+          "The result 😍❤️"
+        ]
+      },
+      "ctaPatterns": [
+        "Would you try it? Comment \"{WORD}\""
+      ],
+      "fitProductTraits": [
+        "beauty",
+        "routine",
+        "visual_payoff_one_frame"
+      ],
+      "references": [
+        "V11",
+        "V2"
+      ],
+      "guardrails": [
+        "Chỉ dựng hiệu ứng mà sản phẩm thật làm được; kiểm theo ảnh và chức năng đã duyệt.",
+        "Tình huống hư cấu, không chấn thương, không lời chứng thực ngôi thứ nhất.",
+        "Không ngụ ý cơ quan nhà nước chứng nhận."
+      ],
+      "version": 2,
+      "updatedAt": "2026-11-12T00:00:00Z",
+      "storyboardVersion": 2,
+      "resultStyle": "feature_tour",
+      "situationExamples": [
+        "A runner stuffs a phone into a loose shirt pocket; it slides into the waiting hand.",
+        "A runner ties a bulky pouch with string; the knot loosens before starting."
+      ],
+      "ctaPlacement": "overlay",
+      "ctaTiming": {
+        "fromEndSec": 5,
+        "toEndSec": 0
+      },
+      "usCues": [
+        "suburban homes",
+        "stadium"
+      ],
+      "pacingSource": {
+        "samples": [
+          "V02",
+          "V11"
+        ],
+        "timing": "adapted",
+        "notes": "V02: vest chạy bộ, 16,1 giây trong v1; đề ghi hook 3 shot rồi tour 11 shot. Điều chỉnh thành hook 3, mở hộp 2 và tour 8 shot (hai beat 4+4 để mỗi beat ≤6); giữ tổng 16,1 giây. V11 cung cấp kiểu audience-callout. CTA 11,1–16,1 giây là đề xuất, không phải overlay đã xác minh trên V02 (v1 chỉ có từ khóa từ tên file). Số cắt v1 là dữ liệu lấy mẫu lịch sử; không dùng làm số shot đo chính xác."
+      }
+    },
+    {
+      "id": "emotional-story-pov",
+      "name": "Câu chuyện cảm xúc (CHỈ dạng POV, không lời chứng thực giả)",
+      "hookType": "emotional_story",
+      "aspect": "9:16",
+      "durationSec": {
+        "min": 14.5,
+        "max": 14.5
+      },
+      "cuts": {
+        "min": 9,
+        "max": 9
+      },
+      "overlay": {
+        "position": "top-center",
+        "lines": 2,
+        "changesPerBeat": true,
+        "readableMuted": true,
+        "color": "white",
+        "outline": "black",
+        "heightPercent": {
+          "min": 5,
+          "max": 6
+        },
+        "transition": "hard-cut"
+      },
+      "beats": [
+        {
+          "kind": "problem",
+          "role": "hook",
+          "phase": "hook",
+          "label": "The problem… 😳",
+          "goal": "Show ONE specific failed DIY attempt or near-miss that reads in one second. Fictional. No injury, no blood, no collision shown.",
+          "fromSec": 0,
+          "toSec": 2.6,
+          "timeOrigin": "start",
+          "situation": "An older adult fumbles for a phone across the table; a visiting neighbour notices and moves closer.",
+          "shots": [
+            {
+              "duration": 1.2,
+              "camera": "Eye-level medium shot; short lateral slide",
+              "subjects": "One older adult, one family member and one visiting neighbour; the neighbour notices and reacts calmly",
+              "setting": "A lived-in US suburban kitchen",
+              "action": "Establish the specific awkward attempt in one readable frame.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            },
+            {
+              "duration": 1.4,
+              "camera": "Low-angle close-up; gentle push-in",
+              "subjects": "One older adult, one family member and one visiting neighbour; the neighbour notices and reacts calmly",
+              "setting": "A lived-in US suburban kitchen",
+              "action": "Move closer to the visible failed detail; the observer reacts.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            }
+          ],
+          "overlay": {
+            "text": "The problem… 😳",
+            "emoji": "😳",
+            "fromSec": 0,
+            "toSec": 2.6,
+            "position": "top-center",
+            "lines": 1
+          }
+        },
+        {
+          "kind": "versus_unbox",
+          "role": "body",
+          "phase": "unbox",
+          "label": "Vs…",
+          "goal": "Reveal named packaging and the actual product in three distinct views.",
+          "fromSec": 2.6,
+          "toSec": 6.5,
+          "timeOrigin": "start",
+          "shots": [
+            {
+              "duration": 1.1,
+              "camera": "Low-angle close-up; gentle push-in",
+              "subjects": "One older adult, one family member and one visiting neighbour; the neighbour notices and reacts calmly",
+              "setting": "A lived-in US suburban kitchen",
+              "action": "Show the named box in the same setting; turn the front toward camera.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            },
+            {
+              "duration": 1.4,
+              "camera": "Overhead detail; quick controlled tilt",
+              "subjects": "One older adult, one family member and one visiting neighbour; the neighbour notices and reacts calmly",
+              "setting": "A lived-in US suburban kitchen",
+              "action": "Lift the lid and reveal the actual product and its parts.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            },
+            {
+              "duration": 1.4,
+              "camera": "Wide three-quarter view; lateral tracking",
+              "subjects": "One older adult, one family member and one visiting neighbour; the neighbour notices and reacts calmly",
+              "setting": "A lived-in US suburban kitchen",
+              "action": "Fit or set up the product using the approved reference.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            }
+          ],
+          "overlay": {
+            "text": "Vs…",
+            "emoji": "",
+            "fromSec": 2.6,
+            "toSec": 6.5,
+            "position": "top-center",
+            "lines": 1
+          }
+        },
+        {
+          "kind": "result",
+          "role": "body",
+          "phase": "result",
+          "label": "The result 😍❤️",
+          "goal": "Show the product's real function at maximum visual scale, supported by approved product facts.",
+          "fromSec": 6.5,
+          "toSec": 14.5,
+          "timeOrigin": "start",
+          "shots": [
+            {
+              "duration": 1.6,
+              "camera": "Overhead detail; quick controlled tilt",
+              "subjects": "One older adult, one family member and one visiting neighbour; the neighbour notices and reacts calmly",
+              "setting": "A lived-in US suburban kitchen",
+              "action": "Stage the next third-person story card with all characters grounded in this fictional situation.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            },
+            {
+              "duration": 1.4,
+              "camera": "Wide three-quarter view; lateral tracking",
+              "subjects": "One older adult, one family member and one visiting neighbour; the neighbour notices and reacts calmly",
+              "setting": "A lived-in US suburban kitchen",
+              "action": "Stage the next third-person story card with all characters grounded in this fictional situation.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            },
+            {
+              "duration": 1.5,
+              "camera": "Ground-level wide shot; slow arc",
+              "subjects": "One older adult, one family member and one visiting neighbour; the neighbour notices and reacts calmly",
+              "setting": "A lived-in US suburban kitchen",
+              "action": "Stage the next third-person story card with all characters grounded in this fictional situation.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            },
+            {
+              "duration": 1.7,
+              "camera": "Face close-up; gentle pull-back",
+              "subjects": "One older adult, one family member and one visiting neighbour; the neighbour notices and reacts calmly",
+              "setting": "A lived-in US suburban kitchen",
+              "action": "Stage the next third-person story card with all characters grounded in this fictional situation.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            },
+            {
+              "duration": 1.8,
+              "camera": "Eye-level medium shot; short lateral slide",
+              "subjects": "One older adult, one family member and one visiting neighbour; the neighbour notices and reacts calmly",
+              "setting": "A lived-in US suburban kitchen",
+              "action": "Stage the next third-person story card with all characters grounded in this fictional situation.",
+              "ending": "End on a clear readable pose for a hard cut into the next shot.",
+              "lighting": "Soft natural light; visible faces and readable product details."
+            }
+          ],
+          "overlay": {
+            "text": "The result 😍❤️",
+            "emoji": "😍❤️",
+            "fromSec": 6.5,
+            "toSec": 14.5,
+            "position": "top-center",
+            "lines": 1
+          }
+        }
+      ],
+      "labelVariants": {
+        "problem": [
+          "The problem… 😳",
+          "The problem… 😳"
+        ],
+        "versus_unbox": [
+          "Vs…"
+        ],
+        "result": [
+          "The result 😍❤️"
+        ]
+      },
+      "ctaPatterns": [
+        "Comment \"{WORD}\" if you want one"
+      ],
+      "fitProductTraits": [
+        "safety",
+        "family",
+        "senior",
+        "pet"
+      ],
+      "references": [
+        "V12"
+      ],
+      "guardrails": [
+        "Chỉ dựng hiệu ứng mà sản phẩm thật làm được; kiểm theo ảnh và chức năng đã duyệt.",
+        "Tình huống hư cấu, không chấn thương, không lời chứng thực ngôi thứ nhất.",
+        "Không ngụ ý cơ quan nhà nước chứng nhận."
+      ],
+      "version": 2,
+      "updatedAt": "2026-11-12T00:00:00Z",
+      "storyboardVersion": 2,
+      "resultStyle": "story_cards",
+      "situationExamples": [
+        "An older adult fumbles for a phone across the table; a visiting neighbour notices and moves closer.",
+        "An adult reaches for a ringing phone while holding a cup; a family member offers a free hand."
+      ],
+      "ctaPlacement": "overlay",
+      "ctaTiming": {
+        "fromEndSec": 5,
+        "toEndSec": 0
+      },
+      "usCues": [
+        "suburban homes",
+        "stadium"
+      ],
+      "metadata": {
+        "dramatization": true
+      },
+      "storyCards": [
+        "A neighbour notices the struggle",
+        "A family member brings the product",
+        "They set it up together",
+        "A simple action brings them closer",
+        "A calmer moment together"
+      ],
+      "pacingSource": {
+        "samples": [
+          "V12"
+        ],
+        "timing": "adapted",
+        "notes": "V12: Senvia SOS, 14,5 giây. Giữ 5 thẻ chuyện, đổi sang ngôi thứ ba có hàng xóm và metadata tình huống hư cấu. Nhịp 2/3/5 và CTA 9,5–14,5 giây là bản điều chỉnh; chưa có mốc từng shot từ gói video. Số cắt v1 là dữ liệu lấy mẫu lịch sử; không dùng làm số shot đo chính xác."
+      }
+    }
+  ],
+  "storyboardMeasurements": {
+    "source": "Số đo rea-video 12 mẫu do người dùng cung cấp ngày 12/11/2026; chưa mở gói video trong T-007",
+    "sampleCount": 12,
+    "durationSec": {
+      "min": 10,
+      "max": 18
+    },
+    "cutsPerMinute": 41,
+    "shotSeconds": 1.5,
+    "shotsTypical": 10,
+    "shotsObserved": {
+      "min": 5,
+      "max": 15
+    },
+    "musicBpm": {
+      "min": 83,
+      "max": 152
+    },
+    "ctaOverlayCount": 7,
+    "ctaCaptionCount": 5,
+    "cutTiming": "content",
+    "voice": false
+  }
 }
