@@ -18,6 +18,9 @@ Một main Codex thực hiện, kiểm và tự review theo Office mode; không 
 | T-020 | 47bb61a | Mười bước tiếp theo, đúng product/project và bằng chứng hiện tại |
 | T-021 | c5be1da | Một ngày với Hermes, 13 link đúng màn, bàn phím |
 | T-022 | 8a2753d / c9546a4 / a38a226 | Office đọc đủ số đo/receipt; bỏ nhãn MP4 hiện hành khi đổi đoạn; null mới không lấy số cũ |
+| T-022a | c0474fb | Test rủi ro render/matrix/CSV; cùng thời điểm khác ISO offset không nhập trùng |
+| T-022b | c5958fd | Bảy màn trống, nhãn tiếng Việt/null, 14 ảnh ở hai khổ |
+| T-022c | 8ec2aa5 | Bảng preview cuộn bằng phím, lỗi giữ ngữ nghĩa danh sách; axe/ARIA/focus |
 
 ## Muse và video thật
 
@@ -38,5 +41,7 @@ Ba bài nháp thật dùng CTA PAWS và giá hồ sơ 5,99 USD, chưa tài kho�
 ## Kiểm và tiếp tục
 
 Báo cáo từng task: ops/office/reports/T-xxx.md; review ở văn phòng. Ảnh 1366/1920: outputs/T-012-ui, T-013-ui, T-014-ui, T-015-ui, T-017-ui, T-018-ui, T-019-ui, T-020-ui, T-021-ui, T-023-ui, T-022-ui; ảnh Electron thật ở outputs/M-20261113. Test dịch vụ giả tách khỏi OpenMontage/FFmpeg chạy thật với fixture. Không sửa dependency, data/evidence hay giảm assertion. Kết quả suite/build cuối và SHA cuối ghi STATUS văn phòng.
+
+Kiểm source cuối tại 8ec2aa5: **764 đạt / 1 bỏ qua / 0 lỗi** (domain 247, API 29, desktop 488), TypeScript đạt. Kiểm UI T-019 hồi quy đạt; T-022b có 14 PNG và T-022c có 8 PNG. Axe 4.11.0: sáu trạng thái, 0 violation; 18 kiểm focus/bàn phím, cây ARIA lưu cùng ảnh tại outputs/T-022c-ui. Còn incomplete về tương phản/nội dung ngoài vùng cuộn/bảng trống; chưa screen reader, zoom 200% và high contrast, không coi là chứng nhận WCAG. Ba mục bổ sung người dùng giao đã hoàn tất, không thêm tính năng ngoài danh sách.
 
 Mở START-HERMES-CLIP.cmd sau build cuối → Hướng dẫn hoặc hồ sơ → Bước tiếp theo. Muse giữ Tạm dừng; tiếp bằng manual nếu cần clip mới. Người dùng cần chốt ngưỡng tín hiệu và tài khoản/landing trước phát hành. Chưa kiểm Meta/DM thật, Flow mới, Thùng rác thật và toàn bộ hành trình trên dữ liệu người dùng sau build cuối. Không đọc lại dữ liệu thật chỉ để bổ sung báo cáo.

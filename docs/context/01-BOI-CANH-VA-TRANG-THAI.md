@@ -2,6 +2,8 @@
 
 T-012–T-023 trong danh sách người dùng đã triển khai; review cuối T-022 có ba sửa nhỏ về receipt, MP4 cũ và null. Đọc [báo cáo sáng](2026-11-13-OFFICE-MORNING.md) và STATUS văn phòng cho SHA/build/test cuối. Một main agent; không push/merge. Office nằm ngay trong app.
 
+Bổ sung cuối đợt: T-022a c0474fb sửa chống trùng bản đo khác cách viết múi giờ và thêm test rủi ro; T-022b c5958fd kiểm nhãn/trạng thái trống; T-022c 8ec2aa5 sửa cuộn bảng bằng phím/ngữ nghĩa danh sách lỗi. Source cuối: 764 đạt/1 skip/0 lỗi, typecheck; axe sáu trạng thái không violation, 18 kiểm focus và ảnh hai khổ. Chưa trình đọc màn hình thật; xem giới hạn ở báo cáo. Build cuối sau commit tài liệu trên cây sạch, chi tiết STATUS.
+
 Electron chạy được. Muse thật đã Tạm dừng sau hạn chế vùng: 1 gửi/0 clip mới/2 lỗi (một trước gửi), không thử lại đêm này. Ba MP4 thật và ba draft dùng clip Muse cũ ngày 12/11; chưa đăng, chưa tài khoản/landing, chưa xác minh đúng SKU/công dụng. Không gọi mục tiêu clip mới hoàn thành. Ngưỡng tín hiệu còn null.
 
 Các mục bên dưới là lịch sử; mốc dừng trước T-012 và các lỗi sandbox/SAC cũ không thay trạng thái hiện hành.
