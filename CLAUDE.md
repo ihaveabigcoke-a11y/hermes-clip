@@ -87,7 +87,7 @@ renderPlan {
    - Đếm được: **hôm nay đã chọn n/3**, **tổng lượt chọn qua các ngày**, **số sản phẩm khác nhau**.
    - Schema mới để optional/nullable, record cũ vẫn đọc được.
    - Có fixture "hôm nay 3, hôm qua 1 khác còn việc".
-2. **Dữ liệu cho hai màn Office trong app** (mục 8): hàm thuần `buildOfficeView(records, workerStore, manual, integrations, now)` kèm test fixture, đọc qua route local đã xác thực. **Đây là mốc nghiệm thu đầu tiên.**
+2. **T-010 — dữ liệu cho hai màn Office trong app** (mục 8): hàm thuần `buildOfficeView(records, workerStore, manual, integrations, now)` kèm test fixture, đọc qua route local đã xác thực. **T-011** thêm Tín hiệu & Phòng chờ (lọc theo sản phẩm/trạng thái, provider, sự kiện cuối, lịch sử, lý do cần xử lý), Phòng sản xuất (Đợt hôm nay / Đang triển khai) và bộ đếm Hôm nay n/3 ở mục Sản phẩm. Giữ theme/font, kiểm ảnh 1366/1920. **Đây là mốc nghiệm thu đầu tiên; dừng trước bước 3.**
 3. **Một video xuyên suốt** (mục 5):
    - `renderPlan` và màn chọn đoạn in/out trên take.
    - Cắt, ghép, đè chữ, xuất `render`.
@@ -114,7 +114,7 @@ pnpm local:build         # chỉ khi app đang tắt; KHÔNG dùng pnpm build
 ### Nguyên tắc
 - **Hermes Clip là nguồn dữ liệu gốc.** Hai màn theo dõi trong app chỉ đọc; lựa chọn sản phẩm vẫn thực hiện trong màn Nghiên cứu.
 - Server local nghe 127.0.0.1 ở cổng ngẫu nhiên, giữ cookie phiên và chặn host/origin lạ. Hai màn trong app dùng cùng route đã xác thực; không có kênh chia sẻ ra repo ngoài.
-- Snapshot không chứa cookie, key, token, email, cấu hình proxy, đường dẫn tuyệt đối trên máy hay nội dung prompt đầy đủ.
+- View không chứa cookie, key, token, email, cấu hình proxy, đường dẫn tuyệt đối trên máy hay nội dung prompt đầy đủ.
 
 ### Cách đọc trong app (thay vận chuyển file theo chỉ đạo trực tiếp)
 - `buildOfficeView(records, workerStore, manual, integrations, now)` là hàm thuần, giữ cấu trúc dữ liệu v1 phía dưới.
@@ -195,8 +195,8 @@ pnpm local:build         # chỉ khi app đang tắt; KHÔNG dùng pnpm build
 ### Đơn vị đếm
 Lượt media, bản xuất, bài đăng và lần đo là **bốn đơn vị khác nhau**. Không cộng chúng thành một con số chung "video". Mỗi con số trên UI ghi rõ đơn vị của nó.
 
-### Mốc nghiệm thu đầu tiên (chung cho hai repo)
-1. **Một lượt thật đổi trạng thái** trong Hermes, ví dụ thả một MP4 vào Hộp nhận media hoặc một job đi từ `validating` sang `ready`. Trong vòng 1 phút, snapshot mới có lượt đó với `group` mới, và Office hiện đúng lượt đó ở đúng nhóm, kèm sự kiện cuối và giờ cập nhật.
+### Mốc nghiệm thu đầu tiên (T-010 + T-011 trong app)
+1. **Một lượt thật đổi trạng thái** trong Hermes, ví dụ thả một MP4 vào Hộp nhận media hoặc một job đi từ `validating` sang `ready`. Trong vòng 1 phút, view mới có lượt đó với `group` mới, và Office hiện đúng lượt đó ở đúng nhóm, kèm sự kiện cuối và giờ cập nhật.
 2. **Fixture:** hôm nay chọn 3 sản phẩm, hôm qua có 1 sản phẩm khác vẫn còn việc. Office hiện **Hôm nay 3/3** và **Đang triển khai 4**. Hermes xuất đúng `selection.days`, `products[].active` và `totals` cho fixture này.
 Chỉ khi cả hai mục đạt mới mở rộng đồng bộ và giao diện.
 
@@ -209,7 +209,7 @@ Chỉ khi cả hai mục đạt mới mở rộng đồng bộ và giao diện.
   - Thả 1 MP4 vào Hộp nhận media.
   - Trong ≤ 1 phút, view trong app có lượt `manual:<sha256>` chuyển nhóm.
   - Ghi bằng chứng view trước/sau và ảnh màn Tín hiệu trong app.
-- [ ] Một MP4 xuất ra:
+- [ ] Sau mốc 1, T-012 mới làm một MP4 xuất ra:
   - ffprobe ra 720×1280, thời lượng khớp `renderPlan`, có `sha256`.
   - Mở được bằng trình phát mặc định của Windows.
   - Ba biến thể hook có cùng đoạn thân (so `sha256` từng đoạn hoặc so danh sách `segments`).

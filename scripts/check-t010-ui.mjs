@@ -34,10 +34,10 @@ try {
  });
  const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
  await page.goto(local.origin+'/?view=research&ops_id=today');
- await page.getByText('Hôm nay 3/3',{exact:true}).waitFor();
+ await page.locator('.research-selection-bar').getByText('Hôm nay 3/3',{exact:true}).waitFor();
  for(const width of [1366,1920]){await page.setViewportSize({width,height:900});await page.screenshot({path:join(out,`selection-${width}.png`),fullPage:true});}
  await page.getByRole('checkbox',{name:'Chọn Hộp chia ngăn',exact:true}).click();
- await page.getByText('Hôm nay 2/3',{exact:true}).waitFor();
+ await page.locator('.research-selection-bar').getByText('Hôm nay 2/3',{exact:true}).waitFor();
  await page.getByRole('checkbox',{name:'Chọn Giá xoay màn hình',exact:true}).click();
  const dialog=page.getByRole('dialog');await dialog.waitFor();
  assert.equal(await dialog.getByLabel('Mã sản phẩm',{exact:true}).inputValue(),'');
@@ -47,7 +47,7 @@ try {
  await dialog.getByLabel('Thứ hạng hôm nay',{exact:true}).fill('3');
  await dialog.getByLabel('Lý do lựa chọn',{exact:true}).fill('Người dùng tự xếp; fixture kiểm giao diện.');
  await dialog.getByRole('button',{name:/Lưu/,exact:false}).click();
- await dialog.waitFor({state:'hidden'});await page.getByText('Hôm nay 3/3',{exact:true}).waitFor();
+ await dialog.waitFor({state:'hidden'});await page.locator('.research-selection-bar').getByText('Hôm nay 3/3',{exact:true}).waitFor();
  const view=await page.evaluate(async()=> (await (await fetch('/api/lab?view=office')).json()).view);
  assert.equal(view.selection.totals.distinctProducts,4); // one today was replaced, yesterday remains
  assert.equal(view.products.filter(p=>p.key==='SCREEN-STAND').length,1);

@@ -92,8 +92,12 @@ import {
   productMarginLabel,
   formatTime,
 } from "@/lib/lab/domain";
+import OfficeViews from './office-views';
+import {selectionCounts} from '@/lib/lab/daily-selection';
 const businessViews = new Set(["overview", "studio", "experiments", "results", "social", "landing"]);
 const navigation = [
+  {id:"office",label:"Phòng sản xuất",icon:LayoutDashboard},
+  {id:"signals",label:"Tín hiệu & Phòng chờ",icon:BarChart3},
   { id: "production", label: "Tạo nội dung", icon: Video },
   { id: "images", label: "Tạo ảnh", icon: ImageIcon },
   { id: "queue", label: "Hàng đợi", icon: Clapperboard },
@@ -254,6 +258,9 @@ export default function LabApp() {
     abort = useRef<AbortController | null>(null),
     pending = useRef(false);
   const records = demo ? samples : real;
+  const [selectionNow,setSelectionNow]=useState(Date.now());
+  useEffect(()=>{const timer=setInterval(()=>setSelectionNow(Date.now()),60000);return()=>clearInterval(timer);},[]);
+  const selectionSummary=selectionCounts(records,selectionNow);
   const notify = useCallback(
     (text: string, tone = "success") => setNotice({ text, tone }),
     [],
@@ -2158,7 +2165,7 @@ export default function LabApp() {
               <a key={item.id} href={`?view=${item.id}`} aria-current={view === item.id ? "page" : undefined}
                 className={view === item.id ? "active" : ""}
                 onClick={event => { event.preventDefault(); navigate(item.id); }}>
-                <item.icon size={19}/><span>{item.label}</span>
+                <item.icon size={19}/><span>{item.label}{item.id==='products'&&<small className="office-nav-count">Hôm nay {selectionSummary.count}/3</small>}</span>
               </a>
             ))}
           </nav>
@@ -2218,7 +2225,7 @@ export default function LabApp() {
           </div>
         </header>
         <main id="lab-main" tabIndex={-1}>
-          <div className="page-heading" hidden={["research", "social", "landing", "accounts", "queue", "chat", "library"].includes(view)}>
+          <div className="page-heading" hidden={["research", "social", "landing", "accounts", "queue", "chat", "library", "office", "signals"].includes(view)}>
             <div>
               {view !== "products" && <div className="page-eyebrow">
                 HERMES CLIP <span>/</span>{" "}
@@ -2296,6 +2303,8 @@ export default function LabApp() {
             </div>
           ) : view === "overview" ? (
             overview()
+          ) : view === "office" || view === "signals" ? (
+            <OfficeViews key={demo?"demo-office":"local-office"} mode={view} records={records} demo={demo}/>
           ) : view === "products" ? (
             productsView()
           ) : ["research", "social", "landing"].includes(view) ? (

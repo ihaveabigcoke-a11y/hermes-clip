@@ -38,3 +38,21 @@ test('T-010: manual unmatched to received preserves run ID and outputs; native c
  assert.equal(before.group,'attention');assert.equal(after[0].id,before.id);assert.equal(after[0].group,'library');assert.equal(after[0].outputs.assetId,'asset');assert.equal(after[0].needsAction,null);
  assert.deepEqual(after[0].history.map(h=>h.state),['unmatched','received']);assert.equal(after[1].group,'unmapped');assert.equal(after[1].state,'done');
 });
+
+test('T-011: parser rejects wrong schema/version; freshness boundary and duplicate-day counts',async()=>{
+ const {parseOfficeView,freshness,todayCount,activeProducts}=await importModule('lib/lab/office-view.ts');
+ const f=fixture(),view=buildOfficeView(f.records,[],{},[],f.now);
+ assert.equal(parseOfficeView(view),view);for(const bad of [null,{}, {...view,version:2},{...view,schema:'other'},{...view,runs:[{id:'bad'}]}])assert.throws(()=>parseOfficeView(bad));
+ assert.equal(freshness(f.now,view.generatedAt),'live');assert.equal(freshness(f.now+180000,view.generatedAt),'live');assert.equal(freshness(f.now+180001,view.generatedAt),'stale');assert.equal(freshness(f.now,'invalid'),'disconnected');
+ view.selection.days.push(view.selection.days.find(d=>d.day===view.today));assert.equal(todayCount(view),3);assert.equal(activeProducts(view).length,4);
+});
+
+
+test('T-011: malformed nested API data is rejected before it can crash the last-good UI',async()=>{
+ const {parseOfficeView}=await importModule('lib/lab/office-view.ts');
+ const f=fixture(),view=buildOfficeView(f.records,f.jobs,f.manual,f.integrations,f.now);
+ for(const mutate of [v=>v.selection.days.push(null),v=>v.selection.days[0].productIds=null,v=>v.selection.totals.distinctProducts='4',v=>v.products[0].key={},v=>v.products[0].priorityRank=4,v=>v.runs[0].lastEvent.note={},v=>v.runs[0].history=[null],v=>v.runs[0].history=Array(21).fill(v.runs[0].history[0]),v=>v.runs[0].needsAction={reason:{}},v=>v.runs[0].outputs.assetId={},v=>v.posts.push({id:'p',productId:'product_1',status:null}),v=>v.measurements.push({id:'m',keywordComments:'unknown'})]) {
+   const bad=structuredClone(view);mutate(bad);assert.throws(()=>parseOfficeView(bad));
+ }
+ assert.equal(parseOfficeView(view),view);
+});

@@ -1,3 +1,4 @@
+import {z} from 'zod';
 import {VIETNAM_TIME_ZONE,vietnamDay,type LabRecord} from './domain.ts';
 import {selectionEntries} from './daily-selection.ts';
 
@@ -82,3 +83,31 @@ export function buildOfficeView(records:LabRecord[],workerStore:any=[],manual:an
   return {schema:'hermes-office-view',version:1,generatedAt:new Date(now).toISOString(),source:{app:'hermes-clip',commit:null,timezone:VIETNAM_TIME_ZONE},today:vietnamDay(now),selection:{limitPerDay:3,days:[...days.values()],totals:{selectionsAllDays:selections.length,distinctProducts:new Set(selections.map(s=>s.productId)).size}},products,runs,exports,posts,measurements};
 }
 export type OfficeView=ReturnType<typeof buildOfficeView>;
+
+// Validate every nested field consumed by the read-only UI before replacing its last good view.
+const viewText=z.string(),viewId=viewText.min(1),viewDay=viewText.regex(/^\d{4}-\d{2}-\d{2}$/);
+const viewTime=viewText.datetime({offset:true}),viewCount=z.number().int().nonnegative();
+const viewEvent=z.object({at:viewTime.nullable(),state:viewText,note:viewText});
+const officeViewSchema=z.object({
+  schema:z.literal('hermes-office-view'),version:z.literal(1),generatedAt:viewTime,today:viewDay,
+  source:z.object({app:z.literal('hermes-clip'),commit:viewText.nullable(),timezone:z.literal(VIETNAM_TIME_ZONE)}),
+  selection:z.object({limitPerDay:z.literal(3),days:z.array(z.object({day:viewDay,batchId:viewId,productIds:z.array(viewId)})),totals:z.object({selectionsAllDays:viewCount,distinctProducts:viewCount})}),
+  products:z.array(z.object({id:viewId,key:viewText.nullable(),name:viewText,stage:viewText,firstSelectedDay:viewDay.nullable(),lastSelectedDay:viewDay.nullable(),selectionCount:viewCount,active:z.boolean(),priorityRank:z.number().int().min(1).max(3).nullable(),openActions:viewCount,updatedAt:viewTime.nullable()})),
+  runs:z.array(z.object({id:viewId,kind:z.enum(['media','compose']),productId:viewId.nullable(),productionId:viewId.nullable(),sceneId:viewId.nullable(),variantId:viewId.nullable(),provider:viewText.nullable(),state:viewText,group:z.custom<OfficeGroup>(v=>typeof v==='string'&&Object.hasOwn(officeGroups,v)),createdAt:viewTime.nullable(),updatedAt:viewTime.nullable(),lastEvent:z.object({at:viewTime.nullable(),note:viewText}),history:z.array(viewEvent).max(20),needsAction:z.object({reason:viewText}).nullable(),outputs:z.object({assetId:viewId.nullable(),takeId:viewId.nullable()})})),
+  exports:z.array(z.object({id:viewId.nullable(),productId:viewId,productionId:viewId,variantId:viewId.nullable(),kind:z.enum(['package','render']),assetId:viewId.nullable(),verified:z.boolean(),createdAt:viewTime.nullable()})),
+  posts:z.array(z.object({id:viewId,productId:viewId.nullable(),status:viewText})),
+  measurements:z.array(z.object({id:viewId,postId:viewId.nullable(),observedAt:viewTime.nullable(),source:viewText,period:viewText.nullable(),keywordComments:viewCount.nullable(),dms:viewCount.nullable(),shares:viewCount.nullable(),utmClicks:viewCount.nullable(),orders:viewCount.nullable()})),
+});
+export function parseOfficeView(raw:unknown):OfficeView {
+  if(!officeViewSchema.safeParse(raw).success)throw Error('Dữ liệu theo dõi không đúng phiên bản.');
+  return raw as OfficeView;
+}
+export function freshness(now:number,generatedAt:string) {
+  const time=Date.parse(generatedAt);
+  if(!Number.isFinite(time)||time>now+180000)return 'disconnected';
+  return now-time>180000?'stale':'live';
+}
+export function todayCount(view:OfficeView) {
+  return new Set(view.selection.days.filter(d=>d.day===view.today).flatMap(d=>d.productIds)).size;
+}
+export function activeProducts(view:OfficeView) {return view.products.filter(p=>p.active);}
