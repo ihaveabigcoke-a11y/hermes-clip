@@ -92,6 +92,7 @@ import {
   productMarginLabel,
   formatTime,
 } from "@/lib/lab/domain";
+import {CompetitorVideoFields} from './competitor-videos';
 import OfficeViews from './office-views';
 import {selectionCounts} from '@/lib/lab/daily-selection';
 const businessViews = new Set(["overview", "studio", "experiments", "results", "social", "landing"]);
@@ -182,7 +183,7 @@ const creativeFields: FieldDef[] = [
   { name: "name", label: "Tên ý tưởng" },
   { name: "angle", label: "Góc nội dung" },
   { name: "hook", label: "Câu mở đầu", type: "textarea", full: true },
-  { name: "script", label: "Kịch bản theo cảnh", type: "textarea", full: true },
+  { name: "script", label: "Khung content theo cảnh", type: "textarea", full: true },
   {
     name: "prompt",
     label: "Prompt cho công cụ tạo video",
@@ -534,7 +535,7 @@ export default function LabApp() {
           : kind === "experiment"
             ? "Chi tiết bài test"
             : kind === "creative"
-              ? "Kịch bản & video"
+              ? "Khung content & video"
               : kind === "settings"
                 ? "Cài đặt Hermes Clip"
                 : title;
@@ -794,7 +795,7 @@ export default function LabApp() {
         await load();
       }
       notify(
-        "Đã lưu 6 kịch bản nháp để bạn chỉnh sửa.",
+        "Đã lưu 6 khung content nháp để bạn chỉnh sửa.",
         "info",
       );
     } catch (e) {
@@ -1213,7 +1214,7 @@ export default function LabApp() {
               label: "BƯỚC TIẾP THEO · NỘI DUNG",
               title: "Đưa ý tưởng tiếp theo vào Studio.",
               detail:
-                "Rà kịch bản, hoàn thiện prompt và duyệt video theo đúng phiên bản. Tất cả nằm trong bài test đã chọn.",
+                "Rà khung content, hoàn thiện prompt và duyệt video theo đúng phiên bản. Tất cả nằm trong bài test đã chọn.",
               action: "Mở Studio video",
               run: () => navigate("studio"),
             };
@@ -1592,7 +1593,7 @@ export default function LabApp() {
             disabled={!exp || settings.paused}
           >
             <Sparkles size={16} />
-            Tạo 6 khung kịch bản
+            Tạo 6 khung khung content
           </Button>
         </div>
         {exp && (
@@ -1662,7 +1663,7 @@ export default function LabApp() {
                     >
                       <div className="storyboard-top">
                         <span>Ý TƯỞNG {String(i + 1).padStart(2, "0")}</span>
-                        <span>{duration === null ? "Chưa rõ thời lượng" : `${duration}s · theo kịch bản`}</span>
+                        <span>{duration === null ? "Chưa rõ thời lượng" : `${duration}s · theo khung content`}</span>
                       </div>
                       {c.data.mediaUrl ? (
                         /^\/api\/assets\/[a-zA-Z0-9_-]+$/.test(c.data.mediaUrl)
@@ -1717,7 +1718,7 @@ export default function LabApp() {
                       {c.data.source === "template" && (
                         <div
                           className="scene-strip"
-                          aria-label="Cấu trúc kịch bản mẫu"
+                          aria-label="Cấu trúc khung content mẫu"
                         >
                           <span>
                             <i />
@@ -1760,15 +1761,15 @@ export default function LabApp() {
             </div>
           ) : (
             <Empty
-              title="Tạo kịch bản đầu tiên"
-              text="Chọn bài test rồi tạo 3 góc nội dung × 2 cách mở đầu. Bạn có thể sửa toàn bộ kịch bản và prompt."
+              title="Tạo khung content đầu tiên"
+              text="Chọn bài test rồi tạo 3 góc nội dung × 2 cách mở đầu. Bạn có thể sửa toàn bộ khung content và prompt."
               action={
                 exp ? (
                   <Button
                     onClick={() => void generate()}
                     busy={busy === "brief"}
                   >
-                    Tạo 6 khung kịch bản
+                    Tạo 6 khung khung content
                   </Button>
                 ) : (
                   <Button onClick={() => openEditor("experiment")}>
@@ -2368,7 +2369,7 @@ export default function LabApp() {
             kind={editor.kind}
             initial={editor.initial}
             fields={fieldDefs()}
-            extra={editor.kind === "product" ? (values, change, errors) => <SampleCheckFields values={values} change={change} errors={errors} records={records}/> : undefined}
+            extra={editor.kind === "product" ? (values, change, errors) => <><SampleCheckFields values={values} change={change} errors={errors} records={records}/><CompetitorVideoFields values={values} change={change} records={records} productId={editor.id}/></> : undefined}
             onSave={saveEditor}
             onCancel={() => {
               setEditor(null);
@@ -2434,7 +2435,7 @@ export default function LabApp() {
             "Tìm hàng, kiểm supplier và biên lợi nhuận dự kiến.",
             "Kiểm mẫu sản phẩm, ghi điều kiện và giới hạn công dụng.",
             "Khóa giả thuyết, trang có giá và biến muốn thử.",
-            "Tạo kịch bản, video; bạn duyệt phiên bản cuối.",
+            "Tạo khung content, video; bạn duyệt phiên bản cuối.",
             "Đo đúng tệp và quan tâm sau khi thấy giá.",
             "Thử đơn thật khi nguồn hàng, giao và support đã sẵn sàng.",
             "Đối soát giao, hoàn, chi phí; tăng từng bước khi lặp lại có lãi.",

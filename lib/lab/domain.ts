@@ -1,3 +1,4 @@
+import {competitorVideosSchema} from "./competitor-videos.ts";
 import { z } from "zod";
 import { productionSchema } from "./production.ts";
 import { codexRunSchema } from "./codex-exchange.ts";
@@ -92,6 +93,7 @@ export const schemas = {
       costCurrency: candidateCurrencySchema.nullable().optional(),
       shippingCurrency: candidateCurrencySchema.nullable().optional(),
       archived: z.boolean().default(false),
+      competitorVideos: competitorVideosSchema.optional(),
       researchOrigin: z.object({batchId: z.string().max(120), candidateId: z.string().max(120)}).optional(),
     })
     .superRefine((v, c) => {

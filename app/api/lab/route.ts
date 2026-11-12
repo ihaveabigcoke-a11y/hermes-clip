@@ -104,6 +104,9 @@ export async function POST(request: Request) {
     }
     if (kind === "settings") id = "workspace";
     if(kind==='product') {
+      for(const video of d.competitorVideos??[]){
+        if(video.referenceId){const ref=await getRecord(uid,video.referenceId);if(ref?.kind!=='reference_video_draft')throw new ApiError(422,'Bản phân tích video không tồn tại trong không gian làm việc.');}
+      }
       const previous=await getRecord(uid,id);
       if((d.productKey??null)!==(previous?.data.productKey??null))
         throw new ApiError(422,'Gán mã khi chọn sản phẩm theo ngày. Mã đã gán không được đổi.');

@@ -28,10 +28,10 @@ export default function AssistantSettings({demo}: {demo: boolean}) {
     return () => { live = false; };
   }, [demo]);
   return <><CodexTextSettings demo={demo}/><ReaVideoSettings demo={demo}/><section className="production-card production-card-body">
-    <header><h3>Gemini viết kịch bản</h3><Badge tone={proof?.connected ? "success" : "warning"}>{proof?.connected ? "Đã nhận kết quả" : status?.configured ? "Đã cấu hình · chờ kiểm chứng" : "Chưa cấu hình"}</Badge></header>
+    <header><h3>Gemini viết khung content</h3><Badge tone={proof?.connected ? "success" : "warning"}>{proof?.connected ? "Đã nhận kết quả" : status?.configured ? "Đã cấu hình · chờ kiểm chứng" : "Chưa cấu hình"}</Badge></header>
     <p>{status?.model || "Chọn model và giới hạn lượt/ngày để sử dụng."}{status?.dailyLimit > 0 && ` · ${status.dailyLimit} lượt/ngày`}</p>
     {proof?.verifiedAt && <p>Kết quả gần nhất {formatTime(proof.verifiedAt)}</p>}
-    <p>Khóa được mã hóa bằng kho bảo mật Windows. Gọi model từ bước soạn kịch bản trong Tạo video.</p>
+    <p>Khóa được mã hóa bằng kho bảo mật Windows. Gọi model từ bước soạn khung content trong Tạo video.</p>
     {error && <p className="inline-error" role="alert">{error}</p>}
     <Button tone="neutral" disabled={demo || !desktopBridge()?.assistantSettings} onClick={() => { setDirty(false); setOpen(true); }}>Cấu hình Gemini trên máy</Button>
     <Modal open={open} title="Cấu hình Gemini trên máy" dirty={dirty} locked={busy} onClose={() => setOpen(false)}>

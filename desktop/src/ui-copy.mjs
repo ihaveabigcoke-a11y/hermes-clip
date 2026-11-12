@@ -10,7 +10,7 @@ export const uiCopy = {
   take: 'Phiên bản',
   provider: 'Công cụ tạo',
   frames: 'Ảnh đầu và cuối',
-  approveScript: 'Duyệt kịch bản',
+  approveScript: 'Duyệt khung content',
   runScene: 'Chạy cảnh',
   downloadFile: 'Tải file',
   accounts: 'Tài khoản Muse',

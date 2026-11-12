@@ -1,3 +1,4 @@
+import './competitor-videos.test.mjs';
 import test from 'node:test';
 import './hook-matrix.test.mjs';
 import './text-exchange.test.mjs';

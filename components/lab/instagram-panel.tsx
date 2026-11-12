@@ -190,7 +190,7 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
               <Button disabled={!canPublish || profile?.apiMode === 'browser' && !live.status?.browserEnabled || profile?.apiMode !== 'browser' && (!live.status?.api?.enabled || !live.status?.api?.videoUrlEnabled && !live.status?.api?.resumableEnabled)} onClick={publish}><Play size={16}/>{profile?.apiMode !== 'browser' ? 'Đăng qua API' : profile?.session === 'signed_in' ? 'Đăng video' : 'Đăng sau khi đăng nhập'}</Button></>}
             {published && plan.data.postUrl && <a className="lab-button neutral" href={plan.data.postUrl} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Xem bài đã đăng</a>}
             {production && <a href={`?view=production&production=${encodeURIComponent(production.id)}`}>Mở dự án video</a>}
-            {!production && <Button tone="neutral" disabled={disabled || demo || !(plan.data.hook || plan.data.script)} onClick={() => onCreateProduction(plan)}>Tạo dự án từ kịch bản</Button>}
+            {!production && <Button tone="neutral" disabled={disabled || demo || !(plan.data.hook || plan.data.script)} onClick={() => onCreateProduction(plan)}>Tạo dự án từ khung content</Button>}
           </div></div>
         {latest && <div className="instagram-job-status" aria-live="polite"><Badge tone={jobTone(latest)}>{instagramStateLabels[latest.state]}</Badge><p>{latest.error || latest.history.at(-1)?.note}</p>{latest.syncError && <p>{latest.syncError}</p>}{jobActions(latest)}</div>}
         <PlanUtmLink key={plan.id + ':' + plan.revision} plan={plan} records={records} disabled={disabled || busy || !!pending} onSave={onSavePlan}/>

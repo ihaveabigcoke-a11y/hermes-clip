@@ -1,6 +1,6 @@
 import {structuredMuseResponse} from '@/lib/lab/media-catalog';
 
-const fields: Record<string, string> = {hook: "Mở đầu", prompt: 'Prompt', script: 'Kịch bản', caption: "Chú thích", contentAngle: 'Hướng nội dung', evidenceNotes: 'Bằng chứng nguồn', risks: 'Điểm cần kiểm tra', description: 'Mô tả', benefits: 'Lợi ích', limitations: 'Giới hạn'};
+const fields: Record<string, string> = {hook: "Mở đầu", prompt: 'Prompt', script: 'Khung content', caption: "Chú thích", contentAngle: 'Hướng nội dung', evidenceNotes: 'Bằng chứng nguồn', risks: 'Điểm cần kiểm tra', description: 'Mô tả', benefits: 'Lợi ích', limitations: 'Giới hạn'};
 
 export default function MuseResponse({text}: {text: string}) {
   const data = structuredMuseResponse(text);

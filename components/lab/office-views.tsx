@@ -8,7 +8,7 @@ import './office.css';
 
 const clock=(value:string|null)=>value?new Date(value).toLocaleTimeString('vi-VN',{timeZone:VIETNAM_TIME_ZONE,hour12:false}):'Chưa biết';
 const date=(value:string|null)=>value?value.split('-').reverse().join('/'):'Chưa biết';
-const stageNames:Record<string,string>={research:'Nghiên cứu',script:'Chuẩn bị kịch bản',media:'Tạo media',review:'Duyệt phiên bản',publish:'Phát hành / đo',done:'Hoàn tất',dropped:'Đã lưu trữ'};
+const stageNames:Record<string,string>={research:'Nghiên cứu',script:'Chuẩn bị khung content',media:'Tạo media',review:'Duyệt phiên bản',publish:'Phát hành / đo',done:'Hoàn tất',dropped:'Đã lưu trữ'};
 const providerNames:Record<string,string>={muse:'Muse',manual:'Nhập tay',codex:'Codex',openmontage:'OpenMontage','grok-cli':'Grok CLI',fal:'fal'};
 const groupTone=(group:OfficeGroup)=>['failed','attention'].includes(group)?'error':group==='library'?'success':'neutral';
 

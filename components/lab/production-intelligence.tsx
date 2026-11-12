@@ -18,7 +18,8 @@ export function FormulaDraftPanel({records, production:p, product, disabled, onD
   const library=workspaceFormulas(records);
   const suggested=formulasForProduct(Array.isArray(product.traits)?product.traits.filter((v):v is string=>typeof v==='string'):[],library);
   const formulas=[...suggested,...library.filter(formula=>!suggested.includes(formula))];
-  const [selected,setSelected]=useState('problem-vs-result-cta'),[keyword,setKeyword]=useState('');
+  const linkedReference=records.find(r=>r.kind==='reference_video_draft'&&r.id===new URLSearchParams(typeof location==='undefined'?'':location.search).get('reference'));
+  const [selected,setSelected]=useState(String(linkedReference?.data.formulaId??'problem-vs-result-cta')),[keyword,setKeyword]=useState('');
   const [placement,setPlacement]=useState<'overlay'|'caption'>('overlay');
   const [brandName,setBrandName]=useState(''),[boxText,setBoxText]=useState(''),[situation,setSituation]=useState('');
   const [usCues,setUsCues]=useState(false);
@@ -26,8 +27,8 @@ export function FormulaDraftPanel({records, production:p, product, disabled, onD
   const [error,setError]=useState(''),[busy,setBusy]=useState(false),[saved,setSaved]=useState(false);
   const formula=formulas.find(row=>row.id===selected)??formulas[0],locked=disabled||busy;
   const invalidate=()=>{setDraft(null);setSaved(false);setError('');};
-  return <section className="production-card production-card-body formula-composer" aria-label="Kịch bản từ công thức">
-    <h3>Mẫu kịch bản từ công thức</h3>
+  return <section className="production-card production-card-body formula-composer" aria-label="Khung content từ công thức">
+    <h3>Khung content từ công thức</h3>{linkedReference&&<p>Mẫu đã chọn: {linkedReference.data.product} · {linkedReference.data.reaVideo?.shots.length??'Chưa biết'} shot</p>}
     <p>Hai mở đầu A/B dùng chung các shot tiếp theo. Chỉ lưu cảnh nháp, chưa duyệt hoặc gửi Muse.</p>
     <div className="formula-input-grid">
       <div className="desk-field formula-wide"><label htmlFor="formula-choice">Công thức</label><select id="formula-choice" disabled={locked} value={formula?.id??''} onChange={event=>{setSelected(event.target.value);setSituation('');invalidate();}}>
@@ -48,13 +49,13 @@ export function FormulaDraftPanel({records, production:p, product, disabled, onD
       <p>9:16 · {Number(draft.rows.reduce((sum,row)=>sum+row.duration,0).toFixed(1))} giây · {draft.rows.length} shot · CTA: {draft.ctaPlacement==='caption'?'Caption':'Đè cảnh kết thúc'}</p>
       {draft.storyboardVersion===2?<p>Chữ trắng viền đen, cao 5–6% khung, giữa trên, 1–2 dòng; vào/ra cứng theo mốc cắt. Không lời thoại.</p>:<p>Công thức đã lưu dùng khung v1: một cảnh mỗi beat, chữ một dòng; giữ để đối chiếu.</p>}
       <p>{draft.ctaText}</p>
-      <div className="formula-shot-table" tabIndex={0} role="region" aria-label="Bảng shot kịch bản"><table className="lab-table"><thead><tr>{['#','Nhịp','Giây','Chữ đè','Góc máy','Chủ thể','Prompt'].map(label=><th key={label}>{label}</th>)}</tr></thead><tbody>
+      <div className="formula-shot-table" tabIndex={0} role="region" aria-label="Bảng shot khung content"><table className="lab-table"><thead><tr>{['#','Nhịp','Giây','Chữ đè','Góc máy','Chủ thể','Prompt'].map(label=><th key={label}>{label}</th>)}</tr></thead><tbody>
         {draft.rows.map((row,index)=><tr key={index}><td>{index+1}</td><td>{row.phase==='hook'||row.role==='hook'?'Mở đầu':row.phase==='unbox'?'Mở hộp':row.phase==='feature_tour'?'Tính năng':row.phase==='result'?'Kết quả':row.role==='cta'?'CTA':'Nội dung'}</td><td className="formula-shot-time"><span className="formula-time-label">{shotTimeLabel(row.fromSec??Number(draft.rows.slice(0,index).reduce((n,r)=>n+r.duration,0).toFixed(1)),row.toSec??Number(draft.rows.slice(0,index+1).reduce((n,r)=>n+r.duration,0).toFixed(1)))}</span></td><td>{row.overlay?.text??row.overlayText}<small className="formula-time-label">{row.overlay?shotTimeLabel(row.overlay.fromSec,row.overlay.toSec):''}</small></td><td>{row.camera}</td><td>{row.subjects}</td><td><details><summary>Xem prompt</summary><p className="formula-prompt">{row.prompt}</p><p>Bối cảnh: {row.setting}</p><strong>Giới hạn</strong>{row.constraints?.map(line=><p key={line}>{line}</p>)}<small>Nhóm tạo · {row.generationUnit?.duration}s; cắt lấy shot {row.duration}s.</small></details></td></tr>)}
       </tbody></table></div>
       <details><summary>Mở đầu thay thế B · {draft.alternateHook.duration}s</summary><p>{draft.alternateHook.overlayText}</p><p className="formula-prompt">{draft.alternateHook.prompt}</p></details>
       <Button busy={busy} disabled={disabled} onClick={()=>{setBusy(true);setError('');void onDrafts(draft).then(()=>{setDraft(null);setSaved(true);}).catch(reason=>setError(reason.message)).finally(()=>setBusy(false));}}>Lưu cảnh nháp và hai biến thể</Button>
     </>}
-    {saved&&<p role="status">Đã lưu cảnh nháp A/B. Xem từng cảnh và duyệt kịch bản trước khi chạy.</p>}
+    {saved&&<p role="status">Đã lưu cảnh nháp A/B. Xem từng cảnh và duyệt khung content trước khi chạy.</p>}
   </section>;
 }
 
@@ -89,8 +90,8 @@ export function PromptAssistant({projectId, production: p, product, disabled, de
     } catch { throw Error('Muse cần trả JSON với đúng ' + rows.length + ' prompt. Gửi tiếp trong chat để yêu cầu chỉnh định dạng.'); }
   }
   return <>
-    <Button tone="neutral" disabled={disabled} onClick={() => { setRows([]); setError(''); setOpen(true); }}>Soạn kịch bản</Button>
-    <Modal open={open} title="Trợ lý prompt theo sản phẩm" description="Soạn kịch bản với Muse qua hồ sơ đã đăng nhập. Duyệt bản nháp trước khi tạo video."
+    <Button tone="neutral" disabled={disabled} onClick={() => { setRows([]); setError(''); setOpen(true); }}>Soạn khung content</Button>
+    <Modal open={open} title="Trợ lý prompt theo sản phẩm" description="Soạn khung content với Muse qua hồ sơ đã đăng nhập. Duyệt bản nháp trước khi tạo video."
       onClose={() => setOpen(false)} dirty={dirty} locked={busy}>
       {!rows.length ? <RecordForm kind="production" initial={{idea: '', sceneCount: 4, duration: 5, ratio: '9:16', cta: 'Learn more on the product page.'}}
         fields={fields} validation={briefSchema} onDirty={setDirty} onCancel={() => setOpen(false)}

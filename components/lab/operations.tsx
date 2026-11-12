@@ -240,7 +240,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
         {name: "accountId", label: "Tài khoản", type: "select", options: [{value: "", label: "Gắn tài khoản sau"}, ...options(accounts.filter(account => !account.data.archived))]},
         {name: "productionId", label: "Dự án video", type: "select", options: [{value: "", label: "Chưa gắn dự án"}, ...options(records.filter(record => record.kind === "production" && record.data.productId === chosen.id))]},
         {name: "plannedDate", label: "Ngày dự kiến", placeholder: "YYYY-MM-DD", help: "Lưu lịch dự kiến trong app."},
-        {name: "hook", label: "Mở đầu bằng tiếng Anh", type: "textarea", full: true}, {name: "script", label: "Khung kịch bản tiếng Anh", type: "textarea", full: true},
+        {name: "hook", label: "Mở đầu bằng tiếng Anh", type: "textarea", full: true}, {name: "script", label: "Khung khung content tiếng Anh", type: "textarea", full: true},
         {name: "caption", label: "Chú thích tiếng Anh", type: "textarea", full: true},
         {name:'apiVideoUrl',label:'URL video công khai cho Instagram API',help:'HTTPS của đúng file đã chọn và duyệt. Meta tải từ URL này; không dùng localhost hoặc URL chứa token. App không tự tải video lên dịch vụ khác.',full:true},
         {name: "ctaKeyword", label: "Từ khóa CTA", placeholder: "LED / RUN / HELP", help: "Một từ tiếng Anh. Để trống để dùng từ khóa từ biến thể video đã gắn."},
@@ -256,7 +256,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
         locale: chosen?.data.locale || 'en-US', contentPlanId: plan.id, contentPlanRevision: plan.revision},
     })});
     reload();
-    notify("Đã tạo dự án và cảnh nháp. Mở dự án để gắn tham chiếu và duyệt kịch bản.");
+    notify("Đã tạo dự án và cảnh nháp. Mở dự án để gắn tham chiếu và duyệt khung content.");
   }
   function landingForm(draft: Record<string, any> = {}) {
     if (!chosen) return;

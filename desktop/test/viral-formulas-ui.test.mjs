@@ -126,7 +126,7 @@ test('formula composer includes saved versions, keyword entry and draft-only con
     records:[custom,extra].map(data=>({id:viralFormulaRecordId(data),kind:'viral_formula',data})),
     production:newProduction('Fixture','p',1),product:{traits:['night_glow']},disabled:true,onDrafts:async()=>{saves++;},
   }));
-  assert.match(html,/Mẫu kịch bản từ công thức/);
+  assert.match(html,/Khung content từ công thức/);
   assert.match(html,/Saved English formula · v3 · Gợi ý/);
   assert.match(html,/User formula · v3/);
   assert.match(html,/Từ khóa CTA · một từ tiếng Anh in hoa/);
