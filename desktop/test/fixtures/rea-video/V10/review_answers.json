@@ -1,0 +1,640 @@
+{
+ "by": "claude-fable",
+ "shots": [
+  {
+   "id": "shot_001",
+   "time": "0.00-3.10",
+   "label_probs": {
+    "live_action": 0.8,
+    "ai_video": 0.2
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real street lamp bloom, natural camera"
+   ],
+   "description": "night street, small dog trots into the road, car headlights approach, man on sidewalk",
+   "narrative": {
+    "role": "hook",
+    "point": "Dog runs into the road toward headlights, owner behind"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Wide shot at night on a suburban street, a dog runs into the road as a car's headlights approach, its owner stands on the sidewalk",
+    "video_prompt": "Wide shot at night on a suburban street, a dog runs into the road as a car's headlights approach, its owner stands on the sidewalk",
+    "video_prompt_en": "Wide shot at night on a suburban street, a dog runs into the road as a car's headlights approach, its owner stands on the sidewalk"
+   }
+  },
+  {
+   "id": "shot_002",
+   "time": "3.10-4.07",
+   "label_probs": {
+    "live_action": 0.85,
+    "ai_video": 0.15
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real product, real fur"
+   ],
+   "description": "hands open a black box with harness and leash; Golden retriever faces camera while harness is buckled; leash clipped",
+   "narrative": {
+    "role": "proof",
+    "point": "Unbox LumaWalk, fit harness on the Golden"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV close-up, hands open a black product box containing a harness and leash, then buckle the harness onto a Golden retriever in a backyard at night",
+    "video_prompt": "POV close-up, hands open a black product box containing a harness and leash, then buckle the harness onto a Golden retriever in a backyard at night",
+    "video_prompt_en": "POV close-up, hands open a black product box containing a harness and leash, then buckle the harness onto a Golden retriever in a backyard at night"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_003",
+   "time": "4.07-5.10",
+   "label_probs": {
+    "live_action": 0.85,
+    "ai_video": 0.15
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real product, real fur"
+   ],
+   "description": "hands open a black box with harness and leash; Golden retriever faces camera while harness is buckled; leash clipped",
+   "narrative": {
+    "role": "proof",
+    "point": "Unbox LumaWalk, fit harness on the Golden"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV close-up, hands open a black product box containing a harness and leash, then buckle the harness onto a Golden retriever in a backyard at night",
+    "video_prompt": "POV close-up, hands open a black product box containing a harness and leash, then buckle the harness onto a Golden retriever in a backyard at night",
+    "video_prompt_en": "POV close-up, hands open a black product box containing a harness and leash, then buckle the harness onto a Golden retriever in a backyard at night"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_004",
+   "time": "5.10-6.00",
+   "label_probs": {
+    "live_action": 0.85,
+    "ai_video": 0.15
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real product, real fur"
+   ],
+   "description": "hands open a black box with harness and leash; Golden retriever faces camera while harness is buckled; leash clipped",
+   "narrative": {
+    "role": "proof",
+    "point": "Unbox LumaWalk, fit harness on the Golden"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV close-up, hands open a black product box containing a harness and leash, then buckle the harness onto a Golden retriever in a backyard at night",
+    "video_prompt": "POV close-up, hands open a black product box containing a harness and leash, then buckle the harness onto a Golden retriever in a backyard at night",
+    "video_prompt_en": "POV close-up, hands open a black product box containing a harness and leash, then buckle the harness onto a Golden retriever in a backyard at night"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_005",
+   "time": "6.00-7.07",
+   "label_probs": {
+    "live_action": 0.85,
+    "ai_video": 0.15
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real product, real fur"
+   ],
+   "description": "hands open a black box with harness and leash; Golden retriever faces camera while harness is buckled; leash clipped",
+   "narrative": {
+    "role": "proof",
+    "point": "Unbox LumaWalk, fit harness on the Golden"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV close-up, hands open a black product box containing a harness and leash, then buckle the harness onto a Golden retriever in a backyard at night",
+    "video_prompt": "POV close-up, hands open a black product box containing a harness and leash, then buckle the harness onto a Golden retriever in a backyard at night",
+    "video_prompt_en": "POV close-up, hands open a black product box containing a harness and leash, then buckle the harness onto a Golden retriever in a backyard at night"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_006",
+   "time": "7.07-7.63",
+   "label_probs": {
+    "live_action": 0.85,
+    "ai_video": 0.15
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real product, real fur"
+   ],
+   "description": "hands open a black box with harness and leash; Golden retriever faces camera while harness is buckled; leash clipped",
+   "narrative": {
+    "role": "proof",
+    "point": "Unbox LumaWalk, fit harness on the Golden"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV close-up, hands open a black product box containing a harness and leash, then buckle the harness onto a Golden retriever in a backyard at night",
+    "video_prompt": "POV close-up, hands open a black product box containing a harness and leash, then buckle the harness onto a Golden retriever in a backyard at night",
+    "video_prompt_en": "POV close-up, hands open a black product box containing a harness and leash, then buckle the harness onto a Golden retriever in a backyard at night"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_007",
+   "time": "7.63-8.53",
+   "label_probs": {
+    "live_action": 0.8,
+    "ai_video": 0.2
+   },
+   "image_source": "photo",
+   "evidence": [
+    "LED glow consistent with real strips"
+   ],
+   "description": "Golden retriever sits facing camera, harness and leash glow blue",
+   "narrative": {
+    "role": "payoff",
+    "point": "Golden with glowing blue harness and leash"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot at night, a Golden retriever sits facing the camera wearing a harness and leash that glow bright blue, string lights behind",
+    "video_prompt": "Medium shot at night, a Golden retriever sits facing the camera wearing a harness and leash that glow bright blue, string lights behind",
+    "video_prompt_en": "Medium shot at night, a Golden retriever sits facing the camera wearing a harness and leash that glow bright blue, string lights behind"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_008",
+   "time": "8.53-10.03",
+   "label_probs": {
+    "live_action": 0.8,
+    "ai_video": 0.2
+   },
+   "image_source": "photo",
+   "evidence": [
+    ""
+   ],
+   "description": "husky and small dog in snow with red and yellow glow; black dog on grass with green; POV leash with blue; dog in snow with yellow",
+   "narrative": {
+    "role": "payoff",
+    "point": "Four more dogs in red, yellow, green, blue in snow and on grass"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Wide shot at night in a snowy yard, two dogs run wearing harnesses glowing red and yellow",
+    "video_prompt": "Wide shot at night in a snowy yard, two dogs run wearing harnesses glowing red and yellow",
+    "video_prompt_en": "Wide shot at night in a snowy yard, two dogs run wearing harnesses glowing red and yellow"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_009",
+   "time": "10.03-11.57",
+   "label_probs": {
+    "live_action": 0.8,
+    "ai_video": 0.2
+   },
+   "image_source": "photo",
+   "evidence": [
+    ""
+   ],
+   "description": "husky and small dog in snow with red and yellow glow; black dog on grass with green; POV leash with blue; dog in snow with yellow",
+   "narrative": {
+    "role": "payoff",
+    "point": "Four more dogs in red, yellow, green, blue in snow and on grass"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Wide shot at night in a snowy yard, two dogs run wearing harnesses glowing red and yellow",
+    "video_prompt": "Wide shot at night in a snowy yard, two dogs run wearing harnesses glowing red and yellow",
+    "video_prompt_en": "Wide shot at night in a snowy yard, two dogs run wearing harnesses glowing red and yellow"
+   }
+  },
+  {
+   "id": "shot_010",
+   "time": "11.57-12.57",
+   "label_probs": {
+    "live_action": 0.8,
+    "ai_video": 0.2
+   },
+   "image_source": "photo",
+   "evidence": [
+    ""
+   ],
+   "description": "husky and small dog in snow with red and yellow glow; black dog on grass with green; POV leash with blue; dog in snow with yellow",
+   "narrative": {
+    "role": "payoff",
+    "point": "Four more dogs in red, yellow, green, blue in snow and on grass"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Wide shot at night in a snowy yard, two dogs run wearing harnesses glowing red and yellow",
+    "video_prompt": "Wide shot at night in a snowy yard, two dogs run wearing harnesses glowing red and yellow",
+    "video_prompt_en": "Wide shot at night in a snowy yard, two dogs run wearing harnesses glowing red and yellow"
+   }
+  },
+  {
+   "id": "shot_011",
+   "time": "12.57-14.23",
+   "label_probs": {
+    "live_action": 0.8,
+    "ai_video": 0.2
+   },
+   "image_source": "photo",
+   "evidence": [
+    ""
+   ],
+   "description": "husky and small dog in snow with red and yellow glow; black dog on grass with green; POV leash with blue; dog in snow with yellow",
+   "narrative": {
+    "role": "payoff",
+    "point": "Four more dogs in red, yellow, green, blue in snow and on grass"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Wide shot at night in a snowy yard, two dogs run wearing harnesses glowing red and yellow",
+    "video_prompt": "Wide shot at night in a snowy yard, two dogs run wearing harnesses glowing red and yellow",
+    "video_prompt_en": "Wide shot at night in a snowy yard, two dogs run wearing harnesses glowing red and yellow"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  }
+ ],
+ "aspects": {
+  "camera": {
+   "setups": "",
+   "gear_guess": ""
+  },
+  "lighting": {
+   "lighting_overall": ""
+  },
+  "grade": {
+   "grade_overall": ""
+  },
+  "editing": {
+   "editing": ""
+  },
+  "format": {
+   "format": ""
+  }
+ },
+ "story": {
+  "summary": "LED dog harness: dog runs into the road at night toward car headlights (problem) vs unboxing LumaWalk and fitting the harness, then five dogs glowing in snow and grass.",
+  "hook": "'The problem😟' + a dog running into the road at night as a car's headlights come at it.",
+  "highlights": [
+   "0–3s: near-miss that every dog owner fears, one shot held 3 s",
+   "3–7.5s: 'Vs...' box 'LumaWalk Night Walk LED Kit' then fitting the harness on a Golden, 5 shots",
+   "7.5–14s: 'The solution😍' blue glow on the Golden, then 4 other dogs in red/yellow/green/blue in snow and on grass",
+   "Multiple dogs = multiple colours = feels like a product line, not one unit"
+  ]
+ },
+ "cast": {
+  "style": "Live night footage, backyard string lights, snow field",
+  "characters": [
+   {
+    "id": "A",
+    "name": "Golden retriever",
+    "kind": "animal",
+    "look": "golden, happy",
+    "role": "main dog",
+    "voice": "",
+    "shots": [
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     10
+    ]
+   },
+   {
+    "id": "B",
+    "name": "Other dogs",
+    "kind": "animal",
+    "look": "husky, black dog, small dog",
+    "role": "colour variants",
+    "voice": "",
+    "shots": [
+     8,
+     9,
+     11
+    ]
+   }
+  ],
+  "scenes": [
+   {
+    "id": "S1",
+    "where": "suburban street",
+    "when": "night",
+    "look": "street lamps, car headlights",
+    "shots": [
+     1
+    ]
+   },
+   {
+    "id": "S2",
+    "where": "backyard with string lights",
+    "when": "night",
+    "look": "",
+    "shots": [
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ]
+   },
+   {
+    "id": "S3",
+    "where": "snow field / dark park",
+    "when": "night",
+    "look": "",
+    "shots": [
+     8,
+     9,
+     10,
+     11
+    ]
+   }
+  ],
+  "props": [
+   {
+    "name": "LumaWalk LED harness and leash",
+    "note": "product, blue/red/yellow/green",
+    "shots": [
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   }
+  ]
+ },
+ "packaging": {
+  "stickers": [],
+  "text": [
+   {
+    "id": "text_002",
+    "kind": ""
+   },
+   {
+    "id": "text_003",
+    "kind": ""
+   },
+   {
+    "id": "text_004",
+    "kind": ""
+   },
+   {
+    "id": "text_005",
+    "kind": ""
+   },
+   {
+    "id": "text_006",
+    "kind": ""
+   },
+   {
+    "id": "text_007",
+    "kind": ""
+   },
+   {
+    "id": "text_008",
+    "kind": ""
+   }
+  ],
+  "missed": []
+ }
+}

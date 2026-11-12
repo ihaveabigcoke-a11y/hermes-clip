@@ -1,0 +1,502 @@
+{
+ "by": "claude-fable",
+ "shots": [
+  {
+   "id": "shot_001",
+   "time": "0.00-3.10",
+   "label_probs": {
+    "live_action": 0.2,
+    "ai_video": 0.8
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "AI-smooth skin, too-even lighting, clean floor, typical generated composition"
+   ],
+   "description": "elderly man lying on beige bathroom tile; close-up of a tan clog beside his hands",
+   "narrative": {
+    "role": "hook",
+    "point": "Old man on the bathroom floor, close-up of a clog"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot, an elderly man in a navy cardigan lies on a beige tiled bathroom floor near a bathtub, soft daylight, slow push in",
+    "video_prompt": "Medium shot, an elderly man in a navy cardigan lies on a beige tiled bathroom floor near a bathtub, soft daylight, slow push in",
+    "video_prompt_en": "Medium shot, an elderly man in a navy cardigan lies on a beige tiled bathroom floor near a bathtub, soft daylight, slow push in"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_002",
+   "time": "3.10-5.03",
+   "label_probs": {
+    "live_action": 0.2,
+    "ai_video": 0.8
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "AI-smooth skin, too-even lighting, clean floor, typical generated composition"
+   ],
+   "description": "elderly man lying on beige bathroom tile; close-up of a tan clog beside his hands",
+   "narrative": {
+    "role": "hook",
+    "point": "Old man on the bathroom floor, close-up of a clog"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot, an elderly man in a navy cardigan lies on a beige tiled bathroom floor near a bathtub, soft daylight, slow push in",
+    "video_prompt": "Medium shot, an elderly man in a navy cardigan lies on a beige tiled bathroom floor near a bathtub, soft daylight, slow push in",
+    "video_prompt_en": "Medium shot, an elderly man in a navy cardigan lies on a beige tiled bathroom floor near a bathtub, soft daylight, slow push in"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_003",
+   "time": "5.03-6.53",
+   "label_probs": {
+    "live_action": 0.2,
+    "ai_video": 0.8
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "generated office, paperwork too uniform"
+   ],
+   "description": "man in white shirt types at a laptop, small US flag on desk",
+   "narrative": {
+    "role": "context",
+    "point": "Son typing at an office desk with headset"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot, a man in a white shirt and headset types at a laptop in an open office, small US flag and coffee cup on the desk",
+    "video_prompt": "Medium shot, a man in a white shirt and headset types at a laptop in an open office, small US flag and coffee cup on the desk",
+    "video_prompt_en": "Medium shot, a man in a white shirt and headset types at a laptop in an open office, small US flag and coffee cup on the desk"
+   }
+  },
+  {
+   "id": "shot_004",
+   "time": "6.53-7.70",
+   "label_probs": {
+    "live_action": 0.25,
+    "ai_video": 0.75
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "box text clean but product looks rendered; flag patch on sweater"
+   ],
+   "description": "hands hold a white box; bracelet fastened on a wrinkled wrist; finger presses the red SOS button, phone beside",
+   "narrative": {
+    "role": "proof",
+    "point": "Box 'SENVIA Smart SOS Bracelet', strap on the old man's wrist, press the red button"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up, younger hands fasten a white bracelet with a red SOS button onto an elderly man's wrist, then a finger presses the button and a phone beside lights up",
+    "video_prompt": "Close-up, younger hands fasten a white bracelet with a red SOS button onto an elderly man's wrist, then a finger presses the button and a phone beside lights up",
+    "video_prompt_en": "Close-up, younger hands fasten a white bracelet with a red SOS button onto an elderly man's wrist, then a finger presses the button and a phone beside lights up"
+   }
+  },
+  {
+   "id": "shot_005",
+   "time": "7.70-8.83",
+   "label_probs": {
+    "live_action": 0.25,
+    "ai_video": 0.75
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "box text clean but product looks rendered; flag patch on sweater"
+   ],
+   "description": "hands hold a white box; bracelet fastened on a wrinkled wrist; finger presses the red SOS button, phone beside",
+   "narrative": {
+    "role": "proof",
+    "point": "Box 'SENVIA Smart SOS Bracelet', strap on the old man's wrist, press the red button"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up, younger hands fasten a white bracelet with a red SOS button onto an elderly man's wrist, then a finger presses the button and a phone beside lights up",
+    "video_prompt": "Close-up, younger hands fasten a white bracelet with a red SOS button onto an elderly man's wrist, then a finger presses the button and a phone beside lights up",
+    "video_prompt_en": "Close-up, younger hands fasten a white bracelet with a red SOS button onto an elderly man's wrist, then a finger presses the button and a phone beside lights up"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_006",
+   "time": "8.83-10.60",
+   "label_probs": {
+    "live_action": 0.25,
+    "ai_video": 0.75
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "box text clean but product looks rendered; flag patch on sweater"
+   ],
+   "description": "hands hold a white box; bracelet fastened on a wrinkled wrist; finger presses the red SOS button, phone beside",
+   "narrative": {
+    "role": "proof",
+    "point": "Box 'SENVIA Smart SOS Bracelet', strap on the old man's wrist, press the red button"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up, younger hands fasten a white bracelet with a red SOS button onto an elderly man's wrist, then a finger presses the button and a phone beside lights up",
+    "video_prompt": "Close-up, younger hands fasten a white bracelet with a red SOS button onto an elderly man's wrist, then a finger presses the button and a phone beside lights up",
+    "video_prompt_en": "Close-up, younger hands fasten a white bracelet with a red SOS button onto an elderly man's wrist, then a finger presses the button and a phone beside lights up"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_007",
+   "time": "10.60-13.40",
+   "label_probs": {
+    "live_action": 0.2,
+    "ai_video": 0.8
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    ""
+   ],
+   "description": "same office, man picks up phone",
+   "narrative": {
+    "role": "turn",
+    "point": "Son at the office turns to look at his phone"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot in the office, the man stops typing, picks up his phone and looks at the screen",
+    "video_prompt": "Medium shot in the office, the man stops typing, picks up his phone and looks at the screen",
+    "video_prompt_en": "Medium shot in the office, the man stops typing, picks up his phone and looks at the screen"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_008",
+   "time": "13.40-14.43",
+   "label_probs": {
+    "live_action": 0.2,
+    "ai_video": 0.8
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    ""
+   ],
+   "description": "two men embrace on a sofa, warm room",
+   "narrative": {
+    "role": "cta",
+    "point": "Father and son hug on the sofa, CTA label"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot, a younger man hugs an elderly man on a sofa in a warm living room, soft window light",
+    "video_prompt": "Medium shot, a younger man hugs an elderly man on a sofa in a warm living room, soft window light",
+    "video_prompt_en": "Medium shot, a younger man hugs an elderly man on a sofa in a warm living room, soft window light"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  }
+ ],
+ "aspects": {
+  "camera": {
+   "setups": "",
+   "gear_guess": ""
+  },
+  "lighting": {
+   "lighting_overall": ""
+  },
+  "grade": {
+   "grade_overall": ""
+  },
+  "editing": {
+   "editing": ""
+  },
+  "format": {
+   "format": ""
+  }
+ },
+ "story": {
+  "summary": "SOS bracelet story in five text cards: dad fell and lay in the bathroom for 5 hours, son at work had no idea, so he bought the bracelet; press the button, instant alert; hug.",
+  "hook": "'My dad fell and was left alone in the bathroom for 5 hours ❤️😢' over an old man lying on a bathroom floor.",
+  "highlights": [
+   "0–5s: emotional story opening, one sentence, old man on the floor, close-up of a lost clog",
+   "5–8.8s: two more cards: son at the office (US flag on desk), then 'So I got him this' with the SENVIA box",
+   "9.5s: the SOS button press with a click SFX, phone lights up, son looks at the phone",
+   "13.4s: 'Comment HELP if you want one' over father and son hugging — CTA on the emotional peak"
+  ]
+ },
+ "cast": {
+  "style": "Fully AI-generated, warm domestic interiors and an office",
+  "characters": [
+   {
+    "id": "A",
+    "name": "Dad",
+    "kind": "person",
+    "look": "elderly man, white hair, navy cardigan",
+    "role": "falls, wears bracelet",
+    "voice": "",
+    "shots": [
+     1,
+     2,
+     4,
+     5,
+     6,
+     8
+    ]
+   },
+   {
+    "id": "B",
+    "name": "Son",
+    "kind": "person",
+    "look": "30s man, white shirt, headset at office",
+    "role": "narrator figure",
+    "voice": "",
+    "shots": [
+     3,
+     7,
+     8
+    ]
+   }
+  ],
+  "scenes": [
+   {
+    "id": "S1",
+    "where": "bathroom, beige tile",
+    "when": "day",
+    "look": "",
+    "shots": [
+     1,
+     2
+    ]
+   },
+   {
+    "id": "S2",
+    "where": "open-plan office with US flag",
+    "when": "day",
+    "look": "",
+    "shots": [
+     3,
+     7
+    ]
+   },
+   {
+    "id": "S3",
+    "where": "living room sofa",
+    "when": "day",
+    "look": "",
+    "shots": [
+     4,
+     5,
+     6,
+     8
+    ]
+   }
+  ],
+  "props": [
+   {
+    "name": "SENVIA smart SOS bracelet, white with red SOS button",
+    "note": "product",
+    "shots": [
+     4,
+     5,
+     6
+    ]
+   }
+  ]
+ },
+ "packaging": {
+  "stickers": [],
+  "text": [
+   {
+    "id": "text_005",
+    "kind": ""
+   },
+   {
+    "id": "text_006",
+    "kind": ""
+   },
+   {
+    "id": "text_007",
+    "kind": ""
+   },
+   {
+    "id": "text_008",
+    "kind": ""
+   },
+   {
+    "id": "text_009",
+    "kind": ""
+   },
+   {
+    "id": "text_011",
+    "kind": ""
+   },
+   {
+    "id": "text_012",
+    "kind": ""
+   }
+  ],
+  "missed": []
+ }
+}

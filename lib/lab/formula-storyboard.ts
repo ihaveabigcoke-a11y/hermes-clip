@@ -153,12 +153,19 @@ function storyboardV2(product:Record<string,unknown>,p:Production,formula:ViralF
     if(formula.resultStyle==='story_cards')return {...row,overlay:{...row.overlay,text:row.overlay.text+'\n'+ctaText,lines:2 as const},ctaOverlay};
     return {...row,overlay:ctaOverlay,overlayText:ctaText,ctaOverlay};
   });
-  const first=timedRows[0],alternateLabel=labelFor(formula,formula.beats[0],ctaKeyword,true);
+  const withSources=timedRows.map((row,i)=>{
+    const source=formula.referenceSource;if(!source?.jobId)return row;
+    const shot=source.analysis.shots[Math.min(source.analysis.shots.length-1,Math.floor(i*source.analysis.shots.length/timedRows.length))];
+    const prompt=source.analysis.remakePrompts.find(p=>p.shotId===shot.id)?.prompt;if(!prompt)return row;
+    return {...row,sourceReference:{jobId:source.jobId,shotId:shot.id,prompt,firstFrame:shot.firstFrame,lastFrame:shot.lastFrame},
+      prompt:row.prompt+'\nReference camera/action only; replace source brands, people and packaging with the approved product, setting and claims:\n'+prompt};
+  });
+  const first=withSources[0],alternateLabel=labelFor(formula,formula.beats[0],ctaKeyword,true);
   const alternateHook={...first,name:first.name+' · B',overlayText:alternateLabel,
     overlay:{...first.overlay,text:alternateLabel,toSec:first.toSec},
     camera:'Extreme close-up at eye level; quick pull-back to the same situation',
     prompt:first.prompt.replace(`Camera: ${first.camera}.`,'Camera: Extreme close-up at eye level; quick pull-back to the same situation.'),
     generationUnit:{id:'alternate_opening',fromSec:0,toSec:first.toSec,duration:8 as const}};
   return formulaDraftInputSchema.parse({name:formula.name.slice(0,150),formulaId:formula.id,formulaVersion:formula.version,storyboardVersion:2,
-    rows:timedRows,alternateHook,ctaKeyword,ctaText,ctaPlacement,situation,packaging});
+    rows:withSources,alternateHook,ctaKeyword,ctaText,ctaPlacement,situation,packaging});
 }

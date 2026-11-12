@@ -1,0 +1,16 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 720
+PlayResY: 1280
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: label_1,Sans,81,&H00F7F7F7,&H0000FFFF,&H00060508,&H00000000,0,0,0,0,100,100,0,-0,1,3,0,5,0,0,0,1
+Style: huazi_2,Sans,75,&H00F7F5F4,&H0000FFFF,&H00060508,&H00000000,0,0,0,0,100,100,0,-6,1,2,0,5,0,0,0,1
+Style: label_3,Sans,70,&H00FAFAFA,&H0000FFFF,&H00080605,&H00000000,0,0,0,0,100,100,0,-0,1,2,0,5,0,0,0,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 1,0:00:00.00,0:00:04.00,label_1,,0,0,0,,{\pos(354,266)}The idea
+Dialogue: 1,0:00:04.00,0:00:08.00,huazi_2,,0,0,0,,{\pos(356,219)\fad(200,200)}Vs...
+Dialogue: 1,0:00:08.00,0:00:13.60,label_3,,0,0,0,,{\pos(280,227)}The result

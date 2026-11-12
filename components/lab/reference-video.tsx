@@ -10,10 +10,13 @@ import {formulaVersions, workspaceFormulas, type ViralFormula} from '@/lib/lab/v
 import {draftReferenceVideo, referenceVideoDraftSchema, type ReferenceVideoDraft, type VideoStructure} from '@/lib/lab/viral-reference';
 import {formulaAnalysisPrompt, parseFormulaAnalysis, matchFormula, proposeFormulaChanges, type FormulaAnalysis, type FormulaChange} from '@/lib/lab/formula-analysis';
 import {Button} from './primitives';
+import {ReaTimeline} from './rea-video';
+import type {ReaVideo} from '@/lib/lab/rea-video';
+import {proposeReaFormulas} from '@/lib/lab/rea-formula';
 
 type Props = {records: LabRecord[]; disabled?: boolean; onSaveDraft: (draft: ReferenceVideoDraft, revision: number) => Promise<unknown>;
   onSaveFormula?: (formula: ViralFormula) => Promise<unknown>};
-type Analysis = {jobId: string; projectId: string; name: string; sourceSha256: string; sourceUrl: string | null; structure: unknown; subtitles: {path: string}[]};
+type Analysis = {reaVideo?:ReaVideo;jobId: string; projectId: string; name: string; sourceSha256: string; sourceUrl: string | null; structure: unknown; subtitles: {path: string}[]};
 const roleLabels = {hook:'Mở đầu',body:'Nội dung',cta:'Kêu gọi hành động'};
 const kindLabels = {problem:'Vấn đề',versus_unbox:'So sánh / mở hộp',result:'Kết quả',cta:'Kêu gọi hành động'};
 const hookLabels = {problem_label:'Nhãn vấn đề',pov_share_bait:'Góc nhìn gợi chia sẻ',do_not_show:'Đừng cho nhóm này xem',
@@ -168,6 +171,8 @@ export default function ReferenceVideoPanel({records, disabled=false, onSaveDraf
   const [caption,setCaption]=useState(''),[fileName,setFileName]=useState(''),[jsonText,setJsonText]=useState(''),[jsonDirty,setJsonDirty]=useState(false);
   const [parsedAnalysis,setParsedAnalysis]=useState<FormulaAnalysis|null>(null);
   const [draftRevision,setDraftRevision]=useState(0);
+  const [assignedHook,setAssignedHook]=useState<ReferenceVideoDraft['hookType']>(null);
+  const [productCopy,setProductCopy]=useState<Record<string,string>>({});
   const [youtubeUrl,setYoutubeUrl]=useState(''),[youtube,setYoutube]=useState<{supported:boolean;error:string|null}|null>(null);
   const mounted=useRef(true),lock=useRef(false),blobUrl=useRef(''),controller=useRef<AbortController|null>(null);
   const api=desktopBridge(),formulas=formulaVersions(records);
@@ -176,6 +181,7 @@ export default function ReferenceVideoPanel({records, disabled=false, onSaveDraf
     const parsed=referenceVideoDraftSchema.safeParse(record.data);return parsed.success?[{record,draft:parsed.data}]:[];
   });
   const latest=workspaceFormulas(records);
+  const reaProposals=proposeReaFormulas(saved.map(r=>r.draft),formulas);
   const proposals=proposeFormulaChanges(saved.flatMap(({draft})=>draft.analysis ? [{...draft.analysis,id:draft.id,sourceSha256:draft.sourceSha256}] : []),latest);
   // Reopening a saved draft keeps its exact formula version, labels and nulls.
   // Only explicitly choosing a template regenerates its provisional timing.
@@ -183,8 +189,9 @@ export default function ReferenceVideoPanel({records, disabled=false, onSaveDraf
     projectId:analysis.projectId,integrationJobId:analysis.jobId,sourceSha256:analysis.sourceSha256,sourceUrl:analysis.sourceUrl,
     structure:analysis.structure,formula})),product:title.trim()||analysis.name,hookText:parsedAnalysis?.hookText??(parsedAnalysis?null:hookText),
     ctaText:parsedAnalysis?.ctaText??(parsedAnalysis?null:ctaText),caption,fileName,analysis:parsedAnalysis,
+    ...(analysis.reaVideo?{reaVideo:analysis.reaVideo,hookType:assignedHook,beats:null}:{}),
     ...(parsedAnalysis?{hookType:parsedAnalysis.hookType,ctaType:parsedAnalysis.ctaType,ctaKeyword:parsedAnalysis.ctaKeyword,productTraits:parsedAnalysis.productTraits}:{}),
-  }:null,[analysis,title,formula,hookText,ctaText,snapshot,caption,fileName,parsedAnalysis]);
+  }:null,[analysis,title,formula,hookText,ctaText,snapshot,caption,fileName,parsedAnalysis,assignedHook]);
   const blocked=disabled||busy||!!status?.busy||!api?.integrationAnalyzeStructure;
   useEffect(()=>{
     mounted.current=true;
@@ -212,6 +219,8 @@ export default function ReferenceVideoPanel({records, disabled=false, onSaveDraf
     const savedRow=saved.find(row=>row.draft.integrationJobId===id),previous=savedRow?.draft;
     setDraftRevision(savedRow?.record.revision??0);
     setSnapshot(previous??null);
+    setAssignedHook(previous?.hookType??null);
+    setProductCopy({});
     setTitle(previous?.product??records.find(r=>r.id===project)?.data.name??result.name);
     setHookText(previous?.hookText??'');setCtaText(previous?.ctaText??'');
     setCaption(previous?.caption??'');setFileName(previous?.fileName??result.name);
@@ -236,7 +245,8 @@ export default function ReferenceVideoPanel({records, disabled=false, onSaveDraf
   return <div>
     <Button tone="neutral" disabled={disabled||busy} onClick={()=>setOpen(!open)}>Phân tích video mẫu</Button>
     {open&&<div className="production-card production-card-body">
-      <p>MP4 tối đa 25 MB / 180 giây. Sheet thưa mỗi 0,8 giây và sheet dày 4 khung hình/giây; phân tích chạy trên máy, chưa gửi Muse.</p>
+      <p>MP4 tối đa 25 MB / 180 giây. Dùng rea-video khi đã cài; nếu thiếu, dùng FFmpeg local. Cách đọc ảnh chọn trong Cài đặt, mặc định Codex CLI.</p>
+      <details><summary>Hướng dẫn cài rea-video</summary><p>Chạy desktop/SETUP-INTEGRATIONS.ps1 rồi kiểm công cụ trong Cài đặt → Đọc ảnh video mẫu.</p></details>
       {!api?.integrationAnalyzeStructure&&<p>Mở bản desktop đã cập nhật để phân tích video.</p>}
       <label className="field">Sản phẩm<select value={projectId} disabled={blocked} onChange={e=>setProjectId(e.target.value)}>
         <option value="formula-library">Tham chiếu chung · chưa gắn sản phẩm</option>
@@ -259,14 +269,25 @@ export default function ReferenceVideoPanel({records, disabled=false, onSaveDraf
       {error&&<p role="alert" className="inline-error">{error}</p>}{notice&&<p role="status">{notice}</p>}
       {(status?.jobs??[]).filter((j:any)=>j.kind==='reference-structure').map((j:any)=><p key={j.id}>
         {j.request.name} · {({done:'Đã phân tích',running:'Đang phân tích',failed:'Cần đối soát',interrupted:'Đã gián đoạn',queued:'Đang chờ'} as Record<string,string>)[j.state]??j.state}
-        {j.error&&<> · {j.error}</>} {j.state==='done'&&<Button tone="ghost" disabled={blocked} onClick={()=>void execute(()=>show(j.id,j.projectId))}>Xem phân tích</Button>}
+        {j.result&&<> · {j.result.durationSec} s · {j.result.shotCount??j.result.cutCount+1} shot · BPM {j.result.bpm??'Chưa biết'}</>}
+        {j.readStatus==='waiting'&&' · Chờ đọc ảnh'}{j.error&&<> · {j.error}</>} {j.state==='done'&&<Button tone="ghost" disabled={blocked} onClick={()=>void execute(()=>show(j.id,j.projectId))}>Xem timeline</Button>}
       </p>)}
       {draft&&<>
         <label className="field">Công thức gợi ý<select value={formulaKey||`${formula.id}@${formula.version}`} disabled={blocked||!!parsedAnalysis} onChange={e=>{setFormulaKey(e.target.value);setSnapshot(null);}}>
           {formulaKey&&!formulas.some(f=>`${f.id}@${f.version}`===formulaKey)&&<option value={formulaKey}>Giữ bản đã lưu · {snapshot?.formulaId} · v{snapshot?.formulaVersion}</option>}
           {formulas.map(f=><option key={`${f.id}@${f.version}`} value={`${f.id}@${f.version}`}>{f.name} · v{f.version}</option>)}
         </select></label>
-        <ReferenceDraftPreview draft={{...draft,beats:parsedAnalysis?null:draft.beats}} contactUrl={contactUrl}/>
+        {draft.reaVideo?<><ReaTimeline data={draft.reaVideo}/>
+          <label className="field">Kiểu mở đầu do bạn gán<select value={assignedHook??''} disabled={blocked} onChange={e=>setAssignedHook(e.target.value as ReferenceVideoDraft['hookType']||null)}><option value="">Chưa gán</option>{Object.entries(hookLabels).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>
+          <Button tone="neutral" disabled={blocked} onClick={()=>void execute(async()=>{const r=await api!.reaVideoExportReview({id:analysis!.jobId,projectId:analysis!.projectId});setNotice('Gói đọc ảnh: '+r.path);})}>Xuất gói đọc ảnh</Button>
+          <label className="field">Nhập kết quả đọc ảnh<input type="file" accept=".json,application/json" disabled={blocked} onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)void execute(async()=>{if(file.size>2*1024*1024)throw Error('JSON tối đa 2 MB.');await api!.reaVideoImportReview({id:analysis!.jobId,projectId:analysis!.projectId,text:await file.text()});await show(analysis!.jobId,analysis!.projectId);});}}/></label>
+          <p>Tự gửi review_tasks.json và ảnh cho công cụ đọc ảnh, lưu review_answers.json rồi nhập lại. App không mở hoặc điều khiển trang web.</p>
+          {draft.reaVideo.readStatus==='complete'&&<details><summary>Gói prompt manual theo mẫu</summary>
+            <p>Điền tên sản phẩm ở dưới và thay từng lớp chữ. Gói gồm prompt theo nhóm tạo, khung đầu/cuối, timeline và ASS để đốt chữ bằng FFmpeg, giữ kiểu và mốc gốc.</p>
+            {draft.reaVideo.overlays.map(o=><label className="field" key={o.id}>Thay “{o.text}” ({o.fromSec}–{o.toSec}s)<input maxLength={120} value={productCopy[o.id]??''} onChange={e=>setProductCopy(v=>({...v,[o.id]:e.target.value}))}/></label>)}
+            <Button disabled={blocked||!title.trim()||draft.reaVideo.overlays.some(o=>!productCopy[o.id]?.trim())} onClick={()=>void execute(async()=>{const r=await api!.reaVideoExportPack({id:analysis!.jobId,projectId:analysis!.projectId,productName:title,copies:draft.reaVideo!.overlays.map(o=>({id:o.id,text:productCopy[o.id]}))});setNotice('Đã xuất gói prompt: '+r.path);})}>Xuất gói prompt theo mẫu</Button>
+          </details>}
+        </>:<ReferenceDraftPreview draft={{...draft,beats:parsedAnalysis?null:draft.beats}} contactUrl={contactUrl}/>}
         {!!analysis?.subtitles.length&&<p>Đã lưu {analysis.subtitles.length} file phụ đề cùng tác vụ.</p>}
         <label className="field">Sản phẩm / tên tham chiếu<input maxLength={3000} value={title} disabled={blocked} onChange={e=>setTitle(e.target.value)}/></label>
         <label className="field">Caption bài gốc<textarea aria-label="Caption bài gốc" maxLength={2200} rows={4} value={caption} disabled={blocked} onChange={e=>{setCaption(e.target.value);setJsonDirty(!!jsonText.trim());}}/></label>
@@ -275,10 +296,10 @@ export default function ReferenceVideoPanel({records, disabled=false, onSaveDraf
           <label className="field">Chữ mở đầu · tiếng Anh<input maxLength={3000} value={hookText} disabled={blocked} onChange={e=>setHookText(e.target.value)}/></label>
           <label className="field">Chữ kêu gọi hành động · tiếng Anh<input maxLength={3000} value={ctaText} disabled={blocked} onChange={e=>setCtaText(e.target.value)}/></label>
         </>}
-        {draft.structure&&analysis&&<ReferenceMuseAnalysis key={analysis.jobId} jobId={analysis.jobId} structure={draft.structure}
+        {!draft.reaVideo&&draft.structure&&analysis&&<ReferenceMuseAnalysis key={analysis.jobId} jobId={analysis.jobId} structure={draft.structure}
           caption={caption} fileName={fileName} formulas={latest} disabled={blocked} onBusy={setBusy}
           onResponse={(text,parsed)=>{setJsonText(text);setParsedAnalysis(parsed);setJsonDirty(!parsed);setNotice(parsed?'Đã điền phân tích Muse. Kiểm tra kết quả rồi bấm Lưu tham chiếu.':'');}}/>}
-        {draft.structure&&<ReferenceAnalysisInput structure={draft.structure} caption={caption} fileName={fileName} jsonText={jsonText} disabled={blocked} formulas={latest}
+        {!draft.reaVideo&&draft.structure&&<ReferenceAnalysisInput structure={draft.structure} caption={caption} fileName={fileName} jsonText={jsonText} disabled={blocked} formulas={latest}
           onJson={value=>{setJsonText(value);setJsonDirty(!!value.trim());if(!value.trim())setParsedAnalysis(null);}}
           onCopy={prompt=>void execute(async()=>{await navigator.clipboard.writeText(prompt);setNotice('Đã sao chép prompt. Đính kèm tất cả sheet khi gửi cho AI.');})}
           onParse={()=>void execute(async()=>{setParsedAnalysis(parseFormulaAnalysis(jsonText,draft.structure!,{caption,fileName}));setJsonDirty(false);})}/>
@@ -295,11 +316,18 @@ export default function ReferenceVideoPanel({records, disabled=false, onSaveDraf
     </div>}
     {!!saved.length&&<details><summary>Tham chiếu nháp đã lưu · {saved.length}</summary>
       {saved.map(({record,draft:reference})=><details key={record.id}><summary>{reference.product} · bản nháp</summary>
-        <ReferenceDraftPreview draft={{...reference,beats:reference.analysis?null:reference.beats}}/>
+        {reference.reaVideo?<ReaTimeline data={reference.reaVideo}/>:<ReferenceDraftPreview draft={{...reference,beats:reference.analysis?null:reference.beats}}/>}
+        {reference.proposedFormula&&<><p>Nháp công thức {reference.proposedFormula.name} · v{reference.proposedFormula.version} · chưa chọn làm mới nhất.</p>
+          <details><summary>Xem bản nháp trước khi duyệt</summary><pre style={{whiteSpace:'pre-wrap'}}>{JSON.stringify(reference.proposedFormula,null,2)}</pre></details>
+          <Button disabled={disabled||busy||!onSaveFormula||formulas.some(f=>f.id===reference.proposedFormula!.id&&f.version>=reference.proposedFormula!.version)} onClick={()=>void execute(async()=>{await onSaveFormula!(reference.proposedFormula!);setNotice('Đã duyệt và lưu phiên bản mới.');})}>Duyệt phiên bản công thức này</Button></>}
         {reference.caption&&<p>Caption bài gốc: {reference.caption}</p>}{reference.fileName&&<p>Tên file gốc: {reference.fileName}</p>}
         {reference.analysis?<FormulaAnalysisPreview analysis={reference.analysis} formulas={latest}/>:<><p>Chữ mở đầu: {reference.hookText||'Chưa có'}</p><p>Chữ kêu gọi hành động: {reference.ctaText||'Chưa có'}</p></>}
       </details>)}
     </details>}
+    {reaProposals.map(proposal=><div className="production-card production-card-body" key={proposal.formula.id}>
+      <p>{proposal.formula.name} · {proposal.referenceIds.length} mẫu cùng kiểu mở đầu · trung vị {proposal.medianDuration.toFixed(1)} giây / {proposal.medianShots} shot · mốc CTA {proposal.medianCta===null?'Chưa biết':proposal.medianCta.toFixed(1)+' s'}.</p>
+      <Button disabled={disabled||busy} onClick={()=>void execute(async()=>{const row=saved.find(r=>r.draft.id===proposal.referenceIds[0])!;await onSaveDraft({...row.draft,proposedFormula:proposal.formula},row.record.revision);setNotice('Đã lưu bản nháp version mới trong tham chiếu. Chỉ dùng sau khi bạn duyệt.');})}>Dùng làm mẫu cho công thức…</Button>
+    </div>)}
     <FormulaChangeProposals changes={proposals} disabled={disabled||busy||!onSaveFormula} onCreate={formula=>void execute(async()=>{
       await onSaveFormula!(formula);setNotice(`Đã tạo phiên bản ${formula.version}. Phiên bản cũ được giữ nguyên.`);
     })}/>

@@ -1,0 +1,178 @@
+{
+  "text": [
+    {
+      "id": "text_001",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 0.0,
+      "t1": 4.5,
+      "text": "Si te haces las cejas y las/pestañas, mira esto. ",
+      "bbox": [
+        0.0875,
+        0.0992,
+        0.8028,
+        0.0914
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#f8f7f5",
+        "stroke_name": "black",
+        "stroke": "#0d0d0a",
+        "stroke_ratio": 0.03,
+        "weight": 0.079
+      },
+      "style_zh": "white text, black outline, line height 5.0% (about 64px)",
+      "anim_in": null,
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_002",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 4.5,
+      "t1": 7.3,
+      "text": "Así puedes proteger el contorno de/tus ojos durante la ducha.",
+      "bbox": [
+        0.0625,
+        0.0898,
+        0.8722,
+        0.0681
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#f8f7f5",
+        "stroke_name": "black",
+        "stroke": "#0d0d0a",
+        "stroke_ratio": 0.03,
+        "weight": 0.081
+      },
+      "style_zh": "white text, black outline, line height 3.7% (about 47px)",
+      "anim_in": null,
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_003",
+      "kind": "huazi",
+      "kind_zh": "styled text",
+      "t0": 4.5,
+      "t1": 6.1,
+      "text": "RAAE",
+      "bbox": [
+        0.8333,
+        0.5406,
+        0.0472,
+        0.0164
+      ],
+      "style": {
+        "fill_name": "orange",
+        "fill": "#784a3b",
+        "multicolor": true,
+        "highlight_name": "brown",
+        "weight": 0.091
+      },
+      "style_zh": "orange text, keywords highlighted in brown, line height 1.6% (about 21px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": {
+        "line": "text_002",
+        "text": "Así puedes proteger el contorno de/tus ojos durante la ducha.",
+        "rel": "during",
+        "dt": 0.0,
+        "word": null
+      },
+      "persistent": null
+    },
+    {
+      "id": "text_004",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 7.4,
+      "t1": 12.2,
+      "text": "¿Lo probarías? Comenta “QUIERO\"",
+      "bbox": [
+        0.0375,
+        0.1016,
+        0.9139,
+        0.0453
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#f8f7f5",
+        "stroke_name": "black",
+        "stroke": "#0d0d0a",
+        "stroke_ratio": 0.03,
+        "multicolor": true,
+        "highlight_name": "orange",
+        "weight": 0.069
+      },
+      "style_zh": "white text, black outline, keywords highlighted in orange, line height 4.3% (about 55px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": null,
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    }
+  ],
+  "stickers": [],
+  "sfx": [
+    {
+      "t": 5.4,
+      "type": "pop",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": null
+    },
+    {
+      "t": 6.14,
+      "type": "click",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": {
+        "type": "cut",
+        "what": "cut",
+        "dt": -0.04,
+        "ref": null
+      }
+    },
+    {
+      "t": 11.76,
+      "type": "click",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": null
+    }
+  ]
+}

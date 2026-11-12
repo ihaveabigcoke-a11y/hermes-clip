@@ -7,6 +7,7 @@ methods.push('instagramConfigureBrowser','instagramSaveDmRule','instagramDmEmerg
 methods.push('researchStatus','researchStart','researchResume','researchCheckSources','researchQueueSources','saveSourceCheckPreference');
 methods.push('setMusePaused','manualMediaStatus','manualMediaConfigure','manualMediaExport','manualMediaAssign','manualMediaOpen');
 methods.push('codexTextSettings','saveCodexTextSettings','codexTextRun');
+methods.push('reaVideoSettings','saveReaVideoSettings','checkReaVideo','reaVideoExportReview','reaVideoImportReview','reaVideoExportPack');
 methods.push('researchSkipReconciliation','museChatSkipReconciliation');
 methods.push('deleteProfile','deploymentStart','deploymentStatus','deploymentResume','deploymentPause');
 const api={};for(const method of methods)api[method]=async payload=>{const r=await ipcRenderer.invoke('product-lab:'+method,payload);if(!r.ok)throw new Error(r.error);return r.value;};contextBridge.exposeInMainWorld('productLabDesktop',Object.freeze(api));

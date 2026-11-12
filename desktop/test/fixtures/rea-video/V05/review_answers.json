@@ -1,0 +1,435 @@
+{
+ "by": "claude-fable",
+ "shots": [
+  {
+   "id": "shot_001",
+   "time": "0.00-1.93",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real water, real skin texture"
+   ],
+   "description": "close-up, woman tilts head back under shower stream",
+   "narrative": {
+    "role": "hook",
+    "point": "Woman under shower, water on face, looking up"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up, a woman tilts her head back under a shower stream, water runs over her face, marble wall",
+    "video_prompt": "Close-up, a woman tilts her head back under a shower stream, water runs over her face, marble wall",
+    "video_prompt_en": "Close-up, a woman tilts her head back under a shower stream, water runs over her face, marble wall"
+   }
+  },
+  {
+   "id": "shot_002",
+   "time": "1.93-2.63",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real transparent plastic, correct refraction"
+   ],
+   "description": "woman in white robe holds a clear goggle-like shield, then positions it over her eyes",
+   "narrative": {
+    "role": "info",
+    "point": "Holds up the clear shield, puts it on"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium close-up, a woman in a white bathrobe holds a clear eye shield to the camera, then places it over her eyes",
+    "video_prompt": "Medium close-up, a woman in a white bathrobe holds a clear eye shield to the camera, then places it over her eyes",
+    "video_prompt_en": "Medium close-up, a woman in a white bathrobe holds a clear eye shield to the camera, then places it over her eyes"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_003",
+   "time": "2.63-4.50",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real transparent plastic, correct refraction"
+   ],
+   "description": "woman in white robe holds a clear goggle-like shield, then positions it over her eyes",
+   "narrative": {
+    "role": "info",
+    "point": "Holds up the clear shield, puts it on"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium close-up, a woman in a white bathrobe holds a clear eye shield to the camera, then places it over her eyes",
+    "video_prompt": "Medium close-up, a woman in a white bathrobe holds a clear eye shield to the camera, then places it over her eyes",
+    "video_prompt_en": "Medium close-up, a woman in a white bathrobe holds a clear eye shield to the camera, then places it over her eyes"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_004",
+   "time": "4.50-6.10",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "foam physics real"
+   ],
+   "description": "close-up, white foam flows from the hairline over the shield and down the nose",
+   "narrative": {
+    "role": "proof",
+    "point": "Shampoo foam runs over the shield"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up under the shower, shampoo foam runs from the hairline over a clear eye shield and down the nose, eyes stay dry",
+    "video_prompt": "Close-up under the shower, shampoo foam runs from the hairline over a clear eye shield and down the nose, eyes stay dry",
+    "video_prompt_en": "Close-up under the shower, shampoo foam runs from the hairline over a clear eye shield and down the nose, eyes stay dry"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_005",
+   "time": "6.10-7.33",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "foam physics real"
+   ],
+   "description": "close-up, white foam flows from the hairline over the shield and down the nose",
+   "narrative": {
+    "role": "proof",
+    "point": "Shampoo foam runs over the shield"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up under the shower, shampoo foam runs from the hairline over a clear eye shield and down the nose, eyes stay dry",
+    "video_prompt": "Close-up under the shower, shampoo foam runs from the hairline over a clear eye shield and down the nose, eyes stay dry",
+    "video_prompt_en": "Close-up under the shower, shampoo foam runs from the hairline over a clear eye shield and down the nose, eyes stay dry"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_006",
+   "time": "7.33-9.50",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "natural freckles"
+   ],
+   "description": "woman removes the shield, then extreme close-up of her eyes closed then open",
+   "narrative": {
+    "role": "cta",
+    "point": "Takes shield off, close-up of dry lashes, eyes open"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Extreme close-up, a woman's eyes with long dry lashes, closed then opening, soft bathroom light",
+    "video_prompt": "Extreme close-up, a woman's eyes with long dry lashes, closed then opening, soft bathroom light",
+    "video_prompt_en": "Extreme close-up, a woman's eyes with long dry lashes, closed then opening, soft bathroom light"
+   }
+  },
+  {
+   "id": "shot_007",
+   "time": "9.50-11.13",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "natural freckles"
+   ],
+   "description": "woman removes the shield, then extreme close-up of her eyes closed then open",
+   "narrative": {
+    "role": "cta",
+    "point": "Takes shield off, close-up of dry lashes, eyes open"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Extreme close-up, a woman's eyes with long dry lashes, closed then opening, soft bathroom light",
+    "video_prompt": "Extreme close-up, a woman's eyes with long dry lashes, closed then opening, soft bathroom light",
+    "video_prompt_en": "Extreme close-up, a woman's eyes with long dry lashes, closed then opening, soft bathroom light"
+   }
+  },
+  {
+   "id": "shot_008",
+   "time": "11.13-12.20",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "natural freckles"
+   ],
+   "description": "woman removes the shield, then extreme close-up of her eyes closed then open",
+   "narrative": {
+    "role": "cta",
+    "point": "Takes shield off, close-up of dry lashes, eyes open"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Extreme close-up, a woman's eyes with long dry lashes, closed then opening, soft bathroom light",
+    "video_prompt": "Extreme close-up, a woman's eyes with long dry lashes, closed then opening, soft bathroom light",
+    "video_prompt_en": "Extreme close-up, a woman's eyes with long dry lashes, closed then opening, soft bathroom light"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  }
+ ],
+ "aspects": {
+  "camera": {
+   "setups": "",
+   "gear_guess": ""
+  },
+  "lighting": {
+   "lighting_overall": ""
+  },
+  "grade": {
+   "grade_overall": ""
+  },
+  "editing": {
+   "editing": ""
+  },
+  "format": {
+   "format": ""
+  }
+ },
+ "story": {
+  "summary": "Shower eye shield (Spanish): if you do your brows and lashes, watch this — shampoo runs over a clear shield instead of your eyes; 'Comment QUIERO'.",
+  "hook": "'Si te haces las cejas y las pestañas, mira esto 👀' + woman under the shower looking up with water on her face.",
+  "highlights": [
+   "0–2s: audience call-out label names the exact customer (brow/lash users)",
+   "4.5–7s: demonstration shot: foam runs down over the shield, nothing touches the eyes",
+   "7.4s: question CTA '¿Lo probarías? Comenta QUIERO' over close-ups of her eyes",
+   "Ends on the benefit itself: intact lashes, eyes open"
+  ]
+ },
+ "cast": {
+  "style": "Live bathroom footage, marble shower, white robe, warm skin tones",
+  "characters": [
+   {
+    "id": "A",
+    "name": "Woman",
+    "kind": "person",
+    "look": "dark hair, freckles, white robe, gold necklace",
+    "role": "demonstrates",
+    "voice": "",
+    "shots": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8
+    ]
+   }
+  ],
+  "scenes": [
+   {
+    "id": "S1",
+    "where": "marble shower",
+    "when": "day",
+    "look": "bright, wet",
+    "shots": [
+     1,
+     4,
+     5
+    ]
+   },
+   {
+    "id": "S2",
+    "where": "bathroom mirror area",
+    "when": "day",
+    "look": "white robe, towels",
+    "shots": [
+     2,
+     3,
+     6,
+     7,
+     8
+    ]
+   }
+  ],
+  "props": [
+   {
+    "name": "clear eye shield (DryLid)",
+    "note": "product",
+    "shots": [
+     2,
+     3,
+     4,
+     5,
+     6
+    ]
+   }
+  ]
+ },
+ "packaging": {
+  "stickers": [],
+  "text": [
+   {
+    "id": "text_003",
+    "kind": ""
+   }
+  ],
+  "missed": []
+ }
+}

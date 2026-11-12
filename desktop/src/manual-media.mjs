@@ -3,10 +3,11 @@ import {resolveProvider,mediaProviderReceipts} from './provider-routing.mjs';
 import {museIsPaused} from './muse-pause.mjs';
 import {createHash, randomUUID} from 'node:crypto';
 import {mkdir, readdir, readFile, writeFile, rename, stat, lstat, copyFile, unlink} from 'node:fs/promises';
-import {join, resolve, isAbsolute, extname, basename} from 'node:path';
+import {join, resolve, isAbsolute, extname, basename, dirname} from 'node:path';
 import {spawn} from 'node:child_process';
 import {sessionCookie} from '../local/server.mjs';
 import {assertDiskSpace, storagePolicy} from './storage-policy.mjs';
+import {confinedFile} from './reference-structure.mjs';
 
 const types = {'.mov':'video/quicktime', '.mp4':'video/mp4', '.webm':'video/webm', '.png':'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.webp':'image/webp'};
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -145,6 +146,16 @@ export class ManualMedia {
     const exports=this.store.get('manual_exports',{});
     for (const {project,scene,code} of rows) {
       const references=[];
+      if(scene.sourceReference){
+        const source=scene.sourceReference,job=this.store.get('integration-jobs',[]).find(j=>j.id===source.jobId&&j.engine==='rea-video'&&j.state==='done');
+        if(!job)throw Error('Không tìm thấy tác vụ tham chiếu đã phân tích.');
+        // Resolve from the saved receipt, never a renderer-provided absolute path.
+        const actualRoot=join(dirname(job.path),'rea-video');
+        for(const role of ['firstFrame','lastFrame'])if(source[role]){
+          const path=await confinedFile(actualRoot,join(actualRoot,source[role]));if((await stat(path)).size>5*1024**2)throw Error('Khung mẫu vượt giới hạn.');
+          const name=`${code}-${role}.jpg`;await copyFile(path,join(staging,name));references.push(`${name} | ${role} | Composition reference only; replace source branding with the approved product.`);
+        }
+      }
       for (const [index,pin] of scene.references.entries()) {
         const ref=project.data.references.find(row=>row.id===pin.id&&row.version===pin.version);
         const latest=project.data.references.filter(row=>row.id===pin.id).sort((a,b)=>b.version-a.version)[0];
@@ -175,12 +186,13 @@ export class ManualMedia {
         const name=`${rows[0].productCode}-UNIT-${pad(index+1)}`,unit=group[0].scene.generationUnit;
         const shots=group.map(({scene,code})=>({code,sceneId:scene.id,sceneRevision:scene.revision,fromSec:scene.fromSec,toSec:scene.toSec,
           trimFromSec:Number((scene.fromSec-unit.fromSec).toFixed(3)),trimToSec:Number((scene.toSec-unit.fromSec).toFixed(3)),duration:scene.duration,
-          overlay:scene.overlay,ctaOverlay:scene.ctaOverlay,packaging:scene.packaging,metadata:scene.metadata,
+          overlay:scene.overlay,ctaOverlay:scene.ctaOverlay,packaging:scene.packaging,metadata:scene.metadata,sourceReference:scene.sourceReference,
           ffmpegArgs:['-n','-i',`${name}.mp4`,'-ss',String(Number((scene.fromSec-unit.fromSec).toFixed(3))),'-t',String(scene.duration),'-map','0:v:0','-an','-c:v','libx264','-pix_fmt','yuv420p',`${code}-take1.mp4`]}));
         timeline.push({file:`${name}.mp4`,unit,shots});
         await writeFile(join(staging,`${name}.txt`),[
           'Create one vertical 9:16 video, exactly 8 seconds. Silent visual sequence with hard cuts at the specified offsets.',
           `Use the reference images listed in ${group[0].code}.txt. Keep the same setting and subjects throughout this unit.`,
+          ...group.filter(r=>r.scene.sourceReference).map(({scene,code})=>`Shot ${code} composition references: ${[scene.sourceReference.firstFrame&&code+'-firstFrame.jpg',scene.sourceReference.lastFrame&&code+'-lastFrame.jpg'].filter(Boolean).join(', ')}. Replace source branding with the approved product.`),
           ...group.map(({scene},i)=>`SHOT ${i+1}: ${shots[i].trimFromSec}–${shots[i].trimToSec}s\n${scene.prompt}`),
           `Hold the last end frame from ${unit.toSec-unit.fromSec}s to 8s; this tail is discarded in editing.`,
           'Constraints:',...group[0].scene.constraints,`Download as ${name}.mp4. Trim using timeline.json before placing scene clips in the inbox.`,

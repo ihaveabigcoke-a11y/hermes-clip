@@ -1,0 +1,462 @@
+{
+  "text": [
+    {
+      "id": "text_001",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 0.0,
+      "t1": 3.6,
+      "text": "STOP",
+      "bbox": [
+        0.6167,
+        0.1562,
+        0.111,
+        0.0782
+      ],
+      "style": {
+        "fill_name": "red",
+        "fill": "#ee958f",
+        "stroke_name": "red",
+        "stroke": "#b82223",
+        "stroke_ratio": 0.032,
+        "weight": 0.104
+      },
+      "style_zh": "red text, red outline, line height 2.8% (about 35px)",
+      "anim_in": null,
+      "anim_out": {
+        "kind": "fade_out",
+        "kind_zh": "fade out"
+      },
+      "mid_motion": true,
+      "follows": true,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_002",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 0.0,
+      "t1": 3.1,
+      "text": "LICEA",
+      "bbox": [
+        0.5833,
+        0.3531,
+        0.3139,
+        0.0758
+      ],
+      "style": {
+        "fill_name": "grey",
+        "fill": "#2d3138",
+        "weight": 0.132
+      },
+      "style_zh": "grey text, line height 4.5% (about 58px)",
+      "anim_in": null,
+      "anim_out": {
+        "kind": "fade_out",
+        "kind_zh": "fade out"
+      },
+      "mid_motion": true,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_003",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 1.5,
+      "t1": 1.6,
+      "text": "e",
+      "bbox": [
+        0.0611,
+        0.8727,
+        0.0181,
+        0.0102
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#ced8ee",
+        "weight": 0.227
+      },
+      "style_zh": "white text, bold, line height 1.0% (about 13px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_004",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 4.0,
+      "t1": 4.6,
+      "text": "STOP",
+      "bbox": [
+        0.6778,
+        0.1273,
+        0.0902,
+        0.0399
+      ],
+      "style": {
+        "fill_name": "red",
+        "fill": "#f29d95",
+        "stroke_name": "red",
+        "stroke": "#c12425",
+        "stroke_ratio": 0.037,
+        "weight": 0.101
+      },
+      "style_zh": "red text, red outline, line height 3.0% (about 38px)",
+      "anim_in": {
+        "kind": "fade",
+        "kind_zh": "fade in"
+      },
+      "anim_out": {
+        "kind": "fade_out",
+        "kind_zh": "fade out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_006",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 4.0,
+      "t1": 4.1,
+      "text": "心",
+      "bbox": [
+        0.8264,
+        0.3305,
+        0.0611,
+        0.025
+      ],
+      "style": {
+        "fill_name": "grey",
+        "fill": "#6c6f74",
+        "weight": 0.171
+      },
+      "style_zh": "grey text, line height 2.5% (about 32px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_007",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 5.0,
+      "t1": 5.1,
+      "text": "nbe",
+      "bbox": [
+        0.7653,
+        0.2289,
+        0.0486,
+        0.0195
+      ],
+      "style": {
+        "fill_name": "grey",
+        "fill": "#6d7075",
+        "weight": 0.076
+      },
+      "style_zh": "grey text, line height 1.9% (about 25px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_008",
+      "kind": "huazi",
+      "kind_zh": "styled text",
+      "t0": 5.0,
+      "t1": 5.4,
+      "text": "alpinestars",
+      "bbox": [
+        0.0958,
+        0.4945,
+        0.1611,
+        0.0672
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#e9e9ef",
+        "weight": 0.059
+      },
+      "style_zh": "white text, line height 6.7% (about 86px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_009",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 5.0,
+      "t1": 5.1,
+      "text": "CA",
+      "bbox": [
+        0.4083,
+        0.9656,
+        0.0306,
+        0.0242
+      ],
+      "style": {
+        "fill_name": "grey",
+        "fill": "#a3a7ad",
+        "stroke_name": "black",
+        "stroke": "#2e2e33",
+        "stroke_ratio": 0.054,
+        "weight": 0.123
+      },
+      "style_zh": "grey text, black outline, line height 2.4% (about 31px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_010",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 5.5,
+      "t1": 5.6,
+      "text": "agy",
+      "bbox": [
+        0.7806,
+        0.2219,
+        0.0472,
+        0.0203
+      ],
+      "style": {
+        "fill_name": "grey",
+        "fill": "#3b3d45",
+        "stroke_name": "white",
+        "stroke": "#ecedef",
+        "stroke_ratio": 0.056,
+        "weight": 0.073
+      },
+      "style_zh": "grey text, white outline, line height 2.0% (about 26px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_011",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 6.5,
+      "t1": 7.1,
+      "text": "Lagy",
+      "bbox": [
+        0.4375,
+        0.1023,
+        0.0875,
+        0.0352
+      ],
+      "style": {
+        "fill_name": "black",
+        "fill": "#1b2028",
+        "stroke_name": "grey",
+        "stroke": "#a2a9b1",
+        "stroke_ratio": 0.026,
+        "weight": 0.084
+      },
+      "style_zh": "black text, grey outline, line height 2.3% (about 29px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_012",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 7.5,
+      "t1": 7.6,
+      "text": "be",
+      "bbox": [
+        0.4444,
+        0.1094,
+        0.0722,
+        0.0219
+      ],
+      "style": {
+        "fill_name": "black",
+        "fill": "#1c1f27",
+        "stroke_name": "grey",
+        "stroke": "#a4a7ac",
+        "stroke_ratio": 0.023,
+        "weight": 0.068
+      },
+      "style_zh": "black text, grey outline, line height 2.2% (about 28px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_013",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 8.0,
+      "t1": 8.1,
+      "text": "日",
+      "bbox": [
+        0.6181,
+        0.8664,
+        0.0236,
+        0.0156
+      ],
+      "style": {
+        "fill_name": "black",
+        "fill": "#121418",
+        "weight": 0.191
+      },
+      "style_zh": "black text, line height 1.6% (about 20px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    }
+  ],
+  "stickers": [
+    {
+      "kind": "animated_sticker",
+      "kind_zh": "animated sticker / GIF",
+      "t0": 0.1,
+      "t1": 6.4,
+      "bbox": [
+        0.2,
+        0.486,
+        0.15,
+        0.086
+      ],
+      "animated": true,
+      "loop_period_s": null,
+      "looping": false,
+      "activity": 12.1,
+      "appears_mid_shot": false,
+      "disappears_mid_shot": false,
+      "crosses_cut": true,
+      "confidence": "medium",
+      "id": "sticker_01",
+      "image": "packaging/sticker_01.jpg",
+      "persistent": {
+        "cuts": 1
+      }
+    }
+  ],
+  "sfx": [
+    {
+      "t": 0.06,
+      "type": "ding",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": {
+        "type": "sticker_in",
+        "what": "animated sticker / GIF appears",
+        "dt": 0.04,
+        "ref": "sticker_01"
+      }
+    },
+    {
+      "t": 0.78,
+      "type": "ding",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": null
+    }
+  ]
+}

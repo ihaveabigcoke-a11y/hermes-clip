@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
 import {importModule} from './helpers/local-server.mjs';
 import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
@@ -16,6 +17,44 @@ const {FormulaAnalysisPreview,FormulaChangeProposals,ReferenceAnalysisInput}=awa
 const {parseFormulaAnalysis,proposeFormulaChanges}=await importModule('lib/lab/formula-analysis.ts');
 const {draftReferenceVideo} = await importModule('lib/lab/viral-reference.ts');
 const render = records => renderToStaticMarkup(React.createElement(ViralFormulas, {records}));
+
+test('T-008: timeline labels cover all twelve fixtures without mutating source values or English prompts',async()=>{
+  const {ReaTimeline}=await importModule('components/lab/rea-video.tsx');
+  const {parseReaVideo}=await importModule('lib/lab/rea-video.ts');
+  const labels=new Set();let sample;
+  for(let i=1;i<=12;i++){
+    const folder=new URL(`./fixtures/rea-video/V${String(i).padStart(2,'0')}/`,import.meta.url);
+    const raw=JSON.parse(await readFile(new URL('breakdown.json',folder),'utf8'));
+    const timeline=JSON.parse(await readFile(new URL('packaging/timeline.json',folder),'utf8'));
+    const data=parseReaVideo(raw,{timeline,readBy:'manual'}),before=JSON.stringify(data);
+    const html=renderToStaticMarkup(React.createElement(ReaTimeline,{data}));
+    const rows=[...html.matchAll(/<tr>(.*?)<\/tr>/gs)].slice(1);
+    assert.equal(rows.length,data.shots.length);
+    for(const row of rows){
+      const cells=[...row[1].matchAll(/<td\b[^>]*>(.*?)<\/td>/gs)];
+      const display=cells[1][1].replace(/<[^>]*>/g,'\n');
+      assert.doesNotMatch(display,/Khác \(|\b[a-z]+(?:_[a-z]+)+\b|\b(?:static|push-in|pull-out|hook|proof|payoff|context|info|turn|cta)\b/);
+      for(const label of display.split('\n'))if(label)labels.add(label);
+    }
+    for(const p of data.remakePrompts){
+      const escaped=renderToStaticMarkup(React.createElement('p',null,p.prompt));
+      assert.ok(html.includes(escaped),'English recreation prompt must render unchanged.');
+    }
+    assert.equal(JSON.stringify(data),before,'Rendering must not change stored/exported data.');
+    sample=data;
+  }
+  assert.equal(labels.size,14,'All seven camera and seven narrative labels must be covered.');
+  for(const label of ['Máy đứng yên','Máy đứng, chủ thể chuyển động','Đẩy máy vào','Mở đầu','Bằng chứng','Kết quả'])assert.ok(labels.has(label));
+  const unknown=structuredClone(sample);
+  unknown.shots[0].camera='<custom_move>';
+  unknown.narrative[0].role='unknown_role';
+  let html=renderToStaticMarkup(React.createElement(ReaTimeline,{data:unknown}));
+  assert.ok(html.includes('Khác (&lt;custom_move&gt;)'));
+  assert.ok(html.includes('Khác (unknown_role)'));
+  unknown.shots[0].camera=null;unknown.narrative=[];
+  html=renderToStaticMarkup(React.createElement(ReaTimeline,{data:unknown}));
+  assert.match(html,/Chưa biết/);assert.match(html,/Chờ đọc ảnh/);
+});
 
 test('Muse analysis prompt states the two attached sheets and parse keeps partial coverage visible',async()=>{
   const {referenceMusePrompt,parseReferenceMuseResponse}=await importModule('lib/lab/reference-muse.ts');

@@ -25,6 +25,8 @@ export const timedOverlaySchema = z.object({
 }).refine(o=>o.toSec>o.fromSec && o.text.split('\n').length<=o.lines,'Mốc chữ đè hoặc số dòng không hợp lệ.');
 export const packagingSchema = z.object({brandName:z.string().trim().min(1,'Chưa đặt tên bao bì.').max(80),boxText:z.string().trim().min(1,'Điền chữ trên hộp.').max(160)});
 export const storyboardV2Fields = {
+  sourceReference:z.object({jobId:id,shotId:z.string().regex(/^shot_\d{3,5}$/),prompt:z.string().max(6000),
+    firstFrame:z.string().regex(/^shots\/shot_\d{3,5}_first\.jpg$/).nullable(),lastFrame:z.string().regex(/^shots\/shot_\d{3,5}_last\.jpg$/).nullable()}).optional(),
   storyboardVersion:z.literal(2).optional(),
   beatId:id.optional(), beatKind:z.enum(['problem','versus_unbox','result']).optional(),
   phase:z.enum(['hook','unbox','result','feature_tour']).optional(),

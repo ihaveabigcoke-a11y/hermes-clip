@@ -1,0 +1,28 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 720
+PlayResY: 1280
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: subtitle_1,Sans,56,&H00F9F8F4,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,-0,1,0,0,5,0,0,0,1
+Style: label_2,Sans,54,&H00F5F7F8,&H0000FFFF,&H000C0D12,&H00000000,0,0,0,0,100,100,0,-6,1,1,0,5,0,0,0,1
+Style: label_3,Sans,33,&H00D1C1BB,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,4,1,0,0,5,0,0,0,1
+Style: label_4,Sans,24,&H00170A05,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,4,1,0,0,5,0,0,0,1
+Style: label_5,Sans,51,&H00958C8C,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,4,1,0,0,5,0,0,0,1
+Style: label_6,Sans,24,&H001F1413,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,4,1,0,0,5,0,0,0,1
+Style: label_7,Sans,21,&H00C0BDC1,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,5,1,0,0,5,0,0,0,1
+Style: huazi_8,Sans,112,&H00293756,&H0000FFFF,&H00101219,&H00000000,0,0,0,0,100,100,0,7,1,2,0,5,0,0,0,1
+Style: subtitle_9,Sans,57,&H00F9F8F4,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,1,1,0,0,5,0,0,0,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:03.00,subtitle_1,,0,0,0,,{\pos(338,253)}The problem
+Dialogue: 1,0:00:03.00,0:00:07.10,label_2,,0,0,0,,{\pos(361,252)}Vs...
+Dialogue: 1,0:00:03.00,0:00:03.10,label_3,,0,0,0,,{\pos(375,525)}LumaWalk"
+Dialogue: 1,0:00:03.00,0:00:03.60,label_4,,0,0,0,,{\pos(384,835)\fad(200,200)}LumaWalk
+Dialogue: 1,0:00:03.50,0:00:03.60,label_5,,0,0,0,,{\pos(357,318)}LumaWalk
+Dialogue: 1,0:00:03.50,0:00:03.60,label_6,,0,0,0,,{\pos(349,341)}NIGHT WALK LED KIT
+Dialogue: 1,0:00:03.50,0:00:03.60,label_7,,0,0,0,,{\pos(584,749)}LumaWalk
+Dialogue: 1,0:00:03.90,0:00:04.10,huazi_8,,0,0,0,,{\pos(404,760)}HA
+Dialogue: 0,0:00:07.50,0:00:14.20,subtitle_9,,0,0,0,,{\pos(359,251)}The solution

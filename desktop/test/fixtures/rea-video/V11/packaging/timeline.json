@@ -1,0 +1,459 @@
+{
+  "text": [
+    {
+      "id": "text_001",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 0.0,
+      "t1": 4.6,
+      "text": "What people think/we sell",
+      "bbox": [
+        0.1236,
+        0.1055,
+        0.7194,
+        0.1031
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#fafbfc",
+        "stroke_name": "black",
+        "stroke": "#0a0607",
+        "stroke_ratio": 0.031,
+        "weight": 0.08
+      },
+      "style_zh": "white text, black outline, line height 5.6% (about 72px)",
+      "anim_in": null,
+      "anim_out": null,
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_002",
+      "kind": "huazi",
+      "kind_zh": "styled text",
+      "t0": 0.0,
+      "t1": 0.6,
+      "text": "FOREHTS",
+      "bbox": [
+        0.7611,
+        0.4609,
+        0.2083,
+        0.068
+      ],
+      "style": {
+        "fill_name": "grey",
+        "fill": "#88807b",
+        "weight": 0.031
+      },
+      "style_zh": "grey text, line height 6.8% (about 87px)",
+      "anim_in": null,
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": {
+        "line": "text_001",
+        "text": "What people think/we sell",
+        "rel": "during",
+        "dt": 0.0,
+        "word": null
+      },
+      "persistent": null
+    },
+    {
+      "id": "text_003",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 0.0,
+      "t1": 0.5,
+      "text": "EPHHES",
+      "bbox": [
+        0.7819,
+        0.4867,
+        0.1361,
+        0.0398
+      ],
+      "style": {
+        "fill_name": "grey",
+        "fill": "#a9a29e",
+        "weight": 0.037
+      },
+      "style_zh": "grey text, line height 4.0% (about 51px)",
+      "anim_in": null,
+      "anim_out": {
+        "kind": "pop_out",
+        "kind_zh": "shrink out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_004",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 4.0,
+      "t1": 4.6,
+      "text": "FORGHTS",
+      "bbox": [
+        0.6694,
+        0.55,
+        0.1542,
+        0.0313
+      ],
+      "style": {
+        "fill_name": "grey",
+        "fill": "#aea6a0",
+        "multicolor": true,
+        "highlight_name": "white",
+        "weight": 0.067
+      },
+      "style_zh": "grey text, keywords highlighted in white, line height 2.7% (about 35px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "fade_out",
+        "kind_zh": "fade out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_005",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 4.0,
+      "t1": 4.6,
+      "text": "EPHARHERS",
+      "bbox": [
+        0.6833,
+        0.5719,
+        0.1264,
+        0.021
+      ],
+      "style": {
+        "fill_name": "grey",
+        "fill": "#afa7a1",
+        "weight": 0.094
+      },
+      "style_zh": "grey text, line height 1.6% (about 20px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "fade_out",
+        "kind_zh": "fade out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_006",
+      "kind": "huazi",
+      "kind_zh": "styled text",
+      "t0": 4.5,
+      "t1": 4.6,
+      "text": "we sell",
+      "bbox": [
+        0.2236,
+        0.1438,
+        0.3458,
+        0.0773
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#f5f6f8",
+        "stroke_name": "black",
+        "stroke": "#06050a",
+        "stroke_ratio": 0.019,
+        "weight": 0.055
+      },
+      "style_zh": "white text, black outline, line height 7.7% (about 99px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": {
+        "line": "text_001",
+        "text": "What people think/we sell",
+        "rel": "during",
+        "dt": 4.5,
+        "word": "wesell"
+      },
+      "persistent": null
+    },
+    {
+      "id": "text_007",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 5.0,
+      "t1": 6.8,
+      "text": "VS...",
+      "bbox": [
+        0.3917,
+        0.1141,
+        0.2153,
+        0.0805
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#fafbfc",
+        "stroke_name": "black",
+        "stroke": "#0a0607",
+        "stroke_ratio": 0.031,
+        "weight": 0.065
+      },
+      "style_zh": "white text, black outline, line height 6.9% (about 88px)",
+      "anim_in": null,
+      "anim_out": null,
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_008",
+      "kind": "huazi",
+      "kind_zh": "styled text",
+      "t0": 5.4,
+      "t1": 6.3,
+      "text": "FORGIVEN",
+      "bbox": [
+        0.7153,
+        0.5914,
+        0.2194,
+        0.0578
+      ],
+      "style": {
+        "fill_name": "grey",
+        "fill": "#90857f",
+        "box": true,
+        "box_name": "black",
+        "box_color": "#000002",
+        "weight": 0.043
+      },
+      "style_zh": "grey text, black box, line height 5.0% (about 63px)",
+      "anim_in": {
+        "kind": "fade",
+        "kind_zh": "fade in"
+      },
+      "anim_out": {
+        "kind": "slide_out",
+        "kind_zh": "slide out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": {
+        "line": "text_007",
+        "text": "VS...",
+        "rel": "during",
+        "dt": 0.4,
+        "word": null
+      },
+      "persistent": null
+    },
+    {
+      "id": "text_009",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 5.3,
+      "t1": 6.1,
+      "text": "EPHESIANS 1:7",
+      "bbox": [
+        0.7597,
+        0.6141,
+        0.1667,
+        0.0437
+      ],
+      "style": {
+        "fill_name": "grey",
+        "fill": "#998e87",
+        "weight": 0.061
+      },
+      "style_zh": "grey text, line height 3.5% (about 45px)",
+      "anim_in": {
+        "kind": "slide",
+        "kind_zh": "slide in"
+      },
+      "anim_out": {
+        "kind": "slide_out",
+        "kind_zh": "slide out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_010",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 7.0,
+      "t1": 9.6,
+      "text": "What we actually sell +",
+      "bbox": [
+        0.0569,
+        0.1305,
+        0.9139,
+        0.0602
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#fafbfc",
+        "stroke_name": "black",
+        "stroke": "#0a0607",
+        "stroke_ratio": 0.031,
+        "multicolor": true,
+        "highlight_name": "purple",
+        "weight": 0.074
+      },
+      "style_zh": "white text, black outline, keywords highlighted in purple, line height 6.0% (about 77px)",
+      "anim_in": null,
+      "anim_out": {
+        "kind": "fade_out",
+        "kind_zh": "fade out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_012",
+      "kind": "huazi",
+      "kind_zh": "styled text",
+      "t0": 9.0,
+      "t1": 9.1,
+      "text": "m",
+      "bbox": [
+        0.1361,
+        0.2211,
+        0.075,
+        0.032
+      ],
+      "style": {
+        "fill_name": "red",
+        "fill": "#f9ccce",
+        "weight": 0.134
+      },
+      "style_zh": "red text, line height 3.2% (about 41px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": {
+        "line": "text_010",
+        "text": "What we actually sell +",
+        "rel": "during",
+        "dt": 2.0,
+        "word": null
+      },
+      "persistent": null
+    },
+    {
+      "id": "text_013",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 10.0,
+      "t1": 11.2,
+      "text": "Comment \"JESUS\" to get/yours!",
+      "bbox": [
+        0.0667,
+        0.1109,
+        0.8528,
+        0.0984
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#fafbfc",
+        "stroke_name": "black",
+        "stroke": "#0a0607",
+        "stroke_ratio": 0.031,
+        "weight": 0.08
+      },
+      "style_zh": "white text, black outline, line height 5.5% (about 70px)",
+      "anim_in": null,
+      "anim_out": {
+        "kind": "fade_out",
+        "kind_zh": "fade out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    }
+  ],
+  "stickers": [],
+  "sfx": [
+    {
+      "t": 2.59,
+      "type": "pop",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": {
+        "type": "cut",
+        "what": "cut",
+        "dt": -0.023,
+        "ref": null
+      }
+    },
+    {
+      "t": 3.3,
+      "type": "pop",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": null
+    },
+    {
+      "t": 6.68,
+      "type": "click",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": {
+        "type": "cut",
+        "what": "cut",
+        "dt": 0.087,
+        "ref": null
+      }
+    }
+  ]
+}

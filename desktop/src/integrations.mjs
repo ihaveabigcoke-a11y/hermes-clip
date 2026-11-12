@@ -10,11 +10,12 @@ import {validateMedia,toolchain} from './media.mjs';
 import {analyzeLocalStructure,checkedBytes,verifyJpeg} from './reference-structure.mjs';
 import {shortsUrl,youtubeCapability,downloadYoutubeReference} from './reference-youtube.mjs';
 import {runReferenceCommand} from './reference-process.mjs';
+import {exportReaPack,productAss,overlayCopySchema} from './rea-pack.mjs';
 
 const here=dirname(fileURLToPath(import.meta.url));
 const lock=JSON.parse(await readFile(join(here,'../integrations-lock.json'),'utf8'));
 const executable=z.string().trim().min(1).max(500).refine(v=>!/[\r\n\0]/.test(v)&&!v.startsWith('-'),'Executable path is invalid.');
-export const integrationConfig=z.object({python:executable,reach:executable,montage:z.string().trim().min(1).max(1000).refine(isAbsolute,'Chọn đường dẫn tuyệt đối đến OpenMontage.')});
+export const integrationConfig=z.object({python:executable,reach:executable,montage:z.string().trim().min(1).max(1000).refine(isAbsolute,'Chọn đường dẫn tuyệt đối đến OpenMontage.'),reaPython:executable.optional(),reaVideo:z.string().refine(isAbsolute).optional()});
 const id=z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/);
 const source=z.object({bytes:z.instanceof(Uint8Array).refine(v=>v.length>0&&v.length<=25*1024*1024),sha256:z.string().regex(/^[a-f0-9]{64}$/)});
 export const researchInput=z.object({projectId:id,channel:z.enum(['web','youtube','reddit','instagram']),query:z.string().trim().min(2).max(300).refine(v=>!v.startsWith('-'),'Không bắt đầu truy vấn bằng dấu gạch ngang.')});
@@ -143,8 +144,25 @@ export class Integrations {
   });
  }
  async structureResult(dir,path,checksum){
+  if(this.rea&&await this.rea.available()){
+   const {data,elapsedMs,usageUsd,...receipt}=await this.rea.analyze(dir,path,checksum);
+   const frames=[];
+   for(const shot of data.shots){
+    const framePath=await this.confinedPath(dir,join(dir,'rea-video',shot.firstFrame??shot.frame));
+    const bytes=await readFile(framePath);if(bytes.length>5*1024**2||bytes[0]!==255||bytes[1]!==216)throw Error('Ảnh shot không hợp lệ.');
+    frames.push({t:shot.start,path:framePath,sha256:createHash('sha256').update(bytes).digest('hex')});
+   }
+   const contact=frames[0],cuts=data.shots.slice(1).map(s=>s.start);
+   const structure={durationSec:data.durationSec,width:null,height:null,aspectRatio:null,cuts,cutCount:cuts.length,
+    contactSheetPath:contact.path,contactSheetSha256:contact.sha256,frames,sourceSha256:checksum};
+   const structurePath=join(dir,'structure.json'),bytes=Buffer.from(JSON.stringify(structure));await writeFile(structurePath,bytes,{flag:'wx'});
+   await checkedBytes(dir,path,checksum,25*1024**2);
+   return {path:structurePath,structureSha256:createHash('sha256').update(bytes).digest('hex'),reaPath:receipt.path,reaSha256:receipt.reaSha256,
+    sourceSha256:checksum,engine:'rea-video',readStatus:data.readStatus,readBy:data.readBy,elapsedMs,usageUsd,
+    result:{durationSec:data.durationSec,cutCount:cuts.length,shotCount:data.shots.length,bpm:data.audio.bpm}};
+  }
   const {result,...receipt}=await analyzeLocalStructure(dir,path,checksum);
-  return {...receipt,sourceSha256:checksum,result:{durationSec:result.durationSec,cutCount:result.cutCount,width:result.width,height:result.height,aspectRatio:result.aspectRatio}};
+  return {...receipt,sourceSha256:checksum,engine:'ffmpeg',fallbackReason:'Chưa có rea-video; dùng FFmpeg local.',result:{durationSec:result.durationSec,cutCount:result.cutCount,width:result.width,height:result.height,aspectRatio:result.aspectRatio}};
  }
  async structure(input){
   const d=z.object({id,projectId:id}).parse(input),job=this.job(d.id);
@@ -153,13 +171,44 @@ export class Integrations {
   const structure=JSON.parse((await checkedBytes(dir,job.path,job.structureSha256,1024*1024)).toString('utf8'));
   // Receipts never expose arbitrary disk paths as readable IPC arguments.
   for(const frame of structure.frames)await checkedBytes(dir,frame.path,frame.sha256,5*1024*1024);
-  await verifyJpeg(dir,structure.contactSheetPath);
+  if(job.engine!=='rea-video')await verifyJpeg(dir,structure.contactSheetPath);
   const bytes=await checkedBytes(dir,structure.contactSheetPath,structure.contactSheetSha256,5*1024*1024);
   for(const sheet of structure.contactSheets?.dense??[]) {
    await verifyJpeg(dir,sheet.path,sheet);
    await checkedBytes(dir,sheet.path,sheet.sha256,5*1024*1024);
   }
-  return {jobId:job.id,projectId:job.projectId,name:job.request.name,sourceSha256:job.sourceSha256,sourceUrl:job.sourceUrl??null,subtitles:job.subtitles??[],structure,contactSheet:{bytes:new Uint8Array(bytes),type:'image/jpeg'}};
+  const reaVideo=job.reaPath?this.rea.domain.reaVideoSchema.parse(JSON.parse((await checkedBytes(dir,job.reaPath,job.reaSha256,3*1024**2)).toString('utf8'))):null;
+  return {jobId:job.id,projectId:job.projectId,name:job.request.name,sourceSha256:job.sourceSha256,sourceUrl:job.sourceUrl??null,subtitles:job.subtitles??[],structure,reaVideo,contactSheet:{bytes:new Uint8Array(bytes),type:'image/jpeg'}};
+ }
+ async reaReview(input){
+  const d=z.object({id,projectId:id,text:z.string().max(2*1024*1024).optional()}).parse(input),j=this.job(d.id);
+  if(j.kind!=='reference-structure'||j.state!=='done'||j.projectId!==d.projectId||j.engine!=='rea-video')throw Error('Chưa có phân tích rea-video của dự án này.');
+  if(this.busy)throw Error('Chờ tác vụ đang chạy.');this.busy=true;this.rea.busy=true;
+  const directory=join(this.root,'integrations',j.id),out=join(directory,'rea-video'),started=Date.now();
+  try{
+   if(d.text===undefined){await this.rea.reviewTasks(out);return {path:out};}
+   const previous=this.rea.domain.reaVideoSchema.parse(JSON.parse((await checkedBytes(directory,j.reaPath,j.reaSha256,3*1024**2)).toString('utf8')));
+   const next=await this.rea.importReview(directory,previous,d.text);
+   this.update({...j,reaPath:next.path,reaSha256:next.reaSha256,readStatus:next.data.readStatus,readBy:next.data.readBy,
+    reviewElapsedMs:Date.now()-started,reviewedAt:Date.now()});return {readStatus:next.data.readStatus};
+  }finally{this.busy=false;this.rea.busy=false;this.drain();}
+ }
+ async reaPack(input){
+  const d=z.object({id,projectId:id,productName:z.string().min(1).max(150),copies:z.array(z.object({id:z.string(),text:z.string()})).max(2000)}).parse(input),j=this.job(d.id);
+  if(j.kind!=='reference-structure'||j.state!=='done'||j.projectId!==d.projectId||j.engine!=='rea-video')throw Error('Chưa có mẫu rea-video của dự án này.');
+  if(this.busy)throw Error('Chờ tác vụ hiện tại.');this.busy=true;
+  try{const dir=join(this.root,'integrations',j.id);assertDiskSpace(this.root,128*1024**2,storagePolicy(this.store));
+   const data=this.rea.domain.reaVideoSchema.parse(JSON.parse((await checkedBytes(dir,j.reaPath,j.reaSha256,3*1024**2)).toString('utf8')));
+   return await exportReaPack(dir,data,d);
+  }finally{this.busy=false;this.drain();}
+ }
+ async reaAss(input,duration){
+  const d=z.object({id,projectId:id,copies:overlayCopySchema}).parse(input),j=this.job(d.id);
+  if(j.kind!=='reference-structure'||j.state!=='done'||j.projectId!==d.projectId||j.engine!=='rea-video')throw Error('Mẫu chữ đè chưa sẵn sàng.');
+  const dir=join(this.root,'integrations',j.id),data=this.rea.domain.reaVideoSchema.parse(JSON.parse((await checkedBytes(dir,j.reaPath,j.reaSha256,3*1024**2)).toString('utf8')));
+  if(Math.abs(duration-data.durationSec)>.25)throw Error('Timeline ghép phải cùng thời lượng mẫu để giữ đúng mốc chữ đè. Chọn mẫu khác hoặc dùng gói manual để chỉnh mốc.');
+  const path=await this.confinedPath(dir,join(dir,'rea-video','packaging','overlays.ass'));if((await stat(path)).size>1024**2)throw Error('ASS vượt giới hạn.');
+  return productAss(await readFile(path,'utf8'),data,d.copies);
  }
  async youtubeStatus(){
   if(this.busy)throw Error('Một tác vụ tích hợp đang chạy; chờ kết quả trước.');this.busy=true;

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import seed from "./viral-formulas.seed.json" with { type: "json" };
 import {timedOverlaySchema} from './production.ts';
+import {reaVideoSchema} from './rea-video.ts';
 
 // Taxonomy v1 is fixed. Future MP4/frame/OCR/Muse analysis must classify into
 // these values, then propose a new formula version for the user to review.
@@ -50,6 +51,7 @@ export const formulaBeatSchema = z.object({
 const range = z.object({min: z.number().finite().nonnegative(), max: z.number().finite().nonnegative()})
   .refine(value => value.min <= value.max, "Khoảng tối thiểu không được lớn hơn tối đa.");
 export const viralFormulaSchema = z.object({
+  referenceSource:z.object({jobId:z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/).nullable(),analysis:reaVideoSchema}).optional(),
   storyboardVersion:z.literal(2).optional(),
   pacingSource:z.object({samples:z.array(z.string().regex(/^V(?:0[1-9]|1[0-2])$/)).min(1).max(12),timing:z.literal('adapted'),notes:text}).optional(),
   situationExamples:z.array(text).min(1).max(20).optional(),
@@ -92,6 +94,7 @@ export type ViralFormula = z.infer<typeof viralFormulaSchema>;
 export type FormulaBeat = z.infer<typeof formulaBeatSchema>;
 
 export const referenceVideoSchema = z.object({
+  reaVideo:reaVideoSchema.optional(),
   id,
   product: text,
   hookText: z.string().max(3000).nullable().default(null),
