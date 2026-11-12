@@ -10,20 +10,26 @@ const ruleInput = z.object({planId:identifier,enabled:z.boolean(),keyword:z.stri
   template:z.string().trim().min(1).max(800).refine(value=>value.includes('{link}'),'Mẫu DM phải có {link}.'),
   requireFollow:z.boolean().default(true), approved:z.boolean()});
 const normalize = value => String(value).normalize('NFKD').replace(/\p{M}/gu,'').toLowerCase();
-// Whole words; one insertion/deletion/substitution or adjacent transposition for
-// keywords >= 4 letters. Short CTA tokens must match exactly.
+// Whole words. Typos stay narrow because a false match sends an unsolicited DM:
+// - keywords >= 4 letters: exact, plural "s"/"es", or one adjacent transposition (LINK ~ lnik);
+// - keywords >= 6 letters: additionally one insertion/deletion/substitution.
+// Short words like LINK/SHOP/WANT must not match pink/line/ink, stop/show/ship or went.
 export function matchCta(text, keyword) {
   const wanted = normalize(keyword).trim();
   const words = normalize(text).match(/[\p{L}\p{N}]+/gu) ?? [];
   if (words.includes(wanted)) return true;
   if (!/^[\p{L}\p{N}]{4,40}$/u.test(wanted)) return false;
+  const loose = wanted.length >= 6;
   return words.some(word => {
+    if (word === wanted + 's' || word === wanted + 'es') return true;
     if (Math.abs(word.length-wanted.length)>1) return false;
     if (word.length === wanted.length) {
       const mismatch=[...word].map((c,i)=>c===wanted[i]?-1:i).filter(i=>i>=0);
-      return mismatch.length===1 || mismatch.length===2 && mismatch[1]===mismatch[0]+1
+      const transposed = mismatch.length===2 && mismatch[1]===mismatch[0]+1
         && word[mismatch[0]]===wanted[mismatch[1]] && word[mismatch[1]]===wanted[mismatch[0]];
+      return transposed || loose && mismatch.length===1;
     }
+    if (!loose) return false;
     const [short,long] = word.length < wanted.length ? [word,wanted] : [wanted,word];
     let a=0,b=0,skips=0;
     while(a<short.length&&b<long.length) {if(short[a]===long[b]){a++;b++;}else{b++;skips++;}}

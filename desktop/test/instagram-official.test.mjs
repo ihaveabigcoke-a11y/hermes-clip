@@ -92,7 +92,13 @@ test('T-004: API poll + private reply idempotent across duplicate deliveries, co
 });
 test('T-004: unknown follow never sends link, known false blocked; exact and typo CTA boundaries',async t=>{
   assert.equal(followAllowsLink(true,null),false);assert.equal(followAllowsLink(true,undefined),false);assert.equal(followAllowsLink(true,false),false);assert.equal(followAllowsLink(true,true),true);
-  for(const word of ['link','LINK!','lnik','lik','liink','lunk'])assert.equal(matchCta(word,'LINK'),true,word);
+  for(const word of ['link','LINK!','lnik','links','nice links please'])assert.equal(matchCta(word,'LINK'),true,word);
+  // Boss phụ: short CTAs no longer accept substitutions/insertions/deletions; each of these is a real
+  // word a customer may write, and a false match sends an unsolicited DM.
+  for(const [word,keyword] of [['pink','LINK'],['line','LINK'],['ink','LINK'],['lint','LINK'],['lik','LINK'],['liink','LINK'],['lunk','LINK'],
+    ['stop','SHOP'],['show','SHOP'],['ship','SHOP'],['went','WANT'],['so pink and nice','LINK']])assert.equal(matchCta(word,keyword),false,word+'/'+keyword);
+  for(const word of ['discount','discont','discuont','dicsount','discounnt','discounts'])assert.equal(matchCta(word,'DISCOUNT'),true,word);
+  for(const word of ['account','discover'])assert.equal(matchCta(word,'DISCOUNT'),false,word);
   for(const word of ['blink','unlinked','random','ledu'])assert.equal(matchCta(word,'LED'),false,word);
   const f=await fixture(t);await f.publisher.comments.saveRule({...f.payload,requireFollow:true});await f.publisher.comments.tick();
   assert.equal(f.calls.some(c=>c.path.endsWith('/messages')),false);assert.equal(f.publisher.comments.rows()[0].state,'follow_unknown');
