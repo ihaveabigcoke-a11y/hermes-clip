@@ -6,6 +6,17 @@ const {buildOfficeView,groupOf}=await importModule('lib/lab/office-view.ts');
 const {emptyProduct,schemas}=await importModule('lib/lab/domain.ts');
 const {newProduction}=await importModule('lib/lab/production.ts');
 const fixture=()=>officeFixture({emptyProduct,researchBatchSchema:schemas.research_batch,newProduction});
+
+test('T022 Office keeps imported metric values and verified render provenance without transient jobs',async()=>{
+ const {hookFixture}=await import('../../tests/fixtures/hook-matrix.mjs');
+ const production=await importModule('lib/lab/production.ts'),{getRenderPlan}=await importModule('lib/lab/render-plan.ts');
+ const f=hookFixture({...production,emptyProduct,getRenderPlan});
+ f.records.push({id:'measurement',kind:'social_metric',revision:1,updatedAt:1,data:{planId:'post',observedAt:'2026-11-13T00:00:00Z',source:'manual',keywordComments:0,dms:3,shares:null,utmClicks:5,orders:null}});
+ let v=buildOfficeView(f.records,[],{},[]);assert.equal(v.exports.filter(e=>e.verified).length,3);
+ assert.deepEqual([v.measurements[0].keywordComments,v.measurements[0].dms,v.measurements[0].shares,v.measurements[0].utmClicks,v.measurements[0].orders],[0,3,null,5,null]);
+ f.records[1].data.exports[0].sha256='f'.repeat(64);v=buildOfficeView(f.records,[],{},[]);assert.equal(v.exports.filter(e=>e.verified).length,2);
+ f.records.find(r=>r.id==='render_1').data.metadata.duration=90;assert.equal(buildOfficeView(f.records,[],{},[]).exports.filter(e=>e.verified).length,1);
+});
 test('T-010: today three, yesterday one active, separate selection totals, pure projection',()=>{
  const f=fixture(),before=structuredClone(f),view=buildOfficeView(f.records,f.jobs,f.manual,f.integrations,f.now);
  assert.equal(view.selection.days.find(d=>d.day===view.today).productIds.length,3);assert.equal(view.products.filter(p=>p.active).length,4);

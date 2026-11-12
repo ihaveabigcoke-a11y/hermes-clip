@@ -1,6 +1,7 @@
 import {z} from 'zod';
 import {VIETNAM_TIME_ZONE,vietnamDay,type LabRecord} from './domain.ts';
 import {selectionEntries} from './daily-selection.ts';
+import {renderPlanSchema,renderDuration} from './render-plan.ts';
 
 export const officeGroups={queued:'Hàng chờ',sending:'Đang gửi',generating:'Đang tạo',checking:'Kiểm / nhập',library:'Đã vào Thư viện',manual:'Chờ file tay',attention:'Cần đối soát',failed:'Lỗi',stopped:'Đã dừng',refused:'Muse từ chối/giới hạn',unmapped:'Chưa phân loại'} as const;
 export type OfficeGroup=keyof typeof officeGroups;
@@ -70,7 +71,10 @@ export function buildOfficeView(records:LabRecord[],workerStore:any=[],manual:an
   for(const s of selections){const key=s.selectionDay+':'+s.batchId;const day=days.get(key)??{day:s.selectionDay,batchId:s.batchId,productIds:[]};if(!day.productIds.includes(s.productId))day.productIds.push(s.productId);days.set(key,day);}
   const exports=projects.flatMap(p=>(p.data.exports??[]).map((e:any)=>{
     const asset=assets.find(a=>a.id===e.assetId),m=asset?.data.metadata;
-    const verified=e.kind==='render'&&!!asset?.data.sha256&&m?.width===720&&m?.height===1280&&m?.duration>0&&integrations.some(j=>j.kind==='compose'&&j.state==='done'&&j.output?.sha256===asset?.data.sha256&&j.output?.metadata?.width===720&&j.output?.metadata?.height===1280);
+    const plan=renderPlanSchema.safeParse(e.renderPlan);
+    const durable=e.verified===true&&e.sha256===asset?.data.sha256&&m?.verifiedBy==='container'&&plan.success&&plan.data.productionId===p.id&&plan.data.variantId===e.variantId&&Math.abs(m.duration-renderDuration(plan.data))<=.1;
+    const legacy=e.verified===undefined&&integrations.some(j=>j.kind==='compose'&&j.state==='done'&&j.output?.sha256===asset?.data.sha256&&j.output?.metadata?.width===720&&j.output?.metadata?.height===1280);
+    const verified=e.kind==='render'&&asset?.data.type==='video/mp4'&&!!asset?.data.sha256&&m?.width===720&&m?.height===1280&&Number.isFinite(m?.duration)&&m.duration>0&&(durable||legacy);
     return {id:identifier(e.id),productId:p.data.productId,productionId:p.id,variantId:identifier(e.variantId),kind:e.kind,assetId:identifier(e.assetId),sha256:asset?.data.sha256??null,verified,createdAt:iso(e.createdAt)};
   }));
   const posts=records.filter(r=>r.kind==='content_plan').map(r=>({id:r.id,productId:identifier(r.data.productId),variantId:identifier(r.data.variantId),accountId:identifier(r.data.accountId),assetId:identifier(r.data.assetId),status:stateOf(r.data.status),utmHookId:identifier(r.data.utmHookId),plannedDate:r.data.plannedDate??null,productionId:identifier(r.data.productionId)}));
@@ -80,7 +84,7 @@ export function buildOfficeView(records:LabRecord[],workerStore:any=[],manual:an
     const stage=p.data.archived?'dropped':posts.some(post=>post.productId===p.id&&post.status.startsWith('published'))||exports.some(e=>e.productId===p.id&&e.verified)?'publish':hasTake?'review':productRuns.length?'media':related.length?'script':'research';
     return {id:p.id,key:p.data.productKey??null,name:safeName(p.data.name),stage,firstSelectedDay:selected[0]?.selectionDay??null,lastSelectedDay:selected.at(-1)?.selectionDay??null,selectionCount:selected.length,active:stage!=='dropped',priorityRank:selected.at(-1)?.rank??null,openActions:productRuns.filter(r=>r.needsAction).length,updatedAt:iso(p.updatedAt),competitorVideos:[]};
   });
-  const measurements=records.filter(r=>['social_metric','keyword_comment_measurement'].includes(r.kind)).map(r=>({id:r.id,postId:identifier(r.data.planId),observedAt:iso(r.data.observedAt),source:stateOf(r.data.source),period:r.kind==='social_metric'?(r.data.period??null):null,keywordComments:r.kind==='keyword_comment_measurement'?number(r.data.matched):null,dms:null,shares:number(r.data.shares),utmClicks:null,orders:null}));
+  const measurements=records.filter(r=>['social_metric','keyword_comment_measurement'].includes(r.kind)).map(r=>({id:r.id,postId:identifier(r.data.planId),observedAt:iso(r.data.observedAt),source:stateOf(r.data.source),period:r.kind==='social_metric'?(r.data.period??null):null,keywordComments:r.kind==='keyword_comment_measurement'?number(r.data.matched):number(r.data.keywordComments),dms:number(r.data.dms),shares:number(r.data.shares),utmClicks:number(r.data.utmClicks),orders:number(r.data.orders)}));
   return {schema:'hermes-office-view',version:1,generatedAt:new Date(now).toISOString(),source:{app:'hermes-clip',commit:null,timezone:VIETNAM_TIME_ZONE},today:vietnamDay(now),selection:{limitPerDay:3,days:[...days.values()],totals:{selectionsAllDays:selections.length,distinctProducts:new Set(selections.map(s=>s.productId)).size}},products,runs,exports,posts,measurements};
 }
 export type OfficeView=ReturnType<typeof buildOfficeView>;
