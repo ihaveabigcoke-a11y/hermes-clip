@@ -1,3 +1,13 @@
+# Trạng thái hiện hành — sáng 13/11/2026
+
+T-012–T-023 trong danh sách người dùng đã triển khai; review cuối T-022 có ba sửa nhỏ về receipt, MP4 cũ và null. Đọc [báo cáo sáng](2026-11-13-OFFICE-MORNING.md) và STATUS văn phòng cho SHA/build/test cuối. Một main agent; không push/merge. Office nằm ngay trong app.
+
+Electron chạy được. Muse thật đã Tạm dừng sau hạn chế vùng: 1 gửi/0 clip mới/2 lỗi (một trước gửi), không thử lại đêm này. Ba MP4 thật và ba draft dùng clip Muse cũ ngày 12/11; chưa đăng, chưa tài khoản/landing, chưa xác minh đúng SKU/công dụng. Không gọi mục tiêu clip mới hoàn thành. Ngưỡng tín hiệu còn null.
+
+Các mục bên dưới là lịch sử; mốc dừng trước T-012 và các lỗi sandbox/SAC cũ không thay trạng thái hiện hành.
+
+---
+
 # Hermes Clip — bối cảnh và trạng thái (cập nhật 13/11/2026)
 
 ## T-010/T-011 — mốc nghiệm thu 1 trong app (13/11/2026)
