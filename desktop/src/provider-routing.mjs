@@ -28,8 +28,7 @@ export function resolveProvider({kind, status, available = true, error = '', cod
   const readyProfiles = available && !error && status?.musePaused === false && status.generationReady
     ? status.profiles.filter(profile => profile.enabled && profile.health === 'ready' && profile.session === 'signed_in'
       && profile.quota?.state === 'available'
-      && !(profile.quota.weeklyRemainingPercent === 0 && !((profile.quota.additionalTokens ?? 0) > 0))
-      && (status.batch?.submittedByProfile[profile.id] ?? 0) < 3) : [];
+      && !(profile.quota.weeklyRemainingPercent === 0 && !((profile.quota.additionalTokens ?? 0) > 0))) : [];
   const ready = readyProfiles.length > 0;
   // Check every receipt, not just the latest: a newer draft cannot settle an older send.
   const uncertain = previous.some(task => task.provider === 'muse' && !task.reconciled

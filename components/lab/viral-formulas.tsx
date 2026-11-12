@@ -36,6 +36,7 @@ export default function ViralFormulas({records,disabled,onSaveDraft,onSaveFormul
         <p>Kiểu mở đầu: {hookLabels[formula.hookType]}. Cập nhật: {formula.updatedAt ? new Date(formula.updatedAt).toLocaleString("vi-VN") : "Chưa biết"}.</p>
         <p>Phù hợp: {formula.fitProductTraits.length ? formula.fitProductTraits.map(trait => traitLabels[trait]).join(" · ") : "Chưa xác định"}.</p>
         <p>Chữ trên màn hình: {positionLabels[formula.overlay.position]}, {formula.overlay.lines} dòng; {formula.overlay.changesPerBeat ? "đổi theo cảnh" : "giữ xuyên cảnh"}; {formula.overlay.readableMuted ? "đọc được khi tắt tiếng" : "cần kiểm tra khi tắt tiếng"}.</p>
+        {formula.storyboardVersion===2&&<p>Nhịp tham khảo: 41 cắt/phút · khoảng 1,5 giây/shot · {formula.beats.reduce((n,b)=>n+(b.shots?.length??0),0)} shot. Chữ trắng viền đen, cao 5–6% khung. CTA đè 4–6 giây cuối hoặc ở caption. Kết quả: {{spectacle:'Toàn cảnh ấn tượng',subject_after:'Chủ thể yên ổn',feature_tour:'Tour tính năng',story_cards:'Thẻ chuyện hư cấu'}[formula.resultStyle!]}. Giữ v1 trong lịch sử công thức.</p>}
         <ol>{formula.beats.map((beat, index) => <li key={index}>
           <strong>{roleLabels[beat.role]} · {kindLabels[beat.kind]} · {formatBeatTime(beat)}</strong>
           <p>Nhãn chữ: {beat.label || "Không có"}</p><p>{beat.goal}</p>

@@ -18,6 +18,32 @@ const referenceSchema = z.object({
 const pinSchema = z.object({ id, version: z.number().int().positive() });
 export const overlayTextSchema = z.string().trim().max(60, "Chữ trên màn hình tối đa 60 ký tự.").refine(value => !/[\r\n]/.test(value), "Chữ trên màn hình chỉ một dòng.").nullable().optional();
 export const ctaKeywordSchema = z.string().trim().regex(/^[A-Z]{1,20}$/, "Từ khóa cần một từ tiếng Anh in hoa, tối đa 20 chữ cái.");
+export const timedOverlaySchema = z.object({
+  text: z.string().trim().min(1).max(120), emoji: z.string().max(24),
+  fromSec: z.number().nonnegative(), toSec: z.number().positive(),
+  position: z.literal('top-center'), lines: z.union([z.literal(1),z.literal(2)]),
+}).refine(o=>o.toSec>o.fromSec && o.text.split('\n').length<=o.lines,'Mốc chữ đè hoặc số dòng không hợp lệ.');
+export const packagingSchema = z.object({brandName:z.string().trim().min(1,'Chưa đặt tên bao bì.').max(80),boxText:z.string().trim().min(1,'Điền chữ trên hộp.').max(160)});
+export const storyboardV2Fields = {
+  sourceReference:z.object({jobId:id,shotId:z.string().regex(/^shot_\d{3,5}$/),prompt:z.string().max(6000),
+    firstFrame:z.string().regex(/^shots\/shot_\d{3,5}_first\.jpg$/).nullable(),lastFrame:z.string().regex(/^shots\/shot_\d{3,5}_last\.jpg$/).nullable()}).optional(),
+  storyboardVersion:z.literal(2).optional(),
+  beatId:id.optional(), beatKind:z.enum(['problem','versus_unbox','result']).optional(),
+  phase:z.enum(['hook','unbox','result','feature_tour']).optional(),
+  fromSec:z.number().nonnegative().optional(), toSec:z.number().positive().optional(),
+  subjects:text(1000).optional(), setting:text(1000).optional(),
+  constraints:z.array(z.string().trim().min(1).max(1000).refine(v=>!/[\r\n]/.test(v))).max(3).optional(),
+  overlay:timedOverlaySchema.optional(), ctaOverlay:timedOverlaySchema.optional(),
+  ctaPlacement:z.enum(['overlay','caption']).optional(), ctaKeyword:ctaKeywordSchema.optional(),
+  situation:z.string().trim().min(1,'Điền tình huống mở đầu.').max(1000).optional(),
+  packaging:packagingSchema.optional(),
+  resultStyle:z.enum(['spectacle','subject_after','feature_tour','story_cards']).optional(),
+  metadata:z.object({dramatization:z.literal(true).optional()}).optional(),
+  generationUnit:z.object({id,fromSec:z.number().nonnegative(),toSec:z.number().positive(),duration:z.literal(8)}).optional(),
+};
+export function storyboardMetadata(s: Partial<Scene>) {
+  return Object.fromEntries(Object.keys(storyboardV2Fields).filter(key=>s[key as keyof Scene]!==undefined).map(key=>[key,s[key as keyof Scene]]));
+}
 const ctaFields = {ctaKeyword: ctaKeywordSchema.nullable().optional(), ctaText: text(200).nullable().optional()};
 const attemptSchema = z.object({
   provider: z.enum(['muse','manual']).optional(),
@@ -26,7 +52,9 @@ const attemptSchema = z.object({
   snapshot: z.string().max(20000), providerJobId: text(200),
   usageUsd: z.number().nonnegative().nullable(), createdAt: z.number(),
 });
+export const compressionSchema = z.object({version:z.literal(1),sourceSha256:z.string().regex(/^[a-f0-9]{64}$/),sha256:z.string().regex(/^[a-f0-9]{64}$/),sourceSize:z.number().int().positive(),size:z.number().int().positive(),mode:z.enum(['encoded','remux','original']),overLimit:z.boolean(),maxBytes:z.number().int().positive().max(6*1024**2)});
 const takeSchema = z.object({
+  compression: compressionSchema.optional(),
   provider: z.enum(['muse','manual']).optional(),
   id, attemptId: id.nullable(), assetId: id, name: text(150), type: text(80),
   sha256: z.string().regex(/^[a-f0-9]{64}$/), size: z.number().int().positive(),
@@ -35,6 +63,7 @@ const takeSchema = z.object({
   review: z.enum(["pending", "approved", "rejected"]), notes: text(2000), createdAt: z.number(),
 });
 export const sceneInputSchema = z.object({
+  ...storyboardV2Fields,
   name: z.string().trim().min(1, "Đặt tên cảnh.").max(150),
   role: z.enum(["hook", "body", "cta"]).default("body"),
   mediaType: z.enum(["image", "video"]).default("video"),
@@ -60,15 +89,57 @@ const variantSchema = z.object({
   id, name: z.string().trim().min(1).max(150), bodyId: id, hook: itemSchema.nullable(), cta: itemSchema.nullable(),
   locale: z.string().trim().min(2).max(40), caption: text(3000), createdAt: z.number(),
   ...ctaFields,
+  ctaPlacement:z.enum(['overlay','caption']).optional(),
   formulaId: id.optional(), formulaVersion: z.number().int().positive().optional(),
 });
 export const formulaDraftInputSchema = z.object({
+  storyboardVersion:z.literal(2).optional(),
+  ctaPlacement:z.enum(['overlay','caption']).optional(),
+  situation:z.string().trim().min(1,'Điền tình huống mở đầu.').max(1000).optional(),
+  packaging:packagingSchema.optional(),
   name: z.string().trim().min(1).max(150), formulaId: id, formulaVersion: z.number().int().positive(),
   rows: z.array(sceneInputSchema).min(2).max(18), alternateHook: sceneInputSchema,
   ctaKeyword: ctaKeywordSchema, ctaText: z.string().trim().min(1).max(200),
 }).superRefine((draft, ctx) => {
   const rows = draft.rows, hook = rows[0], alternate = draft.alternateHook;
   const total = rows.reduce((sum, row) => sum + row.duration, 0);
+  if(draft.storyboardVersion===2) {
+    const fail=(message:string)=>ctx.addIssue({code:'custom',message});
+    if(!draft.situation)fail('Điền tình huống mở đầu.');
+    if(!draft.packaging?.brandName)fail('Chưa đặt tên bao bì.');
+    if(!draft.ctaPlacement)fail('Chọn vị trí CTA.');
+    if(rows.length<8||rows.some(row=>row.duration<1||row.duration>2.5||row.role==='cta'))fail('Bản v2 cần ít nhất 8 shot, mỗi shot 1–2,5 giây; CTA đè cảnh.');
+    let cursor=0;
+    for(const row of [...rows,alternate]) {
+      if(row===alternate)cursor=0;
+      if(row.storyboardVersion!==2||Math.abs((row.fromSec??-1)-cursor)>0.001||Math.abs((row.toSec??-1)-cursor-row.duration)>0.001)fail('Mốc shot phải nối tiếp nhau.');
+      const gate=storyboardShotGate(row);if(gate)fail(gate);
+      if(row.situation!==draft.situation||JSON.stringify(row.packaging)!==JSON.stringify(draft.packaging)||row.ctaKeyword!==draft.ctaKeyword||row.ctaPlacement!==draft.ctaPlacement)fail('Thông tin shot không khớp bản nháp.');
+      cursor+=row.duration;
+    }
+    const result=rows.filter(row=>row.phase==='result'),features=rows.filter(row=>row.phase==='feature_tour');
+    if(features.length ? features.length<6||features.length>8||result.length>0 : result.length<3)fail('Cần ít nhất 3 shot kết quả hoặc 6–8 shot tính năng.');
+    const payoff=features.length?features:result;
+    const ctas=rows.filter(row=>row.ctaOverlay);
+    if(draft.ctaPlacement==='caption'&&ctas.length)fail('CTA caption không đè lên shot.');
+    if(draft.ctaPlacement==='overlay') {
+      const cta=ctas[0]?.ctaOverlay;
+      if(!cta||cta.toSec!==total||cta.toSec-cta.fromSec<4||cta.toSec-cta.fromSec>6||cta.fromSec<(payoff[0]?.fromSec??Infinity)||!rows.some(r=>r.fromSec===cta.fromSec))fail('CTA phải nằm trong 4–6 giây cuối phần kết quả hoặc tour tính năng.');
+      if(cta?.text!==draft.ctaText||ctas.some(r=>JSON.stringify(r.ctaOverlay)!==JSON.stringify(cta)||!r.overlay?.text.includes(cta!.text))||rows.some(r=>Boolean(r.ctaOverlay)!==Boolean(cta&&r.fromSec!>=cta.fromSec)))fail('Mốc và chữ CTA phải thống nhất trên các shot kết thúc.');
+    }
+    const beats=new Map<string,typeof rows>();
+    for(const row of rows)beats.set(row.beatId!,[...(beats.get(row.beatId!)??[]),row]);
+    if([...beats.values()].some(shots=>shots.length>6))fail('Mỗi beat có tối đa 6 shot.');
+    const boundaries=new Set([0,...rows.map(r=>r.toSec)]);
+    for(const row of rows)if(!boundaries.has(row.overlay?.fromSec)||!boundaries.has(row.overlay?.toSec))fail('Nhãn chữ phải đổi đúng mốc cắt shot.');
+    for(const shots of beats.values())if(shots.some((row,i)=>i>0&&row.fromSec!==shots[i-1].toSec))fail('Các shot cùng beat phải liền nhau.');
+    const groups=new Map<string,typeof rows>();
+    for(const row of rows)if(row.generationUnit)groups.set(row.generationUnit.id,[...(groups.get(row.generationUnit.id)??[]),row]);
+    for(const shots of groups.values()) {
+      const unit=shots[0].generationUnit!;
+      if(unit.fromSec!==shots[0].fromSec||unit.toSec!==shots.at(-1)!.toSec||shots.some((row,i)=>row.setting!==shots[0].setting||row.beatId!==shots[0].beatId||JSON.stringify(row.generationUnit)!==JSON.stringify(unit)||(i>0&&row.fromSec!==shots[i-1].toSec)))fail('Nhóm tạo cần shot liền kề, cùng beat và bối cảnh.');
+    }
+  }
   if (hook.role !== 'hook' || rows.filter(row => row.role === 'hook').length !== 1 || !rows.some(row => row.role === 'body') ||
       rows.filter(row => row.role === 'cta').length > 1 || rows.some((row, i) => row.role === 'cta' && i !== rows.length - 1))
     ctx.addIssue({code:'custom', message:'Công thức cần một mở đầu, nội dung chính và tối đa một CTA ở cuối.'});
@@ -96,6 +167,21 @@ export type Production = z.infer<typeof productionSchema>;
 export type Scene = Production["scenes"][number];
 export type Take = Scene["takes"][number];
 export type MediaMetadata = z.infer<typeof metadataSchema>;
+export function storyboardShotGate(s: Omit<z.infer<typeof sceneInputSchema>,"referenceIds">) {
+  if(s.storyboardVersion!==2)return '';
+  if(!s.ctaKeyword)return 'Điền từ khóa CTA.';
+  if(!s.situation?.trim())return 'Điền tình huống mở đầu.';
+  if(!s.packaging?.brandName?.trim())return 'Chưa đặt tên bao bì.';
+  if(!s.packaging.boxText.trim())return 'Điền chữ trên hộp.';
+  if(!s.beatId||!s.phase||!s.beatKind||!s.camera||!s.subjects||!s.setting||!s.overlay||!s.generationUnit||!s.constraints||!s.resultStyle||!s.ctaPlacement)return 'Shot v2 thiếu thông tin hình, chữ đè hoặc nhóm tạo.';
+  if(s.voice||s.role==='cta'||s.duration<1||s.duration>2.5)return 'Shot v2 cần 1–2,5 giây, không lời thoại và không có cảnh CTA riêng.';
+  if(s.fromSec===undefined||s.toSec===undefined||Math.abs(s.toSec-s.fromSec-s.duration)>0.001)return 'Mốc shot không khớp thời lượng.';
+  if(s.generationUnit.fromSec>s.fromSec||s.generationUnit.toSec<s.toSec||s.generationUnit.toSec-s.generationUnit.fromSec>8)return 'Shot nằm ngoài nhóm tạo 8 giây.';
+  if(s.overlay.fromSec>s.fromSec||s.overlay.toSec<s.toSec)return 'Chữ đè phải bao phủ shot.';
+  if(s.resultStyle==='story_cards'&&!s.metadata?.dramatization)return 'Thẻ chuyện cần metadata tình huống hư cấu.';
+  if(s.constraints.length>3||s.prompt.split('\n').filter(Boolean).length<1.5*s.constraints.length)return 'Mô tả hình cần ít nhất 60% số dòng; tối đa 3 dòng giới hạn.';
+  return '';
+}
 export class ProductionError extends Error {}
 export const providerAdapter = {
   id: "unconfigured", connected: false, state: "awaiting_documentation",
@@ -109,6 +195,7 @@ export function latestReferences(p: Production) {
   return p.references.filter(r => !p.references.some(x => x.id === r.id && x.version > r.version));
 }
 export function sceneGate(p: Production, s: Scene) {
+  const storyboardIssue=storyboardShotGate(s);if(storyboardIssue)return storyboardIssue;
   if (!s.prompt.trim()) return "Cảnh chưa có prompt.";
   for (const pin of s.references) {
     const latest = latestReferences(p).find(r => r.id === pin.id);
@@ -188,7 +275,7 @@ export function applyProduction(p0: Production, action: string, input: unknown, 
   const p=productionSchema.parse(structuredClone(p0));
   const scene=(sid:string)=>{const s=p.scenes.find(s=>s.id===sid);if(!s)throw new ProductionError("Cảnh không tồn tại trong dự án.");return s;};
   const snapshotScene = (s: Scene) => JSON.stringify({
-    productId:p.productId, productRevision:p.productRevision,
+    ...storyboardMetadata(s), productId:p.productId, productRevision:p.productRevision,
     sceneId:s.id, sceneRevision:s.revision, name:s.name, role:s.role,
     prompt:s.prompt, overlayText:s.overlayText, action:s.action, camera:s.camera, voice:s.voice,
     ratio:s.ratio, duration:s.duration, mediaType:s.mediaType,
@@ -226,7 +313,7 @@ export function applyProduction(p0: Production, action: string, input: unknown, 
     const ids=d.rows.map((r:any)=>r.id);if(new Set(ids).size!==ids.length||ids.some((v:string)=>p.scenes.some(s=>s.id===v)))throw new ProductionError("Lô có Scene ID trùng. Chưa lưu dòng nào.");
     d.rows.forEach(saveScene);
   } else if(action==="formula_draft") {
-    const rows = [...d.rows, d.alternateHook].map((row:any, index:number) => ({...row, id:`${commandId}_s${index}`}));
+    const rows = [...d.rows, d.alternateHook].map((row:any, index:number) => ({...row, ...(row.generationUnit?{generationUnit:{...row.generationUnit,id:`${commandId}_${row.generationUnit.id}`}}:{}), id:`${commandId}_s${index}`}));
     if(rows.some((row:any)=>p.scenes.some(s=>s.id===row.id)))throw new ProductionError('Mã cảnh công thức đã tồn tại.');
     rows.forEach(saveScene);
     const pin = (row:any) => ({sceneId:row.id, takeId:null});
@@ -234,7 +321,7 @@ export function applyProduction(p0: Production, action: string, input: unknown, 
     p.bodies.push({id:bodyId,name:d.name,items:rows.filter((row:any)=>row.role==='body').map(pin),createdAt:now});
     [rows[0],rows.at(-1)].forEach((hook:any,index:number)=>p.variants.push({
       id:commandId+(index?'_b':'_a'),name:(d.name+(index?' · B':' · A')).slice(0,150),bodyId,
-      hook:pin(hook),cta:cta?pin(cta):null,locale:'en-US',caption:d.ctaText,
+      hook:pin(hook),cta:cta?pin(cta):null,locale:'en-US',caption:d.ctaPlacement==='overlay'?'':d.ctaText,ctaPlacement:d.ctaPlacement,
       ctaKeyword:d.ctaKeyword,ctaText:d.ctaText,formulaId:d.formulaId,formulaVersion:d.formulaVersion,createdAt:now,
     }));
   } else if(action==="pin_formula") {
@@ -259,7 +346,7 @@ export function applyProduction(p0: Production, action: string, input: unknown, 
     if(s.attempts.some(a=>a.status==="unknown"))throw new ProductionError("Lượt tạo chưa rõ kết quả. Cần đối soát mã kết quả trước khi gửi lại.");
     if(action==="prepare" && s.attempts.some(a=>a.sceneRevision===s.revision && a.status==="awaiting_provider"))throw new ProductionError("Cảnh đã có tác vụ chờ API. Dùng Thêm lượt tạo nháp khi cần thử lại.");
     if(action==="retry"&&!s.attempts.length)throw new ProductionError("Chưa có lượt tạo để thử lại.");
-    s.attempts.push({id:commandId,requestId:commandId,sceneRevision:s.revision,status:"awaiting_provider",snapshot:JSON.stringify({productId:p.productId,productRevision:p.productRevision,sceneId:s.id,sceneRevision:s.revision,prompt:s.prompt,overlayText:s.overlayText,action:s.action,camera:s.camera,voice:s.voice,references:s.references.map(pin=>({...pin,assetId:p.references.find(r=>r.id===pin.id&&r.version===pin.version)!.assetId})),ratio:s.ratio,duration:s.duration,mediaType:s.mediaType,provider:providerAdapter.id,model:null}),providerJobId:"",usageUsd:null,createdAt:now});
+    s.attempts.push({id:commandId,requestId:commandId,sceneRevision:s.revision,status:"awaiting_provider",snapshot:JSON.stringify({...storyboardMetadata(s),productId:p.productId,productRevision:p.productRevision,sceneId:s.id,sceneRevision:s.revision,prompt:s.prompt,overlayText:s.overlayText,action:s.action,camera:s.camera,voice:s.voice,references:s.references.map(pin=>({...pin,assetId:p.references.find(r=>r.id===pin.id&&r.version===pin.version)!.assetId})),ratio:s.ratio,duration:s.duration,mediaType:s.mediaType,provider:providerAdapter.id,model:null}),providerJobId:"",usageUsd:null,createdAt:now});
   } else if(action==="pause")p.paused=d.paused;
   else if(action==="cancel") {
     const a=scene(d.sceneId).attempts.find(a=>a.id===d.attemptId);if(!a||a.status!=="awaiting_provider")throw new ProductionError("Chỉ hủy tác vụ nội bộ đang chờ API.");a.status="cancelled";

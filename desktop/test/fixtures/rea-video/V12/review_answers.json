@@ -1,0 +1,529 @@
+{
+ "by": "claude-fable",
+ "shots": [
+  {
+   "id": "shot_001",
+   "time": "0.00-0.70",
+   "label_probs": {
+    "live_action": 0.75,
+    "ai_video": 0.25
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real lens flare and handlebar shake"
+   ],
+   "description": "POV from the handlebar at night, a car's headlights approach head-on; a cyclist waits under a lamp",
+   "narrative": {
+    "role": "hook",
+    "point": "POV handlebar, car headlights coming at the rider"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV from a road bike handlebar at night, a car's bright headlights approach head-on on a narrow park road, handlebars shake",
+    "video_prompt": "POV from a road bike handlebar at night, a car's bright headlights approach head-on on a narrow park road, handlebars shake",
+    "video_prompt_en": "POV from a road bike handlebar at night, a car's bright headlights approach head-on on a narrow park road, handlebars shake"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_002",
+   "time": "0.70-2.50",
+   "label_probs": {
+    "live_action": 0.75,
+    "ai_video": 0.25
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real lens flare and handlebar shake"
+   ],
+   "description": "POV from the handlebar at night, a car's headlights approach head-on; a cyclist waits under a lamp",
+   "narrative": {
+    "role": "hook",
+    "point": "POV handlebar, car headlights coming at the rider"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV from a road bike handlebar at night, a car's bright headlights approach head-on on a narrow park road, handlebars shake",
+    "video_prompt": "POV from a road bike handlebar at night, a car's bright headlights approach head-on on a narrow park road, handlebars shake",
+    "video_prompt_en": "POV from a road bike handlebar at night, a car's bright headlights approach head-on on a narrow park road, handlebars shake"
+   }
+  },
+  {
+   "id": "shot_003",
+   "time": "2.50-3.97",
+   "label_probs": {
+    "live_action": 0.75,
+    "ai_video": 0.25
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real lens flare and handlebar shake"
+   ],
+   "description": "POV from the handlebar at night, a car's headlights approach head-on; a cyclist waits under a lamp",
+   "narrative": {
+    "role": "hook",
+    "point": "POV handlebar, car headlights coming at the rider"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV from a road bike handlebar at night, a car's bright headlights approach head-on on a narrow park road, handlebars shake",
+    "video_prompt": "POV from a road bike handlebar at night, a car's bright headlights approach head-on on a narrow park road, handlebars shake",
+    "video_prompt_en": "POV from a road bike handlebar at night, a car's bright headlights approach head-on on a narrow park road, handlebars shake"
+   }
+  },
+  {
+   "id": "shot_004",
+   "time": "3.97-5.00",
+   "label_probs": {
+    "live_action": 0.75,
+    "ai_video": 0.25
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real box, real gloves, desert road"
+   ],
+   "description": "hand holds the box on a rock; red light held up; mounted under the saddle; POV hands on bars",
+   "narrative": {
+    "role": "proof",
+    "point": "Sunset roadside unbox and mount under the saddle"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV at sunset on a desert road, gloved hands hold a small product box on a rock, lift out a red bike tail light and clip it under the saddle",
+    "video_prompt": "POV at sunset on a desert road, gloved hands hold a small product box on a rock, lift out a red bike tail light and clip it under the saddle",
+    "video_prompt_en": "POV at sunset on a desert road, gloved hands hold a small product box on a rock, lift out a red bike tail light and clip it under the saddle"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_005",
+   "time": "5.00-6.40",
+   "label_probs": {
+    "live_action": 0.75,
+    "ai_video": 0.25
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real box, real gloves, desert road"
+   ],
+   "description": "hand holds the box on a rock; red light held up; mounted under the saddle; POV hands on bars",
+   "narrative": {
+    "role": "proof",
+    "point": "Sunset roadside unbox and mount under the saddle"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV at sunset on a desert road, gloved hands hold a small product box on a rock, lift out a red bike tail light and clip it under the saddle",
+    "video_prompt": "POV at sunset on a desert road, gloved hands hold a small product box on a rock, lift out a red bike tail light and clip it under the saddle",
+    "video_prompt_en": "POV at sunset on a desert road, gloved hands hold a small product box on a rock, lift out a red bike tail light and clip it under the saddle"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_006",
+   "time": "6.40-7.80",
+   "label_probs": {
+    "live_action": 0.75,
+    "ai_video": 0.25
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real box, real gloves, desert road"
+   ],
+   "description": "hand holds the box on a rock; red light held up; mounted under the saddle; POV hands on bars",
+   "narrative": {
+    "role": "proof",
+    "point": "Sunset roadside unbox and mount under the saddle"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV at sunset on a desert road, gloved hands hold a small product box on a rock, lift out a red bike tail light and clip it under the saddle",
+    "video_prompt": "POV at sunset on a desert road, gloved hands hold a small product box on a rock, lift out a red bike tail light and clip it under the saddle",
+    "video_prompt_en": "POV at sunset on a desert road, gloved hands hold a small product box on a rock, lift out a red bike tail light and clip it under the saddle"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_007",
+   "time": "7.80-9.53",
+   "label_probs": {
+    "live_action": 0.2,
+    "ai_video": 0.8
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "laser lines perfectly crisp, rendered"
+   ],
+   "description": "rear shot of three cyclists, red laser chevron lines on the asphalt behind each",
+   "narrative": {
+    "role": "payoff",
+    "point": "Group ride at night with red laser chevrons on the road"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Rear tracking shot at night, three cyclists ride a coastal road, each bike projects crisp red laser chevron lines onto the asphalt behind it, city lights below",
+    "video_prompt": "Rear tracking shot at night, three cyclists ride a coastal road, each bike projects crisp red laser chevron lines onto the asphalt behind it, city lights below",
+    "video_prompt_en": "Rear tracking shot at night, three cyclists ride a coastal road, each bike projects crisp red laser chevron lines onto the asphalt behind it, city lights below"
+   }
+  },
+  {
+   "id": "shot_008",
+   "time": "9.53-10.93",
+   "label_probs": {
+    "live_action": 0.2,
+    "ai_video": 0.8
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "laser lines perfectly crisp, rendered"
+   ],
+   "description": "rear shot of three cyclists, red laser chevron lines on the asphalt behind each",
+   "narrative": {
+    "role": "payoff",
+    "point": "Group ride at night with red laser chevrons on the road"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Rear tracking shot at night, three cyclists ride a coastal road, each bike projects crisp red laser chevron lines onto the asphalt behind it, city lights below",
+    "video_prompt": "Rear tracking shot at night, three cyclists ride a coastal road, each bike projects crisp red laser chevron lines onto the asphalt behind it, city lights below",
+    "video_prompt_en": "Rear tracking shot at night, three cyclists ride a coastal road, each bike projects crisp red laser chevron lines onto the asphalt behind it, city lights below"
+   }
+  },
+  {
+   "id": "shot_009",
+   "time": "10.93-12.77",
+   "label_probs": {
+    "live_action": 0.2,
+    "ai_video": 0.8
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    ""
+   ],
+   "description": "side shot of a rider; rear shot; top-down of three riders with red laser frames",
+   "narrative": {
+    "role": "cta",
+    "point": "More result angles, CTA label, top-down finale"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Top-down drone shot at night, three cyclists ride in a line down a road, each surrounded by a red laser chevron frame projected on the asphalt",
+    "video_prompt": "Top-down drone shot at night, three cyclists ride in a line down a road, each surrounded by a red laser chevron frame projected on the asphalt",
+    "video_prompt_en": "Top-down drone shot at night, three cyclists ride in a line down a road, each surrounded by a red laser chevron frame projected on the asphalt"
+   }
+  },
+  {
+   "id": "shot_010",
+   "time": "12.77-15.03",
+   "label_probs": {
+    "live_action": 0.2,
+    "ai_video": 0.8
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    ""
+   ],
+   "description": "side shot of a rider; rear shot; top-down of three riders with red laser frames",
+   "narrative": {
+    "role": "cta",
+    "point": "More result angles, CTA label, top-down finale"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Top-down drone shot at night, three cyclists ride in a line down a road, each surrounded by a red laser chevron frame projected on the asphalt",
+    "video_prompt": "Top-down drone shot at night, three cyclists ride in a line down a road, each surrounded by a red laser chevron frame projected on the asphalt",
+    "video_prompt_en": "Top-down drone shot at night, three cyclists ride in a line down a road, each surrounded by a red laser chevron frame projected on the asphalt"
+   }
+  },
+  {
+   "id": "shot_011",
+   "time": "15.03-16.67",
+   "label_probs": {
+    "live_action": 0.2,
+    "ai_video": 0.8
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    ""
+   ],
+   "description": "side shot of a rider; rear shot; top-down of three riders with red laser frames",
+   "narrative": {
+    "role": "cta",
+    "point": "More result angles, CTA label, top-down finale"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Top-down drone shot at night, three cyclists ride in a line down a road, each surrounded by a red laser chevron frame projected on the asphalt",
+    "video_prompt": "Top-down drone shot at night, three cyclists ride in a line down a road, each surrounded by a red laser chevron frame projected on the asphalt",
+    "video_prompt_en": "Top-down drone shot at night, three cyclists ride in a line down a road, each surrounded by a red laser chevron frame projected on the asphalt"
+   }
+  }
+ ],
+ "aspects": {
+  "camera": {
+   "setups": "",
+   "gear_guess": ""
+  },
+  "lighting": {
+   "lighting_overall": ""
+  },
+  "grade": {
+   "grade_overall": ""
+  },
+  "editing": {
+   "editing": ""
+  },
+  "format": {
+   "format": ""
+  }
+ },
+ "story": {
+  "summary": "Laser bike tail light: POV night ride with a car passing too close (problem) vs unboxing and mounting under the saddle at sunset, then a group ride with red laser lines projected on the road.",
+  "hook": "'The problem… 😳🚗' + POV from the handlebar at night as car headlights come straight at the rider.",
+  "highlights": [
+   "0–4s: three near-miss POV shots, handlebar in frame, headlights blinding",
+   "4–8s: 'Vs..' sunset roadside, box, hold the red light, mount it under the saddle, 4 shots",
+   "7.8–11s: 'The Result.. 🔥' group of riders at night with red laser chevrons on the asphalt",
+   "11–16.7s: 'Comment LED if you want one' over 5 more result angles, ending on a top-down of three riders"
+  ]
+ },
+ "cast": {
+  "style": "POV live footage for problem and unbox; rendered laser lines on the result shots",
+  "characters": [
+   {
+    "id": "A",
+    "name": "Rider",
+    "kind": "person",
+    "look": "black kit, black helmet",
+    "role": "POV then seen from behind",
+    "voice": "",
+    "shots": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   }
+  ],
+  "scenes": [
+   {
+    "id": "S1",
+    "where": "dark park road",
+    "when": "night",
+    "look": "headlight glare",
+    "shots": [
+     1,
+     2,
+     3
+    ]
+   },
+   {
+    "id": "S2",
+    "where": "desert mountain road",
+    "when": "sunset",
+    "look": "orange sky",
+    "shots": [
+     4,
+     5,
+     6
+    ]
+   },
+   {
+    "id": "S3",
+    "where": "coastal / city road",
+    "when": "night",
+    "look": "city lights, red lasers",
+    "shots": [
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   }
+  ],
+  "props": [
+   {
+    "name": "red laser bike tail light",
+    "note": "product",
+    "shots": [
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   }
+  ]
+ },
+ "packaging": {
+  "stickers": [
+   {
+    "id": "sticker_01",
+    "is_overlay": null,
+    "what": ""
+   },
+   {
+    "id": "sticker_02",
+    "is_overlay": null,
+    "what": ""
+   },
+   {
+    "id": "sticker_03",
+    "is_overlay": null,
+    "what": ""
+   }
+  ],
+  "text": [
+   {
+    "id": "text_001",
+    "kind": ""
+   },
+   {
+    "id": "text_003",
+    "kind": ""
+   },
+   {
+    "id": "text_005",
+    "kind": ""
+   },
+   {
+    "id": "text_007",
+    "kind": ""
+   }
+  ],
+  "missed": []
+ }
+}

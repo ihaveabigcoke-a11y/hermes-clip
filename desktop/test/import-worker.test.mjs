@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp, rm} from 'node:fs/promises';
+import {mkdtemp, rm, mkdir, writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {createHash} from 'node:crypto';
@@ -35,13 +35,14 @@ test('worker imports are durable, idempotent, concurrent and bound to the scene 
     const scene = project.data.scenes.find(item => item.id === 'import_scene');
     const bytes = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a7V8AAAAASUVORK5CYII=', 'base64');
     const sha256 = createHash('sha256').update(bytes).digest('hex');
+    const outputPath=join(root,'outputs','legacy.png');await mkdir(join(root,'outputs'),{recursive:true});await writeFile(outputPath,bytes);
     const worker = new Worker(store, root, {}, {});
     worker.output = async () => ({bytes, name: 'result.png', type: 'image/png', sha256});
     const createJob = fingerprint => {
       const {job} = store.enqueue({projectId: project.id, productId: project.data.productId,
         productRevision: project.data.productRevision, sceneId: scene.id, sceneRevision: scene.revision,
         references: [], mediaType: 'image', ratio: '1:1', duration: 5, prompt: scene.prompt}, fingerprint);
-      store.put({...job, state: 'ready', providerId: `provider_${fingerprint}`});
+      store.put({...job, state: 'ready', output:{path:outputPath,name:'result.png',sha256,size:bytes.length,metadata:{width:1,height:1,duration:null,verifiedBy:'container'}}, providerId: `provider_${fingerprint}`});
       return job.id;
     };
     const first = createJob('first');

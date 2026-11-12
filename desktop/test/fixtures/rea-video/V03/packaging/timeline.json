@@ -1,0 +1,372 @@
+{
+  "text": [
+    {
+      "id": "text_001",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 0.0,
+      "t1": 2.8,
+      "text": "The risk",
+      "bbox": [
+        0.2819,
+        0.1938,
+        0.4209,
+        0.0578
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#f6f7f9",
+        "stroke_name": "black",
+        "stroke": "#020610",
+        "stroke_ratio": 0.041,
+        "weight": 0.09
+      },
+      "style_zh": "white text, black outline, line height 5.6% (about 72px)",
+      "anim_in": null,
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": true,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_002",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 3.0,
+      "t1": 3.1,
+      "text": "hs",
+      "bbox": [
+        0.275,
+        0.1883,
+        0.4375,
+        0.0672
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#f6f7f9",
+        "stroke_name": "black",
+        "stroke": "#020610",
+        "stroke_ratio": 0.041,
+        "multicolor": true,
+        "highlight_name": "yellow",
+        "weight": 0.067
+      },
+      "style_zh": "white text, black outline, keywords highlighted in yellow, line height 6.7% (about 86px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_003",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 3.2,
+      "t1": 4.0,
+      "text": "The risk",
+      "bbox": [
+        0.2833,
+        0.1922,
+        0.3403,
+        0.0578
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#f6f7f9",
+        "stroke_name": "black",
+        "stroke": "#020610",
+        "stroke_ratio": 0.041,
+        "weight": 0.077
+      },
+      "style_zh": "white text, black outline, line height 5.8% (about 74px)",
+      "anim_in": {
+        "kind": "fade",
+        "kind_zh": "fade in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_004",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 4.0,
+      "t1": 9.1,
+      "text": "VS...",
+      "bbox": [
+        0.3819,
+        0.1781,
+        0.2278,
+        0.0828
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#f6f7f9",
+        "stroke_name": "black",
+        "stroke": "#020610",
+        "stroke_ratio": 0.041,
+        "weight": 0.079
+      },
+      "style_zh": "white text, black outline, line height 6.5% (about 83px)",
+      "anim_in": null,
+      "anim_out": null,
+      "mid_motion": true,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_005",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 9.5,
+      "t1": 18.0,
+      "text": "The solution",
+      "bbox": [
+        0.0347,
+        0.1703,
+        0.7083,
+        0.0898
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#f6f7f9",
+        "stroke_name": "black",
+        "stroke": "#020610",
+        "stroke_ratio": 0.041,
+        "weight": 0.077
+      },
+      "style_zh": "white text, black outline, line height 5.8% (about 74px)",
+      "anim_in": {
+        "kind": "reveal",
+        "kind_zh": "type-on"
+      },
+      "anim_out": null,
+      "mid_motion": null,
+      "follows": true,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_006",
+      "kind": "huazi",
+      "kind_zh": "styled text",
+      "t0": 13.9,
+      "t1": 14.1,
+      "text": "11",
+      "bbox": [
+        0.0,
+        0.5609,
+        0.1403,
+        0.0664
+      ],
+      "style": {
+        "fill_name": "black",
+        "fill": "#03060f",
+        "weight": 0.09
+      },
+      "style_zh": "black text, line height 6.6% (about 85px)",
+      "anim_in": {
+        "kind": "fade",
+        "kind_zh": "fade in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": {
+        "line": "text_005",
+        "text": "The solution",
+        "rel": "during",
+        "dt": 4.4,
+        "word": null
+      },
+      "persistent": null
+    },
+    {
+      "id": "text_007",
+      "kind": "huazi",
+      "kind_zh": "styled text",
+      "t0": 15.5,
+      "t1": 16.6,
+      "text": "MERICAINLBAOUDS",
+      "bbox": [
+        0.5611,
+        0.7633,
+        0.2875,
+        0.0672
+      ],
+      "style": {
+        "fill_name": "black",
+        "fill": "#0c0a13",
+        "weight": 0.093
+      },
+      "style_zh": "black text, line height 4.6% (about 59px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "fade_out",
+        "kind_zh": "fade out"
+      },
+      "mid_motion": true,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": {
+        "line": "text_005",
+        "text": "The solution",
+        "rel": "during",
+        "dt": 6.0,
+        "word": null
+      },
+      "persistent": null
+    }
+  ],
+  "stickers": [
+    {
+      "kind": "animated_sticker",
+      "kind_zh": "animated sticker / GIF",
+      "t0": 9.1,
+      "t1": 11.7,
+      "bbox": [
+        0.15,
+        0.4,
+        0.3,
+        0.057
+      ],
+      "animated": true,
+      "loop_period_s": null,
+      "looping": false,
+      "activity": 8.4,
+      "appears_mid_shot": false,
+      "disappears_mid_shot": false,
+      "crosses_cut": true,
+      "confidence": "medium",
+      "id": "sticker_01",
+      "image": "packaging/sticker_01.jpg",
+      "anchor": {
+        "line": "text_004",
+        "text": "VS...",
+        "rel": "after",
+        "dt": 0.0,
+        "word": null
+      },
+      "persistent": {
+        "cuts": 1
+      }
+    }
+  ],
+  "sfx": [
+    {
+      "t": 0.14,
+      "type": "ding",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": {
+        "type": "subtitle_in",
+        "what": "subtitle \"The risk\" appears",
+        "dt": -0.14,
+        "ref": "text_001"
+      }
+    },
+    {
+      "t": 6.67,
+      "type": "pop",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": null
+    },
+    {
+      "t": 7.25,
+      "type": "click",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": null
+    },
+    {
+      "t": 7.92,
+      "type": "pop",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": null
+    },
+    {
+      "t": 8.66,
+      "type": "other",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": null
+    },
+    {
+      "t": 9.16,
+      "type": "pop",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": {
+        "type": "sticker_in",
+        "what": "animated sticker / GIF appears",
+        "dt": -0.06,
+        "ref": "sticker_01"
+      }
+    },
+    {
+      "t": 9.8,
+      "type": "pop",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": {
+        "type": "cut",
+        "what": "cut",
+        "dt": -0.133,
+        "ref": null
+      }
+    },
+    {
+      "t": 11.92,
+      "type": "pop",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": {
+        "type": "cut",
+        "what": "cut",
+        "dt": -0.087,
+        "ref": null
+      }
+    }
+  ]
+}

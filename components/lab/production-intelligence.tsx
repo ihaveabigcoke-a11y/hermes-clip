@@ -5,8 +5,11 @@ import {Button, Badge, Empty, Modal, RecordForm, type FieldDef} from './primitiv
 import MuseChatPanel from './muse-chat';
 import {briefSchema, structuredStoryboard, productionInsights, formulaStoryboard, promptWarnings} from '@/lib/lab/intelligence';
 import {formulasForProduct, workspaceFormulas} from '@/lib/lab/viral-formulas';
+import {ctaKeywordSuggestions} from '@/lib/lab/formula-storyboard';
 import {type Production} from '@/lib/lab/production';
 import {type LabRecord} from '@/lib/lab/domain';
+
+const shotTimeLabel=(from:number,to:number)=>`${from.toLocaleString('vi-VN')}–${to.toLocaleString('vi-VN')} s`;
 
 export function FormulaDraftPanel({records, production:p, product, disabled, onDrafts}: {
   records:LabRecord[]; production:Production; product:Record<string,unknown>; disabled:boolean;
@@ -15,32 +18,43 @@ export function FormulaDraftPanel({records, production:p, product, disabled, onD
   const library=workspaceFormulas(records);
   const suggested=formulasForProduct(Array.isArray(product.traits)?product.traits.filter((v):v is string=>typeof v==='string'):[],library);
   const formulas=[...suggested,...library.filter(formula=>!suggested.includes(formula))];
-  const [selected,setSelected]=useState('problem-vs-result-cta'),[keyword,setKeyword]=useState('LINK');
+  const [selected,setSelected]=useState('problem-vs-result-cta'),[keyword,setKeyword]=useState('');
+  const [placement,setPlacement]=useState<'overlay'|'caption'>('overlay');
+  const [brandName,setBrandName]=useState(''),[boxText,setBoxText]=useState(''),[situation,setSituation]=useState('');
+  const [usCues,setUsCues]=useState(false);
   const [draft,setDraft]=useState<ReturnType<typeof formulaStoryboard>|null>(null);
   const [error,setError]=useState(''),[busy,setBusy]=useState(false),[saved,setSaved]=useState(false);
-  const formula=formulas.find(row=>row.id===selected)??formulas[0];
-  return <section className="production-card production-card-body" aria-label="Kịch bản từ công thức">
+  const formula=formulas.find(row=>row.id===selected)??formulas[0],locked=disabled||busy;
+  const invalidate=()=>{setDraft(null);setSaved(false);setError('');};
+  return <section className="production-card production-card-body formula-composer" aria-label="Kịch bản từ công thức">
     <h3>Mẫu kịch bản từ công thức</h3>
-    <p>Hai mở đầu A/B dùng chung nội dung chính và CTA. Chỉ lưu cảnh nháp, chưa duyệt hoặc gửi Muse.</p>
-    <div className="desk-field"><label htmlFor="formula-choice">Công thức</label><select id="formula-choice" disabled={disabled||busy} value={formula?.id??''} onChange={event=>{setSelected(event.target.value);setDraft(null);setSaved(false);}}>
-      {formulas.map(row=><option key={row.id} value={row.id}>{row.name} · v{row.version}{suggested.includes(row)?' · Gợi ý':''}</option>)}
-    </select></div>
-    <div className="desk-field"><label htmlFor="formula-keyword">Từ khóa CTA · một từ tiếng Anh in hoa</label><input id="formula-keyword" value={keyword} maxLength={20} disabled={disabled||busy} onChange={event=>{setKeyword(event.target.value.toUpperCase());setDraft(null);setSaved(false);}}/></div>
-    {formula?.guardrails.map((guardrail,index)=><p key={index} className="prompt-warning">{guardrail}</p>)}
-    <Button tone="neutral" disabled={disabled||busy||!formula} onClick={()=>{try{setDraft(formulaStoryboard(product,p,formula,keyword));setError('');setSaved(false);}catch(reason){setError((reason as Error).message);}}}>Soạn hai mở đầu A/B</Button>
+    <p>Hai mở đầu A/B dùng chung các shot tiếp theo. Chỉ lưu cảnh nháp, chưa duyệt hoặc gửi Muse.</p>
+    <div className="formula-input-grid">
+      <div className="desk-field formula-wide"><label htmlFor="formula-choice">Công thức</label><select id="formula-choice" disabled={locked} value={formula?.id??''} onChange={event=>{setSelected(event.target.value);setSituation('');invalidate();}}>
+        {formulas.map(row=><option key={row.id} value={row.id}>{row.name} · v{row.version}{suggested.includes(row)?' · Gợi ý':''}</option>)}
+      </select></div>
+      <div className="desk-field"><label htmlFor="formula-keyword">Từ khóa CTA · một từ tiếng Anh in hoa</label><input id="formula-keyword" required value={keyword} maxLength={20} placeholder="Bắt buộc · BIKE, RUN, PAWS, HELP" disabled={locked} onChange={event=>{setKeyword(event.target.value.toUpperCase());invalidate();}}/>
+        <small>Định danh nhóm khách, không dùng tên sản phẩm. {[...ctaKeywordSuggestions(product)].join(' · ')}</small></div>
+      <div className="desk-field"><label htmlFor="formula-placement">Vị trí CTA</label><select id="formula-placement" value={placement} disabled={locked} onChange={event=>{setPlacement(event.target.value as 'overlay'|'caption');invalidate();}}><option value="overlay">Đè cảnh</option><option value="caption">Caption</option></select></div>
+      <div className="desk-field"><label htmlFor="formula-brand">Tên bao bì</label><input id="formula-brand" required maxLength={80} value={brandName} disabled={locked} placeholder="Chưa đặt tên bao bì" onChange={event=>{setBrandName(event.target.value);invalidate();}}/></div>
+      <div className="desk-field"><label htmlFor="formula-box">Chữ trên hộp</label><input id="formula-box" required maxLength={160} value={boxText} disabled={locked} onChange={event=>{setBoxText(event.target.value);invalidate();}}/></div>
+      <div className="desk-field formula-wide"><label htmlFor="formula-situation">Tình huống mở đầu · bắt buộc, viết bằng tiếng Anh</label><textarea id="formula-situation" required maxLength={1000} rows={2} value={situation} disabled={locked} onChange={event=>{setSituation(event.target.value);invalidate();}}/>
+        {formula?.situationExamples?.map(example=><button type="button" className="formula-example" disabled={locked} key={example} onClick={()=>{setSituation(example);invalidate();}}>{example}</button>)}</div>
+      <label className="formula-wide"><input type="checkbox" checked={usCues} disabled={locked} onChange={event=>{setUsCues(event.target.checked);invalidate();}}/> Thêm gợi ý bối cảnh Mỹ: nhà ngoại ô, sân vận động</label>
+    </div>
+    <Button tone="neutral" disabled={locked||!formula} onClick={()=>{try{setDraft(formulaStoryboard(product,p,formula,{ctaKeyword:keyword,ctaPlacement:placement,situation,packaging:{brandName,boxText},usCues:usCues?formula.usCues:[]}));setError('');setSaved(false);}catch(reason){setError((reason as Error).message);}}}>Soạn hai mở đầu A/B</Button>
+    {error&&<p role="alert" className="inline-error">{error}</p>}
     {draft&&<>
-      <p>9:16 · {Number(draft.rows.reduce((sum,row)=>sum+row.duration,0).toFixed(1))} giây mỗi biến thể · {draft.ctaText}</p>
-      <p>Mốc beat đã điều chỉnh thành các cảnh nối tiếp; chữ gợi ý một dòng, tối đa 60 ký tự, được thêm khi dựng.</p>
-      {!draft.rows.some(row=>row.role==='cta')&&<p>Công thức không có cảnh CTA riêng; CTA từ khóa được lưu trong chú thích của cả hai biến thể.</p>}
-      {[...draft.rows,draft.alternateHook].map((row,index)=><details key={index}>
-        <summary>{row.name} · {row.duration}s · {index===draft.rows.length?'Mở đầu thay thế':row.role==='hook'?'Mở đầu A':'Dùng chung A/B'}</summary>
-        <p>Chữ trên màn hình: {row.overlayText}</p><p>{row.prompt}</p>
-        {promptWarnings({...row,references:row.referenceIds.flatMap(id=>{const ref=p.references.filter(r=>r.id===id).at(-1);return ref?[{id,version:ref.version}]:[];})},p,product).map(warning=><p key={warning} className="prompt-warning">{warning}</p>)}
-      </details>)}
+      <p>9:16 · {Number(draft.rows.reduce((sum,row)=>sum+row.duration,0).toFixed(1))} giây · {draft.rows.length} shot · CTA: {draft.ctaPlacement==='caption'?'Caption':'Đè cảnh kết thúc'}</p>
+      {draft.storyboardVersion===2?<p>Chữ trắng viền đen, cao 5–6% khung, giữa trên, 1–2 dòng; vào/ra cứng theo mốc cắt. Không lời thoại.</p>:<p>Công thức đã lưu dùng khung v1: một cảnh mỗi beat, chữ một dòng; giữ để đối chiếu.</p>}
+      <p>{draft.ctaText}</p>
+      <div className="formula-shot-table" tabIndex={0} role="region" aria-label="Bảng shot kịch bản"><table className="lab-table"><thead><tr>{['#','Nhịp','Giây','Chữ đè','Góc máy','Chủ thể','Prompt'].map(label=><th key={label}>{label}</th>)}</tr></thead><tbody>
+        {draft.rows.map((row,index)=><tr key={index}><td>{index+1}</td><td>{row.phase==='hook'||row.role==='hook'?'Mở đầu':row.phase==='unbox'?'Mở hộp':row.phase==='feature_tour'?'Tính năng':row.phase==='result'?'Kết quả':row.role==='cta'?'CTA':'Nội dung'}</td><td className="formula-shot-time"><span className="formula-time-label">{shotTimeLabel(row.fromSec??Number(draft.rows.slice(0,index).reduce((n,r)=>n+r.duration,0).toFixed(1)),row.toSec??Number(draft.rows.slice(0,index+1).reduce((n,r)=>n+r.duration,0).toFixed(1)))}</span></td><td>{row.overlay?.text??row.overlayText}<small className="formula-time-label">{row.overlay?shotTimeLabel(row.overlay.fromSec,row.overlay.toSec):''}</small></td><td>{row.camera}</td><td>{row.subjects}</td><td><details><summary>Xem prompt</summary><p className="formula-prompt">{row.prompt}</p><p>Bối cảnh: {row.setting}</p><strong>Giới hạn</strong>{row.constraints?.map(line=><p key={line}>{line}</p>)}<small>Nhóm tạo · {row.generationUnit?.duration}s; cắt lấy shot {row.duration}s.</small></details></td></tr>)}
+      </tbody></table></div>
+      <details><summary>Mở đầu thay thế B · {draft.alternateHook.duration}s</summary><p>{draft.alternateHook.overlayText}</p><p className="formula-prompt">{draft.alternateHook.prompt}</p></details>
       <Button busy={busy} disabled={disabled} onClick={()=>{setBusy(true);setError('');void onDrafts(draft).then(()=>{setDraft(null);setSaved(true);}).catch(reason=>setError(reason.message)).finally(()=>setBusy(false));}}>Lưu cảnh nháp và hai biến thể</Button>
     </>}
     {saved&&<p role="status">Đã lưu cảnh nháp A/B. Xem từng cảnh và duyệt kịch bản trước khi chạy.</p>}
-    {error&&<p role="alert" className="inline-error">{error}</p>}
   </section>;
 }
 

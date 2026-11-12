@@ -1,4 +1,5 @@
 "use client";
+import {CompressionNote} from './compression-note';
 import {uiCopy, reviewLabels} from '@/desktop/src/ui-copy.mjs';
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {Copy, Download, Images} from 'lucide-react';
@@ -163,7 +164,7 @@ export default function WorkspaceLibrary({records, demo}: {records: LabRecord[];
         <details><summary>{instructions?.fromSnapshot ? 'Prompt và ảnh tham chiếu của phiên bản' : 'Prompt và ảnh tham chiếu hiện tại'}</summary>
           {!instructions?.fromSnapshot && <p>Phiên bản cũ chưa lưu prompt gốc. Dưới đây là nội dung cảnh hiện tại.</p>}
           <p className="muse-chat-text">{instructions?.prompt}</p><div className="catalog-references">{instructions?.references.map((ref, index) => <img key={`${ref.assetId}:${index}`} src={`/api/assets/${ref.assetId}`} alt={ref.name}/>)}</div></details>
-        <p>{entry.take.metadata.width}×{entry.take.metadata.height} · {entry.take.metadata.duration ?? '—'}s</p>
+        <CompressionNote take={entry.take}/><p>{entry.take.metadata.width}×{entry.take.metadata.height} · {entry.take.metadata.duration ?? '—'}s</p>
         <div className="button-row"><Button disabled={busy} onClick={() => void perform(() => downloadOwnedMedia(entry.take.assetId, entry.take.name))}><Download size={16}/>{uiCopy.downloadFile}</Button><a className="lab-button neutral" href={`?view=${entry.take.type.startsWith("image/") ? "images" : "production"}&production=${encodeURIComponent(entry.project.id)}&stage=scenes&desk_scene=${encodeURIComponent(entry.scene.id)}&desk_take=${encodeURIComponent(entry.take.id)}`}>Mở phiên bản trong dự án</a></div>
         {entryJob?.providerUrl && <Button tone="neutral" disabled={busy} onClick={() => void perform(() => desktopBridge()!.openResult({id:entryJob.id}))}>{uiCopy.openMuseResult}</Button>}
         {message && <p role="status">{message}</p>}{(error || organization.error) && <div role="alert" className="inline-error"><p>{error || organization.error}</p>

@@ -1,0 +1,14 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 720
+PlayResY: 1280
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: label_1,Sans,61,&H00EFF0ED,&H0000FFFF,&H0018191F,&H00000000,0,0,0,0,100,100,0,0,1,2,0,5,0,0,0,1
+Style: label_2,Sans,65,&H00F5F5F5,&H0000FFFF,&H000D0D15,&H00000000,0,0,0,0,100,100,0,-0,1,2,0,5,0,0,0,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 1,0:00:00.00,0:00:04.60,label_1,,0,0,0,,{\pos(357,276)\fad(200,200)}The Problem X
+Dialogue: 1,0:00:04.90,0:00:15.70,label_2,,0,0,0,,{\pos(355,277)\fad(200,200)}The product

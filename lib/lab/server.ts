@@ -51,6 +51,19 @@ export async function getRecord(uid: string, id: string) {
 export async function getSettings(uid: string) {
   return (await getRecord(uid, "workspace"))?.data ?? emptySettings;
 }
+/** Atomic insert-if-no-project: safe across tabs, processes and restarts. */
+export async function createProductionIfAbsent(uid: string, id: string, data: Record<string, any>) {
+  const now = Date.now();
+  const result = await database().prepare(`INSERT INTO lab_records (owner_id,id,kind,data,revision,created_at,updated_at)
+    SELECT ?,?,'production',?,1,?,?
+    WHERE NOT EXISTS (SELECT 1 FROM lab_records WHERE owner_id=? AND kind='production' AND json_extract(data,'$.productId')=?)
+    AND (SELECT COUNT(*) FROM lab_records WHERE owner_id=?)<2000
+    ON CONFLICT(owner_id,id) DO NOTHING`).bind(uid,id,JSON.stringify(data),now,now,uid,data.productId,uid).run();
+  const row = await database().prepare(`SELECT * FROM lab_records WHERE owner_id=? AND kind='production'
+    AND json_extract(data,'$.productId')=? ORDER BY created_at,id LIMIT 1`).bind(uid,data.productId).first();
+  if (!row) throw new ApiError(409, 'Chưa tạo được dự án: ID đã dùng hoặc workspace đã đủ 2.000 bản ghi. Tải lại để kiểm tra.');
+  return {record: decode(row), deduplicated: !result.meta.changes};
+}
 export async function body(request: Request) {
   if (!request.headers.get("content-type")?.includes("application/json"))
     throw new ApiError(415, "Ứng dụng cần dữ liệu JSON hợp lệ.");

@@ -1,4 +1,5 @@
-import {spawn} from 'node:child_process';
+import {spawn,execFile} from 'node:child_process';
+import {promisify} from 'node:util';
 import {resolveProvider, textProviderReceipts} from './provider-routing.mjs';
 import {randomUUID} from 'node:crypto';
 import {access, mkdir, mkdtemp, rm} from 'node:fs/promises';
@@ -34,10 +35,13 @@ export async function resolveCodexExecutable(configured = '', env = process.env,
 
 // Shared with scripts/run-codex.mjs. No shell, prompt in stdin, bounded NDJSON.
 export async function runCodexText({prompt, executable, cwd, timeoutMs = CODEX_TIMEOUT_MS,
-  maxOutputBytes = CODEX_OUTPUT_LIMIT, spawnProcess = spawn, env = process.env, profile = ''} = {}) {
+  maxOutputBytes = CODEX_OUTPUT_LIMIT, spawnProcess = spawn, env = process.env, profile = '', images = [], outputSchema = ''} = {}) {
   if (typeof prompt !== 'string' || !prompt.trim() || Buffer.byteLength(prompt) > finalLimit) throw Error('Prompt vượt giới hạn hoặc rỗng.');
   executable ??= await resolveCodexExecutable('', env);
   const childEnv = {...env};
+  if(!Array.isArray(images)||images.length>20||images.some(p=>typeof p!=='string'||!isAbsolute(p)||/[\0\r\n]/.test(p)))throw Error('Tối đa 20 ảnh shot, đường dẫn tuyệt đối.');
+  if(outputSchema&&(!isAbsolute(outputSchema)||/[\0\r\n]/.test(outputSchema)))throw Error('Schema phải có đường dẫn tuyệt đối.');
+  if(images.length||outputSchema){delete childEnv.OPENAI_API_KEY;delete childEnv.CODEX_API_KEY;}
   if (typeof profile !== 'string' || profile.length > 120 || /[\0\r\n]/.test(profile)) throw Error('Codex profile không hợp lệ.');
   // Custom providers inherit the user's config, login and environment unchanged.
   return new Promise((yes, no) => {
@@ -63,7 +67,8 @@ export async function runCodexText({prompt, executable, cwd, timeoutMs = CODEX_T
       return !settled;
     };
     try {
-      child = spawnProcess(executable, ['exec','--json','--ephemeral','--skip-git-repo-check','--sandbox','read-only',
+      child = spawnProcess(executable, ['exec','--json','--ephemeral','--skip-git-repo-check',images.length?'-s':'--sandbox','read-only',
+        ...images.flatMap(path=>['--image',path]),...(outputSchema?['--output-schema',outputSchema]:[]),
         ...(profile.trim() ? ['--profile',profile.trim()] : []),'-'],
       {cwd, env: childEnv, shell: false, windowsHide: true, stdio: ['pipe','pipe','pipe']});
       timer = setTimeout(() => finish(Error('Codex CLI hết thời gian chờ. Chưa nhập kết quả; không tự chạy lại.')), timeoutMs);
@@ -91,6 +96,15 @@ export async function runCodexText({prompt, executable, cwd, timeoutMs = CODEX_T
       child.stdin.end(prompt);
     } catch (error) { finish(error); }
   });
+}
+
+export async function codexImageCapability(executable,{run=promisify(execFile),env=process.env}={}) {
+  const childEnv={...env};delete childEnv.OPENAI_API_KEY;delete childEnv.CODEX_API_KEY;
+  try {
+    const {stdout}=await run(executable,['exec','--help'],{shell:false,windowsHide:true,timeout:15000,maxBuffer:65536,env:childEnv});
+    const missing=['--image','--output-schema'].filter(flag=>!stdout.includes(flag));
+    return {ready:!missing.length,error:missing.length?'Codex CLI thiếu cờ '+missing.join(', ')+'. Dùng Nhập tay hoặc cập nhật CLI.':null};
+  }catch{return {ready:false,error:'Chưa đọc được codex exec --help. Dùng Nhập tay và kiểm tra Codex CLI.'};}
 }
 
 export class CodexTextService {

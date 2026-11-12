@@ -1,4 +1,4 @@
-import {writeFile} from 'node:fs/promises';
+import {writeArchive} from './compress.mjs';
 import {join} from 'node:path';
 import {z} from 'zod';
 import {accessBlocked,boundedText,extractListing,listingWarnings,pageText,publicUrl,youtubeObservation,webObservation} from './listing-check.mjs';
@@ -51,7 +51,7 @@ export class ResearchSources {
   for(const [index,candidate] of job.request.candidates.entries()){
    if(i.stopped)break;
    const observedAt=new Date().toISOString(),query=queryFor(candidate);
-   const rawPath=join(dir,`${index}-listing.txt`);
+   const rawPath=join(dir,`${index}-listing.txt.gz`);
    let listingCheck={status:'failed',fetchedAt:observedAt,title:null,priceText:null,currencyDetected:null,moqText:null,shippingText:null,productCountOnPage:null,sourceUrl:candidate.supplierUrl,rawPath};
    const read=i.store.get('integration-health',null)?.reach?.listingRead;
    try{
@@ -61,18 +61,18 @@ export class ResearchSources {
     const args=[...read.command,candidate.supplierUrl];
     if(read.timeoutFlag)args.push('--timeout','45');
     const response=await i.reach(args,{timeout:45000});
-    const raw=pageText(response);await writeFile(rawPath,raw,'utf8');
+    const raw=pageText(response);await writeArchive(rawPath,raw);
     listingCheck=extractListing(raw,{fetchedAt:new Date().toISOString(),rawPath,sourceUrl:candidate.supplierUrl});
    }catch(error){
     listingCheck={...listingCheck,status:failedStatus(error),error:boundedText(error.message,1000)};
-    await writeFile(rawPath,boundedText(error.message),'utf8');
+    await writeArchive(rawPath,boundedText(error.message));
    }
    if(i.stopped)break;
    const shortsQuery=query+' shorts',webQuery=query+' tiktok OR reels';
-   const youtubeShorts=await this.search(['youtube','search',shortsQuery,'--limit','10','--timeout','45','--backend','public-web'],join(dir,`${index}-youtube.txt`),
+   const youtubeShorts=await this.search(['youtube','search',shortsQuery,'--limit','10','--timeout','45','--backend','public-web'],join(dir,`${index}-youtube.txt.gz`),
     (items,at,path)=>youtubeObservation(items,shortsQuery,at,path));
    if(i.stopped)break;
-   const webReferences=await this.search(['web','search',webQuery,'--limit','5','--timeout','45'],join(dir,`${index}-web.txt`),
+   const webReferences=await this.search(['web','search',webQuery,'--limit','5','--timeout','45'],join(dir,`${index}-web.txt.gz`),
     (items,at,path)=>webObservation(items,webQuery,at,path));
    if(i.stopped)break;
    const patch={listingCheck,competition:{youtubeShorts,webReferences}};
@@ -94,10 +94,10 @@ export class ResearchSources {
   try{
    this.requireReady();
    const response=await this.integrations.reach(args,{timeout:45000});
-   await writeFile(rawPath,boundedText(JSON.stringify(response,null,2)),'utf8');
+   await writeArchive(rawPath,boundedText(JSON.stringify(response,null,2)));
    return observation(response.items,observedAt,rawPath);
   }catch(error){
-   await writeFile(rawPath,boundedText(error.message),'utf8');
+   await writeArchive(rawPath,boundedText(error.message));
    return {...observation([],observedAt,rawPath),status:failedStatus(error),error:boundedText(error.message,1000)};
   }
  }

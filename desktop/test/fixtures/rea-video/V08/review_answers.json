@@ -1,0 +1,497 @@
+{
+ "by": "claude-fable",
+ "shots": [
+  {
+   "id": "shot_001",
+   "time": "0.00-3.13",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real tape and cardboard, dog blinks"
+   ],
+   "description": "hands hold a brown cardboard ring around a yellow Lab's head; finger points at it",
+   "narrative": {
+    "role": "hook",
+    "point": "Cardboard ring held around the dog's head, owner points"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot, a yellow senior Labrador sits on a wood floor while two hands hold a crude cardboard ring around its head",
+    "video_prompt": "Medium shot, a yellow senior Labrador sits on a wood floor while two hands hold a crude cardboard ring around its head",
+    "video_prompt_en": "Medium shot, a yellow senior Labrador sits on a wood floor while two hands hold a crude cardboard ring around its head"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_002",
+   "time": "3.13-3.97",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real tape and cardboard, dog blinks"
+   ],
+   "description": "hands hold a brown cardboard ring around a yellow Lab's head; finger points at it",
+   "narrative": {
+    "role": "hook",
+    "point": "Cardboard ring held around the dog's head, owner points"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot, a yellow senior Labrador sits on a wood floor while two hands hold a crude cardboard ring around its head",
+    "video_prompt": "Medium shot, a yellow senior Labrador sits on a wood floor while two hands hold a crude cardboard ring around its head",
+    "video_prompt_en": "Medium shot, a yellow senior Labrador sits on a wood floor while two hands hold a crude cardboard ring around its head"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_003",
+   "time": "3.97-5.37",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real packaging and buckles"
+   ],
+   "description": "hands lift a grey padded ring from a green box, hold it in front of the dog, clip the black harness",
+   "narrative": {
+    "role": "proof",
+    "point": "Unbox the padded halo, hold it up, buckle the harness"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up, hands lift a grey padded halo ring out of a green box in front of a seated yellow Labrador, then clip the black harness on",
+    "video_prompt": "Close-up, hands lift a grey padded halo ring out of a green box in front of a seated yellow Labrador, then clip the black harness on",
+    "video_prompt_en": "Close-up, hands lift a grey padded halo ring out of a green box in front of a seated yellow Labrador, then clip the black harness on"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_004",
+   "time": "5.37-7.23",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real packaging and buckles"
+   ],
+   "description": "hands lift a grey padded ring from a green box, hold it in front of the dog, clip the black harness",
+   "narrative": {
+    "role": "proof",
+    "point": "Unbox the padded halo, hold it up, buckle the harness"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up, hands lift a grey padded halo ring out of a green box in front of a seated yellow Labrador, then clip the black harness on",
+    "video_prompt": "Close-up, hands lift a grey padded halo ring out of a green box in front of a seated yellow Labrador, then clip the black harness on",
+    "video_prompt_en": "Close-up, hands lift a grey padded halo ring out of a green box in front of a seated yellow Labrador, then clip the black harness on"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_005",
+   "time": "7.23-8.07",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real packaging and buckles"
+   ],
+   "description": "hands lift a grey padded ring from a green box, hold it in front of the dog, clip the black harness",
+   "narrative": {
+    "role": "proof",
+    "point": "Unbox the padded halo, hold it up, buckle the harness"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Close-up, hands lift a grey padded halo ring out of a green box in front of a seated yellow Labrador, then clip the black harness on",
+    "video_prompt": "Close-up, hands lift a grey padded halo ring out of a green box in front of a seated yellow Labrador, then clip the black harness on",
+    "video_prompt_en": "Close-up, hands lift a grey padded halo ring out of a green box in front of a seated yellow Labrador, then clip the black harness on"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_006",
+   "time": "8.07-11.13",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "natural dog gait"
+   ],
+   "description": "dog walks past a sofa, the ring touches it first; dog walks in a garden by a white fence",
+   "narrative": {
+    "role": "payoff",
+    "point": "Dog walks around the room and garden with the halo"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot, a senior yellow Labrador wearing a grey halo harness walks past a sofa, the ring bumps the sofa before his nose; then the dog walks along a white garden fence",
+    "video_prompt": "Medium shot, a senior yellow Labrador wearing a grey halo harness walks past a sofa, the ring bumps the sofa before his nose; then the dog walks along a white garden fence",
+    "video_prompt_en": "Medium shot, a senior yellow Labrador wearing a grey halo harness walks past a sofa, the ring bumps the sofa before his nose; then the dog walks along a white garden fence"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_007",
+   "time": "11.13-13.90",
+   "label_probs": {
+    "live_action": 0.9,
+    "ai_video": 0.1
+   },
+   "image_source": "photo",
+   "evidence": [
+    "natural dog gait"
+   ],
+   "description": "dog walks past a sofa, the ring touches it first; dog walks in a garden by a white fence",
+   "narrative": {
+    "role": "payoff",
+    "point": "Dog walks around the room and garden with the halo"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot, a senior yellow Labrador wearing a grey halo harness walks past a sofa, the ring bumps the sofa before his nose; then the dog walks along a white garden fence",
+    "video_prompt": "Medium shot, a senior yellow Labrador wearing a grey halo harness walks past a sofa, the ring bumps the sofa before his nose; then the dog walks along a white garden fence",
+    "video_prompt_en": "Medium shot, a senior yellow Labrador wearing a grey halo harness walks past a sofa, the ring bumps the sofa before his nose; then the dog walks along a white garden fence"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  }
+ ],
+ "aspects": {
+  "camera": {
+   "setups": "",
+   "gear_guess": ""
+  },
+  "lighting": {
+   "lighting_overall": ""
+  },
+  "grade": {
+   "grade_overall": ""
+  },
+  "editing": {
+   "editing": ""
+  },
+  "format": {
+   "format": ""
+  }
+ },
+ "story": {
+  "summary": "Blind-dog halo: owner tries a cardboard ring on an old Labrador (the idea) vs unboxing the padded halo and strapping it on, then the dog walks around furniture and the garden.",
+  "hook": "'The idea 🤢' + a cardboard-and-tape ring held around a sad-looking senior Lab's head.",
+  "highlights": [
+   "0–4s: the DIY fail is funny and sad at once; dog's face is the second character",
+   "4–8s: 'Vs...' unbox from a green box, hold the real halo up, buckle the harness, 3 shots",
+   "8–14s: 'The result 😍❤️' dog walking, the ring touches the sofa before his face, then in the garden",
+   "No on-screen CTA; 'Comment BLIND' in caption"
+  ]
+ },
+ "cast": {
+  "style": "Live footage in a bright Scandinavian-style home and garden",
+  "characters": [
+   {
+    "id": "A",
+    "name": "Senior Labrador",
+    "kind": "animal",
+    "look": "yellow Lab, grey muzzle, cloudy eyes",
+    "role": "subject",
+    "voice": "",
+    "shots": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ]
+   },
+   {
+    "id": "B",
+    "name": "Owner",
+    "kind": "person",
+    "look": "hands only, ring on finger",
+    "role": "fits the halo",
+    "voice": "",
+    "shots": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ]
+   }
+  ],
+  "scenes": [
+   {
+    "id": "S1",
+    "where": "living room, wood floor",
+    "when": "day",
+    "look": "bright",
+    "shots": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6
+    ]
+   },
+   {
+    "id": "S2",
+    "where": "garden with hydrangeas and white fence",
+    "when": "day",
+    "look": "",
+    "shots": [
+     7
+    ]
+   }
+  ],
+  "props": [
+   {
+    "name": "padded blind-dog halo harness",
+    "note": "product",
+    "shots": [
+     3,
+     4,
+     5,
+     6,
+     7
+    ]
+   },
+   {
+    "name": "cardboard ring",
+    "note": "the joke",
+    "shots": [
+     1,
+     2
+    ]
+   }
+  ]
+ },
+ "packaging": {
+  "stickers": [
+   {
+    "id": "sticker_01",
+    "is_overlay": null,
+    "what": ""
+   }
+  ],
+  "text": [
+   {
+    "id": "text_001",
+    "kind": ""
+   },
+   {
+    "id": "text_002",
+    "kind": ""
+   },
+   {
+    "id": "text_003",
+    "kind": ""
+   }
+  ],
+  "missed": []
+ }
+}

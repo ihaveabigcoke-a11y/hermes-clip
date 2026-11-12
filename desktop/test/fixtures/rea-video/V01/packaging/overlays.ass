@@ -1,0 +1,22 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 720
+PlayResY: 1280
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: huazi_1,Sans,38,&H006169CE,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,-0,1,0,0,5,0,0,0,1
+Style: label_2,Sans,22,&H00212126,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,-6,1,0,0,5,0,0,0,1
+Style: label_3,Sans,39,&H00FBF9F8,&H0000FFFF,&H00060200,&H00060200,0,0,0,0,100,100,0,-0,3,8,0,5,0,0,0,1
+Style: label_4,Sans,58,&H00F9F7F6,&H0000FFFF,&H000A0609,&H00000000,0,0,0,0,100,100,0,-0,1,2,0,5,0,0,0,1
+Style: huazi_5,Sans,17,&H001F2228,&H0000FFFF,&H00464F53,&H00000000,0,0,0,0,100,100,0,-7,1,1,0,5,0,0,0,1
+Style: label_6,Sans,39,&H00F9F9F9,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,-0,1,0,0,5,0,0,0,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 1,0:00:00.00,0:00:01.60,huazi_1,,0,0,0,,{\pos(372,448)\fad(200,200)}加儿
+Dialogue: 1,0:00:00.50,0:00:01.10,label_2,,0,0,0,,{\pos(116,366)\fad(200,200)}numm
+Dialogue: 1,0:00:04.40,0:00:06.50,label_3,,0,0,0,,{\pos(176,317)}a
+Dialogue: 1,0:00:04.50,0:00:07.10,label_4,,0,0,0,,{\pos(330,312)\fscx60\fscy60\t(0,180,\fscx110\fscy110)\t(180,260,\fscx100\fscy100)}CARGUY...
+Dialogue: 1,0:00:08.50,0:00:10.10,huazi_5,,0,0,0,,{\pos(97,305)\fscx60\fscy60\t(0,180,\fscx110\fscy110)\t(180,260,\fscx100\fscy100)}Car
+Dialogue: 1,0:00:13.60,0:00:15.10,label_6,,0,0,0,,{\pos(178,316)}a

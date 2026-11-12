@@ -1,0 +1,226 @@
+{
+  "text": [
+    {
+      "id": "text_001",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 0.0,
+      "t1": 5.1,
+      "text": "The concept",
+      "bbox": [
+        0.2806,
+        0.1555,
+        0.3611,
+        0.0578
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#f2f6f7",
+        "stroke_name": "black",
+        "stroke": "#0c0806",
+        "stroke_ratio": 0.02,
+        "weight": 0.08
+      },
+      "style_zh": "white text, black outline, line height 5.6% (about 72px)",
+      "anim_in": null,
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_002",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 5.1,
+      "t1": 6.2,
+      "text": "Vs..Oo",
+      "bbox": [
+        0.3986,
+        0.1531,
+        0.2014,
+        0.0547
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#f2f6f7",
+        "multicolor": true,
+        "highlight_name": "white",
+        "weight": 0.082,
+        "stroke_name": "black",
+        "stroke": "#0c0806",
+        "stroke_ratio": 0.02
+      },
+      "style_zh": "white text, black outline, keywords highlighted in white, line height 5.5% (about 70px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_003",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 6.5,
+      "t1": 6.6,
+      "text": "heelit",
+      "bbox": [
+        0.4292,
+        0.3992,
+        0.0847,
+        0.0234
+      ],
+      "style": {
+        "fill_name": "grey",
+        "fill": "#675b5a",
+        "weight": 0.155
+      },
+      "style_zh": "grey text, line height 2.3% (about 30px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_004",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 6.9,
+      "t1": 11.3,
+      "text": "The result",
+      "bbox": [
+        0.3097,
+        0.1547,
+        0.3014,
+        0.0555
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#f2f6f7",
+        "stroke_name": "black",
+        "stroke": "#0c0806",
+        "stroke_ratio": 0.02,
+        "weight": 0.09
+      },
+      "style_zh": "white text, black outline, line height 5.0% (about 64px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_005",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 6.9,
+      "t1": 8.3,
+      "text": " foy luo à",
+      "bbox": [
+        0.5375,
+        0.493,
+        0.0653,
+        0.0148
+      ],
+      "style": {
+        "fill_name": "cyan",
+        "fill": "#2a5962",
+        "weight": 0.131
+      },
+      "style_zh": "cyan text, line height 1.5% (about 19px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_006",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 11.3,
+      "t1": 12.4,
+      "text": "comment “run\"/if you want them",
+      "bbox": [
+        0.2694,
+        0.1086,
+        0.4639,
+        0.1047
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#f2f6f7",
+        "stroke_name": "black",
+        "stroke": "#0c0806",
+        "stroke_ratio": 0.02,
+        "weight": 0.079
+      },
+      "style_zh": "white text, black outline, line height 5.6% (about 71px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": null,
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    }
+  ],
+  "stickers": [],
+  "sfx": [
+    {
+      "t": 2.81,
+      "type": "whoosh",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": {
+        "type": "cut",
+        "what": "cut",
+        "dt": 0.023,
+        "ref": null
+      }
+    }
+  ]
+}

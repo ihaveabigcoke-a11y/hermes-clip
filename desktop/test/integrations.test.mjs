@@ -1,3 +1,4 @@
+import {readArchive} from '../src/compress.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtemp,rm,readFile,writeFile,mkdir} from 'node:fs/promises';
@@ -6,6 +7,28 @@ import {tmpdir} from 'node:os';
 import {createHash} from 'node:crypto';
 import {Store} from '../src/store.mjs';
 import {Integrations,runJson,researchInput,composeInput} from '../src/integrations.mjs';
+
+test('installed rea-video paths upgrade legacy config without replacing chosen tools or receipts',()=>fixture(async(store,dir)=>{
+ const i=new Integrations(store,dir),legacy={python:'chosen-python',reach:'chosen-reach',montage:dir};
+ i.saveConfig(legacy);store.set('integration-jobs',[{id:'kept',state:'done',kind:'reference-structure'}]);
+ const installed={python:'setup-python',reach:'setup-reach',montage:join(dir,'setup-montage'),reaPython:'setup-rea-python',reaVideo:join(dir,'rea-video')};
+ assert.equal(i.loadInstalledConfig(installed),true);
+ assert.deepEqual(i.config(),{...legacy,reaPython:installed.reaPython,reaVideo:installed.reaVideo});
+ assert.deepEqual(i.jobs(),[{id:'kept',state:'done',kind:'reference-structure'}]);
+ const selected={...legacy,reaPython:'custom-rea-python',reaVideo:join(dir,'custom-rea')};
+ i.saveConfig(selected);store.set('integration-health',{checkedAt:123});
+ assert.equal(i.loadInstalledConfig(installed),false);
+ assert.deepEqual(i.config(),selected);assert.deepEqual(store.get('integration-health'),{checkedAt:123});
+ assert.throws(()=>i.loadInstalledConfig({...installed,reaVideo:'relative-path'}));
+ assert.deepEqual(i.config(),selected);
+}));
+
+test('first install and repeated legacy setup remain idempotent',()=>fixture(async(store,dir)=>{
+ const i=new Integrations(store,dir),installed={python:'python',reach:'reach',montage:dir};
+ assert.equal(i.loadInstalledConfig(installed),true);assert.deepEqual(i.config(),installed);
+ store.set('integration-health',{checkedAt:456});
+ assert.equal(i.loadInstalledConfig(installed),false);assert.deepEqual(store.get('integration-health'),{checkedAt:456});
+}));
 
 test('subprocess rejects non-object JSON envelopes', async () => {
  for (const value of ['null', '[]', 'true', '42', '"text"']) {
@@ -118,7 +141,7 @@ test('stdout accepts exactly 4 MiB, rejects one extra byte and never raises the 
 });
 
 async function fixture(fn){const dir=await mkdtemp(join(tmpdir(),'lab-integrations-')),s=new Store(join(dir,'state.sqlite'));try{await fn(s,dir);}finally{s.close();await rm(dir,{recursive:true,force:true});}}
-test('research argv are bounded, read-only, channel-specific and never a shell',()=>fixture(async(s,dir)=>{const calls=[];const i=new Integrations(s,dir,async(cmd,args)=>{calls.push({cmd,args});return {ok:true,items:[{url:'https://example.com',text:'fixture'}]};});i.saveConfig({python:'python',reach:'agent-reach',montage:dir});const j=await i.research({projectId:'p',channel:'web',query:'phone bouncing $(touch no)'});assert.equal(calls[0].args[2],'phone bouncing $(touch no)');assert.ok(!calls[0].args.includes('--backend'));assert.equal(j.state,'done');assert.ok((await readFile(j.path,'utf8')).includes('unreviewed'));await i.research({projectId:'p',channel:'reddit',query:'running vest'});assert.deepEqual(calls[1].args.slice(-2),['--backend','public-web']);assert.equal(researchInput.safeParse({projectId:'p',channel:'tiktok',query:'x'}).success,false);}));
+test('research argv are bounded, read-only, channel-specific and never a shell',()=>fixture(async(s,dir)=>{const calls=[];const i=new Integrations(s,dir,async(cmd,args)=>{calls.push({cmd,args});return {ok:true,items:[{url:'https://example.com',text:'fixture'}]};});i.saveConfig({python:'python',reach:'agent-reach',montage:dir});const j=await i.research({projectId:'p',channel:'web',query:'phone bouncing $(touch no)'});assert.equal(calls[0].args[2],'phone bouncing $(touch no)');assert.ok(!calls[0].args.includes('--backend'));assert.equal(j.state,'done');assert.ok((await readArchive(j.path)).includes('unreviewed'));await i.research({projectId:'p',channel:'reddit',query:'running vest'});assert.deepEqual(calls[1].args.slice(-2),['--backend','public-web']);assert.equal(researchInput.safeParse({projectId:'p',channel:'tiktok',query:'x'}).success,false);}));
 test('failure is persisted, partial data is not marked as a successful result',()=>fixture(async(s,dir)=>{const i=new Integrations(s,dir,async()=>{throw Error('Network blocked');});i.saveConfig({python:'python',reach:'agent-reach',montage:dir});await assert.rejects(()=>i.research({projectId:'p',channel:'web',query:'running vest'}),/blocked/);assert.equal(i.jobs()[0].state,'failed');assert.equal(i.busy,false);}));
 test('restart marks interrupted jobs and does not replay',()=>fixture(async(s,dir)=>{s.set('integration-jobs',[{id:'old',kind:'research',state:'running'}]);let calls=0;const i=new Integrations(s,dir,async()=>calls++);assert.equal(i.jobs()[0].state,'interrupted');assert.equal(calls,0);}));
 test('invalid checksum stops before upstream invocation',()=>fixture(async(s,dir)=>{let calls=0;const i=new Integrations(s,dir,async()=>{calls++;});await assert.rejects(()=>i.analyze({projectId:'p',assetId:'a',name:'ref.mp4',bytes:new Uint8Array([1,2]),sha256:'0'.repeat(64)}),/checksum/);assert.equal(calls,0);assert.equal(i.jobs()[0].state,'failed');}));

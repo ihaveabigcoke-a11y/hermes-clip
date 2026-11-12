@@ -97,9 +97,8 @@ export class MuseChat {
     assertMuseAvailable(this.store, {jobId:chat.requestId, profileId:chat.profileId});
     this.store.db.exec('BEGIN IMMEDIATE');
     try {
-      const batch = this.store.batch() ?? {id: randomUUID(), startedAt: Date.now(), perProfileLimit: 3, submittedByProfile: {}};
+      const batch = this.store.batch() ?? {id: randomUUID(), startedAt: Date.now(), perProfileLimit: null, submittedByProfile: {}};
       const count = batch.submittedByProfile[chat.profileId] ?? 0;
-      if (count >= 3) throw Error('Profile đã dùng đủ 3 lượt trong đợt. Mở đợt mới trong Tài khoản.');
       this.store.set('generation_batch', {...batch, submittedByProfile: {...batch.submittedByProfile, [chat.profileId]: count + 1}});
       const saved = this.save({...chat, state: 'waiting', submitBatchId: batch.id});
       this.store.db.exec('COMMIT');

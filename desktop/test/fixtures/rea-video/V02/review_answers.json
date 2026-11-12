@@ -1,0 +1,490 @@
+{
+ "by": "claude-fable",
+ "shots": [
+  {
+   "id": "shot_001",
+   "time": "0.00-5.00",
+   "label_probs": {
+    "live_action": 0.1,
+    "ai_video": 0.9
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "impossible light trails, garbled badge details, overly clean faces"
+   ],
+   "description": "night road, two police officers, woman on road bike, pink glowing wings on asphalt behind the bike",
+   "narrative": {
+    "role": "hook",
+    "point": "Cops stop a cyclist whose bike leaves wing-shaped pink light trails"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Night mountain road, two police officers stand beside a woman in a pink jersey on a road bike, patrol car lights behind, wing-shaped pink and white light trails glow on the asphalt behind the bike, officers laugh",
+    "video_prompt": "Night mountain road, two police officers stand beside a woman in a pink jersey on a road bike, patrol car lights behind, wing-shaped pink and white light trails glow on the asphalt behind the bike, officers laugh",
+    "video_prompt_en": "Night mountain road, two police officers stand beside a woman in a pink jersey on a road bike, patrol car lights behind, wing-shaped pink and white light trails glow on the asphalt behind the bike, officers laugh"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_002",
+   "time": "5.00-5.67",
+   "label_probs": {
+    "live_action": 0.15,
+    "ai_video": 0.85
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "text on box partly garbled, pink gloves, AI-smooth"
+   ],
+   "description": "POV looking down at a product box on asphalt, hands open it, small black light unit inside, then hand holds it near the handlebar",
+   "narrative": {
+    "role": "proof",
+    "point": "POV unboxing the NIGHTRAZE light at sunset"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV looking down, pink-gloved hands open a small product box on the roadside at sunset, lift out a small black bike light",
+    "video_prompt": "POV looking down, pink-gloved hands open a small product box on the roadside at sunset, lift out a small black bike light",
+    "video_prompt_en": "POV looking down, pink-gloved hands open a small product box on the roadside at sunset, lift out a small black bike light"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_003",
+   "time": "5.67-6.27",
+   "label_probs": {
+    "live_action": 0.15,
+    "ai_video": 0.85
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "text on box partly garbled, pink gloves, AI-smooth"
+   ],
+   "description": "POV looking down at a product box on asphalt, hands open it, small black light unit inside, then hand holds it near the handlebar",
+   "narrative": {
+    "role": "proof",
+    "point": "POV unboxing the NIGHTRAZE light at sunset"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV looking down, pink-gloved hands open a small product box on the roadside at sunset, lift out a small black bike light",
+    "video_prompt": "POV looking down, pink-gloved hands open a small product box on the roadside at sunset, lift out a small black bike light",
+    "video_prompt_en": "POV looking down, pink-gloved hands open a small product box on the roadside at sunset, lift out a small black bike light"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_004",
+   "time": "6.27-6.83",
+   "label_probs": {
+    "live_action": 0.15,
+    "ai_video": 0.85
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "text on box partly garbled, pink gloves, AI-smooth"
+   ],
+   "description": "POV looking down at a product box on asphalt, hands open it, small black light unit inside, then hand holds it near the handlebar",
+   "narrative": {
+    "role": "proof",
+    "point": "POV unboxing the NIGHTRAZE light at sunset"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV looking down, pink-gloved hands open a small product box on the roadside at sunset, lift out a small black bike light",
+    "video_prompt": "POV looking down, pink-gloved hands open a small product box on the roadside at sunset, lift out a small black bike light",
+    "video_prompt_en": "POV looking down, pink-gloved hands open a small product box on the roadside at sunset, lift out a small black bike light"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_005",
+   "time": "6.83-7.37",
+   "label_probs": {
+    "live_action": 0.15,
+    "ai_video": 0.85
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "text on box partly garbled, pink gloves, AI-smooth"
+   ],
+   "description": "POV looking down at a product box on asphalt, hands open it, small black light unit inside, then hand holds it near the handlebar",
+   "narrative": {
+    "role": "proof",
+    "point": "POV unboxing the NIGHTRAZE light at sunset"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV looking down, pink-gloved hands open a small product box on the roadside at sunset, lift out a small black bike light",
+    "video_prompt": "POV looking down, pink-gloved hands open a small product box on the roadside at sunset, lift out a small black bike light",
+    "video_prompt_en": "POV looking down, pink-gloved hands open a small product box on the roadside at sunset, lift out a small black bike light"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_006",
+   "time": "7.37-8.97",
+   "label_probs": {
+    "live_action": 0.1,
+    "ai_video": 0.9
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "trails are rendered"
+   ],
+   "description": "rear three-quarter shot, cyclist in pink, wings of light on the road",
+   "narrative": {
+    "role": "payoff",
+    "point": "Rider on a sunset road leaving pink wing trails"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Rear three-quarter shot at dusk, woman cyclist on a mountain road, wing-shaped pink light trails spread across the asphalt behind her bike",
+    "video_prompt": "Rear three-quarter shot at dusk, woman cyclist on a mountain road, wing-shaped pink light trails spread across the asphalt behind her bike",
+    "video_prompt_en": "Rear three-quarter shot at dusk, woman cyclist on a mountain road, wing-shaped pink light trails spread across the asphalt behind her bike"
+   }
+  },
+  {
+   "id": "shot_007",
+   "time": "8.97-10.63",
+   "label_probs": {
+    "live_action": 0.1,
+    "ai_video": 0.9
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "multiple riders, identical trails"
+   ],
+   "description": "rear shot, 3–4 cyclists in a line, pink and blue light wings on the road, valley lights",
+   "narrative": {
+    "role": "cta",
+    "point": "Group of riders, pink and blue trails, CTA label"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Rear tracking shot at night, three cyclists ride in a line down a mountain road, each bike leaving glowing pink or blue wing-shaped light trails, city lights in the valley",
+    "video_prompt": "Rear tracking shot at night, three cyclists ride in a line down a mountain road, each bike leaving glowing pink or blue wing-shaped light trails, city lights in the valley",
+    "video_prompt_en": "Rear tracking shot at night, three cyclists ride in a line down a mountain road, each bike leaving glowing pink or blue wing-shaped light trails, city lights in the valley"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_008",
+   "time": "10.63-13.33",
+   "label_probs": {
+    "live_action": 0.1,
+    "ai_video": 0.9
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "multiple riders, identical trails"
+   ],
+   "description": "rear shot, 3–4 cyclists in a line, pink and blue light wings on the road, valley lights",
+   "narrative": {
+    "role": "cta",
+    "point": "Group of riders, pink and blue trails, CTA label"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Rear tracking shot at night, three cyclists ride in a line down a mountain road, each bike leaving glowing pink or blue wing-shaped light trails, city lights in the valley",
+    "video_prompt": "Rear tracking shot at night, three cyclists ride in a line down a mountain road, each bike leaving glowing pink or blue wing-shaped light trails, city lights in the valley",
+    "video_prompt_en": "Rear tracking shot at night, three cyclists ride in a line down a mountain road, each bike leaving glowing pink or blue wing-shaped light trails, city lights in the valley"
+   }
+  }
+ ],
+ "aspects": {
+  "camera": {
+   "setups": "",
+   "gear_guess": ""
+  },
+  "lighting": {
+   "lighting_overall": ""
+  },
+  "grade": {
+   "grade_overall": ""
+  },
+  "editing": {
+   "editing": ""
+  },
+  "format": {
+   "format": ""
+  }
+ },
+ "story": {
+  "summary": "POV share-bait: cyclist with glowing wing trails gets stopped by amused cops, unboxes the light, then rides with friends leaving pink trails.",
+  "hook": "'POV: you send this to your Cycling Buddies 😂' over a night scene of police checking a cyclist whose bike leaves pink light wings on the road.",
+  "highlights": [
+   "0–5s: a second character reacting (cops) makes it a story, not a demo",
+   "5–7s: 3 fast unbox shots with the branded box NIGHTRAZE",
+   "7.4s: CTA 'Comment bike for the link' appears over the payoff and stays to the end",
+   "payoff is impossible in reality (wing-shaped light trails) — spectacle beats accuracy"
+  ]
+ },
+ "cast": {
+  "style": "Fully AI-generated, night road, pink/blue neon trails, warm sunset for unbox",
+  "characters": [
+   {
+    "id": "A",
+    "name": "Cyclist",
+    "kind": "person",
+    "look": "woman, pink jersey, pink helmet",
+    "role": "rider",
+    "voice": "",
+    "shots": [
+     1,
+     6,
+     7,
+     8
+    ]
+   },
+   {
+    "id": "B",
+    "name": "Police officers",
+    "kind": "person",
+    "look": "two uniformed cops, patrol car lights",
+    "role": "react, comic authority",
+    "voice": "",
+    "shots": [
+     1
+    ]
+   }
+  ],
+  "scenes": [
+   {
+    "id": "S1",
+    "where": "mountain road",
+    "when": "night",
+    "look": "police lights, neon trails",
+    "shots": [
+     1,
+     6,
+     7,
+     8
+    ]
+   },
+   {
+    "id": "S2",
+    "where": "roadside",
+    "when": "sunset",
+    "look": "POV hands, box on asphalt",
+    "shots": [
+     2,
+     3,
+     4,
+     5
+    ]
+   }
+  ],
+  "props": [
+   {
+    "name": "NIGHTRAZE bike light box",
+    "note": "branded box, garbled small text = AI",
+    "shots": [
+     2,
+     3,
+     4
+    ]
+   }
+  ]
+ },
+ "packaging": {
+  "stickers": [],
+  "text": [
+   {
+    "id": "text_002",
+    "kind": ""
+   },
+   {
+    "id": "text_003",
+    "kind": ""
+   },
+   {
+    "id": "text_004",
+    "kind": ""
+   },
+   {
+    "id": "text_005",
+    "kind": ""
+   },
+   {
+    "id": "text_006",
+    "kind": ""
+   },
+   {
+    "id": "text_007",
+    "kind": ""
+   },
+   {
+    "id": "text_009",
+    "kind": ""
+   }
+  ],
+  "missed": []
+ }
+}

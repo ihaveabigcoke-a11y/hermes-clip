@@ -16,7 +16,6 @@ type Props = {
   records: LabRecord[];
   projectId?: string;
   busy: boolean;
-  remainingCapacity: number;
   onAction: (method: string, value?: {id: string}) => Promise<unknown>;
   onStart: (jobs: DesktopJob[]) => void;
   onReconcile: (job: DesktopJob) => void;
@@ -29,7 +28,7 @@ const actionLabels = {
   recheckResult: 'Kiểm tra lại trên Muse',
 };
 
-export default function QueueBoard({status, records, projectId, busy, remainingCapacity, onAction, onStart, onReconcile, onImport}: Props) {
+export default function QueueBoard({status, records, projectId, busy, onAction, onStart, onReconcile, onImport}: Props) {
   const organization = useDesktopPreference<MediaOrganization>('mediaOrganization', {});
   const [filter, setFilter] = useState<QueueFilter>('pending');
   const [category, setCategory] = useState<MediaScope>('content');
@@ -81,7 +80,7 @@ export default function QueueBoard({status, records, projectId, busy, remainingC
     .sort((a, b) => b.createdAt - a.createdAt || b.id.localeCompare(a.id));
   const selected = attempts.find(job => job.id === attemptId) ?? selectedGroup?.latest;
   const queued = filtered.filter(job => job.state === 'queued');
-  const canStart = !busy && organization.ready && !!status?.generationReady && !status?.storage?.blocked && remainingCapacity > 0;
+  const canStart = !busy && organization.ready && !!status?.generationReady && !status?.storage?.blocked && !!status?.profiles.some(profile => profile.enabled);
   const filteredScope = !['pending', 'history'].includes(filter) || query.trim() || profileId !== 'all' || batchOnly || productId !== 'all' || mediaType !== 'all' || period !== 'all';
 
   function resetPage() {
@@ -148,7 +147,7 @@ export default function QueueBoard({status, records, projectId, busy, remainingC
         setMessage('Đã chuyển cảnh “' + selected.request.name + '” sang ' + (next === 'test' ? uiCopy.test : uiCopy.content) + '.');
       }}><option value="content">{uiCopy.content}</option><option value="test">{uiCopy.test}</option></select></label>
     <QueueDetails key={selected.id} job={selected} label={reviewLabel(selected)} tone={resultTone(selected)}
-    profileName={status?.profiles.find(profile => profile.id === selected.profileId)?.name ?? 'Chờ phân hồ sơ'}
+    profileName={status?.profiles.find(profile => profile.id === selected.profileId)?.name ?? selected.profileName ?? 'Chờ phân hồ sơ'}
     busy={busy} musePaused={status?.musePaused!==false} onAction={onAction} onImport={onImport}
     primary={queueAction(selected) !== 'result' && queueAction(selected) !== 'details' ? actionButton(selected) : null}/></>;
 
@@ -166,7 +165,7 @@ export default function QueueBoard({status, records, projectId, busy, remainingC
     <div className="queue-controls">
       <div className="queue-dispatch">
         <Badge tone={status?.paused ? 'neutral' : 'success'}>{status?.paused ? 'Đã dừng giao mới' : 'Cho phép giao việc'}</Badge>
-        <span>{status?.active ?? 0} đang chạy · còn {remainingCapacity} lượt trong đợt</span>
+        <span>{status?.active ?? 0} đang chạy · không giới hạn lượt trong Hermes</span>
         <small>Tác vụ đã gửi vẫn có thể tiếp tục trên Muse.</small>
       </div>
       <div className="button-row">
@@ -206,7 +205,7 @@ export default function QueueBoard({status, records, projectId, busy, remainingC
             <button type="button" className="queue-row-title" aria-pressed={selected?.id === job.id}
               aria-label={'Chi tiết ' + job.request.name} onClick={() => openDetails(job)}>
               {job.request.mediaType === 'video' ? <FileVideo size={19}/> : <ImageIcon size={19}/>}
-              <span><small title={products.find(product => product.id === job.request.productId)?.data.name}>{products.find(product => product.id === job.request.productId)?.data.name ?? 'Sản phẩm đã lưu'}</small><strong title={job.request.name}>{job.request.name}</strong><small>{group.jobs.length} lượt tạo · {formatTime(job.createdAt)}<span className="queue-inline-profile"> · {status?.profiles.find(profile => profile.id === job.profileId)?.name ?? 'Chờ phân hồ sơ'}</span></small></span>
+              <span><small title={products.find(product => product.id === job.request.productId)?.data.name}>{products.find(product => product.id === job.request.productId)?.data.name ?? 'Sản phẩm đã lưu'}</small><strong title={job.request.name}>{job.request.name}</strong><small>{group.jobs.length} lượt tạo · {formatTime(job.createdAt)}<span className="queue-inline-profile"> · {status?.profiles.find(profile => profile.id === job.profileId)?.name ?? job.profileName ?? 'Chờ phân hồ sơ'}</span></small></span>
             </button>
             <span className="queue-row-profile">{status?.profiles.find(profile => profile.id === job.profileId)?.name ?? 'Chờ phân hồ sơ'}</span>
             <Badge tone={resultTone(job)}>{reviewLabel(job)}</Badge>

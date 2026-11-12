@@ -7,9 +7,47 @@ import {execFileSync} from 'node:child_process';
 import {setTimeout as delay} from 'node:timers/promises';
 import {Store} from '../src/store.mjs';
 import {ManualMedia, probeManualMedia} from '../src/manual-media.mjs';
+import {runMediaTool,probeMedia} from '../src/compress.mjs';
 import {startLocalServer, importModule} from './helpers/local-server.mjs';
 
 const {emptyProduct}=await importModule('lib/lab/domain.ts');
+test('T-007: manual export groups approved v2 shots and maps exact cuts; missing packaging or partial group blocks export',async t=>{
+  const f=await fixture(t);
+  const {formulaStoryboard}=await importModule('lib/lab/formula-storyboard.ts');
+  const {viralFormulasV2}=await importModule('lib/lab/viral-formulas.ts');
+  const {newProduction}=await importModule('lib/lab/production.ts');
+  const formula=viralFormulasV2[0],draft=formulaStoryboard({},newProduction('V2','product_fixture',1),formula,{ctaKeyword:'BIKE',situation:formula.situationExamples[0],packaging:{brandName:'FIXTURE',boxText:'Night Kit'}});
+  let project=await f.command('formula_draft',draft);
+  const ids=project.data.scenes.filter(s=>s.storyboardVersion===2).map(s=>s.id);
+  for(const sceneId of ids)await f.command('storyboard',{sceneId});
+  await assert.rejects(f.media.exportPack({projectId:project.id,sceneIds:ids.slice(1)},new Date(2026,10,12,23,1)),/đủ shot/);
+  const pack=await f.media.exportPack({projectId:project.id,sceneIds:ids},new Date(2026,10,12,23,2));
+  const timeline=JSON.parse(await readFile(join(pack.path,'timeline.json'),'utf8'));
+  assert.equal(timeline.units.length,4);assert.equal(timeline.units.flatMap(u=>u.shots).length,12);
+  for(const group of timeline.units) {
+    const prompt=await readFile(join(pack.path,group.file.replace('.mp4','.txt')),'utf8');
+    assert.match(prompt,/exactly 8 seconds/);assert.match(prompt,/Constraints:/);assert.doesNotMatch(prompt,/narration|neutral handling|AI label|AI-generated/i);
+    assert.equal(group.shots[0].trimFromSec,0);
+    for(const shot of group.shots) {
+      assert.equal(Number((shot.trimToSec-shot.trimFromSec).toFixed(3)),shot.duration);
+      assert.equal(shot.duration,project.data.scenes.find(s=>s.id===shot.sceneId).duration);
+      assert.ok(shot.duration>=1&&shot.duration<=2.5);
+      assert.ok(shot.trimToSec<=8);assert.equal(shot.packaging.brandName,'FIXTURE');
+      assert.equal(shot.ffmpegArgs.at(-1),shot.code+'-take1.mp4');
+      assert.match(await readFile(join(pack.path,shot.code+'.txt'),'utf8'),/Editing overlay/);
+    }
+  }
+  assert.equal(timeline.overlayStyle.transition,'hard-cut');
+  // Probe/cut synthetic media with the same argument array emitted in the pack.
+  const group=timeline.units[0],source=join(f.root,group.file),clip=join(f.root,'cut.mp4');
+  await runMediaTool('ffmpeg',['-y','-v','error','-f','lavfi','-i','color=c=blue:s=90x160:r=30','-t','8','-c:v','libx264','-pix_fmt','yuv420p',source]);
+  const args=[...group.shots[1].ffmpegArgs];args[2]=source;args[args.length-1]=clip;
+  await runMediaTool('ffmpeg',args);assert.equal(group.shots[1].duration,1.2);assert.equal((await probeMedia(clip)).duration,group.shots[1].duration);
+  const records=await f.media.records();const damaged=structuredClone(records);
+  delete damaged.find(r=>r.id===project.id).data.scenes.find(s=>s.id===ids[0]).packaging;
+  f.media.records=async()=>damaged;
+  await assert.rejects(f.media.exportPack({projectId:project.id,sceneIds:ids},new Date(2026,10,12,23,3)),/Chưa đặt tên bao bì/);
+});
 async function fixture(t) {
   const root=await mkdtemp(join(tmpdir(),'hermes-t002-'));
   const store=new Store(join(root,'worker.sqlite'));
@@ -38,7 +76,7 @@ async function fixture(t) {
   return {root,store,local,media,command,scene,clip};
 }
 
-test('manual pack contains approved scenes, English instructions, exact pinned reference bytes and durable codes',async t=>{
+test('manual pack contains approved scenes, English instructions, compressed pinned reference and immutable asset and durable codes',async t=>{
   const f=await fixture(t), {media,command,scene}=f;
   const png=join(f.root,'reference.png');
   execFileSync('ffmpeg',['-y','-v','error','-f','lavfi','-i','color=c=blue:s=90x160','-frames:v','1',png],{windowsHide:true,stdio:'inherit'});
@@ -52,10 +90,12 @@ test('manual pack contains approved scenes, English instructions, exact pinned r
   assert.match(code,/^P\d+-S\d+$/);
   const pack=await media.exportPack({projectId:'project_fixture'},new Date(2026,10,12,19,5));
   assert.equal(pack.path,join(f.local.root,'exports','prompt-packs','P1-20261112-1905'));
-  assert.deepEqual((await readdir(pack.path)).sort(),[`${code}-ref-1.png`,`${code}.txt`,'README-VI.txt'].sort());
+  assert.deepEqual((await readdir(pack.path)).sort(),[`${code}-ref-1.webp`,`${code}.txt`,'README-VI.txt'].sort());
   const prompt=await readFile(join(pack.path,`${code}.txt`),'utf8');
   assert.match(prompt,/9:16/);assert.match(prompt,/8 seconds/);assert.match(prompt,/Show the product/);assert.match(prompt,/Keep the blue finish/);
-  assert.deepEqual(await readFile(join(pack.path,`${code}-ref-1.png`)),bytes);
+  const packed=await readFile(join(pack.path,`${code}-ref-1.webp`));
+  assert.ok(packed.length<bytes.length);assert.equal((await probeManualMedia(join(pack.path,`${code}-ref-1.webp`))).type,'image/webp');
+  assert.equal((await (await media.request(`/api/assets/${asset.id}`)).arrayBuffer()).byteLength,asset.size);
   assert.match(await readFile(join(pack.path,'README-VI.txt'),'utf8'),/Flow\/Gemini/);
   assert.equal((await scene('one')).state,'Đã xuất');
   await media.waitForFiles({projectId:'project_fixture'});assert.equal((await scene('one')).state,'Chờ file');
@@ -232,4 +272,63 @@ test('T-002c G (c): a skipped old job without providerId can never be resumed or
   await assert.rejects(worker.resume(old.id),{message:'Đã bỏ qua kết quả Muse cũ; app sẽ không gửi lại.'});
   await assert.rejects(worker.recheckResult({id:old.id}),{message:'Đã bỏ qua kết quả Muse cũ; app sẽ không gửi lại.'});
   assert.equal(launches,0);assert.equal(store.job(old.id).state,'needs_attention');
+});
+
+
+test('T-006: compressed intake trashes once after take commit; original hash deduplicates retry',async t=>{
+  const f=await fixture(t),code=(await f.scene('one')).code;
+  const path=await f.clip(code+'-compressed.mp4'),original=await readFile(path),trashed=[];
+  f.media.trashItem=async target=>{const p=(await f.media.records()).find(r=>r.id==='project_fixture');assert.equal(p.data.scenes[0].takes.length,1);trashed.push(target);};
+  await f.media.scan();await f.media.scan();await f.media.scan();
+  const receipt=f.media.receipts()[0];assert.equal(receipt.state,'received');assert.ok(receipt.sourceSha256);assert.ok(receipt.compression);assert.ok(receipt.trashedAt);assert.deepEqual(trashed,[path]);
+  const take=(await f.media.records()).find(r=>r.id==='project_fixture').data.scenes[0].takes[0];assert.deepEqual(take.compression,receipt.compression);
+  assert.deepEqual(await readFile(path),original,'trash mock does not delete any real file');
+  const restarted=new ManualMedia({store:f.store,local:f.local,trashItem:f.media.trashItem});
+  await writeFile(join(f.media.inbox(),code+'-duplicate.mp4'),original);await restarted.scan();await restarted.scan();
+  assert.equal(restarted.receipts().length,1);assert.equal(trashed.length,1);
+  assert.equal((await f.media.records()).find(r=>r.id==='project_fixture').data.scenes[0].takes.length,1);
+});
+test('T-006: compression failure never uploads or trashes; source remains in File cần kiểm tra',async t=>{
+  const f=await fixture(t),code=(await f.scene('one')).code;
+  const path=await f.clip(code+'-failure.mp4'),bytes=await readFile(path);let trash=0;
+  f.media.trashItem=async()=>{trash++;};f.media.compress=async()=>{throw Error('Không nén được clip ≤ 15 giây xuống dưới giới hạn video');};
+  await f.media.scan();await f.media.scan();assert.equal(trash,0);assert.equal(f.media.receipts().length,0);assert.deepEqual(await readFile(path),bytes);
+  assert.match((await f.media.status()).errors[0].message,/Không nén được/);
+  assert.equal((await f.media.records()).filter(r=>r.kind==='asset').length,0);
+});
+test('T-006: legacy receipt is never trashed; replaced source is retained',async t=>{
+  const f=await fixture(t),code=(await f.scene('one')).code;
+  const path=await f.clip(code+'-legacy.mp4');await f.media.scan();await f.media.scan();
+  let trash=0;f.media.trashItem=async()=>{trash++;};const receipt=f.media.receipts()[0];
+  await f.media.recycleSource({...receipt,sourceSha256:undefined,compression:undefined});assert.equal(trash,0);
+  await writeFile(path,'replaced by user');await assert.rejects(f.media.recycleSource(receipt),/đã thay đổi/);assert.equal(trash,0);assert.equal(await readFile(path,'utf8'),'replaced by user');
+});
+
+test('T-006: long light intake is imported without inflation and trashes only after success',async t=>{
+  // Boss phụ: the ~2 Mbps floor only guards shrinking heavy videos (see compress.test 30s heavy);
+  // a light 60s clip must not be inflated to >6 MB as before.
+  const f=await fixture(t),code=(await f.scene('one')).code,path=join(f.media.inbox(),code+'-long.mp4');
+  await runMediaTool('ffmpeg',['-v','error','-f','lavfi','-i','color=c=blue:s=720x1280:r=12','-t','60','-c:v','libx264','-threads','2',path]);
+  const before=(await stat(path)).size;
+  const trashed=[];f.media.trashItem=async path=>{trashed.push(path);};await f.media.scan();await f.media.scan();
+  const receipt=f.media.receipts()[0],take=(await f.media.records()).find(r=>r.id==='project_fixture').data.scenes[0].takes[0];
+  assert.equal(receipt.state,'received');assert.equal(take.compression.overLimit,false);assert.ok(take.size<=before);assert.deepEqual([take.metadata.width,take.metadata.height],[720,1280]);assert.equal(take.metadata.duration,60);assert.deepEqual(trashed,[path]);
+});
+
+test('T-006: two distinct source hashes converging to one compressed hash keep both receipts',async t=>{
+  const f=await fixture(t),code=(await f.scene('one')).code,first=await f.clip(code+'-a.mp4'),bytes=await readFile(first),trashed=[];
+  const free=Buffer.alloc(64);free.writeUInt32BE(64);free.write('free',4);
+  const second=join(f.media.inbox(),code+'-b.mp4');await writeFile(second,Buffer.concat([bytes,free]));
+  f.media.trashItem=async path=>{trashed.push(path);};await f.media.scan();await f.media.scan();
+  const receipts=f.media.receipts();assert.equal(receipts.length,2);assert.notEqual(receipts[0].sourceSha256,receipts[1].sourceSha256);assert.equal(receipts[0].sha256,receipts[1].sha256);
+  assert.ok(receipts.every(r=>r.state==='received'&&r.trashedAt));assert.deepEqual(trashed.sort(),[first,second].sort());
+});
+
+test('T-006: Windows trash failure keeps original and retries at most three times',async t=>{
+  const f=await fixture(t),code=(await f.scene('one')).code,path=await f.clip(code+'-trash-denied.mp4'),bytes=await readFile(path);let calls=0;
+  f.media.trashItem=async()=>{calls++;throw Error('Windows trash denied');};
+  for(let i=0;i<7;i++)await f.media.scan();
+  assert.equal(calls,3);assert.deepEqual(await readFile(path),bytes);assert.equal(f.media.receipts()[0].state,'received');assert.equal(f.media.receipts()[0].trashedAt,undefined);
+  assert.match((await f.media.status()).errors[0].message,/3 lần/);
+  assert.equal((await f.media.records()).find(r=>r.id==='project_fixture').data.scenes[0].takes.length,1);
 });

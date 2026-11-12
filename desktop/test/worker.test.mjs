@@ -36,6 +36,7 @@ test('RAM recovery closes only idle background profiles and dispatches the same 
   store.set('profiles',[{id:'used',enabled:true},{id:'next',enabled:true},{id:'visible',enabled:false}]);
   store.set('generation_batch',{id:'batch',startedAt:1,perProfileLimit:3,submittedByProfile:{used:3}});
   const queued = store.enqueue(job(),'ram-recovery').job;
+  store.put({...queued,preferredProfileId:'next'});
   worker.contexts.set('used',{close:async()=>{worker.contexts.delete('used');worker.backgroundProfiles.delete('used');freeRam=3*1024**3;}});
   worker.contexts.set('spare',{close:async()=>assert.fail('Enough RAM was recovered by the first close')});
   worker.backgroundProfiles.add('spare');
@@ -58,6 +59,7 @@ test('failed memory recovery is bounded and pause prevents dispatch during clean
   store.set('profiles',[{id:'used',enabled:true},{id:'next',enabled:true}]);
   store.set('generation_batch',{id:'batch',startedAt:1,perProfileLimit:3,submittedByProfile:{used:3}});
   const queued = store.enqueue(job(),'ram-failure').job;
+  store.put({...queued,preferredProfileId:'next'});
   let closeCalls=0;
   worker.contexts.set('used',{close:async()=>{closeCalls++;throw Error('Close failed');}});
   worker.backgroundProfiles.add('used');
@@ -214,7 +216,7 @@ test('resume reserves concurrency and profile checks before changing the existin
   assert.equal(store.job(queued.id).providerId, 'existing');
 }));
 
-test('submission checkpoint and per-profile budget commit together and survive restart', () => fixture(async (store, dir) => {
+test('submission checkpoint and unlimited usage count commit together and survive restart', () => fixture(async (store, dir) => {
   assert.equal(store.batch(), null);
   const submitted = [];
   for (let index = 0; index < 3; index++) {
@@ -229,17 +231,18 @@ test('submission checkpoint and per-profile budget commit together and survive r
   const fourth = store.enqueue(job(), 'fourth').job;
   store.transition(fourth.id, 'preflight');
   store.transition(fourth.id, 'prepared');
-  assert.throws(() => store.beginSubmit(fourth.id, 'one'), /3 lượt/);
-  assert.equal(store.job(fourth.id).state, 'prepared');
-  assert.equal(store.batch().submittedByProfile.one, 3);
+  store.beginSubmit(fourth.id,'one');submitted.push(fourth.id);
+  assert.equal(store.job(fourth.id).state,'submitting');
+  assert.throws(()=>store.beginSubmit(fourth.id,'one'),/chuyển/);
+  assert.equal(store.batch().submittedByProfile.one,4);assert.equal(store.batch().perProfileLimit,null);
   assert.throws(() => store.newBatch(), /kết thúc/);
   const reopened = new Store(join(dir, 'queue.sqlite'));
   try {
     const worker = new Worker(reopened, dir, {}, {});
-    assert.equal(worker.status().batch.submittedByProfile.one, 3);
+    assert.equal(worker.status().batch.submittedByProfile.one, 4);
     assert.ok(submitted.every(id => reopened.job(id).state === 'needs_attention'));
     worker.pause();
-    assert.equal(reopened.batch().submittedByProfile.one, 3);
+    assert.equal(reopened.batch().submittedByProfile.one, 4);
     const oldBatch = reopened.batch().id;
     worker.active.set('one', 'active-job');
     assert.throws(() => worker.newBatch(), /kết thúc/);

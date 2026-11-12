@@ -8,6 +8,36 @@ import {newProduction,applyProduction,checkMedia,takeGate,variantItems,parseCsv,
 import {inspectMedia} from '../lib/lab/media.ts';
 import {productionPackage,buildManifest,zipFiles,crc32} from '../lib/lab/package.ts';
 import {formulaStoryboard} from '../lib/lab/intelligence.ts';
+import {viralFormulasV2} from '../lib/lab/viral-formulas.ts';
+
+test('T-007: v2 persists shot metadata, separate generation groups, caption placement, snapshots and export manifest',()=>{
+  const formula=viralFormulasV2.find(f=>f.resultStyle==='story_cards');
+  let p=newProduction('V2','product1',1),n=0;
+  const command=(action,input)=>{p=applyProduction(p,action,input,'v2_'+(++n),1000+n);};
+  const draft=formulaStoryboard({},p,formula,{ctaKeyword:'HELP',ctaPlacement:'caption',situation:formula.situationExamples[0],packaging:{brandName:'FIXTURE',boxText:'SOS Kit'}});
+  command('formula_draft',draft);
+  assert.equal(p.scenes.length,11);assert.equal(p.variants.length,2);assert.ok(p.variants.every(v=>v.cta===null&&v.caption===draft.ctaText));
+  assert.equal(p.bodies[0].items.length,9);assert.ok(p.scenes.every(s=>s.attempts.length===0&&!s.storyboardApproved&&s.metadata.dramatization));
+  assert.ok(p.scenes.every(s=>s.generationUnit.id.startsWith('v2_1_')));
+  const original=structuredClone(p.scenes[0]);
+  for(const s of p.scenes) {
+    command('storyboard',{sceneId:s.id});
+    command('attach',{sceneId:s.id,attemptId:null,take:{assetId:'asset_'+s.id,name:'fixture.mp4',type:'video/mp4',size:100,sha256:'a'.repeat(64),metadata:{width:720,height:1280,duration:s.duration,verifiedBy:'container'}}});
+    command('review',{sceneId:s.id,takeId:p.scenes.find(r=>r.id===s.id).takes[0].id,review:'approved',notes:'Fixture'});
+  }
+  command('pin_formula',{bodyId:p.bodies[0].id,items:p.scenes.map(s=>({sceneId:s.id,takeId:s.takes[0].id}))});
+  p=productionSchema.parse(JSON.parse(JSON.stringify(p)));
+  const manifest=buildManifest(p,p.variants[0].id,{id:'product1',revision:1,data:{name:'Fixture'}});
+  assert.equal(manifest.media.length,10);assert.equal(manifest.duration_seconds,14.5);
+  assert.deepEqual(manifest.media[0].storyboard.overlay,original.overlay);
+  assert.equal(manifest.media[0].storyboard.metadata.dramatization,true);
+  const snapshot=JSON.parse(p.scenes[0].takes[0].snapshot);
+  assert.deepEqual(snapshot.generationUnit,original.generationUnit);assert.deepEqual(snapshot.constraints,original.constraints);
+  command('scene',{...p.scenes[0],referenceIds:[],prompt:p.scenes[0].prompt+'\nA new composition.'});
+  assert.equal(p.scenes[0].storyboardApproved,false);assert.deepEqual(JSON.parse(p.scenes[0].takes[0].snapshot),snapshot);
+  const broken=structuredClone(p);delete broken.scenes[0].packaging;
+  assert.throws(()=>applyProduction(broken,'storyboard',{sceneId:p.scenes[0].id},'approve_bad',2000),/Chưa đặt tên bao bì/);
+});
 import {viralFormulas} from '../lib/lab/viral-formulas.ts';
 import {sceneInputSchema} from '../lib/lab/production.ts';
 import {pendingTakeSelection,ProductionError} from '../lib/lab/production.ts';
@@ -155,7 +185,7 @@ test('overlay and CTA fields remain optional for old records and enforce single-
   assert.equal(productionSchema.parse(JSON.parse(JSON.stringify(old))).scenes[0].overlayText,undefined);
   for(const overlayText of [null,undefined,'', 'A short overlay'])assert.equal(sceneInputSchema.safeParse({name:'S',prompt:'Shot',overlayText}).success,true);
   for(const overlayText of ['First\nsecond','x'.repeat(61)])assert.equal(sceneInputSchema.safeParse({name:'S',prompt:'Shot',overlayText}).success,false);
-  const draft=formulaStoryboard({},legacy,viralFormulas[0]);
+  const draft=formulaStoryboard({},legacy,viralFormulas[0],'LED');
   assert.throws(()=>run(legacy,'formula_draft',{...draft,ctaKeyword:'two words'}));
   const saved=run(legacy,'formula_draft',draft);
   for(const variant of saved.variants){delete variant.ctaKeyword;delete variant.ctaText;delete variant.formulaId;delete variant.formulaVersion;}

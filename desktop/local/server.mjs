@@ -1,3 +1,4 @@
+import {assetCompression} from '../src/asset-compression.mjs';
 import {putImmutableMedia, shareVerifiedMedia, digest, storagePolicy} from '../src/storage-policy.mjs';
 import {ThumbnailCache} from './thumbnails.mjs';
 import {createServer} from 'node:http';
@@ -30,7 +31,12 @@ export async function startLocalServer({root, uiDir=join(here,'../local-dist/ui'
   };
   const thumbnails=new ThumbnailCache(root,db,filePath,storagePolicy(workerStore));
   const writes=new Map();
-  const localEnv={get MUSE_STATUS(){return {musePaused:workerStore?.get('muse_paused',true)!==false,generationReady:!!workerStore?.get('adapter')?.enabled,profiles:workerStore?.get('profiles',[])??[],batch:workerStore?.batch(),jobs:workerStore?.jobs()??[]};},get MUSE_PAUSED(){return workerStore?.get('muse_paused',true)!==false;},DB:{
+  const compression=assetCompression();
+  const localEnv={
+    COMPRESS_ASSET:(file,type)=>compression.upload(file,type),
+    RESOLVE_PREPARED_ASSET:token=>compression.resolve(token),
+    PREPARED_ASSET_STORED:(token,asset)=>compression.stored(token,filePath(asset.key),asset),
+    get MUSE_STATUS(){return {musePaused:workerStore?.get('muse_paused',true)!==false,generationReady:!!workerStore?.get('adapter')?.enabled,profiles:workerStore?.get('profiles',[])??[],batch:workerStore?.batch(),jobs:workerStore?.jobs()??[]};},get MUSE_PAUSED(){return workerStore?.get('muse_paused',true)!==false;},DB:{
     prepare(sql){const statement=db.prepare(sql);return {bind(...params){return {async first(){return statement.get(...params)??null;},async all(){return {results:statement.all(...params)};},async run(){return {meta:{changes:Number(statement.run(...params).changes)}};}};}};},
     async batch(statements) {
       db.exec('BEGIN IMMEDIATE');
@@ -131,7 +137,9 @@ export async function startLocalServer({root, uiDir=join(here,'../local-dist/ui'
   });
   await new Promise((yes,no)=>{app.once('error',no);app.listen(0,'127.0.0.1',yes);});
   host='127.0.0.1:'+app.address().port;origin='http://'+host;
-  return {origin,session,root,reuseWorkerOutput:async(job,assetId)=>{
+  return {origin,session,root,registerPreparedMedia:(result,onStored)=>compression.register(result,onStored),
+    compressionStatus:()=>{const sources=new Map();for(const row of db.prepare("SELECT data FROM lab_records WHERE kind='asset'").all()){const c=JSON.parse(row.data).compression;if(c)sources.set(c.sourceSha256,Math.max(sources.get(c.sourceSha256)??0,c.sourceSize-c.size));}return {enabled:true,maxBytes:6*1024**2,savedBytes:[...sources.values()].reduce((a,b)=>a+b,0)};},
+    reuseWorkerOutput:async(job,assetId)=>{
     if(job.state!=='ready'||!job.output?.path)return false;
     const row=db.prepare("SELECT data FROM lab_records WHERE owner_id='local-owner' AND kind='asset' AND id=?").get(assetId);
     if(!row)return false;const asset=JSON.parse(row.data);

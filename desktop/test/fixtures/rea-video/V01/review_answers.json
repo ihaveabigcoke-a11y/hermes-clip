@@ -1,0 +1,566 @@
+{
+ "by": "claude-fable",
+ "shots": [
+  {
+   "id": "shot_001",
+   "time": "0.00-1.95",
+   "label_probs": {
+    "live_action": 0.6,
+    "ai_video": 0.4
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real garage clutter, consistent gloves, plausible reflections; polished enough that AI is possible"
+   ],
+   "description": "POV from chest height, two blue-iris LED headlight units held in blue-gloved hands, grey BMW and US flag behind, garage",
+   "narrative": {
+    "role": "hook",
+    "point": "Two eyeball headlights held up in gloved hands in front of the car"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV chest-level medium shot, two gloved hands hold two round eyeball LED headlights toward the camera, grey sports car and tool wall with a US flag behind, bright garage light, hands slowly lift the units",
+    "video_prompt": "POV chest-level medium shot, two gloved hands hold two round eyeball LED headlights toward the camera, grey sports car and tool wall with a US flag behind, bright garage light, hands slowly lift the units",
+    "video_prompt_en": "POV chest-level medium shot, two gloved hands hold two round eyeball LED headlights toward the camera, grey sports car and tool wall with a US flag behind, bright garage light, hands slowly lift the units"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_002",
+   "time": "1.95-3.19",
+   "label_probs": {
+    "live_action": 0.6,
+    "ai_video": 0.4
+   },
+   "image_source": "photo",
+   "evidence": [
+    "same garage, consistent car and gloves across cuts, natural hand motion"
+   ],
+   "description": "close-ups: peeling plastic, holding the new headlight unit, fitting it into the bumper, hood open with tool",
+   "narrative": {
+    "role": "proof",
+    "point": "Unbox and install the headlight on the car, gloved hands only"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV close-up, blue-gloved hands peel plastic from a new LED headlight unit, then fit it into the front of a grey car, hood open, garage light",
+    "video_prompt": "POV close-up, blue-gloved hands peel plastic from a new LED headlight unit, then fit it into the front of a grey car, hood open, garage light",
+    "video_prompt_en": "POV close-up, blue-gloved hands peel plastic from a new LED headlight unit, then fit it into the front of a grey car, hood open, garage light"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_003",
+   "time": "3.19-4.37",
+   "label_probs": {
+    "live_action": 0.6,
+    "ai_video": 0.4
+   },
+   "image_source": "photo",
+   "evidence": [
+    "same garage, consistent car and gloves across cuts, natural hand motion"
+   ],
+   "description": "close-ups: peeling plastic, holding the new headlight unit, fitting it into the bumper, hood open with tool",
+   "narrative": {
+    "role": "proof",
+    "point": "Unbox and install the headlight on the car, gloved hands only"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV close-up, blue-gloved hands peel plastic from a new LED headlight unit, then fit it into the front of a grey car, hood open, garage light",
+    "video_prompt": "POV close-up, blue-gloved hands peel plastic from a new LED headlight unit, then fit it into the front of a grey car, hood open, garage light",
+    "video_prompt_en": "POV close-up, blue-gloved hands peel plastic from a new LED headlight unit, then fit it into the front of a grey car, hood open, garage light"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_004",
+   "time": "4.37-6.46",
+   "label_probs": {
+    "live_action": 0.6,
+    "ai_video": 0.4
+   },
+   "image_source": "photo",
+   "evidence": [
+    "same garage, consistent car and gloves across cuts, natural hand motion"
+   ],
+   "description": "close-ups: peeling plastic, holding the new headlight unit, fitting it into the bumper, hood open with tool",
+   "narrative": {
+    "role": "proof",
+    "point": "Unbox and install the headlight on the car, gloved hands only"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV close-up, blue-gloved hands peel plastic from a new LED headlight unit, then fit it into the front of a grey car, hood open, garage light",
+    "video_prompt": "POV close-up, blue-gloved hands peel plastic from a new LED headlight unit, then fit it into the front of a grey car, hood open, garage light",
+    "video_prompt_en": "POV close-up, blue-gloved hands peel plastic from a new LED headlight unit, then fit it into the front of a grey car, hood open, garage light"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_005",
+   "time": "6.46-7.60",
+   "label_probs": {
+    "live_action": 0.6,
+    "ai_video": 0.4
+   },
+   "image_source": "photo",
+   "evidence": [
+    "same garage, consistent car and gloves across cuts, natural hand motion"
+   ],
+   "description": "close-ups: peeling plastic, holding the new headlight unit, fitting it into the bumper, hood open with tool",
+   "narrative": {
+    "role": "proof",
+    "point": "Unbox and install the headlight on the car, gloved hands only"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV close-up, blue-gloved hands peel plastic from a new LED headlight unit, then fit it into the front of a grey car, hood open, garage light",
+    "video_prompt": "POV close-up, blue-gloved hands peel plastic from a new LED headlight unit, then fit it into the front of a grey car, hood open, garage light",
+    "video_prompt_en": "POV close-up, blue-gloved hands peel plastic from a new LED headlight unit, then fit it into the front of a grey car, hood open, garage light"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_006",
+   "time": "7.60-8.73",
+   "label_probs": {
+    "live_action": 0.6,
+    "ai_video": 0.4
+   },
+   "image_source": "photo",
+   "evidence": [
+    "same garage, consistent car and gloves across cuts, natural hand motion"
+   ],
+   "description": "close-ups: peeling plastic, holding the new headlight unit, fitting it into the bumper, hood open with tool",
+   "narrative": {
+    "role": "proof",
+    "point": "Unbox and install the headlight on the car, gloved hands only"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV close-up, blue-gloved hands peel plastic from a new LED headlight unit, then fit it into the front of a grey car, hood open, garage light",
+    "video_prompt": "POV close-up, blue-gloved hands peel plastic from a new LED headlight unit, then fit it into the front of a grey car, hood open, garage light",
+    "video_prompt_en": "POV close-up, blue-gloved hands peel plastic from a new LED headlight unit, then fit it into the front of a grey car, hood open, garage light"
+   }
+  },
+  {
+   "id": "shot_007",
+   "time": "8.73-10.37",
+   "label_probs": {
+    "live_action": 0.15,
+    "ai_video": 0.85
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "glow is too perfect, eye iris rendered, reflections flat; VFX or AI"
+   ],
+   "description": "low front three-quarter shot of a car at night, headlights are blue slit-pupil eyes",
+   "narrative": {
+    "role": "payoff",
+    "point": "Night: BMW with glowing blue cat-eye headlights"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Low front three-quarter shot at night, grey sports car with headlights that glow as blue cat-eye irises, dark street, slow push in",
+    "video_prompt": "Low front three-quarter shot at night, grey sports car with headlights that glow as blue cat-eye irises, dark street, slow push in",
+    "video_prompt_en": "Low front three-quarter shot at night, grey sports car with headlights that glow as blue cat-eye irises, dark street, slow push in"
+   }
+  },
+  {
+   "id": "shot_008",
+   "time": "10.37-12.28",
+   "label_probs": {
+    "live_action": 0.15,
+    "ai_video": 0.85
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "glow is too perfect, eye iris rendered, reflections flat; VFX or AI"
+   ],
+   "description": "low front three-quarter shot of a car at night, headlights are blue slit-pupil eyes",
+   "narrative": {
+    "role": "payoff",
+    "point": "Night: BMW with glowing blue cat-eye headlights"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Low front three-quarter shot at night, grey sports car with headlights that glow as blue cat-eye irises, dark street, slow push in",
+    "video_prompt": "Low front three-quarter shot at night, grey sports car with headlights that glow as blue cat-eye irises, dark street, slow push in",
+    "video_prompt_en": "Low front three-quarter shot at night, grey sports car with headlights that glow as blue cat-eye irises, dark street, slow push in"
+   }
+  },
+  {
+   "id": "shot_009",
+   "time": "12.28-13.60",
+   "label_probs": {
+    "live_action": 0.2,
+    "ai_video": 0.8
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "AI-looking SUV, soft rendering"
+   ],
+   "description": "front shot of a black boxy SUV at dusk, one headlight glows orange slit pupil",
+   "narrative": {
+    "role": "payoff",
+    "point": "Second car: black G-class with one orange eye"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Front shot at dusk, black boxy luxury SUV, one headlight glowing as an orange slit-pupil eye, driveway, static camera",
+    "video_prompt": "Front shot at dusk, black boxy luxury SUV, one headlight glowing as an orange slit-pupil eye, driveway, static camera",
+    "video_prompt_en": "Front shot at dusk, black boxy luxury SUV, one headlight glowing as an orange slit-pupil eye, driveway, static camera"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_010",
+   "time": "13.60-15.12",
+   "label_probs": {
+    "live_action": 0.3,
+    "ai_video": 0.7
+   },
+   "image_source": "ai_image",
+   "evidence": [
+    "pan over a white car at night"
+   ],
+   "description": "white sedan at night, amber ring headlights, slow pan",
+   "narrative": {
+    "role": "cta",
+    "point": "Third car: white sedan, amber ring eyes; label still the dare"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Slow pan across the front of a white sedan at night, amber ring headlights glowing, suburban street",
+    "video_prompt": "Slow pan across the front of a white sedan at night, amber ring headlights glowing, suburban street",
+    "video_prompt_en": "Slow pan across the front of a white sedan at night, amber ring headlights glowing, suburban street"
+   }
+  }
+ ],
+ "aspects": {
+  "camera": {
+   "setups": "",
+   "gear_guess": ""
+  },
+  "lighting": {
+   "lighting_overall": ""
+  },
+  "grade": {
+   "grade_overall": ""
+  },
+  "editing": {
+   "editing": ""
+  },
+  "format": {
+   "format": ""
+  }
+ },
+ "story": {
+  "summary": "Car-guy share-bait: install cat-eye LED headlights on a BMW, then show glowing eyes on three cars at night.",
+  "hook": "'DO NOT show this to a CARGUY' label held for the whole video + two eyeball headlights in gloved hands in the first frame.",
+  "highlights": [
+   "0s: product held in two hands in front of the car it will go on, label is a dare to share",
+   "2–8s: unbox and install ritual with blue gloves, 5 shots of 1–2 s each, proves it is a real buyable part",
+   "8.7–15s: payoff is the glowing eye on three different cars at night, cut every 1.5 s, label never changes",
+   "No voice: music 117 BPM, text carries everything"
+  ]
+ },
+ "cast": {
+  "style": "Clean garage with US flag, blue nitrile gloves, grey BMW; night exterior for payoff",
+  "characters": [
+   {
+    "id": "A",
+    "name": "Installer",
+    "kind": "person",
+    "look": "male hands in blue nitrile gloves, no face",
+    "role": "installs the product",
+    "voice": "",
+    "shots": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6
+    ]
+   }
+  ],
+  "scenes": [
+   {
+    "id": "S1",
+    "where": "home garage with tool wall and US flag",
+    "when": "day",
+    "look": "bright, grey car",
+    "shots": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6
+    ]
+   },
+   {
+    "id": "S2",
+    "where": "street / gas station / driveway",
+    "when": "night",
+    "look": "dark, headlight glow is the only light",
+    "shots": [
+     7,
+     8,
+     9,
+     10
+    ]
+   }
+  ],
+  "props": [
+   {
+    "name": "cat-eye LED headlight pair",
+    "note": "product",
+    "shots": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10
+    ]
+   }
+  ]
+ },
+ "packaging": {
+  "stickers": [
+   {
+    "id": "sticker_01",
+    "is_overlay": null,
+    "what": ""
+   },
+   {
+    "id": "sticker_02",
+    "is_overlay": null,
+    "what": ""
+   },
+   {
+    "id": "sticker_03",
+    "is_overlay": null,
+    "what": ""
+   },
+   {
+    "id": "sticker_04",
+    "is_overlay": null,
+    "what": ""
+   },
+   {
+    "id": "sticker_05",
+    "is_overlay": null,
+    "what": ""
+   }
+  ],
+  "text": [
+   {
+    "id": "text_001",
+    "kind": ""
+   },
+   {
+    "id": "text_002",
+    "kind": ""
+   },
+   {
+    "id": "text_003",
+    "kind": ""
+   },
+   {
+    "id": "text_004",
+    "kind": ""
+   },
+   {
+    "id": "text_005",
+    "kind": ""
+   },
+   {
+    "id": "text_006",
+    "kind": ""
+   },
+   {
+    "id": "text_007",
+    "kind": ""
+   }
+  ],
+  "missed": []
+ }
+}

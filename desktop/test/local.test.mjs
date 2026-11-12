@@ -175,7 +175,9 @@ test('WebP upload reads signature at byte offsets when RIFF size contains UTF-8 
     assert.equal(asset.type,'image/webp');
     assert.equal(asset.metadata.width,16);
     assert.equal(asset.metadata.height,16);
-    assert.equal(asset.sha256,createHash('sha256').update(bytes).digest('hex'));
+    assert.equal(asset.compression.sourceSha256,createHash('sha256').update(bytes).digest('hex'));
+    const compressed=Buffer.from(await (await fetch(server.origin+'/api/assets/'+asset.id,{headers:{Cookie:sessionCookie+'='+server.session}})).arrayBuffer());
+    assert.equal(asset.sha256,createHash('sha256').update(compressed).digest('hex'));assert.ok(compressed.length<bytes.length);
   }finally{await server?.close();await rm(root,{recursive:true,force:true});}
 });
 
@@ -197,11 +199,12 @@ test('local HTTP workspace persists canonical records and media across restart, 
     const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a7V8AAAAASUVORK5CYII=','base64');
     const form=new FormData();form.append('file',new File([png],'test.png',{type:'image/png'}));
     const upload=await request('/api/assets',{method:'POST',form});assert.equal(upload.status,200);const asset=await upload.json();assert.equal(asset.metadata.width,1);
-    const range=await request('/api/assets/'+asset.id,{extra:{Range:'bytes=8-15'}});assert.equal(range.status,206);assert.deepEqual(Buffer.from(await range.arrayBuffer()),png.subarray(8,16));
+    const compressed=Buffer.from(await (await request('/api/assets/'+asset.id)).arrayBuffer());assert.equal(createHash('sha256').update(compressed).digest('hex'),asset.sha256);assert.equal(asset.compression.sourceSha256,createHash('sha256').update(png).digest('hex'));
+    const range=await request('/api/assets/'+asset.id,{extra:{Range:'bytes=8-15'}});assert.equal(range.status,206);assert.deepEqual(Buffer.from(await range.arrayBuffer()),compressed.subarray(8,16));
     const before=(await (await request('/api/lab')).json()).records;assert.equal(before.length,3);
     await server.close();server=await startLocalServer({root,seedPath:join(root,'missing-seed.json')});
     const after=(await (await request('/api/lab')).json()).records;assert.deepEqual(after,before);
-    assert.deepEqual(Buffer.from(await (await request('/api/assets/'+asset.id)).arrayBuffer()),png);
+    assert.deepEqual(Buffer.from(await (await request('/api/assets/'+asset.id)).arrayBuffer()),compressed);
     assert.equal((await request('/api/assistant')).status,200);
     assert.equal((await (await request('/api/assistant')).json()).connected,false);
   } finally {await server?.close();await rm(root,{recursive:true,force:true});}

@@ -1,0 +1,366 @@
+{
+  "text": [
+    {
+      "id": "text_001",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 0.0,
+      "t1": 7.1,
+      "text": "POV: you send this to your/Cycling Buddies..",
+      "bbox": [
+        0.1278,
+        0.107,
+        0.7417,
+        0.118
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#f5f8f7",
+        "stroke_name": "black",
+        "stroke": "#0b0910",
+        "stroke_ratio": 0.023,
+        "multicolor": true,
+        "highlight_name": "yellow",
+        "weight": 0.072
+      },
+      "style_zh": "white text, black outline, keywords highlighted in yellow, line height 6.2% (about 80px)",
+      "anim_in": null,
+      "anim_out": {
+        "kind": "fade_out",
+        "kind_zh": "fade out"
+      },
+      "mid_motion": true,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_002",
+      "kind": "huazi",
+      "kind_zh": "styled text",
+      "t0": 0.5,
+      "t1": 2.6,
+      "text": "Cycling Buddies..",
+      "bbox": [
+        0.1667,
+        0.1523,
+        0.6667,
+        0.0742
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#f5f6f4",
+        "stroke_name": "black",
+        "stroke": "#060811",
+        "stroke_ratio": 0.018,
+        "multicolor": true,
+        "highlight_name": "orange",
+        "weight": 0.061
+      },
+      "style_zh": "white text, black outline, keywords highlighted in orange, line height 7.3% (about 93px)",
+      "anim_in": {
+        "kind": "fade",
+        "kind_zh": "fade in"
+      },
+      "anim_out": null,
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_003",
+      "kind": "huazi",
+      "kind_zh": "styled text",
+      "t0": 2.0,
+      "t1": 2.6,
+      "text": "P",
+      "bbox": [
+        0.9347,
+        0.5078,
+        0.0639,
+        0.0508
+      ],
+      "style": {
+        "fill_name": "yellow",
+        "fill": "#debe6a",
+        "stroke_name": "yellow",
+        "stroke": "#786640",
+        "stroke_ratio": 0.02,
+        "multicolor": true,
+        "highlight_name": "grey",
+        "weight": 0.076
+      },
+      "style_zh": "yellow text, yellow outline, keywords highlighted in grey, line height 3.8% (about 48px)",
+      "anim_in": {
+        "kind": "reveal",
+        "kind_zh": "type-on"
+      },
+      "anim_out": {
+        "kind": "fade_out",
+        "kind_zh": "fade out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_004",
+      "kind": "huazi",
+      "kind_zh": "styled text",
+      "t0": 5.0,
+      "t1": 5.1,
+      "text": "NIGHTRAZE",
+      "bbox": [
+        0.3917,
+        0.4281,
+        0.2542,
+        0.0289
+      ],
+      "style": {
+        "fill_name": "red",
+        "fill": "#b25142",
+        "multicolor": true,
+        "highlight_name": "orange",
+        "weight": 0.103
+      },
+      "style_zh": "red text, keywords highlighted in orange, line height 2.9% (about 37px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_005",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 5.0,
+      "t1": 5.1,
+      "text": "RIDE/STANO",
+      "bbox": [
+        0.5611,
+        0.4773,
+        0.0792,
+        0.0399
+      ],
+      "style": {
+        "fill_name": "orange",
+        "fill": "#c0a494",
+        "multicolor": true,
+        "highlight_name": "brown",
+        "weight": 0.076
+      },
+      "style_zh": "orange text, keywords highlighted in brown, line height 1.9% (about 25px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_006",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 5.0,
+      "t1": 5.1,
+      "text": "BOLDER./OUT",
+      "bbox": [
+        0.5611,
+        0.4859,
+        0.0833,
+        0.0391
+      ],
+      "style": {
+        "fill_name": "orange",
+        "fill": "#dec1b0",
+        "multicolor": true,
+        "highlight_name": "brown",
+        "weight": 0.083
+      },
+      "style_zh": "orange text, keywords highlighted in brown, line height 1.8% (about 23px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_007",
+      "kind": "huazi",
+      "kind_zh": "styled text",
+      "t0": 5.0,
+      "t1": 5.1,
+      "text": "S COLOS OFTIONS",
+      "bbox": [
+        0.4181,
+        0.6188,
+        0.1528,
+        0.0203
+      ],
+      "style": {
+        "fill_name": "orange",
+        "fill": "#c1ac89",
+        "stroke_name": "brown",
+        "stroke": "#5d4b37",
+        "stroke_ratio": 0.056,
+        "weight": 0.105
+      },
+      "style_zh": "orange text, brown outline, line height 2.0% (about 26px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_008",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 7.4,
+      "t1": 13.1,
+      "text": "Comment“bike\" for/the link!!!",
+      "bbox": [
+        0.2319,
+        0.1195,
+        0.5389,
+        0.0961
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#f5f8f7",
+        "stroke_name": "black",
+        "stroke": "#0b0910",
+        "stroke_ratio": 0.023,
+        "weight": 0.092
+      },
+      "style_zh": "white text, black outline, line height 4.8% (about 62px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": null,
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_009",
+      "kind": "huazi",
+      "kind_zh": "styled text",
+      "t0": 10.5,
+      "t1": 13.1,
+      "text": "the link!!!",
+      "bbox": [
+        0.2958,
+        0.1625,
+        0.4028,
+        0.0524
+      ],
+      "style": {
+        "fill_name": "black",
+        "fill": "#302a30",
+        "multicolor": true,
+        "highlight_name": "white",
+        "weight": 0.064
+      },
+      "style_zh": "black text, keywords highlighted in white, line height 4.7% (about 61px)",
+      "anim_in": {
+        "kind": "fade",
+        "kind_zh": "fade in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    }
+  ],
+  "stickers": [],
+  "sfx": [
+    {
+      "t": 1.19,
+      "type": "pop",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": null
+    },
+    {
+      "t": 4.3,
+      "type": "ding",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": null
+    },
+    {
+      "t": 6.12,
+      "type": "ding",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": {
+        "type": "cut",
+        "what": "cut",
+        "dt": 0.147,
+        "ref": null
+      }
+    },
+    {
+      "t": 7.39,
+      "type": "click",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": {
+        "type": "subtitle_in",
+        "what": "subtitle \"Comment“bike\" fo\" appears",
+        "dt": 0.01,
+        "ref": "text_008"
+      }
+    }
+  ]
+}

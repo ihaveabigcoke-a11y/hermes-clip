@@ -24,7 +24,7 @@ test('Studio distinguishes loading, IPC failure, setup and unavailable profiles'
   assert.doesNotMatch(museConnectionSummary({...status, profiles: [{...profile, quota: null}]}, true).description, /76|undefined|NaN/);
 });
 
-test('Studio excludes legacy zero quota, unknown quota and profiles at their batch limit', () => {
+test('Studio respects real Muse quota but ignores legacy local usage caps', () => {
   for (const additionalTokens of [null, undefined]) {
     const quota = {state: 'available', weeklyRemainingPercent: 0, additionalTokens};
     assert.equal(museConnectionSummary({...status, profiles: [{...profile, quota}]}, true).state, 'attention');
@@ -35,6 +35,6 @@ test('Studio excludes legacy zero quota, unknown quota and profiles at their bat
   assert.equal(museConnectionSummary({...status, profiles: [{...profile, quota: emptyQuota}]}, true).state, 'attention');
   assert.equal(museConnectionSummary({...status, profiles: [{...profile, quota: null}]}, true).state, 'attention');
   const batch = {id: 'batch', startedAt: 1, perProfileLimit: 3, submittedByProfile: {one: 3}};
-  assert.equal(museConnectionSummary({...status, batch, profiles: [{...profile, id: 'one'}]}, true).state, 'attention');
+  assert.equal(museConnectionSummary({...status, batch, profiles: [{...profile, id: 'one'}]}, true).state, 'ready');
   assert.equal(museConnectionSummary({...status, batch, profiles: [{...profile, id: 'two'}]}, true).state, 'ready');
 });

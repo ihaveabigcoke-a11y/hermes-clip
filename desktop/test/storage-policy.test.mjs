@@ -1,3 +1,4 @@
+import {readArchive} from '../src/compress.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtemp,rm,readFile,writeFile,stat,readdir,utimes,mkdir} from 'node:fs/promises';
@@ -46,17 +47,17 @@ test('low disk pauses queued dispatch without altering submitted receipts',()=>f
 }));
 test('log rotation bounds regenerable logs and preserves latest files',()=>fixture(async root=>{
  const path=join(root,'maintenance.log');for(let i=0;i<5;i++){await writeFile(path,String(i).repeat(30));await rotateLog(path,{maxBytes:20,keep:2});}
- assert.deepEqual((await readdir(root)).sort(),['maintenance.log.1','maintenance.log.2']);assert.equal(await readFile(path+'.1','utf8'),'4'.repeat(30));
+ assert.deepEqual((await readdir(root)).sort(),['maintenance.log.1.gz','maintenance.log.2.gz']);assert.equal(await readArchive(path+'.1'),'4'.repeat(30));
 }));
 test('real local upload retries keep one record and independent jobs share bytes across restart',()=>fixture(async root=>{
  const bytes=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a7V8AAAAASUVORK5CYII=','base64');
  let local=await startLocalServer({root,seedPath:join(root,'none.json')});
  try{
  const upload=async command=>{const f=new FormData();f.set('file',new File([bytes],'test.png',{type:'image/png'}));if(command)f.set('commandId',command);const r=await fetch(local.origin+'/api/assets',{method:'POST',headers:{Cookie:sessionCookie+'='+local.session,Origin:local.origin},body:f});const data=await r.json();assert.equal(r.status,200,JSON.stringify(data));return data;};
- const [a,b]=await Promise.all([upload(),upload()]);assert.equal(a.id,b.id);
+ const [a,b]=await Promise.all([upload(),upload()]);assert.equal(a.id,b.id);assert.equal(a.compression.sourceSha256,digest(bytes));assert.ok(a.size<bytes.length);
  const c=await upload('different_job');assert.notEqual(c.id,a.id);
  const files=await readdir(join(root,'media/local-owner'));assert.equal(files.length,2);const info=await Promise.all(files.map(f=>stat(join(root,'media/local-owner',f))));assert.equal(info[0].ino,info[1].ino);
  await local.close();local=await startLocalServer({root,seedPath:join(root,'none.json')});assert.equal((await upload()).id,a.id);
- const original=await fetch(local.origin+'/api/assets/'+a.id,{headers:{Cookie:sessionCookie+'='+local.session}});assert.equal(digest(Buffer.from(await original.arrayBuffer())),digest(bytes));
+ const original=await fetch(local.origin+'/api/assets/'+a.id,{headers:{Cookie:sessionCookie+'='+local.session}});assert.equal(digest(Buffer.from(await original.arrayBuffer())),a.sha256);
  }finally{await local.close();}
 }));

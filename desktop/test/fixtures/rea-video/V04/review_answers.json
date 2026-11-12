@@ -1,0 +1,324 @@
+{
+ "by": "claude-fable",
+ "shots": [
+  {
+   "id": "shot_001",
+   "time": "0.00-5.00",
+   "label_probs": {
+    "live_action": 0.55,
+    "ai_video": 0.45
+   },
+   "image_source": "photo",
+   "evidence": [
+    "composition is too neat (flags, patrol car, stop sign); could be staged real or AI"
+   ],
+   "description": "gas station, female officer points at rider's waist belt, small child in pink helmet",
+   "narrative": {
+    "role": "hook",
+    "point": "Officer points at the belt on the rider, kid beside him"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Medium shot at a gas station, a female police officer points at the grab belt around a motorcyclist's waist, a small child in a pink helmet stands beside him, patrol car behind",
+    "video_prompt": "Medium shot at a gas station, a female police officer points at the grab belt around a motorcyclist's waist, a small child in a pink helmet stands beside him, patrol car behind",
+    "video_prompt_en": "Medium shot at a gas station, a female police officer points at the grab belt around a motorcyclist's waist, a small child in a pink helmet stands beside him, patrol car behind"
+   },
+   "aspects": {
+    "framing": {
+     "shot_size": "",
+     "camera_angle": "",
+     "composition": ""
+    },
+    "camera": {
+     "camera_support": "",
+     "lens": "",
+     "speed": ""
+    },
+    "lighting": {
+     "location": "",
+     "key_light": "",
+     "light_quality": "",
+     "fill_light": "",
+     "rim_light": "",
+     "catchlight": "",
+     "practicals": "",
+     "color_temp": "",
+     "lighting_setup": ""
+    },
+    "grade": {
+     "color_grade": ""
+    }
+   }
+  },
+  {
+   "id": "shot_002",
+   "time": "5.00-6.47",
+   "label_probs": {
+    "live_action": 0.7,
+    "ai_video": 0.3
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real bike details, lens flare, natural road"
+   ],
+   "description": "child seated behind rider gripping belt handles; POV over the tank; side tracking shot",
+   "narrative": {
+    "role": "proof",
+    "point": "Child on the pillion holding the belt handles; POV rider hands"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV from the rider's chest, gloved hands on the grips, a child's hands grip the belt handles at the rider's waist, coastal road at golden hour",
+    "video_prompt": "POV from the rider's chest, gloved hands on the grips, a child's hands grip the belt handles at the rider's waist, coastal road at golden hour",
+    "video_prompt_en": "POV from the rider's chest, gloved hands on the grips, a child's hands grip the belt handles at the rider's waist, coastal road at golden hour"
+   }
+  },
+  {
+   "id": "shot_003",
+   "time": "6.47-7.80",
+   "label_probs": {
+    "live_action": 0.7,
+    "ai_video": 0.3
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real bike details, lens flare, natural road"
+   ],
+   "description": "child seated behind rider gripping belt handles; POV over the tank; side tracking shot",
+   "narrative": {
+    "role": "proof",
+    "point": "Child on the pillion holding the belt handles; POV rider hands"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV from the rider's chest, gloved hands on the grips, a child's hands grip the belt handles at the rider's waist, coastal road at golden hour",
+    "video_prompt": "POV from the rider's chest, gloved hands on the grips, a child's hands grip the belt handles at the rider's waist, coastal road at golden hour",
+    "video_prompt_en": "POV from the rider's chest, gloved hands on the grips, a child's hands grip the belt handles at the rider's waist, coastal road at golden hour"
+   }
+  },
+  {
+   "id": "shot_004",
+   "time": "7.80-9.20",
+   "label_probs": {
+    "live_action": 0.7,
+    "ai_video": 0.3
+   },
+   "image_source": "photo",
+   "evidence": [
+    "real bike details, lens flare, natural road"
+   ],
+   "description": "child seated behind rider gripping belt handles; POV over the tank; side tracking shot",
+   "narrative": {
+    "role": "proof",
+    "point": "Child on the pillion holding the belt handles; POV rider hands"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "POV from the rider's chest, gloved hands on the grips, a child's hands grip the belt handles at the rider's waist, coastal road at golden hour",
+    "video_prompt": "POV from the rider's chest, gloved hands on the grips, a child's hands grip the belt handles at the rider's waist, coastal road at golden hour",
+    "video_prompt_en": "POV from the rider's chest, gloved hands on the grips, a child's hands grip the belt handles at the rider's waist, coastal road at golden hour"
+   }
+  },
+  {
+   "id": "shot_005",
+   "time": "9.20-10.40",
+   "label_probs": {
+    "live_action": 0.7,
+    "ai_video": 0.3
+   },
+   "image_source": "photo",
+   "evidence": [
+    "backlit silhouette, natural flare"
+   ],
+   "description": "wide side shot, father and child on a motorcycle against the sunset",
+   "narrative": {
+    "role": "payoff",
+    "point": "Silhouette ride at sunset"
+   },
+   "embedded_assets": [],
+   "ai_edits": [],
+   "same_clip_as": null,
+   "replication": {
+    "image_prompt": "Wide side shot, a motorcycle with an adult and a child passenger rides along a coastal road silhouetted against the sunset",
+    "video_prompt": "Wide side shot, a motorcycle with an adult and a child passenger rides along a coastal road silhouetted against the sunset",
+    "video_prompt_en": "Wide side shot, a motorcycle with an adult and a child passenger rides along a coastal road silhouetted against the sunset"
+   }
+  }
+ ],
+ "aspects": {
+  "camera": {
+   "setups": "",
+   "gear_guess": ""
+  },
+  "lighting": {
+   "lighting_overall": ""
+  },
+  "grade": {
+   "grade_overall": ""
+  },
+  "editing": {
+   "editing": ""
+  },
+  "format": {
+   "format": ""
+  }
+ },
+ "story": {
+  "summary": "Motorcycle passenger grab-belt: a cop checks the belt on a rider with a child, then father and kid ride off at sunset.",
+  "hook": "Police officer pointing at the belt around the rider's waist, a small child in a pink helmet beside him — authority plus a kid.",
+  "highlights": [
+   "0–5s: 'authority check' hook, no label text; the cop's pointing is the hook",
+   "5–8s: child holds the belt handles from the pillion, POV of the rider's hands on the grips",
+   "8–10s: wide sunset ride, only 10 s total",
+   "No on-screen CTA at all; 'Comment SAFETY' lives in the caption"
+  ]
+ },
+ "cast": {
+  "style": "Mostly live footage, gas station and coastal road, golden hour",
+  "characters": [
+   {
+    "id": "A",
+    "name": "Rider",
+    "kind": "person",
+    "look": "man, black helmet, brown jacket then black Alpinestars jacket",
+    "role": "wears the belt",
+    "voice": "",
+    "shots": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ]
+   },
+   {
+    "id": "B",
+    "name": "Child",
+    "kind": "person",
+    "look": "small kid, pink helmet",
+    "role": "passenger",
+    "voice": "",
+    "shots": [
+     1,
+     2,
+     4,
+     5
+    ]
+   },
+   {
+    "id": "C",
+    "name": "Officer",
+    "kind": "person",
+    "look": "female police officer",
+    "role": "checks the belt",
+    "voice": "",
+    "shots": [
+     1
+    ]
+   }
+  ],
+  "scenes": [
+   {
+    "id": "S1",
+    "where": "gas station with police car",
+    "when": "day",
+    "look": "flags, overcast",
+    "shots": [
+     1
+    ]
+   },
+   {
+    "id": "S2",
+    "where": "coastal road",
+    "when": "sunset",
+    "look": "golden",
+    "shots": [
+     2,
+     3,
+     4,
+     5
+    ]
+   }
+  ],
+  "props": [
+   {
+    "name": "passenger grab belt with handles",
+    "note": "product",
+    "shots": [
+     1,
+     2,
+     3,
+     4
+    ]
+   }
+  ]
+ },
+ "packaging": {
+  "stickers": [
+   {
+    "id": "sticker_01",
+    "is_overlay": null,
+    "what": ""
+   }
+  ],
+  "text": [
+   {
+    "id": "text_001",
+    "kind": ""
+   },
+   {
+    "id": "text_003",
+    "kind": ""
+   },
+   {
+    "id": "text_004",
+    "kind": ""
+   },
+   {
+    "id": "text_005",
+    "kind": ""
+   },
+   {
+    "id": "text_006",
+    "kind": ""
+   },
+   {
+    "id": "text_007",
+    "kind": ""
+   },
+   {
+    "id": "text_008",
+    "kind": ""
+   },
+   {
+    "id": "text_009",
+    "kind": ""
+   },
+   {
+    "id": "text_010",
+    "kind": ""
+   },
+   {
+    "id": "text_011",
+    "kind": ""
+   },
+   {
+    "id": "text_012",
+    "kind": ""
+   },
+   {
+    "id": "text_013",
+    "kind": ""
+   }
+  ],
+  "missed": []
+ }
+}

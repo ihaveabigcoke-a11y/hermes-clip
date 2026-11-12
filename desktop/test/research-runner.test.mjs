@@ -55,8 +55,9 @@ test('resume at exhausted step replays completed receipts locally without a new 
  assert.deepEqual(counts(),{sends:1,recovers:0});
 }));
 test('profile quota is not reset by research and malformed output is retained for inspection',()=>fixture(async({runner,store,chat,counts})=>{
- store.set('generation_batch',{id:'batch',submittedByProfile:{profile:3}});assert.throws(()=>runner.start({requestId:'limited'}),/còn lượt/);assert.equal(store.batch().id,'batch');
- store.set('generation_batch',{id:'batch',submittedByProfile:{profile:0}});
+ store.set('generation_batch',{id:'batch',perProfileLimit:3,submittedByProfile:{profile:3}});
+ runner.start({requestId:'unlimited'});await runner.running.promise;
+ assert.equal(runner.rows()[0].state,'done');assert.equal(counts().sends,1);assert.equal(store.batch().id,'batch');assert.equal(store.batch().submittedByProfile.profile,3);
  chat.send=async payload=>({...payload,state:'done',response:'invalid JSON'});
  runner.start({requestId:'invalid'});await runner.running.promise;assert.equal(runner.rows()[0].state,'needs_attention');assert.match(runner.rows()[0].error,/cấu trúc/);
 }));
@@ -82,7 +83,7 @@ test('research sends the formula brief, stops at three turns and stores decision
   assert.equal(context.remainingSlots,10-index);
   assert.match(context.priority,/visual payoff/);assert.match(context.priority,/Problem → Vs → Result → CTA/);
   assert.match(context.priority,/≤ 20 USD/);assert.match(context.priority,/listing riêng/);
-  assert.match(context.priority,/Tối đa 3 lượt/);assert.match(context.priority,/chọn tối đa 3/);
+  assert.doesNotMatch(context.priority,/Tối đa 3 lượt/);assert.match(context.priority,/chọn tối đa 3/);
   assert.equal(payload.parentId,index?submitted[index-1].requestId:null);
  }
  const batch=(await runner.records()).find(r=>r.id==='research_formula').data;

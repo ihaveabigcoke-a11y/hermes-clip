@@ -1,0 +1,390 @@
+{
+  "text": [
+    {
+      "id": "text_002",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 4.0,
+      "t1": 7.6,
+      "text": "Vs..",
+      "bbox": [
+        0.4111,
+        0.1859,
+        0.1722,
+        0.0656
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#f7f5f8",
+        "stroke_name": "black",
+        "stroke": "#0f0609",
+        "stroke_ratio": 0.026,
+        "weight": 0.071
+      },
+      "style_zh": "white text, black outline, line height 6.0% (about 77px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "slide_out",
+        "kind_zh": "slide out"
+      },
+      "mid_motion": true,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_003",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 4.0,
+      "t1": 5.0,
+      "text": "Bo Saon. Nido Soln.",
+      "bbox": [
+        0.4111,
+        0.7445,
+        0.1639,
+        0.0156
+      ],
+      "style": {
+        "fill_name": "grey",
+        "fill": "#3d373d",
+        "box": true,
+        "box_name": "black",
+        "box_color": "#130a10",
+        "multicolor": true,
+        "highlight_name": "grey",
+        "weight": 0.107
+      },
+      "style_zh": "grey text, black box, keywords highlighted in grey, line height 1.4% (about 18px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_004",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 7.8,
+      "t1": 10.9,
+      "text": "The Result..",
+      "bbox": [
+        0.2347,
+        0.1562,
+        0.4389,
+        0.0516
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#f7f5f8",
+        "stroke_name": "black",
+        "stroke": "#05050d",
+        "stroke_ratio": 0.036,
+        "weight": 0.087
+      },
+      "style_zh": "white text, black outline, line height 4.9% (about 62px)",
+      "anim_in": null,
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_005",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 11.0,
+      "t1": 13.6,
+      "text": "Comment \"LED\" if you/want one",
+      "bbox": [
+        0.1319,
+        0.1219,
+        0.7222,
+        0.0929
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#f5f7fb",
+        "stroke_name": "black",
+        "stroke": "#06050f",
+        "stroke_ratio": 0.033,
+        "weight": 0.079
+      },
+      "style_zh": "white text, black outline, line height 5.2% (about 67px)",
+      "anim_in": {
+        "kind": "reveal",
+        "kind_zh": "type-on"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_006",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 10.9,
+      "t1": 12.6,
+      "text": "want one",
+      "bbox": [
+        0.2736,
+        0.1688,
+        0.3167,
+        0.0406
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#f7f5f8",
+        "weight": 0.089
+      },
+      "style_zh": "white text, line height 4.1% (about 52px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": null,
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_007",
+      "kind": "label",
+      "kind_zh": "text label",
+      "t0": 12.5,
+      "t1": 12.6,
+      "text": "LED",
+      "bbox": [
+        0.4639,
+        0.3477,
+        0.0236,
+        0.0094
+      ],
+      "style": {
+        "fill_name": "grey",
+        "fill": "#3d3d4c"
+      },
+      "style_zh": "grey text, line height 0.9% (about 12px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "cut_out",
+        "kind_zh": "hard out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    },
+    {
+      "id": "text_008",
+      "kind": "subtitle",
+      "kind_zh": "subtitle",
+      "t0": 13.5,
+      "t1": 16.2,
+      "text": "Comment \"LED\" if you/want one",
+      "bbox": [
+        0.1333,
+        0.1219,
+        0.7236,
+        0.0961
+      ],
+      "style": {
+        "fill_name": "white",
+        "fill": "#f7f5f8",
+        "weight": 0.076
+      },
+      "style_zh": "white text, line height 5.1% (about 65px)",
+      "anim_in": {
+        "kind": "cut",
+        "kind_zh": "hard in"
+      },
+      "anim_out": {
+        "kind": "slide_out",
+        "kind_zh": "slide out"
+      },
+      "mid_motion": null,
+      "follows": null,
+      "part_of_picture": false,
+      "anchor": null,
+      "persistent": null
+    }
+  ],
+  "stickers": [
+    {
+      "kind": "animated_sticker",
+      "kind_zh": "animated sticker / GIF",
+      "t0": 2.6,
+      "t1": 4.9,
+      "bbox": [
+        0.3,
+        0.629,
+        0.2,
+        0.057
+      ],
+      "animated": true,
+      "loop_period_s": null,
+      "looping": false,
+      "activity": 8.1,
+      "appears_mid_shot": false,
+      "disappears_mid_shot": false,
+      "crosses_cut": true,
+      "confidence": "medium",
+      "id": "sticker_01",
+      "image": "packaging/sticker_01.jpg",
+      "persistent": {
+        "cuts": 1
+      }
+    },
+    {
+      "kind": "animated_sticker",
+      "kind_zh": "animated sticker / GIF",
+      "t0": 6.5,
+      "t1": 9.4,
+      "bbox": [
+        0.7,
+        0.629,
+        0.2,
+        0.114
+      ],
+      "animated": true,
+      "loop_period_s": null,
+      "looping": false,
+      "activity": 16.2,
+      "appears_mid_shot": false,
+      "disappears_mid_shot": false,
+      "crosses_cut": true,
+      "confidence": "medium",
+      "id": "sticker_02",
+      "image": "packaging/sticker_02.jpg",
+      "anchor": {
+        "line": "text_002",
+        "text": "Vs..",
+        "rel": "during",
+        "dt": 2.5,
+        "word": null
+      },
+      "persistent": {
+        "cuts": 1
+      }
+    },
+    {
+      "kind": "animated_sticker",
+      "kind_zh": "animated sticker / GIF",
+      "t0": 6.5,
+      "t1": 9.4,
+      "bbox": [
+        0.5,
+        0.714,
+        0.15,
+        0.086
+      ],
+      "animated": true,
+      "loop_period_s": null,
+      "looping": false,
+      "activity": 12.4,
+      "appears_mid_shot": false,
+      "disappears_mid_shot": false,
+      "crosses_cut": true,
+      "confidence": "medium",
+      "id": "sticker_03",
+      "image": "packaging/sticker_03.jpg",
+      "anchor": {
+        "line": "text_002",
+        "text": "Vs..",
+        "rel": "during",
+        "dt": 2.5,
+        "word": null
+      },
+      "persistent": {
+        "cuts": 1
+      }
+    }
+  ],
+  "sfx": [
+    {
+      "t": 6.68,
+      "type": "click",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": {
+        "type": "sticker_in",
+        "what": "animated sticker / GIF appears",
+        "dt": -0.18,
+        "ref": "sticker_02"
+      }
+    },
+    {
+      "t": 7.43,
+      "type": "click",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": null
+    },
+    {
+      "t": 7.79,
+      "type": "other",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": {
+        "type": "subtitle_in",
+        "what": "subtitle \"The Result..\" appears",
+        "dt": 0.01,
+        "ref": "text_004"
+      }
+    },
+    {
+      "t": 11.39,
+      "type": "click",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": null
+    },
+    {
+      "t": 14.89,
+      "type": "click",
+      "description": null,
+      "source": "effects_stem",
+      "confidence": "medium",
+      "on": {
+        "type": "cut",
+        "what": "cut",
+        "dt": 0.143,
+        "ref": null
+      }
+    }
+  ]
+}
