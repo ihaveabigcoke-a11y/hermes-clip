@@ -43,6 +43,14 @@ Write only to the review folder the user names (default `E:\Hermes Night\review\
    - every claim in Codex's report (tests added, files changed) actually appears in the diff.
 6. **FAILED tasks.** `git -C <clone> stash show -p stash@{n}`. Say whether the partial work is worth salvaging and whether a task spec exists for it.
 
+## Office mode (T-xxx tasks edited directly in the main app)
+
+Since 12/11/2026 the office boss gives Codex T-xxx tasks (specs in the office repo's `tasks/T-xxx-*.md`) that edit the **main app folder directly**, with a tag `before-T-xxx` set before each task. Review the same way, with these substitutions:
+- Range: `git log --oneline before-T-xxx..HEAD` and `git diff before-T-xxx..HEAD` in the main app folder.
+- Spec: `tasks/T-xxx-*.md` in the office repo; the report is the last commit message or `ops/office/reports/T-xxx.md` if present.
+- Write the verdict into the office repo's `STATUS.md` (and `REVIEW-T-xxx.md` next to it), not `E:\Hermes Night\review`.
+- Do not run the read-only HEAD/stash check against a runner here: nothing else edits the folder during review. Do check that `data/`, `evidence/` and the user's AppData were not touched.
+
 ## REVIEW.md
 
 1. Table: Task | Kết luận (Đạt / Cần sửa / Bỏ / Chưa làm) | Lý do (file + đoạn) | Việc cần sửa.
