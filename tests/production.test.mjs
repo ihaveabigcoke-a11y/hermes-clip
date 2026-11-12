@@ -29,7 +29,9 @@ test('T-012: legacy, trim/hash gates, planned timing and shared body for three h
 test('T-012: MP4 status requires verified render, asset and hash',()=>{
  const p=renderFixture().production,id=p.variants[0].id;
  for(const e of [{kind:'package',assetId:null},{kind:'render',assetId:'x'},{kind:'render',assetId:'x',verified:true}]){p.exports=[{id:'e',variantId:id,filename:'x.mp4',createdAt:1,...e}];assert.notEqual(variantExportStatus(p,id).label,'Đã xuất MP4');}
- p.exports=[{id:'e',variantId:id,filename:'x.mp4',createdAt:1,kind:'render',assetId:'x',verified:true,sha256:'a'.repeat(64)}];assert.equal(variantExportStatus(p,id).label,'Đã xuất MP4');
+ p.exports=[{id:'e',variantId:id,filename:'x.mp4',createdAt:1,kind:'render',assetId:'x',verified:true,sha256:'a'.repeat(64)}];assert.notEqual(variantExportStatus(p,id).label,'Đã xuất MP4');
+ p.exports[0].renderPlan=structuredClone(p.renderPlans[0]);assert.equal(variantExportStatus(p,id).label,'Đã xuất MP4');
+ p.renderPlans[0].segments[0].inSec+=.1;assert.notEqual(variantExportStatus(p,id).label,'Đã xuất MP4');assert.equal(p.exports.length,1,'old render preserved');
 });
 
 test('T-007: v2 persists shot metadata, separate generation groups, caption placement, snapshots and export manifest',()=>{

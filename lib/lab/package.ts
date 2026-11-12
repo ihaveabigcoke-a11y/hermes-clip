@@ -5,7 +5,7 @@ import { sampleCheckState } from "./sample-check.ts";
 /** Non-throwing preflight for export views; the actual export keeps its strict domain gate. */
 export function variantExportStatus(p:Production,variantId:string) {
   if(pendingTakeSelection(p)?.variantIds.includes(variantId))return {state:'waiting_take' as const,label:'Chờ chọn take',reason:'Duyệt kịch bản/video rồi chọn đủ phiên bản cho biến thể trước khi ghép.'};
-  try {variantItems(p,variantId);const rendered=p.exports.some(e=>e.variantId===variantId&&e.kind==='render'&&e.assetId&&e.sha256&&e.verified===true);return {state:'ready' as const,label:rendered?'Đã xuất MP4':'Đủ để xuất prompt',reason:''};}
+  try {variantItems(p,variantId);const plan=p.renderPlans?.find(plan=>plan.variantId===variantId);const rendered=p.exports.some(e=>e.variantId===variantId&&e.kind==='render'&&e.assetId&&e.sha256&&e.verified===true&&(!plan||JSON.stringify(e.renderPlan)===JSON.stringify(plan)));return {state:'ready' as const,label:rendered?'Đã xuất MP4':'Đủ để xuất prompt',reason:''};}
   catch(error){return {state:'blocked' as const,label:'Cần duyệt lại',reason:(error as Error).message};}
 }
 
