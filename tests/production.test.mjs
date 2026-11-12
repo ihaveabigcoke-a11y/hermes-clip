@@ -291,3 +291,14 @@ test('concept duration follows complete script timing and stays unknown for unti
   assert.equal(creativeDuration('0-1.5s: Hook\n1.5-3s: CTA'),3);
   for(const script of ['', 'A product idea', '0–3s: Hook\nUntimed CTA', '0–3s: Hook\n5–8s: Gap', '0–3s: Hook\n2–5s: Overlap', '3–0s: Reversed'])assert.equal(creativeDuration(script),null);
 });
+
+test('T-002c G: skip_reconciliation only moves the scene mark forward and keeps attempts, takes and older records valid',()=>{
+  const p=formulaProduction({approved:true,pinned:true}),sceneId=p.scenes[0].id;
+  assert.equal(productionSchema.parse(p).scenes[0].museReconciledAt,undefined);
+  const first=applyProduction(p,'skip_reconciliation',{sceneId},'skip_a',5000);
+  assert.equal(first.scenes[0].museReconciledAt,5000);
+  assert.deepEqual(first.scenes[0].attempts,p.scenes[0].attempts);assert.deepEqual(first.scenes[0].takes,p.scenes[0].takes);
+  assert.equal(applyProduction(first,'skip_reconciliation',{sceneId},'skip_b',4000).scenes[0].museReconciledAt,5000);
+  assert.equal(productionSchema.parse(first).scenes[0].museReconciledAt,5000);
+  assert.throws(()=>applyProduction(p,'skip_reconciliation',{sceneId:'missing_scene'},'skip_c',5000));
+});

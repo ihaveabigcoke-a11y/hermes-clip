@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {resolveProvider, textProviderReceipts} from '../src/provider-routing.mjs';
+import {resolveProvider, textProviderReceipts, mediaProviderReceipts} from '../src/provider-routing.mjs';
 import {museConnectionSummary} from '../../lib/lab/muse-connection.ts';
 const profile={id:'one',enabled:true,health:'ready',session:'signed_in',quota:{state:'available',weeklyRemainingPercent:50,additionalTokens:0}};
 const status={musePaused:false,generationReady:true,profiles:[profile],batch:{submittedByProfile:{one:0}}};
@@ -63,4 +63,21 @@ test('T-002b A: text receipts share exact scope filtering and preserve provider/
   assert.equal(resolveProvider({kind:'research',previous:textProviderReceipts({kind:'research',scope:'X',runs,chats})}).reason,'Cần đối soát');
   assert.deepEqual(textProviderReceipts({kind:'research',runs,chats}),[]);
   assert.deepEqual(textProviderReceipts({kind:'content',scope:'Y',runs,chats}),[]);
+});
+
+test('T-002c G: scene reconciliation mark settles only Muse receipts created at or before it',()=>{
+  const job=(sceneId,state,createdAt)=>({request:{projectId:'P',sceneId},state,createdAt});
+  const scene={id:'S',attempts:[{status:'unknown',createdAt:100},{status:'local_complete',createdAt:50}]};
+  // Same shape as the real data: needs_attention, projectId + sceneId, no providerId.
+  const jobs=[job('S','needs_attention',100),job('OTHER','needs_attention',100)];
+  const before=mediaProviderReceipts({jobs,scene,projectId:'P'});
+  assert.equal(before.length,2);assert.ok(before.every(row=>row.provider==='muse'&&!row.reconciled));
+  assert.equal(resolveProvider({kind:'media',selection:'manual',previous:before}).reason,'Cần đối soát');
+  const skipped={...scene,museReconciledAt:150};
+  assert.equal(resolveProvider({kind:'media',selection:'manual',previous:mediaProviderReceipts({jobs,scene:skipped,projectId:'P'})}).blocked,false);
+  // (a) receipts after the mark, or without a timestamp, still block.
+  for(const late of [job('S','needs_attention',151),{request:{projectId:'P',sceneId:'S'},state:'unknown'}])
+    assert.equal(resolveProvider({kind:'media',selection:'manual',previous:mediaProviderReceipts({jobs:[...jobs,late],scene:skipped,projectId:'P'})}).reason,'Cần đối soát');
+  assert.equal(resolveProvider({kind:'media',selection:'manual',previous:mediaProviderReceipts({jobs,scene:{...skipped,attempts:[{status:'unknown',createdAt:151}]},projectId:'P'})}).reason,'Cần đối soát');
+  assert.deepEqual(mediaProviderReceipts({jobs,scene:null,projectId:'P'}),[]);
 });

@@ -9,6 +9,21 @@ export function textProviderReceipts({kind, scope, runs = [], chats = []}) {
   return [...scopedRuns, ...scopedChats].map(row => ({provider:row.provider ?? 'muse', state:row.state, reconciled:row.reconciled === true}));
 }
 
+// Muse receipts for one media scene. "Skip reconciliation" stores scene.museReconciledAt;
+// jobs and unknown attempts created at or before that mark no longer block manual.
+// Anything created later (or without a timestamp) still blocks.
+export function mediaProviderReceipts({jobs = [], scene, projectId}) {
+  if (!scene) return [];
+  const mark = Number.isFinite(scene.museReconciledAt) ? scene.museReconciledAt : null;
+  const settled = createdAt => mark !== null && Number.isFinite(createdAt) && createdAt <= mark;
+  return [
+    ...jobs.filter(job => job?.request?.projectId === projectId && job.request.sceneId === scene.id)
+      .map(job => ({provider:job.provider ?? 'muse', state:job.state, reconciled:job.reconciled === true || settled(job.createdAt)})),
+    ...(scene.attempts ?? []).filter(attempt => attempt.status === 'unknown')
+      .map(attempt => ({provider:'muse', state:'unknown', reconciled:settled(attempt.createdAt)})),
+  ];
+}
+
 export function resolveProvider({kind, status, available = true, error = '', codexEnabled = false, selection, previous = []}) {
   const readyProfiles = available && !error && status?.musePaused === false && status.generationReady
     ? status.profiles.filter(profile => profile.enabled && profile.health === 'ready' && profile.session === 'signed_in'

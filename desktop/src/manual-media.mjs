@@ -1,4 +1,4 @@
-import {resolveProvider} from './provider-routing.mjs';
+import {resolveProvider,mediaProviderReceipts} from './provider-routing.mjs';
 import {museIsPaused} from './muse-pause.mjs';
 import {createHash, randomUUID} from 'node:crypto';
 import {mkdir, readdir, readFile, writeFile, rename, stat, lstat, copyFile, unlink} from 'node:fs/promises';
@@ -66,9 +66,7 @@ export class ManualMedia {
     return resolveProvider({kind:'media', selection:scene.mediaProvider??project.mediaProvider,
       status:{musePaused:museIsPaused(this.store),generationReady:!!this.store.get('adapter')?.enabled,
         profiles:this.store.get('profiles',[]),batch:this.store.batch()},
-      previous:[...this.store.jobs().filter(job=>job.request.projectId===projectId&&job.request.sceneId===scene.id)
-        .map(job=>({provider:job.provider??'muse',state:job.state})),
-        ...scene.attempts.filter(attempt=>attempt.status==='unknown').map(()=>({provider:'muse',state:'unknown'}))]});
+      previous:mediaProviderReceipts({jobs:this.store.jobs(),scene,projectId})});
   }
   async assertMuseScene(request, {admitted=false}={}) {
     const row=this.catalog(await this.records()).find(row=>row.project.id===request.projectId&&row.scene.id===request.sceneId&&!row.archived);

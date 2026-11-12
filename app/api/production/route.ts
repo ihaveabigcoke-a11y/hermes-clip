@@ -1,4 +1,4 @@
-import {resolveProvider} from '@/desktop/src/provider-routing.mjs';
+import {resolveProvider, mediaProviderReceipts} from '@/desktop/src/provider-routing.mjs';
 import { z } from "zod";
 import { env } from "cloudflare:workers";
 import { owner, body, getRecord, save, getSettings, ApiError, failure } from "@/lib/lab/server";
@@ -18,9 +18,16 @@ export async function POST(request: Request) {
     if(envelope.action==='manual_result'&&old){
       const scene=old.data.scenes.find((row:any)=>row.id===envelope.input.sceneId),status=(env as any).MUSE_STATUS;
       if(scene){const routing=resolveProvider({kind:'media',status,selection:scene.mediaProvider??old.data.mediaProvider,
-        previous:[...(status?.jobs??[]).filter((job:any)=>job.request.projectId===old.id&&job.request.sceneId===scene.id).map((job:any)=>({provider:job.provider??'muse',state:job.state})),
-          ...scene.attempts.filter((row:any)=>row.status==='unknown').map(()=>({provider:'muse',state:'unknown'}))]});
+        previous:mediaProviderReceipts({jobs:status?.jobs??[],scene,projectId:old.id})});
         if(routing.blocked||routing.provider!=='manual')throw new ApiError(422,routing.reason||'Cảnh chưa chọn nhà cung cấp manual.');}
+    }
+    if(envelope.action==='skip_reconciliation'&&old){
+      const scene=old.data.scenes.find((row:any)=>row.id===envelope.input.sceneId),status=(env as any).MUSE_STATUS;
+      if(scene){const receipts=mediaProviderReceipts({jobs:status?.jobs??[],scene,projectId:old.id}).filter(row=>!row.reconciled);
+        const uncertain=receipts.filter(row=>['unknown','needs_attention'].includes(row.state));
+        // An in-flight Muse job may still deliver; never let the user skip past it.
+        if(resolveProvider({kind:'media',selection:'manual',previous:receipts.filter(row=>!uncertain.includes(row))}).reason)throw new ApiError(422,'Tác vụ Muse của cảnh đang chạy. Chờ xong rồi mới bỏ qua đối soát.');
+        if(!uncertain.length)throw new ApiError(422,'Cảnh không có kết quả Muse chưa rõ.');}
     }
     let p;
     if(envelope.action==="create") {

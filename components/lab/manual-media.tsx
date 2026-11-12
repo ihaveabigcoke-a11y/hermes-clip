@@ -5,8 +5,8 @@ import {useDesktopStatus} from '@/lib/lab/use-desktop-status';
 import {mediaProviders, mediaProviderDisabled, type MediaProvider} from '@/lib/lab/provider';
 import type {Production, Scene} from '@/lib/lab/production';
 import {MuseSwitch, musePauseHelp} from './muse-switch';
-import {resolveProvider} from '@/desktop/src/provider-routing.mjs';
-import {Button, Badge} from './primitives';
+import {resolveProvider, mediaProviderReceipts} from '@/desktop/src/provider-routing.mjs';
+import {Button, Badge, Modal} from './primitives';
 
 type Receipt = {sha256:string;name:string;warning:string;error?:string;metadata:{width:number;height:number;duration:number|null}};
 export type ManualStatus = {inbox:string;scenes:{projectId:string;sceneId:string;code:string;state:string;exportedPath:string|null}[];unmatched:Receipt[];errors:{name:string;message:string}[]};
@@ -15,6 +15,20 @@ export function useManualMedia(active=true) {
   const refresh=useCallback(async()=>{if(!active||!desktopBridge()?.manualMediaStatus)return;try{setStatus(await desktopBridge()!.manualMediaStatus());setError('');}catch(e){setError((e as Error).message);}},[active]);
   useEffect(()=>{void refresh();const timer=setInterval(()=>void refresh(),2500);window.addEventListener('product-lab:workspace-changed',refresh);return()=>{clearInterval(timer);window.removeEventListener('product-lab:workspace-changed',refresh);};},[refresh]);
   return {status,error,refresh};
+}
+export const skipReconciliationPrompt='Kết quả Muse cũ của cảnh này chưa rõ. App sẽ không gửi lại Muse và cho phép dùng manual. Tiếp tục?';
+// Only offered while the scene is blocked by an uncertain Muse receipt; the server re-checks.
+export function SkipReconciliation({blocked,disabled,onSkip}:{blocked:boolean;disabled:boolean;onSkip:()=>Promise<unknown>}) {
+  const [open,setOpen]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('');
+  if(!blocked)return null;
+  async function confirm(){setBusy(true);setError('');try{await onSkip();setOpen(false);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
+  return <>
+    <Button tone="neutral" disabled={disabled||busy} onClick={()=>{setError('');setOpen(true);}}>Bỏ qua, không đối soát</Button>
+    {error&&!open&&<p role="alert" className="inline-error">{error}</p>}
+    <Modal open={open} title="Bỏ qua đối soát Muse" description={skipReconciliationPrompt} locked={busy} onClose={()=>setOpen(false)}>
+      <div className="modal-body">{error&&<p role="alert" className="inline-error">{error}</p>}<div className="button-row"><Button busy={busy} disabled={busy} onClick={()=>void confirm()}>Bỏ qua, dùng manual</Button><Button tone="neutral" disabled={busy} onClick={()=>setOpen(false)}>Giữ để đối soát</Button></div></div>
+    </Modal>
+  </>;
 }
 export function ProviderSelect({value,paused,disabled,onChange,label}:{value:MediaProvider|'auto';paused:boolean;disabled:boolean;onChange:(value:MediaProvider|'auto')=>void;label:string}) {
   return <label className="manual-provider"><span>{label}</span><select aria-label={label} value={value} disabled={disabled} onChange={e=>onChange(e.target.value as MediaProvider|'auto')}><option value="auto">Tự động theo trạng thái Muse</option>{mediaProviders.map(provider=><option key={provider.id} value={provider.id} disabled={mediaProviderDisabled(provider.id,paused)}>{provider.id==='muse'&&paused?'Muse đang tạm dừng':provider.label}</option>)}</select>{paused&&<small>{musePauseHelp}</small>}</label>;
@@ -37,8 +51,7 @@ export function ManualToolbar({projectId,production,paused,disabled,manual,onAct
   const unavailable=disabled||busy||!desktopBridge()?.manualMediaExport;
   const canReceive=(scene:Scene)=>{
     const route=resolveProvider({kind:'media',status,selection:scene.mediaProvider??production?.mediaProvider,
-      previous:[...(status?.jobs.filter(job=>job.request.projectId===projectId&&job.request.sceneId===scene.id).map(job=>({provider:job.provider??'muse',state:job.state}))??[]),
-        ...scene.attempts.filter(attempt=>attempt.status==='unknown').map(()=>({provider:'muse',state:'unknown'}))]});
+      previous:mediaProviderReceipts({jobs:status?.jobs??[],scene,projectId})});
     return route.provider==='manual'&&!route.blocked;
   };
   return <div className="manual-media-tools">

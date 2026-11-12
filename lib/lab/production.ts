@@ -47,6 +47,8 @@ export const sceneInputSchema = z.object({
 export const mediaProviderSchema = z.enum(["manual", "muse", "grok-cli", "fal"]);
 const sceneSchema = sceneInputSchema.omit({ referenceIds: true }).extend({
   mediaProvider: mediaProviderSchema.optional(),
+  // User chose "skip reconciliation": Muse receipts created at or before this time stop blocking manual.
+  museReconciledAt: z.number().int().nonnegative().optional(),
   id, revision: z.number().int().positive(), references: z.array(pinSchema).max(12),
   storyboardApproved: z.boolean(), attempts: z.array(attemptSchema).max(50), takes: z.array(takeSchema).max(50),
 });
@@ -167,6 +169,7 @@ const commandSchemas: Record<string, z.ZodTypeAny> = {
   pause: z.object({paused:z.boolean()}), cancel: z.object({sceneId:id,attemptId:id}),
   attach: z.object({sceneId:id,attemptId:id.nullable(),take:takeSchema.omit({id:true,attemptId:true,sceneRevision:true,review:true,notes:true,createdAt:true})}),
   media_provider: z.object({sceneId:id.optional(),provider:z.union([mediaProviderSchema,z.literal('auto')])}),
+  skip_reconciliation: z.object({sceneId:id}),
   manual_result: z.object({sceneId:id,sceneRevision:z.number().int().positive(),take:takeSchema.omit({id:true,attemptId:true,sceneRevision:true,review:true,notes:true,createdAt:true})}),
   worker_result: z.object({sceneId:id,productRevision:z.number().int().positive(),sceneRevision:z.number().int().positive(),jobId:id,providerId:text(200),take:takeSchema.omit({id:true,attemptId:true,sceneRevision:true,review:true,notes:true,createdAt:true})}),
   review: z.object({sceneId:id,takeId:id,review:z.enum(["approved","rejected"]),notes:text(2000)}),
@@ -208,6 +211,9 @@ export function applyProduction(p0: Production, action: string, input: unknown, 
     if(d.provider==='grok-cli'||d.provider==='fal')throw new ProductionError(d.provider==='fal'?'Trả phí, phải báo giá trước.':'Nhà cung cấp chưa kiểm.');
     if(d.sceneId){if(d.provider==='auto')delete scene(d.sceneId).mediaProvider;else scene(d.sceneId).mediaProvider=d.provider;}
     else {if(d.provider==='auto')delete p.mediaProvider;else p.mediaProvider=d.provider;}
+  } else if(action==="skip_reconciliation") {
+    // Receipts, attempts and takes stay untouched; only the scene's reconciliation mark moves forward.
+    const s=scene(d.sceneId);s.museReconciledAt=Math.max(s.museReconciledAt??0,now);
   } else if(action==="manual_result") {
     const s=scene(d.sceneId);
     if((s.mediaProvider??p.mediaProvider??'manual')!=='manual')throw new ProductionError('Cảnh chưa chọn nhà cung cấp manual.');

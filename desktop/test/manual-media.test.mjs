@@ -178,3 +178,57 @@ test('T-002b A: unknown Muse job for scene X cannot block manual scene Y',async 
   assert.equal(Object.values(store.get('manual_exports')).find(row=>row.path===pack.path).provider,'manual');
   assert.equal((await readdir(pack.path)).filter(name=>name.endsWith('.txt')&&name!=='README-VI.txt').length,1);
 });
+
+test('T-002c G: skip reconciliation unblocks manual for old Muse receipts only; running jobs, later jobs and replays stay safe',async t=>{
+  const {media,store,scene,clip}=await fixture(t);
+  const code=(await scene('one')).code;
+  // Real-data shape: needs_attention, projectId + sceneId, no providerId/providerUrl.
+  const old=store.enqueue({projectId:'project_fixture',productId:'product_fixture',sceneId:'one',sceneRevision:1,references:[]},'old_uncertain').job;
+  store.put({...old,state:'needs_attention'});
+  const project=async()=>(await media.records()).find(row=>row.id==='project_fixture');
+  const post=async(body)=>media.request('/api/production',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const skip=async(commandId)=>{const p=await project();return post({id:p.id,revision:p.revision,commandId,action:'skip_reconciliation',input:{sceneId:'one'}});};
+  assert.equal((await scene('one')).state,'Cần đối soát');
+  await assert.rejects(media.exportPack({projectId:'project_fixture'}));
+  // (b) an in-flight Muse job cannot be skipped past.
+  const running=store.enqueue({projectId:'project_fixture',productId:'product_fixture',sceneId:'one',sceneRevision:1,references:[{sha256:'a'.repeat(64)}]},'in_flight').job;
+  store.put({...running,state:'submitted'});
+  await assert.rejects(skip('skip_while_running'),/đang chạy/);
+  assert.equal((await project()).data.scenes[0].museReconciledAt,undefined);
+  store.put({...store.job(running.id),state:'ready'});
+  // Skip: receipts and jobs are kept, manual works for that scene.
+  const done=await (await skip('skip_once')).json();
+  const mark=done.record.data.scenes[0].museReconciledAt;
+  assert.ok(Number.isInteger(mark)&&mark>=old.createdAt);
+  assert.equal(store.job(old.id).state,'needs_attention');assert.equal(store.jobs().length,2);
+  assert.equal((await scene('one')).state,'Chờ xuất prompt');
+  const pack=await media.exportPack({projectId:'project_fixture'});
+  assert.ok((await readdir(pack.path)).includes(code+'.txt'));
+  await clip(code+'-after-skip.mp4');await media.scan();await media.scan();
+  assert.equal((await project()).data.scenes[0].takes.length,1);
+  // (d) replaying the same command is deduplicated; skipping again with nothing uncertain is refused.
+  const replay=await (await post({id:'project_fixture',revision:0,commandId:'skip_once',action:'skip_reconciliation',input:{sceneId:'one'}})).json();
+  assert.equal(replay.deduplicated,true);assert.equal(replay.record.data.scenes[0].museReconciledAt,mark);
+  await assert.rejects(skip('skip_nothing'),/không có kết quả Muse chưa rõ/);
+  // (a) a Muse receipt created after the mark blocks again.
+  const late=store.enqueue({projectId:'project_fixture',productId:'product_fixture',sceneId:'one',sceneRevision:1,references:[{sha256:'b'.repeat(64)}]},'late_uncertain').job;
+  store.put({...late,createdAt:mark+1,state:'needs_attention'});
+  assert.equal((await scene('one')).state,'Cần đối soát');
+  await assert.rejects(media.exportPack({projectId:'project_fixture'}));
+});
+
+test('T-002c G (c): a skipped old job without providerId can never be resumed or rechecked into a new Muse send',async t=>{
+  const {media,store}=await fixture(t);
+  const {Worker}=await import('../src/worker.mjs');
+  let launches=0;
+  const worker=new Worker(store,media.local.root,{launchPersistentContext:async()=>{launches++;throw Error('Must not open Muse');}},{});
+  store.set('profiles',[{id:'one',enabled:true,proxy:{server:''}}]);
+  const old=store.enqueue({projectId:'project_fixture',sceneId:'one',references:[]},'old_skip').job;
+  store.put({...old,state:'needs_attention',profileId:'one'});
+  const p=(await media.records()).find(row=>row.id==='project_fixture');
+  await media.request('/api/production',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:p.id,revision:p.revision,commandId:'skip_c',action:'skip_reconciliation',input:{sceneId:'one'}})});
+  await worker.setMusePaused({paused:false});
+  await assert.rejects(worker.resume(old.id),/Thiếu mã kết quả/);
+  await assert.rejects(worker.recheckResult({id:old.id}));
+  assert.equal(launches,0);assert.equal(store.job(old.id).state,'needs_attention');
+});
