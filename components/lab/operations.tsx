@@ -13,6 +13,7 @@ import { desktopBridge, fetchAssetBytes } from "@/lib/lab/desktop-client";
 import InstagramPanel from './instagram-panel';
 import InstagramOverview from './instagram-overview';
 import ResearchCandidates from './research-candidates';
+import ProductDeploymentPanel from './product-deployment';
 import ResearchLauncher from './research-launcher';
 import {ProductCheckFields} from './product-check-fields';
 import ViralFormulas from './viral-formulas';
@@ -53,6 +54,8 @@ const candidateFormSchema = candidateSchema.extend(Object.fromEntries(["price", 
 
 export default function OperationsPanel({view, records, demo, offline, persist, notify, reload, onRecords}: Props) {
   const {status: desktopStatus} = useDesktopStatus();
+  const [deploymentProfileId,setDeploymentProfileId]=useState('');
+  const activeDeploymentProfile=desktopStatus?.profiles.find(p=>p.enabled&&p.id===deploymentProfileId)?.id??desktopStatus?.profiles.find(p=>p.enabled)?.id??'';
   const musePaused = desktopStatus?.musePaused !== false;
   const [selected, setSelected] = useState(() => new URL(location.href).searchParams.get("ops_id") ?? "");
   const [page, setPage] = useState(1);
@@ -174,6 +177,13 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
   async function deployProducts() {
     if (!chosen) return;
     const products = researchSelection(chosen, records).ready;
+    if(!demo){
+      const bridge=desktopBridge();
+      if(!bridge?.deploymentStart)throw new ClientError('Khởi động lại Hermes Clip bản mới để triển khai tự động.');
+      const run=await bridge.deploymentStart({batchId:chosen.id,productIds:products.map(p=>p.id),profileId:activeDeploymentProfile||undefined});
+      notify(run.state==='ready_for_review'?'Video của đợt này đã sẵn sàng; mở bảng tiến độ để duyệt.':run.state==='needs_attention'||run.state==='paused'?'Đợt đã lưu đang cần kiểm tra. Xem lý do và bấm Tiếp tục cùng đợt.':'Đã giao đợt cho Muse. Theo dõi từng sản phẩm bên dưới; bạn chỉ cần duyệt video cuối.');
+      window.dispatchEvent(new Event('product-lab:workspace-changed'));reload();return;
+    }
     const result = await deployResearchProducts(products, async envelope => {
       if (!demo) return api('/api/production', {method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(envelope)});
       const existing = records.find(row => row.kind === 'production' && row.data.productId === envelope.input.productId);
@@ -287,6 +297,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
       <ResearchCandidates key={chosen.id} record={chosen} records={records} disabled={disabled} onEdit={candidateForm}
         promotionErrors={profileErrors[chosen.id]} onComplete={ids=>act(()=>completeProfiles(ids))} onDeploy={()=>act(deployProducts)}
         onSelect={(candidate,checked)=>act(()=>selectCandidate(candidate,checked))}/>
+      {!demo&&desktopBridge()&&<ProductDeploymentPanel batchId={chosen.id} profiles={desktopStatus?.profiles??[]} profileId={activeDeploymentProfile} onProfile={setDeploymentProfileId} batch={desktopStatus?.batch} selectedCount={researchSelection(chosen,records).ready.length}/>}
       {batch.notes && <details className="operations-evidence"><summary>Kết quả tìm nguồn đã lưu</summary><pre>{batch.notes}</pre></details>}
     </>;
   }

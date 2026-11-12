@@ -5,13 +5,13 @@ export class Store {
   constructor(path){this.db=new DatabaseSync(path);this.db.exec("PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA busy_timeout=5000; CREATE TABLE IF NOT EXISTS kv(k TEXT PRIMARY KEY,v TEXT NOT NULL); CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY,fingerprint TEXT NOT NULL,body TEXT NOT NULL); CREATE INDEX IF NOT EXISTS fingerprint_idx ON jobs(fingerprint);");}
   get(k,fallback=null){const r=this.db.prepare('SELECT v FROM kv WHERE k=?').get(k);return r?JSON.parse(r.v):fallback;}
   set(k,v){this.db.prepare('INSERT INTO kv VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v').run(k,JSON.stringify(v));return v;}
-  batch() { return this.get('generation_batch', null); }
+  batch() { const batch=this.get('generation_batch', null); return batch ? {...batch, perProfileLimit:null} : null; }
   newBatch() {
     this.db.exec('BEGIN IMMEDIATE');
     try {
       const running = ['preflight', 'prepared', 'submitting', 'submitted', 'waiting', 'downloading', 'validating'];
       if (this.jobs().some(job => running.includes(job.state))) throw Error('Chờ tác vụ tạo media kết thúc trước khi mở đợt mới.');
-      const batch = this.set('generation_batch', {id: randomUUID(), startedAt: Date.now(), perProfileLimit: 3, submittedByProfile: {}});
+      const batch = this.set('generation_batch', {id: randomUUID(), startedAt: Date.now(), perProfileLimit: null, submittedByProfile: {}});
       this.db.exec('COMMIT');
       return batch;
     } catch (error) {
@@ -22,11 +22,10 @@ export class Store {
   beginSubmit(id, profileId, patch = {}) {
     this.db.exec('BEGIN IMMEDIATE');
     try {
-      const batch = this.batch() ?? {id: randomUUID(), startedAt: Date.now(), perProfileLimit: 3, submittedByProfile: {}};
+      const batch = this.batch() ?? {id: randomUUID(), startedAt: Date.now(), perProfileLimit: null, submittedByProfile: {}};
       const count = Object.hasOwn(batch.submittedByProfile, profileId) ? batch.submittedByProfile[profileId] : 0;
-      if (count >= 3) throw Error('Profile đã dùng đủ 3 lượt trong đợt này. Mở đợt mới để tiếp tục.');
       const job = this.transition(id, 'submitting', {...patch, profileId, submitBatchId: batch.id});
-      this.set('generation_batch', {...batch, perProfileLimit: 3, submittedByProfile: {...batch.submittedByProfile, [profileId]: count + 1}});
+      this.set('generation_batch', {...batch, perProfileLimit: null, submittedByProfile: {...batch.submittedByProfile, [profileId]: count + 1}});
       this.db.exec('COMMIT');
       return job;
     } catch (error) {

@@ -61,7 +61,7 @@ export default function ResearchCandidates({record,records,disabled,onEdit,onSel
       {missing.length>0&&<div className="research-selection-action"><div role="status"><span className="research-warning">⚠ {missing.length} sản phẩm chưa tạo hồ sơ</span>{missing.filter(candidate=>promotionErrors[candidate.id]).map(candidate=><p className="inline-error" key={candidate.id}>{candidate.name}: {promotionErrors[candidate.id]}</p>)}</div><Button tone="neutral" disabled={disabled||!onComplete} onClick={()=>onComplete?.()}>Hoàn tất tạo hồ sơ</Button></div>}
       {selected.length>0&&<div className="research-selection-action"><span role="status">{ready.length===selected.length?'✓ ':''}{ready.length}/{selected.length} hồ sơ sẵn sàng</span><Button disabled={disabled||!ready.length||!onDeploy} onClick={onDeploy}>Triển khai {ready.length} sản phẩm →</Button></div>}
     </div>
-    <p className="research-selection-note">Tick chọn sẽ tự tạo hồ sơ sản phẩm. Triển khai để mở dự án video nháp. Bỏ tick chỉ bỏ chọn · Hồ sơ vẫn giữ.</p>
+    <p className="research-selection-note">Tick chọn sẽ tự tạo hồ sơ sản phẩm. Triển khai để app chuẩn bị cảnh, tạo video qua Muse và đưa vào Thư viện cho bạn duyệt. Bỏ tick chỉ bỏ chọn · Hồ sơ vẫn giữ.</p>
     {candidates.length?<div className="operations-table-scroll" role="region" aria-label="Bảng 10 ứng viên" tabIndex={0}>
       <table className="operations-comparison research-candidate-table"><caption className="sr-only">Ứng viên nguồn hàng để chọn tối đa ba sản phẩm, giá bán chỉ là giả thuyết.</caption>
         <colgroup>{[42,292,90,178,170,108,150,145,90,240,150].map((width,index)=><col key={index} style={{width}}/>)}</colgroup>

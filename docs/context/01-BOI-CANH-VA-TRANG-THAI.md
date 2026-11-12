@@ -1,5 +1,20 @@
 # Hermes Clip — bối cảnh và trạng thái (source cập nhật đến đêm 3, 12/11/2026)
 
+## Cập nhật 12/11/2026 — bỏ chặn 3 lượt, ba video thật đã về app
+
+Người dùng thay yêu cầu cũ bằng “đừng có limit”. Hermes đã bỏ giới hạn 3 lượt Muse/profile/đợt trong worker, chat, nghiên cứu, chọn công cụ và giao diện. Bộ đếm chỉ ghi lịch sử; không cần reset. Vẫn kiểm phiên và hạn mức thực của Muse, chống gửi trùng và đối soát kết quả chưa rõ. Chỉ một agent Codex thực hiện, không spawn hoặc gọi runner agent.
+
+Đã áp source và build vào `C:/Users/ADMIN/Downloads/Product-Lab-Local/Product-Lab-Local`. Bấm Triển khai 3 sản phẩm với Chi đã tạo đủ ba video mới: vòng cổ LED TIZE TC213, băng tay LED Hong Jing và thẻ thú cưng OKSILICONE OKSBS-001. Cùng đợt cũ, bộ đếm 3 → 6. Tự lấy ảnh, chuẩn bị cảnh theo mẫu, gửi Muse, tải MP4 và nhập đúng cảnh; cả ba 720×1280, 10 giây, SHA-256/file API khớp, FFmpeg giải mã toàn bộ và phát được trong app sau restart. Nút Xem và duyệt video mở đúng asset. Bấm lại đợt hoàn tất không thêm lượt/job.
+
+429 desktop tests đạt, 1 OpenMontage tùy chọn bỏ qua; TypeScript và build đạt. Domain 208/API 28 là kiểm tra trước lần bỏ cap; không gọi chúng là đã chạy lại sau cap. Provider trong các test tự động là fixture; ba video nêu trên dùng Muse thật. 25 job cũ, 45 record không thuộc đợt và trường gốc của ba dự án giữ checksum; 21 media cũ, chat và 4 danh tính profile giữ nguyên. Tổng sau chạy: 28 jobs, 54 records, 27 media.
+
+Video vẫn chờ người dùng duyệt, chưa đăng Instagram. Các khung hình cho thấy Muse có phóng gần/đổi góc; chưa nghiệm thu độ đúng SKU hoặc chất lượng quảng cáo. Khôi phục khi crash giữa lượt gửi mới chỉ có fixture, chưa thử gây crash tài khoản thật. Xóa hồ sơ có dialog xác nhận và bảo vệ job cần đối soát; không xóa profile người dùng khi test.
+
+Context-mode 2.1.9 đã cài/bật, MCP và hook replay đạt; chat hiện tại chưa nạp ctx_* và chưa xác minh hook trong lượt model thật. Cần khởi động lại Codex. Không đổi model/provider.
+
+Bằng chứng local: workspace `outputs/Hermes-Clip-Automation-2026-11-12/REPORT.md`, `.product-lab-repair/automation-20261112/unlimited-acceptance.json`, `installed-complete.json`; plugin: `outputs/context-mode-integration/README.md`. Bản cập nhật này chưa push GitHub. Các mục 3/3/chờ mở đợt bên dưới là lịch sử đã được thay thế.
+
+
 ## T-005 vòng 2 — baseline đạt, bổ sung kiểm lớp che trong script ảnh
 
 Boss xác nhận ngoài sandbox: typecheck 0, domain 208/208, API 28/28, desktop 420 pass/0 fail, build đạt và đủ 6 PNG. Logic vòng 1 giữ nguyên. Ảnh thiếu hồ sơ 1366 có vùng đen che nội dung dù bounds nút trong viewport; ảnh 1920 đúng. Script cũ bỏ lọt vì chỉ kiểm bounds; Tạo video còn giữ scroll từ màn trước. Vòng 2 chỉ sửa script chụp: đợi scroll/layout ổn định, hit-test cảnh báo/lỗi/nút bằng elementFromPoint, lưu DOM/styles trước–sau, kiểm actionability, chụp Tạo video từ đầu trang và xác nhận tên sản phẩm đầu tiên.

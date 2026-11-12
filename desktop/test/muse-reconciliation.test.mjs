@@ -49,7 +49,7 @@ test('T-002b A: explicit skip persists run/chat receipts, unblocks only their sc
   assert.throws(()=>reopened.resume({id:'runX'}),/app sẽ không gửi lại/);
   await assert.rejects(reopenedChat.recover({requestId:'chatX'}),/app sẽ không gửi lại/);
   reopened.boot();assert.equal(reopened.running,null);
-  assert.deepEqual(store.batch(),{id:'quota',submittedByProfile:{one:2}});assert.equal(networkCalls,0);
+  assert.deepEqual(store.batch(),{id:'quota',perProfileLimit:null,submittedByProfile:{one:2}});assert.equal(networkCalls,0);
 });
 
 test('T-002b A: skipping a run is atomic and cannot acknowledge a live chat/run',async t=>{

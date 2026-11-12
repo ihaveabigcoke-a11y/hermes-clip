@@ -90,7 +90,7 @@ export function ReferenceMuseAnalysis({jobId, structure, caption, fileName, form
   const running=useRef(false),live=useRef(true),attempt=useRef<{key:string;requestId:string}|null>(null);
   const scope='reference_'+jobId, profiles=(status?.profiles??[]).filter(p=>p.enabled);
   const selectedId=profileId||profiles.find(p=>p.session==='signed_in')?.id||profiles[0]?.id||'';
-  const selected=profiles.find(p=>p.id===selectedId), count=status?.batch?.submittedByProfile[selectedId]??0;
+  const selected=profiles.find(p=>p.id===selectedId);
   const pending=!!chat&&['preparing','waiting','needs_attention'].includes(chat.state);
   const context={structure,caption,fileName,formulas};
   useEffect(()=>{
@@ -122,7 +122,7 @@ export function ReferenceMuseAnalysis({jobId, structure, caption, fileName, form
         const result=row.state==='needs_attention'?await api.museChatRecover({requestId:row.requestId}):row;
         if(live.current)consume(result);
       } else {
-        if(pending||uncertain||!selected||selected.busy||count>=3)throw Error('Chọn profile đang bật, còn lượt và không có tác vụ cần đối soát.');
+        if(pending||uncertain||!selected||selected.busy)throw Error('Chọn hồ sơ đang bật, rảnh và không có tác vụ cần đối soát.');
         if(mode==='repair'&&(!parseFailed||chat?.state!=='done'||chat.profileId!==selectedId))throw Error('Dùng đúng profile của phản hồi trước để sửa JSON.');
         const request={projectId:scope,profileId:selectedId,prompt:referenceMusePrompt(context,mode==='repair'),
           ...(mode==='repair'?{parentId:chat!.requestId}:{referenceJobId:jobId})};
@@ -138,12 +138,12 @@ export function ReferenceMuseAnalysis({jobId, structure, caption, fileName, form
     finally {running.current=false;onBusy(false);if(live.current)setBusy(false);}
   }
   const blocked=disabled||busy||loading||!api?.museChatSend;
-  const cannotSend=status?.musePaused!==false||blocked||pending||uncertain||!selected||selected.busy||count>=3;
+  const cannotSend=status?.musePaused!==false||blocked||pending||uncertain||!selected||selected.busy;
   return <div>
     {status?.musePaused!==false&&<p className="field-help">Muse đang tạm dừng, bật lại ở Tài khoản Muse</p>}
     <label className="field">Profile Muse<select aria-label="Profile Muse phân tích" disabled={blocked||pending||uncertain} value={selectedId} onChange={e=>setProfileId(e.target.value)}>
       {!profiles.length&&<option value="">Chưa có profile đang bật</option>}
-      {profiles.map(p=><option key={p.id} value={p.id}>{p.name} · {status?.batch?.submittedByProfile[p.id]??0}/3 lượt</option>)}
+      {profiles.map(p=><option key={p.id} value={p.id}>{p.name} · đã gửi {status?.batch?.submittedByProfile[p.id]??0} lượt</option>)}
     </select></label>
     <p>Tốn 1 lượt Muse · gửi sheet thưa và sheet dày đầu tiên. Kết quả chỉ điền để bạn duyệt, chưa lưu.</p>
     {(structure.contactSheets?.dense.length??0)>1&&<p>Video có nhiều sheet dày; chữ/CTA ngoài sheet đầu tiên cần kiểm thêm.</p>}

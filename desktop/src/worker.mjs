@@ -10,10 +10,12 @@ import {MuseAdapter} from './muse.mjs';
 import {TouchVpn,TOUCH_VPN_ID} from './touch-vpn.mjs';
 import {readMuseQuota,museQuotaExhausted} from './muse-quota.mjs';
 import {mediaProviderReceipts} from './provider-routing.mjs';
+import {removeProfile,profileRemovalBlocker} from './profile-removal.mjs';
 export class Worker {
   validateOutput = validateMedia;
   checkToolchain = toolchain;
   chatting = new Set();
+  deleting = new Set();
   dispatchVersion = 0;
   closing = new Map();
   reclaimingMemory = false;
@@ -39,13 +41,18 @@ export class Worker {
       busy: this.active.has(profile.id) || this.checking.has(profile.id) || this.closing.has(profile.id) || this.chatting.has(profile.id),
       open: this.contexts.has(profile.id),
       background: this.backgroundProfiles.has(profile.id),
+      deleteBlockedReason: profileRemovalBlocker(this, profile.id),
     }));
   }
   async saveProfile(input) {
     const d = profileInput.parse(input);
     const id = d.id || randomUUID();
+    if(this.deleting.has(id))throw Error('Hồ sơ đang được xóa.');
+    if(this.store.get('deleted_profiles',[]).some(profile=>profile.id===id))throw Error('Hồ sơ đã xóa. Tạo hồ sơ mới để đăng nhập lại.');
     if (this.contexts.has(id) || this.opening.has(id) || this.active.has(id) || this.checking.has(id) || this.closing.has(id) || this.chatting.has(id)) throw Error('Đóng browser profile và chờ job dừng trước khi sửa proxy.');
     const newPassword = d.proxy.password ? await this.secret.encrypt(d.proxy.password) : null;
+    if(this.deleting.has(id))throw Error('Hồ sơ đang được xóa.');
+    if(this.store.get('deleted_profiles',[]).some(profile=>profile.id===id))throw Error('Hồ sơ đã xóa. Tạo hồ sơ mới để đăng nhập lại.');
     const profiles = this.store.get('profiles', []);
     const old = profiles.find(profile => profile.id === id);
     if (this.contexts.has(id) || this.opening.has(id) || this.active.has(id) || this.checking.has(id) || this.closing.has(id) || this.chatting.has(id)) throw Error('Đóng browser profile và chờ job dừng trước khi sửa proxy.');
@@ -59,6 +66,7 @@ export class Worker {
     return id;
   }
   config(){return this.store.get('adapter',null);}
+  deleteProfile(payload){return removeProfile(this,payload);}
   connection(){return this.store.get('muse_connection',null)??(this.config()?{startUrl:this.config().startUrl}:null);}
   saveMuseConnection(input){if(this.active.size||this.contexts.size||this.opening.size)throw Error('Đóng các profile trước khi đổi trang Muse.');const value=museConnectionInput.parse(input),old=this.config();if(old&&new URL(old.startUrl).href!==new URL(value.startUrl).href)this.store.set('adapter',null);this.store.set('muse_connection',value);this.store.set('profiles',this.store.get('profiles',[]).map(p=>({...p,health:'unknown',session:'unknown',checkedAt:null})));return true;}
   saveAdapter(input){if(this.active.size||this.contexts.size||this.opening.size)throw Error('Đóng các profile trước khi đổi luồng.');const c=adapterInput.parse(input),connection=this.connection();if(connection&&new URL(connection.startUrl).origin!==new URL(c.startUrl).origin)throw Error('Luồng phải thuộc đúng miền Muse đã chọn.');this.store.set('muse_connection',{startUrl:c.startUrl});this.store.set('adapter',c);return true;}
@@ -88,6 +96,7 @@ export class Worker {
   }
 
   async context(id, background = false) {
+    if(this.deleting.has(id))throw Error('Hồ sơ đang được xóa.');
     assertMuseAvailable(this.store, {profileId:id});
     if (this.closing.has(id)) await this.closing.get(id);
     assertMuseAvailable(this.store, {profileId:id});
@@ -355,8 +364,34 @@ export class Worker {
     this.checking.set(id,pending);
     try { return await pending; } finally { this.checking.delete(id); this.tick(); }
   }
-  async enqueue(payload){
-    assertMuseNewTask(this.store);await this.validateMediaProvider?.(payload);assertMuseAvailable(this.store);assertDiskSpace(this.root,32*1024**2,storagePolicy(this.store));const d=jobInput.parse(payload);for(const r of d.references)if(createHash('sha256').update(r.bytes).digest('hex')!==r.sha256)throw Error('Reference tải về sai checksum.');const fp=jobFingerprint(d),refDir=join(this.root,'references');await mkdir(refDir,{recursive:true});const refs=[];for(const r of d.references){const ext=r.type==='image/jpeg'?'.jpg':r.type==='image/png'?'.png':'.webp',path=join(refDir,r.sha256+ext);await writeFile(path,r.bytes);const {bytes,...rest}=r;refs.push({...rest,path});}const legacyFingerprint=jobFingerprint({...d,references:d.references.map(({role,...reference})=>reference)});assertMuseNewTask(this.store);return this.store.enqueue({...d,references:refs},fp,legacyFingerprint);}
+  async enqueue(payload,{profileId,batchId}={}){
+    assertMuseNewTask(this.store);
+    await this.validateMediaProvider?.(payload);
+    assertMuseAvailable(this.store);
+    assertDiskSpace(this.root,32*1024**2,storagePolicy(this.store));
+    const d=jobInput.parse(payload);
+    for(const r of d.references)if(createHash('sha256').update(r.bytes).digest('hex')!==r.sha256)throw Error('Reference tải về sai checksum.');
+    const fp=jobFingerprint(d),refDir=join(this.root,'references');
+    await mkdir(refDir,{recursive:true});
+    const refs=[];
+    for(const r of d.references){
+      const ext=r.type==='image/jpeg'?'.jpg':r.type==='image/png'?'.png':'.webp',path=join(refDir,r.sha256+ext);
+      await writeFile(path,r.bytes);const {bytes,...rest}=r;refs.push({...rest,path});
+    }
+    const legacyFingerprint=jobFingerprint({...d,references:d.references.map(({role,...reference})=>reference)});
+    assertMuseNewTask(this.store);
+    if(profileId){
+      if(this.deleting.has(profileId)||!this.store.get('profiles',[]).some(p=>p.id===profileId&&p.enabled))throw Error('Hồ sơ đã xóa, đang xóa hoặc đang tắt. Chưa thêm lượt tạo.');
+      if(batchId&&this.store.batch()?.id!==batchId)throw Error('Đợt hạn mức Muse đã thay đổi. Chưa thêm lượt tạo.');
+    }
+    const result=this.store.enqueue({...d,references:refs},fp,legacyFingerprint);
+    if(profileId){
+      if(result.job.preferredProfileId&&result.job.preferredProfileId!==profileId)throw Error('Lượt tạo đã gắn hồ sơ khác.');
+      if(!result.job.preferredProfileId)result.job=this.store.put({...result.job,preferredProfileId:profileId,deploymentBatchId:batchId});
+      else if(result.job.deploymentBatchId!==batchId)throw Error('Lượt tạo thuộc đợt Muse khác. Giữ nguyên để đối soát.');
+    }
+    return result;
+  }
   async enqueueAndRun(payload) {
     assertMuseNewTask(this.store);
     const dispatchVersion = this.dispatchVersion;
@@ -423,17 +458,14 @@ export class Worker {
         this.approvedIds = this.approvedIds.filter(candidate => candidate !== id);
         continue;
       }
+      const queuedJob=this.store.job(id);
+      if(queuedJob.deploymentBatchId&&queuedJob.deploymentBatchId!==this.store.batch()?.id){this.note(id,'Đợt Muse đã thay đổi; chưa giao tác vụ từ đợt cũ.');this.approvedIds=this.approvedIds.filter(candidate=>candidate!==id);continue;}
       const attempted = this.attemptedProfiles.get(id) ?? new Set();
-      const batch = this.store.batch();
-      const candidates = profiles.filter(profile => !attempted.has(profile.id)
-        && (batch?.submittedByProfile[profile.id] ?? 0) < 3);
+      const candidates = profiles.filter(profile => (!queuedJob.preferredProfileId||profile.id===queuedJob.preferredProfileId)&&!this.deleting.has(profile.id)&&!attempted.has(profile.id));
       const profile = candidates.find(profile => !this.active.has(profile.id) && !this.checking.has(profile.id) && !this.closing.has(profile.id) && !this.chatting.has(profile.id));
       if (!profile && candidates.length) continue;
       if (!profile) {
-        const atLimit = profiles.some(profile => (batch?.submittedByProfile[profile.id] ?? 0) >= 3);
-        this.note(id, atLimit
-          ? 'Profile đã dùng đủ 3 lượt trong đợt này. Mở đợt mới rồi chọn cảnh cần chạy.'
-          : 'Chưa có profile Muse dùng được. Kiểm tra phiên và hạn mức trong Tài khoản, rồi bấm Chạy cảnh để tiếp tục.');
+        this.note(id, 'Chưa có hồ sơ Muse dùng được. Kiểm tra phiên và hạn mức Muse trong Tài khoản, rồi bấm Chạy cảnh để tiếp tục.');
         this.approvedIds = this.approvedIds.filter(candidate => candidate !== id);
         continue;
       }
@@ -643,7 +675,7 @@ export class Worker {
   linkResult({id,providerId,url}){const j=this.store.job(id);if(j.state!=='needs_attention'||!j.profileId)throw Error('Chỉ đối soát job đã bị gián đoạn.');if(!/^[a-zA-Z0-9_-]{1,200}$/.test(providerId)||(!this.config()||new URL(url).origin!==new URL(this.config().startUrl).origin||new URL(url).username||new URL(url).password))throw Error('Cần mã kết quả và URL Muse hợp lệ.');this.store.put({...j,providerId,providerUrl:url,history:[...j.history,{at:Date.now(),state:'needs_attention',note:'Người dùng chỉ định kết quả cũ để đối soát; chưa xác nhận file.'}]});return true;}
   cancel(id){const j=this.store.job(id);if(j.state!=='queued')throw Error('Chỉ hủy job chưa gửi. Chưa có xác nhận hủy từ Muse.');this.store.transition(id,'cancelled',{note:'Hủy nháp local, chưa có lượt gửi.'});return true;}
   diskStatus(){return diskStatus(this.root,storagePolicy(this.store));}
-  status(){return {storage:this.diskStatus(),version:'0.2.0',profiles:this.profiles(),jobs:this.store.jobs().map(j=>({...j,provider:j.provider??'muse',request:{...j.request,references:j.request.references.map(({path,...r})=>r)},label:j.importedAt?'Đã vào Thư viện':j.importError?'File đã tải · lỗi nhập':labels[j.state]})),paused:this.paused,active:this.active.size,budget:this.budget,batch:this.store.batch(),freeRamGb:Math.round(this.memory()/1024**3*10)/10,adapter:this.config(),connection:this.connection(),musePaused:museIsPaused(this.store),generationReady:!museIsPaused(this.store)&&!!this.config()?.enabled};}
+  status(){return {storage:this.diskStatus(),version:'0.2.0',profiles:this.profiles(),jobs:this.store.jobs().map(j=>({...j,profileName:(this.store.get('profiles',[]).find(p=>p.id===j.profileId)??this.store.get('deleted_profiles',[]).find(p=>p.id===j.profileId))?.name,provider:j.provider??'muse',request:{...j.request,references:j.request.references.map(({path,...r})=>r)},label:j.importedAt?'Đã vào Thư viện':j.importError?'File đã tải · lỗi nhập':labels[j.state]})),paused:this.paused,active:this.active.size,budget:this.budget,batch:this.store.batch(),freeRamGb:Math.round(this.memory()/1024**3*10)/10,adapter:this.config(),connection:this.connection(),musePaused:museIsPaused(this.store),generationReady:!museIsPaused(this.store)&&!!this.config()?.enabled};}
   async output(id){const j=this.store.job(id);if(j.state!=='ready'||!j.output)throw Error('Chưa có file đã kiểm tra.');const bytes=new Uint8Array(await readFile(j.output.path));if(createHash('sha256').update(bytes).digest('hex')!==j.output.sha256)throw Error('File đã thay đổi sau kiểm tra.');return {bytes,name:j.output.name,type:j.request.mediaType==='video'?'video/mp4':({'.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.png':'image/png'}[extname(j.output.path)]||'image/png'),sha256:j.output.sha256};}
   acknowledge(id,assetId){if(!/^[a-zA-Z0-9_-]{1,120}$/.test(assetId))throw Error('Asset ID không hợp lệ.');this.store.put({...this.store.job(id),uploadedAssetId:assetId});return true;}
   async render(payload){assertDiskSpace(this.root,256*1024**2,storagePolicy(this.store));const {z}=await import('zod');const d=z.object({ratio:z.enum(['9:16','16:9','1:1','4:3','3:4']),clips:z.array(z.object({bytes:z.instanceof(Uint8Array),sha256:z.string().regex(/^[a-f0-9]{64}$/),duration:z.number().positive().max(120)})).min(1).max(30)}).parse(payload);if(d.clips.reduce((n,c)=>n+c.bytes.length,0)>60*1024*1024)throw Error('Tổng nguồn tối đa 60 MB.');await toolchain();const id=randomUUID(),dir=join(this.root,'renders',id);await mkdir(dir,{recursive:true});const clips=[];for(const [i,c] of d.clips.entries()){if(createHash('sha256').update(c.bytes).digest('hex')!==c.sha256)throw Error('Nguồn dựng sai checksum.');const path=join(dir,`${i}.mp4`);await writeFile(path,c.bytes);await validateMedia(path,{mediaType:'video',ratio:d.ratio,duration:c.duration});clips.push({path,duration:c.duration,audio:await hasAudio(path)});}const path=join(dir,'output.mp4'),report=await renderClips(clips,d.ratio,path);for(const clip of clips)await unlink(clip.path);return {bytes:new Uint8Array(await readFile(path)),name:`render_${id}.mp4`,type:'video/mp4',path,...report};}
