@@ -13,6 +13,7 @@ const desktopEntries=[
   'components/lab/research-launcher.tsx','components/lab/viral-formulas.tsx',
   'components/lab/production-intelligence.tsx','components/lab/reference-video.tsx',
   'components/lab/manual-media.tsx',
+  'components/lab/compression-note.tsx',
   'components/lab/worker-activity.tsx',
   'components/lab/text-exchange.tsx',
 ];

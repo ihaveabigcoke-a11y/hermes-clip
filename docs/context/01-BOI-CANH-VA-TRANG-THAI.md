@@ -1,5 +1,11 @@
 # Hermes Clip — bối cảnh và trạng thái (source cập nhật đến đêm 3, 12/11/2026)
 
+## T-006 — nén file mới, chưa nghiệm thu full suite/ảnh UI
+
+Source app chính đã thêm nén local cho Hộp nhận, tải tay, renderClips và download Muse mới; ảnh gói prompt mới dùng WebP nếu nhỏ hơn; nguồn research/reference/youtube và log xoay mới dùng gzip, đọc được plain cũ. Chỉ gốc Hộp nhận mới có receipt nén, nhập và gắn take thành công mới đưa vào Thùng rác Windows; file cũ, media/receipt/job có sẵn không di trú. Clip ≤15 giây phải dưới 6 MiB, video dài giữ sàn khoảng 2 Mbps ở 720×1280 khi nguồn đạt kích thước này; take có nhãn khi vượt trần. Muse vẫn mặc định tạm dừng.
+
+Typecheck và build riêng `outputs/T-006-build` đạt; 32/32 kiểm liên quan T-006 đạt bằng FFmpeg và SQLite fixture. Full runner bị spawn EPERM; chạy isolation none: domain 197 pass/11 fail, API 24 pass/4 fail, desktop từng file 379 pass/67 fail/1 skip. Chrome IPC Access denied: 0/4 PNG, chưa xác minh bố cục 1366/1920. Chưa dùng file Flow/Gemini, Thùng rác Windows hoặc dịch vụ thật; chưa thay `desktop/local-dist`, không commit/push. Chi tiết, kích thước file test và cách boss chạy tiếp: [báo cáo T-006](../../ops/office/reports/T-006.md), [media thủ công](../MANUAL-MEDIA.md). Các mục dưới là trạng thái lịch sử trước T-006.
+
 ## Cập nhật 12/11/2026 — bỏ chặn 3 lượt, ba video thật đã về app
 
 Người dùng thay yêu cầu cũ bằng “đừng có limit”. Hermes đã bỏ giới hạn 3 lượt Muse/profile/đợt trong worker, chat, nghiên cứu, chọn công cụ và giao diện. Bộ đếm chỉ ghi lịch sử; không cần reset. Vẫn kiểm phiên và hạn mức thực của Muse, chống gửi trùng và đối soát kết quả chưa rõ. Chỉ một agent Codex thực hiện, không spawn hoặc gọi runner agent.

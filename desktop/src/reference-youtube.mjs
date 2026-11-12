@@ -1,4 +1,5 @@
-import {readFile, readdir, stat, writeFile} from 'node:fs/promises';
+import {writeArchive} from './compress.mjs';
+import {readFile, readdir, stat} from 'node:fs/promises';
 import {join} from 'node:path';
 import {confinedFile, referenceLimits, sha256} from './reference-structure.mjs';
 
@@ -52,7 +53,7 @@ export async function downloadYoutubeReference({run, reach, capability, url, dir
   // select a bounded, single-file MP4. No transcription or paid backend.
   if (capability.infoCommand) {
     const info = await reach([...capability.infoCommand, normalized], {timeout: 60000, maxBytes: 1024 ** 2});
-    await writeFile(join(directory, 'youtube-info.json'), JSON.stringify(info, null, 2), {flag: 'wx'});
+    await writeArchive(join(directory, 'youtube-info.json.gz'), JSON.stringify(info, null, 2), {flag: 'wx'});
   }
   const info = JSON.parse(await run(capability.command, youtubeArgs(capability, 'info', normalized), {format: 'text', timeout: 60000}));
   if (!info || info.id !== normalized.split('/').pop() || !Number.isFinite(info.duration) || info.duration <= 0 || info.duration > referenceLimits.duration)
@@ -62,7 +63,7 @@ export async function downloadYoutubeReference({run, reach, capability, url, dir
     Number.isFinite(f.filesize) && f.filesize > 0 && f.filesize <= referenceLimits.bytes);
   const format = formats.sort((a, b) => (b.height ?? 0) - (a.height ?? 0) || a.filesize - b.filesize)[0];
   if (!format) throw Error('Chưa có MP4 một file với dung lượng xác minh ≤ 25 MB. Không tải định dạng chưa rõ dung lượng.');
-  await writeFile(join(directory, 'youtube-source.json'), JSON.stringify({url: normalized, id: info.id,
+  await writeArchive(join(directory, 'youtube-source.json.gz'), JSON.stringify({url: normalized, id: info.id,
     title: typeof info.title === 'string' ? info.title.slice(0, 500) : null, durationSec: info.duration,
     formatId: format.format_id, size: format.filesize, observedAt: new Date().toISOString()}, null, 2), {flag: 'wx'});
   await run(capability.command, youtubeArgs(capability, 'download', normalized, directory, format.format_id), {

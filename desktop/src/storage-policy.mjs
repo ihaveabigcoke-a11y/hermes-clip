@@ -1,6 +1,7 @@
+import {compressMedia,writeArchive} from './compress.mjs';
 import {statfsSync} from 'node:fs';
 import {mkdir,stat,lstat,realpath,readFile,writeFile,readdir,unlink,rename,link,open} from 'node:fs/promises';
-import {join,dirname,resolve,sep} from 'node:path';
+import {join,dirname,resolve,sep,extname} from 'node:path';
 import {createHash,randomUUID} from 'node:crypto';
 
 const MiB=1024**2;
@@ -52,8 +53,9 @@ export async function putImmutableMedia({root,path,bytes,candidates=[],policy=ST
   }finally{await unlink(temporary).catch(e=>{if(e.code!=='ENOENT')throw e;});}
 }
 
-export async function saveDownload(download,path){
+export async function saveDownload(download,path,{compress=false,onCompression=()=>{}}={}){
   const temporary=path+'.hermes-part-'+randomUUID();
+  let compressed;
   try{
     assertDiskSpace(dirname(path),64*MiB);
     await download.saveAs(temporary);
@@ -62,11 +64,19 @@ export async function saveDownload(download,path){
     const hash=digest(await readFile(temporary));
     if(await stat(path).catch(()=>null)){
       if(!await verifiedFile(path,hash,info.size))throw Error('Kết quả tải lại khác bản đã lưu. Giữ bản cũ để đối soát.');
+    }else if(compress){
+      const sourceType={'.mp4':'video/mp4','.webm':'video/webm','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp'}[extname(path).toLowerCase()];
+      try{compressed=await compressMedia(temporary,{sourceType});}catch(error){await rename(temporary,path);throw error;}
+      const extension=compressed.type==='video/mp4'?'.mp4':compressed.type==='image/webp'?'.webp':extname(path);
+      const target=path.slice(0,-extname(path).length)+extension;
+      await putImmutableMedia({root:dirname(target),path:target,bytes:await readFile(compressed.path)});
+      onCompression(compressed.compression);return target;
     }else await rename(temporary,path);
     if(!await verifiedFile(path,hash,info.size))throw Error('File đích chưa khớp bản tải.');
     return path;
   }finally{
     await unlink(temporary).catch(e=>{if(e.code!=='ENOENT')throw e;});
+    await compressed?.cleanup();
     // The browser artifact is disposable even on failure; the remote receipt
     // remains in SQLite and completed targets are never removed here.
     await download.delete?.().catch(()=>{});
@@ -85,9 +95,12 @@ export async function shareVerifiedMedia(root,path,source,sha256,size){
 
 export async function rotateLog(path,{maxBytes=STORAGE_DEFAULTS.logBytes,keep=STORAGE_DEFAULTS.logFiles}={}){
   if((await stat(path).catch(()=>({size:0}))).size<maxBytes)return;
-  await unlink(path+'.'+keep).catch(e=>{if(e.code!=='ENOENT')throw e;});
-  for(let i=keep-1;i>=1;i--)await rename(path+'.'+i,path+'.'+(i+1)).catch(e=>{if(e.code!=='ENOENT')throw e;});
-  await rename(path,path+'.1');
+  // Old plain rotations remain untouched. Only rotations created from now on
+  // enter the gzip retention series.
+  await unlink(path+'.'+keep+'.gz').catch(e=>{if(e.code!=='ENOENT')throw e;});
+  for(let i=keep-1;i>=1;i--)await rename(path+'.'+i+'.gz',path+'.'+(i+1)+'.gz').catch(e=>{if(e.code!=='ENOENT')throw e;});
+  await writeArchive(path+'.1',await readFile(path),{flag:'wx'});
+  await unlink(path);
 }
 export async function appendStorageLog(root,entry,policy=STORAGE_DEFAULTS){
   const path=join(root,'storage-maintenance.ndjson');await rotateLog(path,{maxBytes:policy.logBytes,keep:policy.logFiles});

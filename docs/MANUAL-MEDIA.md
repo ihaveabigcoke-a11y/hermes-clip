@@ -1,5 +1,15 @@
 # Media thủ công và công tắc Muse — T-002 / T-002b
 
+## T-006 — file mới được nén (12/11/2026)
+
+Source T-006 thay quy tắc giữ gốc Hộp nhận bên dưới: file mới được nén và giải mã kiểm tra trước khi nhập. Receipt giữ `sourceSha256` của gốc và `sha256` của bản lưu, kích thước trước/sau. Chống nhập lại theo checksum gốc. Sau khi nhập **và gắn take thành công**, Electron gọi `shell.trashItem` đưa gốc vào Thùng rác Windows; file chưa gắn cảnh, nén lỗi hoặc nguồn đã thay đổi thì giữ lại. Receipt cũ không bị áp quy tắc này. Thùng rác vẫn khôi phục được; số tiết kiệm trên app không có nghĩa Windows đã thu hồi dung lượng Thùng rác.
+
+MP4/WebM/MOV mới → H.264/AAC/faststart, cạnh dài tối đa 1280; giữ nguồn nhỏ hơn, không hạ nguồn 9:16 đạt 720×1280 xuống dưới mức này. Clip ≤15 giây phải dưới 6×1024×1024 byte, nếu không thì từ chối nhập. Video dài giữ bitrate khoảng 2 Mbps, có thể vượt 6 MB và có nhãn trên take. PNG/JPEG/WebP mới → WebP q82, cạnh dài tối đa 2048; giữ byte gốc nếu chuyển đổi không nhỏ hơn. Giới hạn đầu vào Hộp nhận/tải tay vẫn 25 MB video, 8 MB ảnh. Hosted không có FFmpeg giữ hành vi cũ.
+
+Ảnh tham chiếu trong gói prompt mới dùng bản nén, không sửa asset tham chiếu. Render mới chỉ được dọn sau khi `media` đã khớp checksum; render cũ giữ nguyên. Muse vẫn mặc định tạm dừng; đường tải mới khi bật lại đã nối nén, nhưng chưa nghiệm thu dịch vụ thật. SQLite, profile, cấu hình, khóa và receipt không nén.
+
+Kiểm và cách chạy tiếp: [báo cáo T-006](../ops/office/reports/T-006.md). Build kiểm ở `outputs/T-006-build`, chưa thay `desktop/local-dist`. Các đoạn T-002 bên dưới là lịch sử trước T-006.
+
 Thay đổi source ngày 12/11/2026; chưa triển khai vào bản cài Windows.
 
 ## Cách dùng

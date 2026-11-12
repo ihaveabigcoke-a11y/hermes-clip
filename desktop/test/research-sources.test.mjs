@@ -1,3 +1,4 @@
+import {readArchive} from '../src/compress.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtemp,rm,readFile} from 'node:fs/promises';
@@ -174,13 +175,13 @@ test('read, youtube search and web search argv are fixed, sequential, bounded an
  assert.equal(maximum,1);assert.ok(calls.every(call=>call.options.timeout===45000));assert.equal(integrations.busy,false);
  const result=record(),row=result.data.candidates[0];
  assert.equal(row.cost,10);assert.equal(row.minimumOrder,5);assert.equal(row.matchType,'exact_sku');assert.deepEqual(result.data.selectedIds,['c0']);assert.equal(result.data.notes,'Muse receipt kept');
- assert.equal(row.listingCheck.status,'ok');assert.equal(row.listingCheck.warnings.length,2);assert.equal(await readFile(row.listingCheck.rawPath,'utf8'),page);
+ assert.equal(row.listingCheck.status,'ok');assert.equal(row.listingCheck.warnings.length,2);assert.equal(await readArchive(row.listingCheck.rawPath),page);
  assert.equal(row.competition.activeAdsObserved,2);assert.equal(row.competition.similarReels30d,4);assert.equal(row.competition.observedAt,at);assert.equal(row.competition.sourceUrl,'https://example.test/muse');
  assert.equal(row.competition.youtubeShorts.resultCount,1);assert.equal(row.competition.youtubeShorts.maxViews,50);assert.deepEqual(row.competition.webReferences.links,['https://example.test/reels']);
  assert.equal(integrations.job(job.id).state,'done');assert.equal(integrations.job(job.id).result.candidates[0].status,'ok');
  assert.equal(sources.enqueue(record()),null);assert.equal(calls.length,3);
  await sources.recheck({batchId:result.id});await integrations.idle();assert.equal(calls.length,6);assert.equal(integrations.jobs().length,2);
- assert.equal(await readFile(row.listingCheck.rawPath,'utf8'),page);
+ assert.equal(await readArchive(row.listingCheck.rawPath),page);
 }));
 test('10 candidates cap one automatic pass at 30 commands, even after replacement IDs',()=>fixture(async({integrations,sources,record,change})=>{
  let calls=0;integrations.run=async(...args)=>{calls++;return response(...args);};

@@ -69,7 +69,7 @@ export async function POST(request: Request) {
         if(envelope.action==="reference"&&!a.data.metadata)throw new ApiError(422,"Reference chưa đọc được kích thước. Dùng JPG/PNG/WebP hoặc MP4 đã kiểm tra.");
         if(envelope.action==="attach"||(envelope.action==="worker_result"||envelope.action==="manual_result")) {
           if(!a.data.metadata||!a.data.sha256)throw new ApiError(422,"File cũ chưa có metadata/hash. Tải lại file để kiểm tra trước khi gắn take.");
-          input={sceneId:input.sceneId,attemptId:input.attemptId??null,sceneRevision:input.sceneRevision,productRevision:input.productRevision,jobId:input.jobId,providerId:input.providerId,take:{assetId:a.id,name:a.data.name,type:a.data.type,size:a.data.size,sha256:a.data.sha256,metadata:a.data.metadata}};
+          input={sceneId:input.sceneId,attemptId:input.attemptId??null,sceneRevision:input.sceneRevision,productRevision:input.productRevision,jobId:input.jobId,providerId:input.providerId,take:{assetId:a.id,name:a.data.name,type:a.data.type,size:a.data.size,sha256:a.data.sha256,metadata:a.data.metadata,...(a.data.compression?{compression:a.data.compression}:{})}};
         }
         if(envelope.action==="export") {
           const items=variantItems(p,input.variantId),duration=items.reduce((n,i)=>n+(i.take.metadata.duration??0),0),m=a.data.metadata;

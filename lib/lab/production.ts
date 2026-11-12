@@ -26,7 +26,9 @@ const attemptSchema = z.object({
   snapshot: z.string().max(20000), providerJobId: text(200),
   usageUsd: z.number().nonnegative().nullable(), createdAt: z.number(),
 });
+export const compressionSchema = z.object({version:z.literal(1),sourceSha256:z.string().regex(/^[a-f0-9]{64}$/),sha256:z.string().regex(/^[a-f0-9]{64}$/),sourceSize:z.number().int().positive(),size:z.number().int().positive(),mode:z.enum(['encoded','remux','original']),overLimit:z.boolean(),maxBytes:z.number().int().positive().max(6*1024**2)});
 const takeSchema = z.object({
+  compression: compressionSchema.optional(),
   provider: z.enum(['muse','manual']).optional(),
   id, attemptId: id.nullable(), assetId: id, name: text(150), type: text(80),
   sha256: z.string().regex(/^[a-f0-9]{64}$/), size: z.number().int().positive(),

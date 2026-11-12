@@ -37,7 +37,8 @@ export async function importWorkerOutput(local, worker, id) {
   if (!assetId) {
     const output = await worker.output(id);
     const form = new FormData();
-    form.append('file', new File([output.bytes], output.name, {type: output.type}));
+    if(local.registerPreparedMedia)form.append('preparedToken',local.registerPreparedMedia({...job.output,type:output.type}));
+    else form.append('file', new File([output.bytes], output.name, {type: output.type}));
     form.append('commandId', commandId);
     const uploaded = await request('/api/assets', {method: 'POST', body: form});
     if (uploaded.sha256 !== output.sha256) throw Error('Checksum của file nhập không khớp bản tải.');

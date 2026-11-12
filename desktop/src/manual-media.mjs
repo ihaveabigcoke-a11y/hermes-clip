@@ -1,3 +1,4 @@
+import {compressMedia} from './compress.mjs';
 import {resolveProvider,mediaProviderReceipts} from './provider-routing.mjs';
 import {museIsPaused} from './muse-pause.mjs';
 import {createHash, randomUUID} from 'node:crypto';
@@ -7,7 +8,7 @@ import {spawn} from 'node:child_process';
 import {sessionCookie} from '../local/server.mjs';
 import {assertDiskSpace, storagePolicy} from './storage-policy.mjs';
 
-const types = {'.mp4':'video/mp4', '.webm':'video/webm', '.png':'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.webp':'image/webp'};
+const types = {'.mov':'video/quicktime', '.mp4':'video/mp4', '.webm':'video/webm', '.png':'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.webp':'image/webp'};
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const pad = value => String(value).padStart(2, '0');
 const stamp = date => `${date.getFullYear()}${pad(date.getMonth()+1)}${pad(date.getDate())}-${pad(date.getHours())}${pad(date.getMinutes())}`;
@@ -49,8 +50,8 @@ export async function probeManualMedia(path) {
 
 // Only loopback workspace requests. No provider, browser or external API is used.
 export class ManualMedia {
-  constructor({store, local, changed=()=>{}, now=()=>new Date()}) {
-    this.store=store; this.local=local; this.changed=changed; this.now=now;
+  constructor({store, local, changed=()=>{}, now=()=>new Date(), trashItem=null, compress=compressMedia}) {
+    this.store=store; this.local=local; this.trashItem=trashItem; this.compress=compress; this.changed=changed; this.now=now;
     this.observed=new Map(); this.processed=new Map(); this.errors=new Map(); this.tail=Promise.resolve();
   }
   exclusive(operation) {
@@ -82,7 +83,7 @@ export class ManualMedia {
   receipts() {return this.store.get('manual_receipts', []);}
   saveReceipt(receipt) {
     receipt={...receipt,provider:'manual'};
-    this.store.set('manual_receipts', [...this.receipts().filter(row=>row.sha256!==receipt.sha256), receipt]);
+    this.store.set('manual_receipts', [...this.receipts().filter(row=>(row.sourceSha256??row.sha256)!==(receipt.sourceSha256??receipt.sha256)), receipt]);
     this.changed(); return receipt;
   }
   catalog(records) {
@@ -138,7 +139,10 @@ export class ManualMedia {
         if (!ext) throw Error('Ảnh tham chiếu chưa hỗ trợ.');
         const bytes=new Uint8Array(await (await this.request(`/api/assets/${asset.id}`)).arrayBuffer());
         if (hash(bytes)!==asset.data.sha256) throw Error('Checksum ảnh tham chiếu không khớp.');
-        const name=`${code}-ref-${index+1}${ext}`; await writeFile(join(staging,name),bytes,{flag:'wx'});
+        const original=join(staging,`${code}-ref-${index+1}${ext}`); await writeFile(original,bytes,{flag:'wx'});
+        const compressed=await this.compress(original);
+        let name=basename(original);
+        try {if(compressed.type==='image/webp'&&compressed.path!==original){name=`${code}-ref-${index+1}.webp`;const target=join(staging,name);if(target===original)await writeFile(target,await readFile(compressed.path));else {await copyFile(compressed.path,target);await unlink(original);}}}finally{await compressed.cleanup();}
         references.push(`${name} | role: ${ref.role} | ${ref.notes||ref.name}`);
       }
       const prompt=[`Scene: ${code}`, 'Create a vertical 9:16 video, exactly 8 seconds. Use English for all dialogue and on-screen text.',
@@ -157,7 +161,7 @@ export class ManualMedia {
       '3. Chọn tỷ lệ 9:16 và thời lượng 8 giây. Tự kiểm chi phí của công cụ trước khi tạo.',
       '4. Tải ảnh/video về máy. Đặt tên chứa đúng mã cảnh (ví dụ '+rows[0].code+'-take2.mp4).',
       `5. Chép file đã tải xong vào Hộp nhận media: ${this.inbox()}`,
-      '6. App kiểm file, tạo phiên bản chờ duyệt và receipt; giữ nguyên bản gốc, không nhập lại checksum cũ.',
+      '6. App nén file mới, kiểm và gắn phiên bản chờ duyệt; sau khi thành công, đưa gốc mới vào Thùng rác Windows. File cũ giữ nguyên.',
       '7. File chưa khớp mã nằm ở Chưa gắn cảnh. Chọn đúng cảnh trong app để gắn tay.',
       '8. Xem lại nội dung, tỷ lệ/thời lượng trước khi duyệt và ghép. Gói này yêu cầu 8 giây; thông số cảnh cũ không tự thay đổi.',
       'App không tự gửi prompt hay điều khiển trang web. Muse đang được tạm dừng mặc định.',
@@ -172,7 +176,7 @@ export class ManualMedia {
     this.store.set('manual_exports',exports); await mkdir(this.inbox(),{recursive:true}); this.changed(); return this.inbox();
   });}
   assign({sha256,projectId,sceneId}) {return this.exclusive(async()=>{
-    const receipt=this.receipts().find(row=>row.sha256===sha256);
+    const receipt=this.receipts().find(row=>row.sha256===sha256&&row.state!=='received')??this.receipts().find(row=>row.sha256===sha256);
     if(receipt?.intent&&receipt.state!=='received') {
       // Reconcile the previous intent before honoring a new explicit assignment.
       const records=await this.records();
@@ -183,10 +187,11 @@ export class ManualMedia {
         this.saveReceipt({...receipt,state:'received',projectId:previous.id,sceneId:received.id,sceneRevision:take.sceneRevision,commandId:'manual_'+sha256,receivedAt:take.createdAt});
       } else this.saveReceipt({...receipt,intent:null});
     }
-    return this.attach(sha256,projectId,sceneId);
+    const attached=await this.attach(sha256,projectId,sceneId,receipt?.sourceSha256);
+    await this.recycleSource(attached);return attached;
   });}
-  async attach(sha256,projectId,sceneId) {
-    let receipt=this.receipts().find(row=>row.sha256===sha256);
+  async attach(sha256,projectId,sceneId,sourceSha256) {
+    let receipt=this.receipts().find(row=>row.sha256===sha256&&(!sourceSha256||row.sourceSha256===sourceSha256));
     if (!receipt?.assetId) throw Error('File chưa được nhập vào Thư viện.');
     if (receipt.state==='received') {
       if(receipt.projectId!==projectId||receipt.sceneId!==sceneId)throw Error('File đã gắn vào cảnh khác; giữ receipt cũ.');
@@ -210,6 +215,19 @@ export class ManualMedia {
       }catch(error){if(error.status!==409||attempt===3)throw error;}
     }
   }
+  async recycleSource(receipt) {
+    // Legacy receipts have no compression/sourceSha256 and are never trashed.
+    if(!this.trashItem||!receipt.compression||!receipt.sourceSha256||receipt.state!=='received'||receipt.trashedAt)return;
+    const path=receipt.sourcePath;
+    if(resolve(path)!==join(resolve(this.inbox()),basename(path)))throw Error('File gốc không còn ở Hộp nhận hiện tại; giữ nguyên.');
+    const info=await lstat(path).catch(error=>{if(error.code==='ENOENT')return null;throw error;});
+    if(!info)return;
+    if(!info.isFile()||info.isSymbolicLink()||hash(await readFile(path))!==receipt.sourceSha256)throw Error('File gốc đã thay đổi; không đưa vào Thùng rác.');
+    if((receipt.trashAttempts??0)>=3)throw Error('Đã thử Thùng rác 3 lần; gốc còn nguyên. Kiểm quyền Windows và tự chuyển gốc sau khi xem take đã nhập.');
+    receipt=this.saveReceipt({...receipt,trashAttempts:(receipt.trashAttempts??0)+1});
+    await this.trashItem(path);
+    this.saveReceipt({...receipt,trashedAt:Date.now(),error:''});
+  }
   async importFile(path, rows) {
     const before=await stat(path), ext=extname(path).toLowerCase();
     const type=types[ext];
@@ -218,30 +236,40 @@ export class ManualMedia {
     // Probe a private snapshot, so a browser still writing the source cannot change the imported bytes.
     const staging=join(this.local.root,'manual-staging'); await mkdir(staging,{recursive:true});
     const snapshot=join(staging,randomUUID()+ext);
+    let compressed;
     try {
       await copyFile(path,snapshot);
       const after=await stat(path);
       if(before.size!==after.size||before.mtimeMs!==after.mtimeMs)throw Error('File đang thay đổi; chờ tải xong.');
-      const bytes=await readFile(snapshot), sha256=hash(bytes), prior=this.receipts().find(row=>row.sha256===sha256);
+      const sourceBytes=await readFile(snapshot), sourceSha256=hash(sourceBytes);
+      const prior=this.receipts().find(row=>(row.sourceSha256??row.sha256)===sourceSha256);
       if(prior?.assetId) {
-        if(prior.intent&&prior.state!=='received')await this.attach(sha256,prior.intent.projectId,prior.intent.sceneId);
-        return prior;
+        let receipt=prior;
+        if(prior.intent&&prior.state!=='received')receipt=await this.attach(prior.sha256,prior.intent.projectId,prior.intent.sceneId,prior.sourceSha256);
+        // Reconcile only the original intake path. A later duplicate drop is
+        // ignored, never silently removed using a receipt for another path.
+        if(receipt.sourcePath===path)await this.recycleSource(receipt);
+        return this.receipts().find(row=>(row.sourceSha256??row.sha256)===sourceSha256)??receipt;
       }
-      const probe=await probeManualMedia(snapshot), name=basename(path);
+      compressed=await this.compress(snapshot);
+      const {sha256,metadata,compression}=compressed, name=basename(path);
+      const warning=Math.abs((metadata.width/metadata.height)/(9/16)-1)>.01?'Sai tỷ lệ 9:16; file vẫn được nhập, cần xem lại.':'';
+      const probe={type:compressed.type,metadata,warning};
       const matched=rows.filter(row=>!row.archived&&new RegExp(`(^|[^a-z0-9])${row.code}([^a-z0-9]|$)`,'i').test(name));
       const target=matched.length===1&&this.route(matched[0].project.data,matched[0].scene,matched[0].project.id).provider==='manual'&&!this.route(matched[0].project.data,matched[0].scene,matched[0].project.id).blocked?matched[0]:null;
-      let receipt=this.saveReceipt({sha256,name,sourcePath:path,state:'unmatched',...probe,
+      let receipt=this.saveReceipt({sha256,sourceSha256,compression,sourceSize:before.size,size:compressed.size,name,sourcePath:path,state:'unmatched',...probe,
         error:matched.length===1?this.route(matched[0].project.data,matched[0].scene,matched[0].project.id).reason:'',createdAt:Date.now(),assetId:null});
-      const form=new FormData(); form.append('commandId','manual_'+sha256); form.append('file',new File([bytes],name,{type:probe.type}));
+      const form=new FormData(); form.append('commandId','manual_'+sourceSha256);
+      form.append('preparedToken',this.local.registerPreparedMedia({...compressed,name:name.replace(/\.[^.]+$/,'')+extname(compressed.path)}));
       const asset=await (await this.request('/api/assets',{method:'POST',body:form})).json();
       if(asset.sha256!==sha256)throw Error('Checksum sau nhập không khớp.');
       receipt=this.saveReceipt({...receipt,assetId:asset.id});
       if(target) {
-        try {return await this.attach(sha256,target.project.id,target.scene.id);}
-        catch(error) {return this.saveReceipt({...this.receipts().find(row=>row.sha256===sha256),error:error.message});}
+        try {const attached=await this.attach(sha256,target.project.id,target.scene.id,sourceSha256);await this.recycleSource(attached);return attached;}
+        catch(error) {return this.saveReceipt({...this.receipts().find(row=>row.sourceSha256===sourceSha256),error:error.message});}
       }
       return receipt;
-    } finally {await unlink(snapshot).catch(()=>{});}
+    } finally {await compressed?.cleanup();await unlink(snapshot).catch(()=>{});}
   }
   scan() {return this.exclusive(async()=>{
     const inbox=this.inbox(); await mkdir(inbox,{recursive:true});
@@ -254,7 +282,7 @@ export class ManualMedia {
         const signature=`${info.size}:${info.mtimeMs}`;
         if(this.processed.get(path)===signature)continue;
         if(this.observed.get(path)!==signature){this.observed.set(path,signature);continue;}
-        await this.importFile(path,rows); this.processed.set(path,signature); this.errors.delete(entry.name);
+        const receipt=await this.importFile(path,rows); if(receipt?.error){this.errors.set(entry.name,receipt.error);}else{this.processed.set(path,signature);this.errors.delete(entry.name);}
       }catch(error){this.errors.set(entry.name,error.message);}
     }
     return this.status();

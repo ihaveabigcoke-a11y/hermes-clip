@@ -579,7 +579,7 @@ export class Worker {
       const report = await this.validateOutput(output, job.request);
       this.store.transition(id, 'ready', {
         failedFilePath: null,
-        output: {path: output, name: output.split(/[\\/]/).at(-1), ...report},
+        output: {path: output, name: output.split(/[\\/]/).at(-1), ...(adapter.compression?{compression:adapter.compression}:{}), ...report},
         note: 'Đã ghi file và giải mã toàn bộ; vẫn cần người duyệt nội dung.',
       });
       await this.importReady(id);
