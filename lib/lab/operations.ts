@@ -148,6 +148,9 @@ export const socialAccountSchema = z.object({
   archived: z.boolean().default(false),
 });
 export const contentPlanSchema = z.object({
+  offerPrice:z.number().finite().nonnegative().nullable().optional(),
+  offerCurrency:candidateCurrencySchema.nullable().optional(),
+  comparison:z.object({groupId:identifier,sourceGroupId:identifier,ctaKeyword:commentKeywordSchema,price:z.number().finite().nonnegative().nullable(),currency:candidateCurrencySchema.nullable(),landingBaseUrl:z.string().refine(isHttpsLink).nullable(),variantId:identifier,assetId:identifier,accountId:z.union([z.literal(''),identifier])}).optional(),
   variantId:identifier.nullable().optional(),
   provider:z.string().regex(/^(muse|manual|codex|import:[^\r\n]{1,80})$/).optional(),
   name: z.string().trim().min(2).max(150),

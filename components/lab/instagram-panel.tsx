@@ -16,6 +16,7 @@ import InstagramMetrics from './instagram-metrics';
 import {ProductMetrics,InstagramContentTable} from './instagram-overview';
 import InstagramKeywordComments from './instagram-keyword-comments';
 import PlanUtmLink from './plan-utm-link';
+import {HookMatrix} from './hook-matrix';
 import {instagramAccountContentRows} from '@/lib/lab/instagram-summary';
 
 type Props = {
@@ -45,14 +46,14 @@ function jobTone(job?: InstagramJob) {
 export default function InstagramPanel({product, accounts, plans, records, demo, disabled, onAccount, onPlan, onCreateProduction, onSaveComments, onSavePlan, notify}: Props) {
   const live = useInstagramStatus(!demo);
   const organization = useDesktopPreference<MediaOrganization>('mediaOrganization', {});
-  type Tab='overview'|'content'|'accounts'|'history';
-  const readTab=()=>{const value=new URL(location.href).searchParams.get('ig_tab');return (['overview','content','accounts','history'].includes(value??'')?value:'overview') as Tab;};
+  type Tab='overview'|'content'|'accounts'|'history'|'matrix';
+  const readTab=()=>{const value=new URL(location.href).searchParams.get('ig_tab');return (['overview','content','accounts','history','matrix'].includes(value??'')?value:'overview') as Tab;};
   const [tab, updateTab] = useState<Tab>(readTab);
   const setTab=(value:Tab)=>{updateTab(value);const url=new URL(location.href);url.searchParams.set('ig_tab',value);history.replaceState({},'',url);};
   useEffect(()=>{const restore=()=>updateTab(readTab());window.addEventListener('popstate',restore);return()=>window.removeEventListener('popstate',restore);},[]);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(()=>Math.max(1,Math.floor(plans.findIndex(p=>p.id===new URL(location.href).searchParams.get('plan'))/8)+1));
   const [historyPage, setHistoryPage] = useState(1);
-  const [selectedId, setSelectedId] = useState('');
+  const [selectedId, setSelectedId] = useState(()=>new URL(location.href).searchParams.get('plan')??'');
   const [selection, setSelection] = useState<Record<string, {accountId?: string; assetId?: string}>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -68,7 +69,10 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
   const fixedSnapshot = latest && (pendingStates.includes(latest.state) || latest.state === 'published') ? latest.snapshot : null;
   const production = plan && records.find(record => record.kind === 'production' && (record.id === plan.data.productionId || !plan.data.productionId && record.data.contentPlanId === plan.id));
   const media = catalog.filter(entry => entry.project.id === production?.id && entry.take.type === 'video/mp4');
-  const chosenMedia = fixedSnapshot ? media.find(entry => entry.take.assetId === fixedSnapshot.assetId) : media.find(entry => entry.take.assetId === selection[plan?.id ?? '']?.assetId)
+  const renderDraft=!!plan?.data.comparison;
+  const exported=renderDraft&&production?.data.exports.find((e:any)=>e.kind==='render'&&e.verified&&e.variantId===plan?.data.variantId&&e.assetId===plan?.data.assetId);
+  const renderAsset=exported?records.find(r=>r.kind==='asset'&&r.id===exported.assetId&&r.data.sha256===exported.sha256):null;
+  const chosenMedia = renderDraft?undefined:fixedSnapshot ? media.find(entry => entry.take.assetId === fixedSnapshot.assetId) : media.find(entry => entry.take.assetId === selection[plan?.id ?? '']?.assetId)
     ?? media.find(entry => entry.take.assetId === plan?.data.assetId) ?? preferredMedia(media, organization.value)[0];
   const activeAccounts = accounts.filter(account => !account.data.archived);
   const accountId = fixedSnapshot?.accountId ?? selection[plan?.id ?? '']?.accountId ?? plan?.data.accountId ?? '';
@@ -81,7 +85,7 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
     && !pending && !published && !disabled && !busy && !demo && !!live.status;
   const configProfile = live.status?.profiles.find(profile => profile.id === config?.id);
   const historyCurrentPage = Math.min(historyPage, Math.max(1, Math.ceil(jobs.length / 8)));
-  function openContent(id:string){setSelectedId(id);setPage(Math.max(1,Math.floor(plans.findIndex(p=>p.id===id)/8)+1));setTab('content');}
+  function openContent(id:string){setSelectedId(id);setPage(Math.max(1,Math.floor(plans.findIndex(p=>p.id===id)/8)+1));setTab('content');const url=new URL(location.href);url.searchParams.set('plan',id);history.replaceState({},'',url);}
 
   async function action(method: string, payload: unknown, message = '') {
     if (lock.current) return;
@@ -130,8 +134,10 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
       <button type="button" aria-pressed={tab==='overview'} onClick={()=>setTab('overview')}>Tổng quan</button>
       <button type="button" aria-pressed={tab==='content'} onClick={()=>setTab('content')}>Nội dung <span>{plans.length}</span></button>
       <button type="button" aria-pressed={tab==='accounts'} onClick={()=>setTab('accounts')}>Tài khoản <span>{accounts.length}</span></button>
+      <button type="button" aria-pressed={tab==='matrix'} onClick={()=>setTab('matrix')}>Ma trận</button>
       <button type="button" aria-pressed={tab==='history'} onClick={()=>setTab('history')}>Lượt đăng <span>{jobs.length}</span></button>
     </div>{tab==='content'&&<Button tone="neutral" disabled={disabled||busy} onClick={()=>onPlan()}><Plus size={16}/>Thêm nội dung</Button>}</div>
+    {tab==='matrix'&&<HookMatrix records={records} productId={product.id}/>}
     {tab==='overview'&&<><ProductMetrics productId={product.id} records={records} status={live.status}/>
       <InstagramContentTable records={records} productId={product.id} status={live.status} onOpenPlan={openContent}/>
     </>}
@@ -169,10 +175,10 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
       })}</ul><Pagination page={currentPage} total={plans.length} size={8} onPage={value => {setPage(value); setSelectedId('');}}/></div>
       <section className="instagram-publish-detail" aria-label={'Nội dung ' + plan.data.name}>
         <header className="instagram-section-heading"><h2>{plan.data.name}</h2><small>Nhà cung cấp: {plan.data.provider??'Chưa ghi nguồn'}</small><Button tone="neutral" disabled={disabled || busy} onClick={() => onPlan(plan)}>Sửa nội dung</Button></header>
-        <div className="instagram-publish-columns"><div className="instagram-video-preview">{chosenMedia ? <MediaPlayer take={chosenMedia.take}/> : <Empty title="Chưa có video" text="Gắn dự án có video trong Sửa nội dung."/>}</div>
+        <div className="instagram-publish-columns"><div className="instagram-video-preview">{renderAsset ? <video src={"/api/assets/"+renderAsset.id} controls playsInline preload="none" aria-label={renderAsset.data.name}/> : chosenMedia ? <MediaPlayer take={chosenMedia.take}/> : <Empty title="Chưa có video" text="Gắn dự án có video trong Sửa nội dung."/>}</div>
           <div className="instagram-publish-fields">
-            <label className="field">Video sẽ đăng<select aria-label="Video sẽ đăng" value={chosenMedia?.take.assetId ?? ''} disabled={busy || !!pending || !!published || !media.length} onChange={event => choose('assetId', event.target.value)}>
-              {!media.length && <option value="">Chưa có video</option>}{media.map(entry => <option key={entry.key} value={entry.take.assetId}>{entry.scene.name} · {reviewLabels[entry.take.review]} · {formatTime(entry.take.createdAt)}</option>)}
+            <label className="field">Video sẽ đăng<select aria-label="Video sẽ đăng" value={renderAsset?.id ?? chosenMedia?.take.assetId ?? ''} disabled={renderDraft || busy || !!pending || !!published || !media.length} onChange={event => choose('assetId', event.target.value)}>
+              {renderAsset&&<option value={renderAsset.id}>{renderAsset.data.name}</option>}{!renderDraft&&!media.length && <option value="">Chưa có video</option>}{!renderDraft&&media.map(entry => <option key={entry.key} value={entry.take.assetId}>{entry.scene.name} · {reviewLabels[entry.take.review]} · {formatTime(entry.take.createdAt)}</option>)}
             </select></label>
             <label className="field">Tài khoản đăng<select aria-label="Tài khoản đăng" value={account?.id ?? ''} disabled={busy || !!pending || !!published || !activeAccounts.length} onChange={event => choose('accountId', event.target.value)}>
               {!account && <option value="">Chọn tài khoản</option>}{activeAccounts.map(account => <option key={account.id} value={account.id}>{account.data.name}{live.status?.profiles.find(profile => profile.id === account.id)?.handle ? ' · @' + live.status.profiles.find(profile => profile.id === account.id)!.handle : ''}</option>)}

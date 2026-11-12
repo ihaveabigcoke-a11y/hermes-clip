@@ -1,4 +1,5 @@
 import test from 'node:test';
+import './hook-matrix.test.mjs';
 import './text-exchange.test.mjs';
 import './t005-research.test.mjs';
 import assert from 'node:assert/strict';

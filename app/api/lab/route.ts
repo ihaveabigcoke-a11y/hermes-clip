@@ -17,6 +17,7 @@ import { referenceDraftRecordId } from "@/lib/lab/viral-reference";
 import {env} from 'cloudflare:workers';
 import {buildOfficeView} from '@/lib/lab/office-view';
 import {dailySelectionInput} from '@/lib/lab/daily-selection';
+import {hookDraftInput} from '@/lib/lab/hook-matrix';
 export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   try {
@@ -53,6 +54,13 @@ export async function POST(request: Request) {
   try {
     const uid = await owner(request);
     const b = await body(request);
+    if(b.action==='create_hook_drafts') {
+      const input=hookDraftInput.safeParse(b.input);
+      if(!input.success)throw new ApiError(422,'Chọn nhóm hook, tài khoản và landing HTTPS hợp lệ.');
+      if(!(env as any).CREATE_HOOK_DRAFTS)throw new ApiError(503,'Tạo nhóm bài nháp cần bản desktop local.');
+      try{return Response.json({records:(env as any).CREATE_HOOK_DRAFTS(uid,input.data)});}
+      catch(error){throw new ApiError(409,(error as Error).message);}
+    }
     if(b.action==='select_daily') {
       const input=dailySelectionInput.safeParse(b.input);
       if(!input.success)throw new ApiError(422,'Nhập mã sản phẩm và thứ hạng hợp lệ.');
@@ -131,6 +139,8 @@ export async function POST(request: Request) {
         throw new ApiError(422, "Tạo hồ sơ mới khi cần chuyển sang sản phẩm khác.", {productId: "Hồ sơ đã gắn với sản phẩm ban đầu."});
     }
     if (kind === "content_plan") {
+      const savedPlan=await getRecord(uid,id);
+      if(JSON.stringify(savedPlan?.data.comparison)!==JSON.stringify(d.comparison))throw new ApiError(422,'Giữ bản lưu điều kiện của lượt so sánh. Tạo nhóm qua nút Tạo 3 bài nháp.');
       const account = d.accountId ? await getRecord(uid, d.accountId) : null;
       if (d.accountId && (account?.kind !== "social_account" || account.data.archived || account.data.productId !== d.productId))
         throw new ApiError(422, "Tài khoản và sản phẩm không khớp.", {accountId: "Chọn tài khoản của sản phẩm này."});

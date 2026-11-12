@@ -1,0 +1,29 @@
+"use client";
+import {useState,useRef} from 'react';
+import {type LabRecord} from '@/lib/lab/domain';
+import {hookMatrix,planHookDrafts} from '@/lib/lab/hook-matrix';
+import {Button,api} from './primitives';
+import './hook-matrix.css';
+
+export function HookMatrix({records,productId}:{records:LabRecord[];productId:string}) {
+  const groups=[...new Set(records.filter(r=>r.kind==='content_plan'&&r.data.productId===productId&&r.data.comparison).map(r=>r.data.comparison.groupId as string))];
+  const [chosen,setChosen]=useState('');const group=groups.includes(chosen)?chosen:groups[0];
+  if(!group)return <p className="info-panel">Chưa có lượt so sánh. Xuất ba hook rồi tạo bài nháp ở Ghép và xuất.</p>;
+  const matrix=hookMatrix(records,productId,group),show=(v:number|null)=>v===null?'Chưa biết':v.toLocaleString('vi-VN');
+  return <section className="hook-matrix" aria-label="Ma trận hook và tài khoản"><h2>Ma trận</h2><label>Lượt so sánh<select value={group} onChange={e=>setChosen(e.target.value)}>{groups.map((g,i)=><option key={g} value={g}>Lượt {groups.length-i} · {g.slice(-8)}</option>)}</select></label>
+    <div className="hook-matrix-scroll" role="region" aria-label="Bảng hook × tài khoản" tabIndex={0}><table><caption>Hook × tài khoản · cùng CTA, giá và landing trong một lượt</caption><thead><tr><th scope="col">Hook</th>{matrix.accounts.map(id=><th scope="col" key={id}>{records.find(r=>r.kind==='social_account'&&r.id===id)?.data.name??'Chưa gán tài khoản'}</th>)}</tr></thead><tbody>{matrix.variants.map((vid,i)=><tr key={vid}><th scope="row">Hook {i+1}</th>{matrix.accounts.map(aid=>{const cell=matrix.cells.find(c=>c.variantId===vid&&c.accountId===aid)!;const p=cell.plan;return <td key={aid}>{p?<><a href={`/?view=social&ops_id=${encodeURIComponent(productId)}&ig_tab=content&plan=${encodeURIComponent(p.id)}`}>{p.data.name}</a><p>{({draft:'Bản nháp',planned:'Đã lên kế hoạch',published_manual:'Đã đăng tay',published_browser:'Đã đăng'} as Record<string,string>)[p.data.status]??p.data.status}</p>{cell.drift.length>0&&<p role="alert" className="inline-error">Lệch lượt so sánh: {cell.drift.join(', ')}</p>}<dl>{([['keywordComments','Comment từ khóa'],['dms','DM'],['shares','Share'],['utmClicks','Click UTM'],['orders','Đơn']] as const).map(([key,label])=><div key={key}><dt>{label}</dt><dd>{show(cell.signals[key])}</dd></div>)}</dl>{p.data.utmLink?<a href={p.data.utmLink} target="_blank" rel="noreferrer">Link UTM</a>:<small>UTM: Chưa có đủ landing/tài khoản</small>}</>:<span>Chưa có bài</span>}</td>;})}</tr>)}</tbody></table></div></section>;
+}
+
+export function HookDrafts({records,project,disabled,onSaved}:{records:LabRecord[];project:LabRecord;disabled:boolean;onSaved:()=>void}) {
+  const initialGroup=project.data.variants?.filter((v:any)=>v.comparisonGroupId).at(-1)?.comparisonGroupId;
+  const existing=records.filter(r=>r.kind==='content_plan'&&r.data.productionId===project.id&&r.data.comparison?.sourceGroupId===initialGroup);
+  const [selected,setSelected]=useState<string[]>(()=>[...new Set(existing.map(r=>r.data.comparison.accountId as string).filter(Boolean))]),[groupId,setGroupId]=useState(''),[landing,setLanding]=useState(()=>existing[0]?.data.comparison.landingBaseUrl??''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('');
+  const batch=useRef(crypto.randomUUID().replaceAll('-',''));
+  const groups:string[]=[...new Set<string>((project.data.variants??[]).map((v:any)=>v.comparisonGroupId as string).filter(Boolean))];
+  const group=groups.includes(groupId)?groupId:groups.at(-1)??'';
+  const accounts=records.filter(r=>r.kind==='social_account'&&r.data.productId===project.data.productId&&!r.data.archived);
+  const input={projectId:project.id,revision:project.revision,sourceGroupId:group,batchId:batch.current,accountIds:selected,landingBaseUrl:landing.trim()||null};
+  let reason='';try{planHookDrafts(records,input);}catch(e){reason=(e as Error).message;}
+  async function create(){setBusy(true);setError('');try{const result=await api('/api/lab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create_hook_drafts',input})});setMessage(`Đã lưu ${result.records.length} bài nháp. Chưa đăng.`);batch.current=crypto.randomUUID().replaceAll('-','');onSaved();}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
+  return <section className="hook-drafts info-panel" aria-label="Tạo bài nháp từ ba hook"><h3>Tạo 3 bài nháp</h3><p>Mỗi tài khoản đã chọn nhận ba hook. Giữ chung CTA, giá và landing; chỉ lưu bản nháp.</p><div className="hook-draft-fields"><label>Nhóm ba hook<select value={group} onChange={e=>{setGroupId(e.target.value);batch.current=crypto.randomUUID().replaceAll('-','');}}><option value="">Chọn nhóm</option>{groups.map((g,i)=><option value={g} key={g}>Nhóm {i+1} · {g.slice(-8)}</option>)}</select></label><label>Landing HTTPS (nếu đã có)<input type="url" value={landing} onChange={e=>setLanding(e.target.value)} placeholder="https://"/></label></div><fieldset><legend>Tài khoản nhận bài nháp</legend>{accounts.length?accounts.map(a=><label className="hook-account" key={a.id}><input type="checkbox" checked={selected.includes(a.id)} onChange={e=>setSelected(e.target.checked?[...selected,a.id]:selected.filter(id=>id!==a.id))}/>{a.data.name}</label>):<p>Chưa có tài khoản cho sản phẩm này.</p>}</fieldset><p>{3*Math.max(1,selected.length)} bài nháp · {!selected.length?'Chưa gán tài khoản · ':''}Chưa có giá thì giữ “Chưa biết”.</p>{reason&&<p>{reason}</p>}{error&&<p role="alert" className="inline-error">{error}</p>}{message&&<p role="status">{message}</p>}<Button busy={busy} disabled={disabled||!!reason} onClick={()=>void create()}>Tạo 3 bài nháp</Button><HookMatrix records={records} productId={project.data.productId}/></section>;
+}
