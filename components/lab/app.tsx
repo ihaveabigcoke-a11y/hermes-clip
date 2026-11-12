@@ -92,6 +92,7 @@ import {
   productMarginLabel,
   formatTime,
 } from "@/lib/lab/domain";
+import DailyGuide from './daily-guide';
 import MetricImport from './metric-import';
 import {useManualMedia} from './manual-media';
 import {useDesktopStatus} from '@/lib/lab/use-desktop-status';
@@ -108,6 +109,7 @@ import {viralFormulaRecordId} from '@/lib/lab/viral-formulas';
 import './department-nav.css';
 const businessViews = new Set(["overview", "studio", "experiments", "results", "social", "landing"]);
 const navigation = [
+  {id:"guide",label:"Hướng dẫn",icon:BookOpen},
   {id:"content",label:"Khung content",icon:FileText},
   {id:"competitors",label:"Đối thủ & video",icon:Search},
   {id:"office",label:"Phòng sản xuất",icon:LayoutDashboard},
@@ -272,7 +274,6 @@ export default function LabApp() {
     [editor, setEditor] = useState<Editor | null>(null),
     [dirty, setDirty] = useState(false),
     [archiveTarget, setArchiveTarget] = useState<LabRecord | null>(null),
-    [help, setHelp] = useState(false),
     [busy, setBusy] = useState(""),
     [selected, setSelected] = useState(""),
     [studioTab, setStudioTab] = useState("concepts"),
@@ -1323,7 +1324,7 @@ export default function LabApp() {
           {sectionTitle(
             "Từ ý tưởng đến bằng chứng",
             "Mỗi sản phẩm có một bước tiếp theo.",
-            <button className="text-link" onClick={() => setHelp(true)}>
+            <button className="text-link" onClick={() => navigate("guide")}>
               Xem quy trình
               <ArrowUpRight size={15} />
             </button>,
@@ -2192,7 +2193,7 @@ export default function LabApp() {
             <a href="?view=settings" aria-current={view === "settings" ? "page" : undefined} className={view === "settings" ? "active" : ""}
               onClick={event => { event.preventDefault(); navigate("settings"); }}><PlugZap size={18}/><span>Cài đặt</span></a>
           </nav>
-          <button className="sidebar-help" onClick={() => setHelp(true)}><BookOpen size={18}/><span>Hướng dẫn</span></button>
+          <button className="sidebar-help" onClick={() => navigate("guide")}><BookOpen size={18}/><span>Hướng dẫn</span></button>
         </div>
       </aside>
       <div className="main-shell">
@@ -2252,7 +2253,7 @@ export default function LabApp() {
                             ? "Từ tham chiếu chuẩn đến từng cảnh, phiên bản và biến thể có thể truy vết."
                           : view === "chat" ? "Hội thoại với Muse qua hồ sơ đã đăng nhập."
                           : view === "accounts" ? "Đăng nhập, kiểm tra phiên và hạn mức Muse."
-                          : "Quản lý công cụ, ngân sách và dữ liệu."}
+                          : view === "guide" ? "Theo một sản phẩm từ lựa chọn đến quyết định." : "Quản lý công cụ, ngân sách và dữ liệu."}
               </p>
             </div>
             <div className="page-actions">
@@ -2306,6 +2307,8 @@ export default function LabApp() {
               <Loader2 className="spin" />
               Đang mở không gian làm việc…
             </div>
+          ) : view === "guide" ? (
+            <DailyGuide key={demo?"demo-guide":"real-guide"} records={records}/>
           ) : view === "overview" ? (
             overview()
           ) : view === "office" || view === "signals" ? (
@@ -2429,37 +2432,7 @@ export default function LabApp() {
           </Button>
         </div>
       </Modal>
-      <Modal
-        open={help}
-        onClose={() => setHelp(false)}
-        title="Một vòng Hermes Clip"
-        description="Từ ý tưởng tới bằng chứng, với điểm dừng ở mỗi chặng."
-      >
-        <div className="modal-body flow-help">
-          {[
-            "Chốt khách, thị trường, giá và mức lỗ có thể chấp nhận.",
-            "Tìm hàng, kiểm supplier và biên lợi nhuận dự kiến.",
-            "Kiểm mẫu sản phẩm, ghi điều kiện và giới hạn công dụng.",
-            "Khóa giả thuyết, trang có giá và biến muốn thử.",
-            "Tạo khung content, video; bạn duyệt phiên bản cuối.",
-            "Đo đúng tệp và quan tâm sau khi thấy giá.",
-            "Thử đơn thật khi nguồn hàng, giao và support đã sẵn sàng.",
-            "Đối soát giao, hoàn, chi phí; tăng từng bước khi lặp lại có lãi.",
-          ].map((s, i) => (
-            <div key={s}>
-              <span>{String(i + 1).padStart(2, "0")}</span>
-              <p>{s}</p>
-            </div>
-          ))}
-          <div className="info-strip">
-            <Info size={17} />
-            <span>
-              V1 quản lý và đo thủ công. Kết nối video, social và bán hàng sẽ bổ
-              sung theo API được xác minh.
-            </span>
-          </div>
-        </div>
-      </Modal>
+
     </div>
   );
 }
