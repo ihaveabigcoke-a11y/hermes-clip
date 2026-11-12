@@ -1,4 +1,17 @@
-# Hermes Clip — bối cảnh và trạng thái (source cập nhật đến đêm 3, 12/11/2026)
+# Hermes Clip — bối cảnh và trạng thái (cập nhật 13/11/2026)
+
+## T-009 — Codex tiếp quản bằng một main agent, nghiệm thu rea-video
+
+Yêu cầu trực tiếp ngày 13/11: Codex tự làm boss và hoàn tất các job trong `D:/agent-office/CODEX-BOSS-PROMPT.md`, chỉ **một main agent**. Không thuê worker, gọi `codex exec` để giao việc, spawn sub-agent hoặc chạy lại orchestrator. Các quy trình hai boss trong tài liệu ngày 12/11 là lịch sử. T-001 đến T-008 đã có commit; prompt cũ còn ghi T-006 chờ làm và 31 file WIP là lỗi thời. Khi tiếp quản, app ở `bd8aba9`, nhánh `main`, cây sạch, không có Electron đang chạy.
+
+Đã cài rea-video đúng revision `2f50ab340ab09da334c0dbffc55244ddbaa52e44` vào `desktop/.integrations/rea-video`, dùng Python 3.12.14 trong `.rea-venv` riêng và model local. Cấu hình đường dẫn chỉ ghi trong `.integrations/config.json` bị Git bỏ qua. Commit code **`e47b51d`** bổ sung đường dẫn rea-video còn thiếu khi app đã có cấu hình tích hợp cũ, giữ nguyên đường dẫn người dùng đã chọn và các receipt. Bridge dùng chung cache model cạnh checkout, vẫn tôn trọng `REA_VIDEO_MODELS` do người dùng đặt. Không mở app hoặc đọc/ghi SQLite/profile thật.
+
+Nghiệm thu local thật qua service Hermes: MP4 10 giây từ snapshot đã công khai → rea-video (~62,5 giây) → 1 shot, OCR có mốc, BPM chưa biết giữ `null` → xuất review → chính main agent đọc contact sheet → nhập qua CLI `apply-review` → trạng thái `complete`, đủ narrative và prompt. DB dùng fixture riêng; SHA-256 media gốc không đổi. Không gọi Codex/Gemini/Muse/Instagram, không chọn lại sản phẩm cũ hoặc cập nhật thư viện công thức. OCR nhận cả chữ in trên túi là chữ đè; cần kiểm mắt trước tái dùng, không coi đây là nghiệm thu chất lượng nội dung.
+
+Sau sửa: typecheck đạt; domain **213/213**, API **28/28**, desktop **465 pass / 1 skip OpenMontage / 0 fail**; bridge Python **2/2**. Không nới assertion. Build và kiểm ảnh chạy tiếp từ cây sạch; kết quả cuối, giờ build và hash được ghi trong `outputs/office-20261113/FINAL.md` và `D:/agent-office/ngh-ch-ti-p-agent-office/STATUS.md`. Chưa kiểm Electron trên dữ liệu thật, VLM thật, Meta thật, file mới từ Flow/Gemini và Thùng rác Windows thật. Không push/merge trong lượt này.
+
+Bàn giao và cách chạy tiếp: [T-009](T-009-OFFICE-HANDOVER.md), [báo cáo](../../ops/office/reports/T-009.md). Các checkpoint bên dưới giữ nguyên làm lịch sử; các dòng “chưa commit/chưa build” của worker ngày 12/11 không phủ nhận những lần boss đã nghiệm thu sau đó.
+
 
 ## T-006 — nén file mới, chưa nghiệm thu full suite/ảnh UI
 
