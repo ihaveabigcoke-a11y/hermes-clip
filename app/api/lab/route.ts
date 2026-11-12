@@ -14,6 +14,9 @@ import { kinds, productGate, type Kind } from "@/lib/lab/domain";
 import { researchProductId } from "@/lib/lab/operations";
 import { viralFormulaRecordId } from "@/lib/lab/viral-formulas";
 import { referenceDraftRecordId } from "@/lib/lab/viral-reference";
+import {env} from 'cloudflare:workers';
+import {buildOfficeView} from '@/lib/lab/office-view';
+import {dailySelectionInput} from '@/lib/lab/daily-selection';
 export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   try {
@@ -29,6 +32,11 @@ export async function GET(request: Request) {
         409,
         "Workspace vượt giới hạn bản đầu. Cần phân trang phía server trước khi tiếp tục.",
       );
+    if(new URL(request.url).searchParams.get('view')==='office') {
+      const state=(env as any).OFFICE_STATE;
+      if(!state)throw new ApiError(503,'Màn theo dõi cần dữ liệu desktop local.');
+      return Response.json({view:buildOfficeView(r.results.map(decode),state.jobs,state.manual,state.integrations,Date.now())},{headers:{'Cache-Control':'no-store'}});
+    }
     return Response.json(
       {
         records: r.results.map(decode).filter(r=>r.kind!=="assistant_run"),
@@ -45,6 +53,13 @@ export async function POST(request: Request) {
   try {
     const uid = await owner(request);
     const b = await body(request);
+    if(b.action==='select_daily') {
+      const input=dailySelectionInput.safeParse(b.input);
+      if(!input.success)throw new ApiError(422,'Nhập mã sản phẩm và thứ hạng hợp lệ.');
+      if(!(env as any).SELECT_RESEARCH)throw new ApiError(503,'Chọn theo ngày cần bản desktop local.');
+      try {return Response.json({records:(env as any).SELECT_RESEARCH(uid,input.data)});}
+      catch(error) {throw new ApiError(409,(error as Error).message);}
+    }
     if (
       !kinds.includes(b.kind) ||
       ![
@@ -80,6 +95,17 @@ export async function POST(request: Request) {
       d.updatedAt = new Date().toISOString();
     }
     if (kind === "settings") id = "workspace";
+    if(kind==='product') {
+      const previous=await getRecord(uid,id);
+      if((d.productKey??null)!==(previous?.data.productKey??null))
+        throw new ApiError(422,'Gán mã khi chọn sản phẩm theo ngày. Mã đã gán không được đổi.');
+    }
+    if(kind==='research_batch') {
+      const previous=await getRecord(uid,id);
+      if(JSON.stringify(d.selectionLinks??[])!==JSON.stringify(previous?.data.selectionLinks??[]) ||
+        (previous?.data.selectionDay && d.selectionDay!==previous.data.selectionDay))
+        throw new ApiError(422,'Giữ liên kết và ngày của đợt đã lưu.');
+    }
     if (kind === "product" && d.researchOrigin) {
       const {batchId, candidateId} = d.researchOrigin;
       const batch = await getRecord(uid, batchId);

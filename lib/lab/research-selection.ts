@@ -1,5 +1,6 @@
 import {productFromCandidate, type Kind, type LabRecord} from './domain.ts';
 import {researchProductId, type ResearchBatch} from './operations.ts';
+import {candidateProductId} from './daily-selection.ts';
 
 /** Explicit desired state makes replaying a check idempotent (never a toggle). */
 export function planResearchSelection(batchId: string, batch: ResearchBatch, candidateId: string, checked: boolean) {
@@ -22,10 +23,10 @@ export function researchSelection(record: LabRecord, records: LabRecord[]) {
   const batch = record.data as ResearchBatch;
   const selected = batch.candidates.filter(candidate => batch.selectedIds.includes(candidate.id));
   const ready = selected.flatMap(candidate => {
-    const product = records.find(row => row.kind === 'product' && row.id === researchProductId(record.id, candidate.id));
+    const product = records.find(row => row.kind === 'product' && row.id === candidateProductId(record, candidate.id));
     return product ? [product] : [];
   });
-  return {selected, ready, missing: selected.filter(candidate => !ready.some(product => product.id === researchProductId(record.id, candidate.id)))};
+  return {selected, ready, missing: selected.filter(candidate => !ready.some(product => product.id === candidateProductId(record, candidate.id)))};
 }
 /** Reconcile only saved selections. A failure on one row must not stop the rest. */
 export async function completeResearchProfiles(record: LabRecord, records: LabRecord[], persist: Persist, candidateIds?: string[]) {

@@ -117,6 +117,8 @@ export const candidateSchema = z.object({
   marketAssessment: text(1200),
 });
 export const researchBatchSchema = z.object({
+  selectionDay: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  selectionLinks: z.array(z.object({candidateId:identifier,productId:identifier})).max(10).optional(),
   name: z.string().trim().min(2).max(140),
   market: z.string().trim().min(2).max(100).default("United States"),
   locale: z.string().trim().min(2).max(40).default("en-US"),

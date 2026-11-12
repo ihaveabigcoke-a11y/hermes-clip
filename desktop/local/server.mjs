@@ -31,8 +31,22 @@ export async function startLocalServer({root, uiDir=join(here,'../local-dist/ui'
   };
   const thumbnails=new ThumbnailCache(root,db,filePath,storagePolicy(workerStore));
   const writes=new Map();
+  const selectionDomain=await import(pathToFileURL(join(dirname(resolve(routesPath)), 'lib/lab/daily-selection.mjs')).href);
+  const decodeOffice=row=>({id:row.id,kind:row.kind,data:JSON.parse(row.data),revision:row.revision,createdAt:row.created_at,updatedAt:row.updated_at});
   const compression=assetCompression();
   const localEnv={
+    get OFFICE_STATE(){return {jobs:workerStore?.jobs()??[],manual:{receipts:workerStore?.get('manual_receipts',[])??[],exports:workerStore?.get('manual_exports',{})??{},codes:workerStore?.get('manual_codes',{scenes:{}})??{scenes:{}}},integrations:workerStore?.get('integration-jobs',[])??[]};},
+    SELECT_RESEARCH(uid,input){
+      db.exec('BEGIN IMMEDIATE');
+      try {
+        const records=db.prepare('SELECT * FROM lab_records WHERE owner_id=?').all(uid).map(decodeOffice);
+        const changed=selectionDomain.planDailySelection(records,input,Date.now());
+        const put=db.prepare(`INSERT INTO lab_records (owner_id,id,kind,data,revision,created_at,updated_at) VALUES(?,?,?,?,?,?,?)
+          ON CONFLICT(owner_id,id) DO UPDATE SET data=excluded.data,revision=excluded.revision,updated_at=excluded.updated_at`);
+        for(const r of changed)put.run(uid,r.id,r.kind,JSON.stringify(r.data),r.revision,r.createdAt,r.updatedAt);
+        db.exec('COMMIT');return changed;
+      }catch(error){db.exec('ROLLBACK');throw error;}
+    },
     COMPRESS_ASSET:(file,type)=>compression.upload(file,type),
     RESOLVE_PREPARED_ASSET:token=>compression.resolve(token),
     PREPARED_ASSET_STORED:(token,asset)=>compression.stored(token,filePath(asset.key),asset),

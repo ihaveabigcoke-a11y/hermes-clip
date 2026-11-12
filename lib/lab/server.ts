@@ -39,6 +39,7 @@ export function decode(row: any): LabRecord {
     data: JSON.parse(row.data),
     revision: row.revision,
     updatedAt: row.updated_at,
+    createdAt: row.created_at,
   };
 }
 export async function getRecord(uid: string, id: string) {
@@ -126,7 +127,7 @@ export async function save(
       409,
       "Dữ liệu đã thay đổi hoặc không gian làm việc đã chạm giới hạn 2.000 bản ghi. Tải lại trước khi lưu.",
     );
-  return { id, kind, data, revision: revision + 1, updatedAt: now };
+  return (await getRecord(uid, id))!;
 }
 export function failure(error: unknown) {
   if (error instanceof ApiError)

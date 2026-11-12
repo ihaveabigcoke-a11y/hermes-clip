@@ -21,6 +21,7 @@ export const kinds = [
   "assistant_run",
   "codex_run",
   "research_batch",
+  "product_selection",
   "social_account",
   "content_plan",
   "social_metric",
@@ -36,6 +37,7 @@ export type LabRecord = {
   data: Record<string, any>;
   revision: number;
   updatedAt: number;
+  createdAt?: number;
 };
 export function validationMessage(issue: {code:string;message:string;minimum?:any;maximum?:any;type?:string}) {
   if (!/^(String must|Number must|Array must|Invalid|Expected|Required|Too)/.test(issue.message)) return issue.message;
@@ -61,9 +63,11 @@ export const schemas = {
   codex_run: codexRunSchema,
   production: productionSchema,
   assistant_run: z.object({configId:z.string().optional(),day:z.string(),state:z.enum(["pending","done"]),fingerprint:z.string().max(5000),rows:z.array(z.record(z.unknown())).nullable()}),
+  product_selection: z.object({selectionDay:z.string(),batchId:z.string(),candidateId:z.string(),productId:z.string(),rank:z.number().int().min(1).max(3).nullable(),reason:z.string().max(1000),active:z.boolean()}),
   product: z
     .object({
       name: z.string().trim().min(2, "Tên cần ít nhất 2 ký tự.").max(120),
+      productKey: z.string().trim().regex(/^[A-Z0-9][A-Z0-9_-]{1,63}$/, "Mã gồm 2–64 chữ in hoa, số, gạch ngang hoặc gạch dưới.").nullable().optional(),
       niche: str(80),
       sku: str(100),
       market: str(100),
@@ -399,12 +403,17 @@ export function formatMoney(v: number | null | undefined, currency = "USD") {
     maximumFractionDigits: currency === "VND" ? 0 : 2,
   }).format(v);
 }
+export const VIETNAM_TIME_ZONE = "Asia/Ho_Chi_Minh";
+export function vietnamDay(value: number | string | Date = Date.now()): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {timeZone:VIETNAM_TIME_ZONE,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date(value));
+  return ["year","month","day"].map(type=>parts.find(p=>p.type===type)!.value).join("-");
+}
 export function formatTime(v: number) {
   return new Intl.DateTimeFormat("vi-VN", {
     day: "2-digit",
     month: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: "Asia/Ho_Chi_Minh",
+    timeZone: VIETNAM_TIME_ZONE,
   }).format(new Date(v));
 }

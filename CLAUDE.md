@@ -1,8 +1,10 @@
 @AGENTS.md
 
+> Quyết định trực tiếp mới nhất 13/11/2026: Office nằm ngay trong Hermes Clip. Không dùng repo production-office, không áp patch mẫu. T-010 = chọn theo ngày + buildOfficeView; T-011 = hai màn trong app. Không ghi live/snapshot.json hoặc snapshot ra AppData. Giữ dữ liệu, nhóm trạng thái và đơn vị đếm bên dưới. Mốc dừng: fixture 3/3 · 4 active và một lượt media local thật đổi nhóm trên màn Tín hiệu. Không push/merge.
+
 # CLAUDE.md — Hermes Clip (`ihaveabigcoke-a11y/hermes-clip`)
 
-File này dành cho Codex khi build repo Hermes Clip. **`AGENTS.md` vẫn có hiệu lực**: chỉ một agent, giữ dữ liệu gốc, không chạy script có tác động bên ngoài, null không phải 0, test phù hợp, báo cáo tách đã kiểm / chưa kiểm. Hai file nói khác nhau thì theo file này, vì nó là quyết định mới hơn (13/11/2026). Ai làm boss (Claude hay Codex) theo dòng `Chế độ:` trong `STATUS.md` của repo văn phòng `D:/agent-office/ngh-ch-ti-p-agent-office`, xem `CHE-DO-VAN-PHONG.md`. Ở chế độ `CLAUDE-BOSS`, Codex chỉ làm đúng đề được giao. Riêng giới hạn "3 lượt Muse/profile/đợt" trong `AGENTS.md` vẫn áp dụng khi Muse bật lại.
+File này dành cho Codex khi build repo Hermes Clip. **`AGENTS.md` vẫn có hiệu lực**: chỉ một agent, giữ dữ liệu gốc, không chạy script có tác động bên ngoài, null không phải 0, test phù hợp, báo cáo tách đã kiểm / chưa kiểm. Chỉ đạo trực tiếp mới nhất của người dùng có ưu tiên; các mô tả lịch sử dưới đây không mở rộng phạm vi. Ai làm boss (Claude hay Codex) theo dòng `Chế độ:` trong `STATUS.md` của repo văn phòng `D:/agent-office/ngh-ch-ti-p-agent-office`, xem `CHE-DO-VAN-PHONG.md`. Ở chế độ `CLAUDE-BOSS`, Codex chỉ làm đúng đề được giao. Giữ Muse tạm dừng và chính sách hiện có; không đổi hạn mức trong T-010/T-011.
 
 ## 1. Mục tiêu kinh doanh
 - Mỗi ngày chọn **3 sản phẩm**. **Người dùng tự xếp hạng** theo ba tiêu chí: nỗi đau của khách, khả năng chứng minh công dụng bằng hình, khả năng bán có lời (vốn + ship về Mỹ ≤ 20 USD, giá bán khoảng ×3–4). App chỉ hiện dữ liệu giúp xếp, không chấm điểm thay. Ưu tiên đưa **một** sản phẩm vào sản xuất trước. Đợt mới vẫn hiện cùng những sản phẩm từ hôm trước còn việc.
@@ -12,7 +14,7 @@ File này dành cho Codex khi build repo Hermes Clip. **`AGENTS.md` vẫn có hi
 
 ## 2. Trách nhiệm của repo này
 - Là **app vận hành thật** và là **nguồn dữ liệu gốc**: SQLite, media, phiên bản, bản xuất, biên nhận. Mọi thao tác tạo, duyệt, xuất và đăng diễn ra ở đây.
-- **Công bố trạng thái cho Agent Office** theo "Hợp đồng tích hợp" (mục 8). Office chỉ đọc.
+- **Cung cấp trạng thái cho hai màn Office trong app** theo "Hợp đồng tích hợp" (mục 8). Office chỉ đọc.
 - Không biến Office thành nơi ra lệnh. Không thêm endpoint ghi nào cho Office.
 
 ## 3. Bản đồ dữ liệu đã kiểm trong source (`adf48c9` trên GitHub)
@@ -85,7 +87,7 @@ renderPlan {
    - Đếm được: **hôm nay đã chọn n/3**, **tổng lượt chọn qua các ngày**, **số sản phẩm khác nhau**.
    - Schema mới để optional/nullable, record cũ vẫn đọc được.
    - Có fixture "hôm nay 3, hôm qua 1 khác còn việc".
-2. **Snapshot cho Office** (mục 8): hàm thuần `buildOfficeSnapshot(records, workerStore, manual, integrations, now)` kèm test fixture, rồi đến bộ ghi file nguyên tử. **Đây là mốc nghiệm thu đầu tiên.**
+2. **Dữ liệu cho hai màn Office trong app** (mục 8): hàm thuần `buildOfficeView(records, workerStore, manual, integrations, now)` kèm test fixture, đọc qua route local đã xác thực. **Đây là mốc nghiệm thu đầu tiên.**
 3. **Một video xuyên suốt** (mục 5):
    - `renderPlan` và màn chọn đoạn in/out trên take.
    - Cắt, ghép, đè chữ, xuất `render`.
@@ -107,20 +109,18 @@ pnpm local:build         # chỉ khi app đang tắt; KHÔNG dùng pnpm build
 ## 8. Hợp đồng tích hợp
 ## Hợp đồng tích hợp Hermes Clip → Agent Office (v1.1)
 
-> Đoạn này giống hệt trong `CLAUDE.md` của cả hai repo. Sửa ở một bên thì phải sửa bên kia trong cùng đợt, và tăng `version`. v1.1 khác v1 ở các quyết định người dùng chốt ngày 13/11: thư mục `live/`, `productKey` tự gán, tự xếp hạng, video đối thủ. Snapshot vẫn ghi `version: 1` vì chỉ thêm trường optional.
+> Phần dữ liệu kế thừa hợp đồng cũ; chỉ đạo trực tiếp mới nhất chuyển hai màn vào Hermes, nên không cần đồng bộ repo Office riêng. v1.1 giữ các quyết định người dùng chốt ngày 13/11: `productKey` tự gán, tự xếp hạng, video đối thủ. View vẫn ghi `version: 1` vì chỉ thêm trường optional.
 
 ### Nguyên tắc
-- **Hermes Clip là nguồn dữ liệu gốc.** Agent Office chỉ đọc, không bao giờ ghi ngược vào Hermes.
-- **Kiểm trước khi chọn cách truyền.** Đã kiểm trong source `adf48c9`: server local của Hermes (`desktop/local/server.mjs`) nghe ở `127.0.0.1` với **cổng ngẫu nhiên** (`listen(0)`), đòi cookie phiên `product_lab_local_session`, từ chối request khác origin và khác host. Office không gọi được API này. Vì vậy bản v1 dùng **snapshot JSON có phiên bản**. Endpoint chỉ đọc có token để sau, khi luồng snapshot đã chạy.
+- **Hermes Clip là nguồn dữ liệu gốc.** Hai màn theo dõi trong app chỉ đọc; lựa chọn sản phẩm vẫn thực hiện trong màn Nghiên cứu.
+- Server local nghe 127.0.0.1 ở cổng ngẫu nhiên, giữ cookie phiên và chặn host/origin lạ. Hai màn trong app dùng cùng route đã xác thực; không có kênh chia sẻ ra repo ngoài.
 - Snapshot không chứa cookie, key, token, email, cấu hình proxy, đường dẫn tuyệt đối trên máy hay nội dung prompt đầy đủ.
 
-### Vận chuyển
-- Hermes ghi `snapshot.json` theo kiểu **ghi file tạm rồi rename**, để không bao giờ để lại file ghi dở. Hai nơi ghi:
-  1. Thư mục dữ liệu app: `<userData>/office/snapshot.json`. `userData` mặc định là `%APPDATA%/product-lab-desktop`, xem `desktop/src/main.mjs`.
-  2. Một bản copy vào `<repo Office>/live/snapshot.json` (**người dùng đã chốt 13/11**). Đường dẫn repo Office do người dùng chọn trong Cài đặt; chưa chọn thì không copy. Thêm `live/` vào `.gitignore` của repo Office.
-- Thời điểm ghi: khi dữ liệu đổi (debounce 2 giây), cộng một nhịp tim mỗi 60 giây kể cả khi không có gì đổi.
-- Office đọc `live/snapshot.json` bằng `fetch` khi chạy qua HTTP local (`python -m http.server`), mỗi 15 giây. Không đọc được qua `file://`.
-- Office coi dữ liệu là **cũ** khi `generatedAt` quá 3 phút, và **mất kết nối** khi không đọc được file hoặc sai `schema`/`version`. Khi đó vẫn hiện snapshot cuối cùng, kèm nhãn rõ.
+### Cách đọc trong app (thay vận chuyển file theo chỉ đạo trực tiếp)
+- `buildOfficeView(records, workerStore, manual, integrations, now)` là hàm thuần, giữ cấu trúc dữ liệu v1 phía dưới.
+- Màn trong Hermes đọc qua `GET /api/lab?view=office` với cùng cookie, host và origin bảo vệ hiện có. Không có endpoint ghi dành cho màn theo dõi.
+- Không ghi snapshot ra file, không cấu hình thư mục Office, không dùng repo production-office.
+- Khi đang mở màn, cập nhật sau sự kiện workspace và mỗi 5 giây. Lỗi đọc giữ dữ liệu cuối với nhãn Mất kết nối; quá 3 phút là Dữ liệu cũ. Demo riêng luôn ghi Dữ liệu mô phỏng.
 
 ### Định danh (ID)
 | Thực thể | ID | Hiện có trong Hermes | Cần bổ sung |
@@ -138,10 +138,10 @@ pnpm local:build         # chỉ khi app đang tắt; KHÔNG dùng pnpm build
 | Bài đăng | `postId` = id record `content_plan` (có `productId`, `accountId`, `productionId`, `assetId`, `utmHookId`, `status`) | Có | Thêm `variantId`, để nối `sản phẩm × hook × tài khoản × bài đăng` |
 | Lần đo | `measurementId` = id record `social_metric` / `keyword_comment_measurement` (có `planId`) | Có | — |
 
-### Snapshot v1 (tối thiểu)
+### Office view v1 (dữ liệu tối thiểu)
 ```json
 {
-  "schema": "hermes-office-snapshot",
+  "schema": "hermes-office-view",
   "version": 1,
   "generatedAt": "2026-11-13T09:00:00+07:00",
   "source": { "app": "hermes-clip", "commit": "<git sha nếu biết, không thì null>", "timezone": "Asia/Ho_Chi_Minh" },
@@ -202,13 +202,13 @@ Chỉ khi cả hai mục đạt mới mở rộng đồng bộ và giao diện.
 
 ## 9. Bằng chứng nghiệm thu (đợt đầu)
 - [ ] Log 5 lệnh ở mục 7, kèm số test đạt / bỏ qua / lỗi.
-- [ ] Test `buildOfficeSnapshot`: fixture "hôm nay 3, hôm qua 1 khác còn việc" ra `selection.days[today].productIds.length === 3`, có đúng 4 sản phẩm `active`, `totals.distinctProducts === 4`. Số chưa biết là `null`, không phải 0.
+- [ ] Test `buildOfficeView`: fixture "hôm nay 3, hôm qua 1 khác còn việc" ra `selection.days[today].productIds.length === 3`, có đúng 4 sản phẩm `active`, `totals.distinctProducts === 4`. Số chưa biết là `null`, không phải 0.
 - [ ] Test chọn lại: cùng `productKey` ở hai ngày → một `productId`, `selectionCount === 2`.
-- [ ] Test ghi nguyên tử: file đang ghi bị ngắt không để lại `snapshot.json` hỏng.
+- [ ] Test giao dịch chọn: lỗi/tranh chấp không để lại hồ sơ hoặc lượt chọn nửa chừng; màn đọc cùng dữ liệu đã lưu.
 - [ ] **Chạy thật trên máy người dùng** (boss kiểm):
   - Thả 1 MP4 vào Hộp nhận media.
-  - Trong ≤ 1 phút, `snapshot.json` có lượt `manual:<sha256>` chuyển nhóm.
-  - Ghi lại cả hai bản snapshot trước và sau.
+  - Trong ≤ 1 phút, view trong app có lượt `manual:<sha256>` chuyển nhóm.
+  - Ghi bằng chứng view trước/sau và ảnh màn Tín hiệu trong app.
 - [ ] Một MP4 xuất ra:
   - ffprobe ra 720×1280, thời lượng khớp `renderPlan`, có `sha256`.
   - Mở được bằng trình phát mặc định của Windows.

@@ -9,6 +9,8 @@ import { currencyFields } from "./currency-fields";
 import { candidateSchema, landingHtml, landingPageSchema, type Candidate, type ResearchBatch } from "@/lib/lab/operations";
 import {saveResearchSelection, completeResearchProfiles, researchSelection, deployResearchProducts, researchFailure} from '@/lib/lab/research-selection';
 import {newProduction} from '@/lib/lab/production';
+import {candidateProductId,planDailySelection,suggestProductKey,selectionEntries} from '@/lib/lab/daily-selection';
+import {vietnamDay} from '@/lib/lab/domain';
 import { desktopBridge, fetchAssetBytes } from "@/lib/lab/desktop-client";
 import InstagramPanel from './instagram-panel';
 import InstagramOverview from './instagram-overview';
@@ -158,15 +160,23 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
     setDirty(true);
   }
   async function selectCandidate(candidate: Candidate, checked: boolean) {
-    if (!chosen) return;
-    try {
-      await saveResearchSelection(chosen, candidate.id, checked, persist);
-      setProfileErrors(previous => ({...previous, [chosen.id]: {...previous[chosen.id], [candidate.id]: ''}}));
-      notify(checked ? 'Đã chọn và giữ hồ sơ sản phẩm.' : 'Đã bỏ chọn. Hồ sơ vẫn giữ.');
-    } catch (failure) {
-      setProfileErrors(previous => ({...previous, [chosen.id]: {...previous[chosen.id], [candidate.id]: researchFailure(failure)}}));
-      reload(); throw failure;
-    }
+    if(!chosen)return;
+    const batch=chosen,product=records.find(r=>r.kind==='product'&&r.id===candidateProductId(batch,candidate.id));
+    const selection=selectionEntries(records).find(s=>s.selectionDay===vietnamDay()&&s.productId===product?.id);
+    const apply=async(value:Record<string,any>)=>{
+      const input={batchId:batch.id,candidateId:candidate.id,revision:batch.revision,checked,...value};
+      try {
+        const rows=demo?planDailySelection(records,input):(await api('/api/lab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'select_daily',input})})).records;
+        onRecords(rows);notify(checked?'Đã lưu lựa chọn hôm nay và giữ hồ sơ sản phẩm.':'Đã bỏ lựa chọn hôm nay. Hồ sơ và lịch sử vẫn giữ.');
+      }catch(error){reload();throw error;}
+    };
+    if(!checked){await apply({});return;}
+    show({title:'Chọn sản phẩm hôm nay · '+candidate.name,kind:'product',
+      initial:{productKey:product?.data.productKey??'',rank:selection?.rank??null,reason:selection?.reason??''},
+      validation:z.object({productKey:z.string().trim().regex(/^[A-Z0-9][A-Z0-9_-]{1,63}$/, 'Nhập mã 2–64 chữ in hoa, số, gạch ngang hoặc gạch dưới.'),rank:z.number().int().min(1,'Chọn hạng 1–3.').max(3),reason:z.string().max(1000)}),
+      fields:[{name:'productKey',label:'Mã sản phẩm',placeholder:suggestProductKey(candidate.name),help:product?.data.productKey?'Mã đã gán là bất biến. Giữ đúng mã để dùng lại hồ sơ.':'Gợi ý: '+suggestProductKey(candidate.name)+'. Tự nhập hoặc dùng mã hồ sơ đã có; gợi ý chưa được lưu.'},
+        {name:'rank',label:'Thứ hạng hôm nay',type:'number',nullable:true,help:'Tự xếp 1–3. Mỗi hạng chỉ có một sản phẩm.'},
+        {name:'reason',label:'Lý do lựa chọn',type:'textarea',full:true}],save:apply});
   }
   async function completeProfiles(candidateIds?: string[]) {
     if (!chosen) return;
