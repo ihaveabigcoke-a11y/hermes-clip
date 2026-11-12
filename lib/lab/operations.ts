@@ -148,6 +148,7 @@ export const socialAccountSchema = z.object({
   archived: z.boolean().default(false),
 });
 export const contentPlanSchema = z.object({
+  variantId:identifier.nullable().optional(),
   provider:z.string().regex(/^(muse|manual|codex|import:[^\r\n]{1,80})$/).optional(),
   name: z.string().trim().min(2).max(150),
   productId: identifier,

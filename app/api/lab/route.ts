@@ -125,6 +125,7 @@ export async function POST(request: Request) {
       const product = await getRecord(uid, d.productId);
       if (product?.kind !== "product" || product.data.archived)
         throw new ApiError(422, "Chọn sản phẩm đang hoạt động trong workspace.", {productId: "Sản phẩm không sẵn sàng."});
+      if(d.variantId){const production=d.productionId?await getRecord(uid,d.productionId):null;if(!production||production.kind!=='production'||production.data.productId!==d.productId||!production.data.variants.some((v:any)=>v.id===d.variantId))throw new ApiError(422,'Biến thể không thuộc dự án/sản phẩm.');}
       const previous = await getRecord(uid, id);
       if (previous && previous.data.productId !== d.productId)
         throw new ApiError(422, "Tạo hồ sơ mới khi cần chuyển sang sản phẩm khác.", {productId: "Hồ sơ đã gắn với sản phẩm ban đầu."});

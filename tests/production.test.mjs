@@ -9,6 +9,28 @@ import {inspectMedia} from '../lib/lab/media.ts';
 import {productionPackage,buildManifest,zipFiles,crc32} from '../lib/lab/package.ts';
 import {formulaStoryboard} from '../lib/lab/intelligence.ts';
 import {viralFormulasV2} from '../lib/lab/viral-formulas.ts';
+import {renderFixture} from './fixtures/render-plan.mjs';
+import {getRenderPlan,validateRenderPlan,renderDuration} from '../lib/lab/render-plan.ts';
+
+test('T-012: legacy, trim/hash gates, planned timing and shared body for three hooks',()=>{
+ const f=renderFixture(),before=structuredClone(f.production.scenes);
+ assert.equal(renderDuration(f.plan),4);
+ const legacy=structuredClone(f.production);delete legacy.renderPlans;assert.ok(productionSchema.parse(legacy));
+ const bad=structuredClone(f.plan);bad.segments[0].outSec=4;assert.throws(()=>validateRenderPlan(f.production,bad));
+ bad.segments[0].outSec=1;bad.segments[0].sha256='a'.repeat(64);assert.throws(()=>validateRenderPlan(f.production,bad));
+ const nullable=structuredClone(f.plan);nullable.segments[0].shotId=null;assert.ok(validateRenderPlan(f.production,nullable));
+ f.makeHooks();const variants=f.production.variants.filter(v=>v.comparisonGroupId);
+ assert.equal(variants.length,3);
+ for(const v of variants){const p=getRenderPlan(f.production,'render_project',v.id);assert.deepEqual(p.segments.slice(1),f.plan.segments.slice(1));assert.deepEqual(p.overlays,f.plan.overlays);assert.equal(v.ctaKeyword,'GLOW');assert.equal(v.caption,'Comment GLOW for details.');}
+ assert.deepEqual(f.production.scenes,before);
+ const drift=getRenderPlan(f.production,'render_project',variants[0].id);drift.segments[1].inSec=.1;assert.throws(()=>validateRenderPlan(f.production,drift),/chung đoạn thân/);
+});
+
+test('T-012: MP4 status requires verified render, asset and hash',()=>{
+ const p=renderFixture().production,id=p.variants[0].id;
+ for(const e of [{kind:'package',assetId:null},{kind:'render',assetId:'x'},{kind:'render',assetId:'x',verified:true}]){p.exports=[{id:'e',variantId:id,filename:'x.mp4',createdAt:1,...e}];assert.notEqual(variantExportStatus(p,id).label,'Đã xuất MP4');}
+ p.exports=[{id:'e',variantId:id,filename:'x.mp4',createdAt:1,kind:'render',assetId:'x',verified:true,sha256:'a'.repeat(64)}];assert.equal(variantExportStatus(p,id).label,'Đã xuất MP4');
+});
 
 test('T-007: v2 persists shot metadata, separate generation groups, caption placement, snapshots and export manifest',()=>{
   const formula=viralFormulasV2.find(f=>f.resultStyle==='story_cards');

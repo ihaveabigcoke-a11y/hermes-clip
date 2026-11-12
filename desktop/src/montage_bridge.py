@@ -57,11 +57,23 @@ def execute(request):
             if not math.isfinite(duration) or not 0 < duration <= 120:
                 raise ValueError("Invalid clip duration.")
             source = Path(clip["path"]).resolve(strict=True)
-            cuts.append({"id": str(i), "source": str(source), "in_seconds": 0, "out_seconds": duration})
+            start = float(clip.get("inSec", 0))
+            end = float(clip.get("outSec", duration))
+            if not math.isfinite(start) or not math.isfinite(end) or not 0 <= start < end <= duration + .001:
+                raise ValueError("Cut outside source duration.")
+            cuts.append({"id": str(i), "source": str(source), "in_seconds": start, "out_seconds": end})
         width, height = request["size"]
         decisions = {"version": "1.0", "render_runtime": "ffmpeg", "cuts": cuts, "metadata": {"compose_target": {"width": width, "height": height, "fit": "pad"}}}
         (out / "edit_decisions.json").write_text(json.dumps(decisions, indent=2), encoding="utf-8")
-        result = VideoCompose().execute({"operation": "compose", "edit_decisions": decisions, "output_path": str(out / "output.mp4"), "preset": "fast"})
+        options = {"operation": "compose", "edit_decisions": decisions, "output_path": str(out / "output.mp4"), "preset": "fast"}
+        subtitle = request.get("subtitlePath")
+        if subtitle:
+            subtitle = Path(subtitle).resolve(strict=True)
+            if subtitle.parent != out or subtitle.name != "overlays.ass":
+                raise ValueError("Subtitle must be inside this job.")
+            options.update({"subtitle_path": str(subtitle), "subtitle_style": {"font": "Arial", "font_size": 70, "alignment": 8, "margin_v": 90, "outline_width": 3}})
+        # No audio_path: upstream keeps each source's audio instead of replacing it.
+        result = VideoCompose().execute(options)
         if not result.success:
             raise ValueError(result.error or "Composition failed.")
         return {"output": str(out / "output.mp4"), "engine": "openmontage_ffmpeg", "commit": head, "cutCount": len(cuts), "usageUsd": 0, "creativeReview": "pending"}

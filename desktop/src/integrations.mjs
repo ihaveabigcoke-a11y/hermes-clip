@@ -7,6 +7,9 @@ import {join,dirname,isAbsolute,relative} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {z} from 'zod';
 import {validateMedia,toolchain} from './media.mjs';
+import {renderPlanAss} from './render-plan.mjs';
+import {compressMedia,captureMediaTool} from './compress.mjs';
+import {copyFile} from 'node:fs/promises';
 import {analyzeLocalStructure,checkedBytes,verifyJpeg} from './reference-structure.mjs';
 import {shortsUrl,youtubeCapability,downloadYoutubeReference} from './reference-youtube.mjs';
 import {runReferenceCommand} from './reference-process.mjs';
@@ -20,7 +23,13 @@ const id=z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/);
 const source=z.object({bytes:z.instanceof(Uint8Array).refine(v=>v.length>0&&v.length<=25*1024*1024),sha256:z.string().regex(/^[a-f0-9]{64}$/)});
 export const researchInput=z.object({projectId:id,channel:z.enum(['web','youtube','reddit','instagram']),query:z.string().trim().min(2).max(300).refine(v=>!v.startsWith('-'),'Không bắt đầu truy vấn bằng dấu gạch ngang.')});
 export const referenceInput=source.extend({projectId:id,assetId:id,name:z.string().max(180)});
-export const composeInput=z.object({projectId:id,variantId:id,ratio:z.enum(['9:16','16:9','1:1','4:3','3:4']),clips:z.array(source.extend({duration:z.number().positive().max(120)})).min(1).max(30)}).superRefine((v,c)=>{if(v.clips.reduce((n,x)=>n+x.bytes.length,0)>60*1024*1024)c.addIssue({code:'custom',message:'Tổng nguồn dựng tối đa 60 MB.'});});
+const composeOverlay=z.object({text:z.string().trim().min(1).max(120).refine(t=>!/[{}\\\r]/.test(t)&&t.split('\n').length<=2),fromSec:z.number().finite().nonnegative(),toSec:z.number().finite().positive()});
+export const composeInput=z.object({planVersion:z.literal(1).optional(),projectId:id,variantId:id,ratio:z.enum(['9:16','16:9','1:1','4:3','3:4']),clips:z.array(source.extend({duration:z.number().finite().positive().max(120),inSec:z.number().finite().nonnegative().default(0),outSec:z.number().finite().positive().optional()})).min(1).max(30),overlays:z.array(composeOverlay).max(80).default([])}).superRefine((v,c)=>{
+ const duration=v.clips.reduce((n,x)=>n+(x.outSec??x.duration)-x.inSec,0);
+ if(v.clips.reduce((n,x)=>n+x.bytes.length,0)>60*1024*1024)c.addIssue({code:'custom',message:'Tổng nguồn dựng tối đa 60 MB.'});
+ if(v.clips.some(x=>(x.outSec??x.duration)>x.duration+.001||(x.outSec??x.duration)-x.inSec<.04)||duration>120)c.addIssue({code:'custom',message:'Đoạn cắt nằm ngoài nguồn hoặc timeline quá 120 giây.'});
+ if(v.overlays.some(o=>o.toSec<=o.fromSec||o.toSec>duration+.001))c.addIssue({code:'custom',message:'Chữ đè vượt timeline thực tế.'});
+});
 
 // No shell, no caller-provided argv; kill the local subprocess tree on timeout.
 export function runJson(command,args,{input,timeout=60000,cwd,format='json',maxBytes=4*1024*1024}={}){
@@ -142,7 +151,24 @@ export class Integrations {
  if(frameBytes.length<3||frameBytes[0]!==0xff||frameBytes[1]!==0xd8||frameBytes[2]!==0xff)throw Error('Khung hình không phải JPEG hợp lệ.');
  await validateMedia(framePath,{mediaType:'image',ratio:`${r.result.source.width}:${r.result.source.height}`});
  return {...frame,path:framePath};}));await writeArchive(join(dir,'reference-analysis.json.gz'),JSON.stringify(r.result,null,2));return {path:join(dir,'reference-analysis.json.gz'),result:{...r.result,frames:undefined},frames};});}
- async compose(input){const d=composeInput.parse(input);return this.task('compose',d.projectId,{variantId:d.variantId,ratio:d.ratio,sources:d.clips.map(({bytes,...c})=>c)},async dir=>{await toolchain();const clips=[];for(const [i,c] of d.clips.entries()){const path=join(dir,`${i}.mp4`);await this.writeSource(c,path);await validateMedia(path,{mediaType:'video',ratio:d.ratio,duration:c.duration});clips.push({path,duration:c.duration});}const [rw,rh]=d.ratio.split(':').map(Number),width=d.ratio==='9:16'?720:d.ratio==='16:9'?1280:960,height=Math.round(width*rh/rw/2)*2;const r=await this.montage('compose',{outputDir:dir,size:[width,height],clips});const outputPath=await this.confinedPath(dir,join(dir,'output.mp4')),report=await validateMedia(outputPath,{mediaType:'video',ratio:d.ratio,duration:clips.reduce((n,c)=>n+c.duration,0)});return {path:outputPath,result:r.result,output:{path:outputPath,name:`openmontage_${jobSafe(d.variantId)}.mp4`,type:'video/mp4',...report}};});}
+ async compose(input){
+  const d=composeInput.parse(input);
+  return this.task('compose',d.projectId,{variantId:d.variantId,ratio:d.ratio,sources:d.clips.map(({bytes,...c})=>c),overlays:d.overlays,audio:'keep'},async dir=>{
+   await toolchain();const clips=[];
+   for(const [i,c] of d.clips.entries()){const path=join(dir,`${i}.mp4`);await this.writeSource(c,path);await validateMedia(path,{mediaType:'video',ratio:d.ratio,duration:c.duration});clips.push({path,duration:c.duration,inSec:c.inSec,outSec:c.outSec??c.duration});}
+   const [rw,rh]=d.ratio.split(':').map(Number),width=d.ratio==='9:16'?720:d.ratio==='16:9'?1280:960,height=Math.round(width*rh/rw/2)*2;
+   let subtitlePath=null;if(d.overlays.length){subtitlePath=join(dir,'overlays.ass');await writeFile(subtitlePath,renderPlanAss(d.overlays),{flag:'wx'});}
+   const r=await this.montage('compose',{outputDir:dir,size:[width,height],clips,subtitlePath,audio:'keep'});
+   const outputPath=await this.confinedPath(dir,join(dir,'output.mp4')),duration=clips.reduce((n,c)=>n+c.outSec-c.inSec,0);
+   let report=await validateMedia(outputPath,{mediaType:'video',ratio:d.ratio,duration,maxBytes:2*1024**3});
+   const compressed=await compressMedia(outputPath);try{if(compressed.path!==outputPath)await copyFile(compressed.path,outputPath);report={...await validateMedia(outputPath,{mediaType:'video',ratio:d.ratio,duration,maxBytes:2*1024**3}),compression:compressed.compression};}finally{await compressed.cleanup();}
+   const probe=JSON.parse((await captureMediaTool('ffprobe',['-v','error','-show_streams','-of','json',outputPath],{timeout:15000,windowsHide:true})).stdout);
+   const audio=probe.streams.find(s=>s.codec_type==='audio'),video=probe.streams.find(s=>s.codec_type==='video');
+   if(d.planVersion&&(video?.width!==720||video?.height!==1280||Math.abs(report.metadata.duration-duration)>.1))throw Error('Bản dựng cần 720×1280 và thời lượng khớp trong 0,1 giây.');
+   if(d.planVersion&&(!audio||!Number.isFinite(Number(audio.duration))||!Number.isFinite(Number(video.duration))||Math.abs(Number(audio.duration)-Number(video.duration))>.1))throw Error('Âm thanh và hình lệch quá 0,1 giây. Giữ file để kiểm tra.');
+   return {path:outputPath,result:r.result,output:{path:outputPath,name:`openmontage_${jobSafe(d.variantId)}.mp4`,type:'video/mp4',...report,audio:audio?{mode:'keep',duration:Number(audio.duration),videoDuration:Number(video.duration)}:null}};
+  });
+ }
  async analyzeStructure(input){
   const d=referenceInput.parse(input);
   return this.task('reference-structure',d.projectId,{assetId:d.assetId,name:d.name,sha256:d.sha256},async dir=>{

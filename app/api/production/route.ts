@@ -1,5 +1,6 @@
 import {resolveProvider, mediaProviderReceipts} from '@/desktop/src/provider-routing.mjs';
 import { z } from "zod";
+import {getRenderPlan,renderDuration,validateRenderPlan} from "@/lib/lab/render-plan";
 import { env } from "cloudflare:workers";
 import { owner, body, getRecord, save, getSettings, createProductionIfAbsent, ApiError, failure } from "@/lib/lab/server";
 import { applyProduction, newProduction, productionSchema, providerAdapter, variantItems, ProductionError, creativeDrafts } from "@/lib/lab/production";
@@ -63,6 +64,9 @@ export async function POST(request: Request) {
       const product=await getRecord(uid,p.productId);
       if(!product||product.kind!=="product"||product.data.archived)throw new ApiError(422,"Sản phẩm không tồn tại hoặc đang lưu trữ. Khôi phục sản phẩm trước khi sửa dự án.");
       let input:any=envelope.input;
+      if(envelope.action==='export'&&input.kind==='render'&&!input.assetId)throw new ApiError(422,'Bản render cần file MP4 đã kiểm.');
+      if(envelope.action==='render_plan'&&input.productionId!==old.id)throw new ApiError(422,'Plan thuộc dự án khác.');
+      if(envelope.action==='hook_variants'&&input.productionId!==old.id)throw new ApiError(422,'Nhóm hook thuộc dự án khác.');
       if(envelope.action==="reference"||envelope.action==="attach"||(envelope.action==="worker_result"||envelope.action==="manual_result")||(envelope.action==="export"&&input.assetId)) {
         const a=typeof input.assetId==="string"?await getRecord(uid,input.assetId):null;
         if(!a||a.kind!=="asset")throw new ApiError(422,"Chọn file đã tải trong workspace này.");
@@ -72,8 +76,11 @@ export async function POST(request: Request) {
           input={sceneId:input.sceneId,attemptId:input.attemptId??null,sceneRevision:input.sceneRevision,productRevision:input.productRevision,jobId:input.jobId,providerId:input.providerId,take:{assetId:a.id,name:a.data.name,type:a.data.type,size:a.data.size,sha256:a.data.sha256,metadata:a.data.metadata,...(a.data.compression?{compression:a.data.compression}:{})}};
         }
         if(envelope.action==="export") {
-          const items=variantItems(p,input.variantId),duration=items.reduce((n,i)=>n+(i.take.metadata.duration??0),0),m=a.data.metadata;
-          if(input.kind!=="render"||!m||!a.data.type.startsWith("video/")||Math.abs(m.duration-duration)>0.5)throw new ApiError(422,"File render cần video có metadata và thời lượng khớp timeline (±0,5s).");
+          const items=variantItems(p,input.variantId),plan=input.renderPlan?validateRenderPlan(p,input.renderPlan):p.renderPlans?.find(x=>x.variantId===input.variantId),duration=plan?renderDuration(plan):items.reduce((n,i)=>n+(i.take.metadata.duration??0),0),m=a.data.metadata;
+          if(plan&&(plan.productionId!==old.id||JSON.stringify(plan)!==JSON.stringify(getRenderPlan(p,old.id,input.variantId))))throw new ApiError(422,'Plan đã thay đổi; dựng lại từ bản lưu mới.');
+          input={...input,sha256:a.data.sha256,verified:!!a.data.sha256&&m?.verifiedBy==='container'&&m.width===720&&m.height===1280, ...(plan?{renderPlan:plan}:{})};
+          if(input.kind!=="render"||!m||!a.data.type.startsWith("video/")||Math.abs(m.duration-duration)>(plan ? .1 : .5))throw new ApiError(422,'File render cần video có metadata và thời lượng khớp timeline.');
+          if(plan&&!input.verified)throw new ApiError(422,'Bản dựng theo đoạn cần MP4 đã kiểm 720×1280.');
           const [w,h]=items[0].scene.ratio.split(":").map(Number);if(Math.abs((m.width/m.height)/(w/h)-1)>0.01)throw new ApiError(422,"File render sai tỷ lệ timeline.");
         }
       }

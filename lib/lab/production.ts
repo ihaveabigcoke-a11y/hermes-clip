@@ -1,4 +1,5 @@
 import { z } from "zod";
+import {renderPlanSchema,validateRenderPlan,getRenderPlan} from "./render-plan.ts";
 
 const id = z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/);
 const text = (n = 1000) => z.string().trim().max(n).default("");
@@ -90,6 +91,7 @@ const variantSchema = z.object({
   locale: z.string().trim().min(2).max(40), caption: text(3000), createdAt: z.number(),
   ...ctaFields,
   ctaPlacement:z.enum(['overlay','caption']).optional(),
+  comparisonGroupId:id.optional(),
   formulaId: id.optional(), formulaVersion: z.number().int().positive().optional(),
 });
 export const formulaDraftInputSchema = z.object({
@@ -158,9 +160,10 @@ export const productionSchema = z.object({
   contentPlanId: id.optional(), contentPlanRevision: z.number().int().positive().optional(),
   locale: z.string().trim().min(2).max(40), paused: z.boolean(),
   references: z.array(referenceSchema).max(120), scenes: z.array(sceneSchema).max(30),
+  renderPlans:z.array(renderPlanSchema).max(60).optional(),
   bodies: z.array(bodySchema).max(30), variants: z.array(variantSchema).max(60),
   measurements: z.array(measurementSchema.and(z.object({updatedAt:z.number()}))).max(60).default([]),
-  exports: z.array(z.object({ id, variantId: id, filename: text(180), assetId: id.nullable(), createdAt: z.number(), kind: z.enum(["package", "render"]) })).max(100),
+  exports: z.array(z.object({ id, variantId: id, filename: text(180), assetId: id.nullable(), createdAt: z.number(), renderPlan:renderPlanSchema.optional(), sha256:z.string().regex(/^[a-f0-9]{64}$/).optional(), verified:z.boolean().optional(), kind: z.enum(["package", "render"]) })).max(100),
   receipts: z.array(id).max(500), events: z.array(z.object({ id, at: z.number(), action: text(100), detail: text(1000) })).max(300),
 });
 export type Production = z.infer<typeof productionSchema>;
@@ -262,7 +265,9 @@ const commandSchemas: Record<string, z.ZodTypeAny> = {
   review: z.object({sceneId:id,takeId:id,review:z.enum(["approved","rejected"]),notes:text(2000)}),
   body: z.object({name:z.string().trim().min(1).max(150),items:z.array(approvedItemSchema).min(1).max(30)}),
   variant: variantSchema.omit({id:true,createdAt:true}).extend({hook:approvedItemSchema.nullable(),cta:approvedItemSchema.nullable()}),
-  export: z.object({variantId:id,filename:z.string().regex(/^[a-zA-Z0-9_.-]{1,180}$/),assetId:id.nullable(),kind:z.enum(["package","render"])}),
+  render_plan:renderPlanSchema,
+  hook_variants:z.object({productionId:id,sourceVariantId:id,hooks:z.array(approvedItemSchema).length(3)}),
+  export: z.object({renderPlan:renderPlanSchema.optional(),sha256:z.string().regex(/^[a-f0-9]{64}$/).optional(),verified:z.boolean().optional(),variantId:id,filename:z.string().regex(/^[a-zA-Z0-9_.-]{1,180}$/),assetId:id.nullable(),kind:z.enum(["package","render"])}),
   sync_product: z.object({}),
   measurement: measurementSchema,
 };
@@ -388,8 +393,21 @@ export function applyProduction(p0: Production, action: string, input: unknown, 
     if(d.cta&&resolved.at(-1)!.scene.role!=="cta")throw new ProductionError("Cuối video cần cảnh kêu gọi hành động.");
     if(new Set(resolved.map(i=>i.scene.ratio)).size>1)throw new ProductionError("Mở đầu, nội dung chính và kêu gọi hành động cần cùng tỷ lệ.");
     p.variants.push({...d,id:commandId,createdAt:now});
+  } else if(action==='render_plan') {
+    const plan=validateRenderPlan(p,d);p.renderPlans=[...(p.renderPlans??[]).filter(x=>x.variantId!==plan.variantId),plan];
+  } else if(action==='hook_variants') {
+    const source=p.variants.find(v=>v.id===d.sourceVariantId);if(!source?.hook)throw new ProductionError('Chọn biến thể có hook làm gốc.');
+    const base=getRenderPlan(p,d.productionId,source.id),hookLength=base.segments[0].outSec-base.segments[0].inSec;
+    if(new Set(d.hooks.map((h:any)=>h.sceneId+':'+h.takeId)).size!==3)throw new ProductionError('Chọn ba hook khác nhau.');
+    const hooks=resolveItems(p,d.hooks);if(hooks.some(h=>h.scene.role!=='hook'||h.scene.ratio!=='9:16'||h.take.metadata.duration!<hookLength))throw new ProductionError('Hook cần video 9:16 đủ thời lượng đã duyệt.');
+    for(const [i,h] of hooks.entries()) {
+      const vid=commandId.slice(0,110)+'_'+i;
+      const variant={...source,id:vid,name:source.name+' · Hook '+(i+1),hook:{sceneId:h.scene.id,takeId:h.take.id},comparisonGroupId:commandId,createdAt:now};p.variants.push(variant);
+      const plan={...structuredClone(base),variantId:vid,segments:[{shotId:h.scene.id,sceneId:h.scene.id,takeId:h.take.id,assetId:h.take.assetId,sha256:h.take.sha256,inSec:0,outSec:hookLength},...structuredClone(base.segments.slice(1))]};
+      p.renderPlans=[...(p.renderPlans??[]),validateRenderPlan(p,plan)];
+    }
   } else if(action==="export") {
-    variantItems(p,d.variantId);p.exports.push({...d,id:commandId,createdAt:now});
+    variantItems(p,d.variantId);if(d.renderPlan)validateRenderPlan(p,d.renderPlan);p.exports.push({...d,id:commandId,createdAt:now});
   } else if(action==="sync_product") {
     for (const s of p.scenes) {
       for (const take of s.takes) {
