@@ -47,6 +47,7 @@ class BridgeTest(unittest.TestCase):
                 r = bridge.main({'checkout': temp, 'expectedCommit': COMMIT, 'operation': 'decompose', 'source': str(source), 'outputDir': temp})
             self.assertEqual(len(r['breakdown']['shots']), 10)
             argv, options = calls[-1]
+            self.assertEqual(options['env']['REA_VIDEO_MODELS'], str(Path(temp).parent / 'rea-models'))
             self.assertEqual(argv[1:4], ['-m', 'rea_video', 'decompose'])
             self.assertIn('--no-vlm', argv)
             self.assertNotIn('OPENAI_API_KEY', options['env'])

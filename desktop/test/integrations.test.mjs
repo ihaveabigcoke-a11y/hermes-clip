@@ -8,6 +8,28 @@ import {createHash} from 'node:crypto';
 import {Store} from '../src/store.mjs';
 import {Integrations,runJson,researchInput,composeInput} from '../src/integrations.mjs';
 
+test('installed rea-video paths upgrade legacy config without replacing chosen tools or receipts',()=>fixture(async(store,dir)=>{
+ const i=new Integrations(store,dir),legacy={python:'chosen-python',reach:'chosen-reach',montage:dir};
+ i.saveConfig(legacy);store.set('integration-jobs',[{id:'kept',state:'done',kind:'reference-structure'}]);
+ const installed={python:'setup-python',reach:'setup-reach',montage:join(dir,'setup-montage'),reaPython:'setup-rea-python',reaVideo:join(dir,'rea-video')};
+ assert.equal(i.loadInstalledConfig(installed),true);
+ assert.deepEqual(i.config(),{...legacy,reaPython:installed.reaPython,reaVideo:installed.reaVideo});
+ assert.deepEqual(i.jobs(),[{id:'kept',state:'done',kind:'reference-structure'}]);
+ const selected={...legacy,reaPython:'custom-rea-python',reaVideo:join(dir,'custom-rea')};
+ i.saveConfig(selected);store.set('integration-health',{checkedAt:123});
+ assert.equal(i.loadInstalledConfig(installed),false);
+ assert.deepEqual(i.config(),selected);assert.deepEqual(store.get('integration-health'),{checkedAt:123});
+ assert.throws(()=>i.loadInstalledConfig({...installed,reaVideo:'relative-path'}));
+ assert.deepEqual(i.config(),selected);
+}));
+
+test('first install and repeated legacy setup remain idempotent',()=>fixture(async(store,dir)=>{
+ const i=new Integrations(store,dir),installed={python:'python',reach:'reach',montage:dir};
+ assert.equal(i.loadInstalledConfig(installed),true);assert.deepEqual(i.config(),installed);
+ store.set('integration-health',{checkedAt:456});
+ assert.equal(i.loadInstalledConfig(installed),false);assert.deepEqual(store.get('integration-health'),{checkedAt:456});
+}));
+
 test('subprocess rejects non-object JSON envelopes', async () => {
  for (const value of ['null', '[]', 'true', '42', '"text"']) {
   await assert.rejects(() => runJson(process.execPath, ['-e', `process.stdout.write(${JSON.stringify(value)})`]), /JSON/);

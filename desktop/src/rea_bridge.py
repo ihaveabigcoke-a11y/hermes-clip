@@ -51,6 +51,8 @@ def main(d):
     out.mkdir(parents=True, exist_ok=True)
     had_answers = (out / 'review_answers.json').exists()
     env = dict(os.environ, PYTHONPATH=str(checkout), PYTHONIOENCODING='utf-8', REA_VIDEO_HOME=str(out / 'preferences'))
+    # Reuse the installed models across jobs; retain an explicit operator override.
+    env.setdefault('REA_VIDEO_MODELS', str(checkout.parent / 'rea-models'))
     # No inherited provider credentials or fallback endpoints. Explicit Gemini config only.
     for key in list(env):
         if key.startswith(('REA_VLM_', 'VIDEO_ANALYSIS_', 'GEMINI3_')) or key in ('OPENAI_API_KEY', 'GEMINI_API_KEY'):

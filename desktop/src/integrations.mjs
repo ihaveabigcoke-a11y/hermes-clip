@@ -47,6 +47,13 @@ export class Integrations {
  autoSourceCheck(){return this.store.get('auto-source-check',null)??(this.store.get('integration-health',null)?.reach?.ready===true);}
  saveSourceCheckPreference(input){const value=z.object({enabled:z.boolean()}).strict().parse(input);this.store.set('auto-source-check',value.enabled);return this.status();}
  saveConfig(input){if(this.busy)throw Error('Chờ tác vụ hiện tại xong trước khi đổi cấu hình.');const value=integrationConfig.parse(input);this.store.set('integrations',value);this.store.set('integration-health',null);return true;}
+ loadInstalledConfig(input){
+  const installed=integrationConfig.parse(input),current=this.config();
+  if(!current)return this.saveConfig(installed);
+  const missing=Object.fromEntries(['reaPython','reaVideo'].filter(key=>!current[key]&&installed[key]).map(key=>[key,installed[key]]));
+  if(Object.keys(missing).length)return this.saveConfig({...current,...missing});
+  return false;
+ }
  async montage(operation,extra={}) {
   const c=this.config();
   if(!c)throw Error('Cài và cấu hình hai công cụ trước.');
