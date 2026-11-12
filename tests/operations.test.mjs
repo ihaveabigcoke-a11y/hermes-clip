@@ -1,3 +1,4 @@
+import './product-profile.test.mjs';
 import './competitor-videos.test.mjs';
 import test from 'node:test';
 import './hook-matrix.test.mjs';

@@ -1,3 +1,4 @@
+import {profileOptionalFields} from "./product-profile-schema.ts";
 import {competitorVideosSchema} from "./competitor-videos.ts";
 import { z } from "zod";
 import { productionSchema } from "./production.ts";
@@ -93,6 +94,7 @@ export const schemas = {
       costCurrency: candidateCurrencySchema.nullable().optional(),
       shippingCurrency: candidateCurrencySchema.nullable().optional(),
       archived: z.boolean().default(false),
+      ...profileOptionalFields,
       competitorVideos: competitorVideosSchema.optional(),
       researchOrigin: z.object({batchId: z.string().max(120), candidateId: z.string().max(120)}).optional(),
     })

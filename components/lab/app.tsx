@@ -92,6 +92,7 @@ import {
   productMarginLabel,
   formatTime,
 } from "@/lib/lab/domain";
+import ProductProfile,{ProfileExtraFields} from './product-profile';
 import {CompetitorVideoFields} from './competitor-videos';
 import OfficeViews from './office-views';
 import {selectionCounts} from '@/lib/lab/daily-selection';
@@ -116,6 +117,16 @@ const navigation = [
   { id: "settings", label: "Cài đặt", icon: PlugZap },
 ];
 const productFields: FieldDef[] = [
+  {name:'brandName',label:'Tên thương hiệu'},
+  {name:'boxText',label:'Tên in trên hộp'},
+  {name:'ctaKeyword',label:'Từ khóa CTA'},
+  {name:'ctaPlacement',label:'Vị trí CTA',type:'select',options:[{value:'overlay',label:'Đè cảnh'},{value:'caption',label:'Caption'}]},
+  {name:'situation',label:'Tình huống mở đầu · tiếng Anh',type:'textarea',full:true},
+  {name:'audience',label:'Đối tượng nội dung',type:'textarea'},
+  {name:'season',label:'Mùa vụ'},
+  {name:'demandNote',label:'Ghi chú nhu cầu',type:'textarea'},
+  {name:'leadDays',label:'Số ngày cung ứng',type:'number',nullable:true},
+
   {
     name: "name",
     label: "Tên sản phẩm",
@@ -259,6 +270,7 @@ export default function LabApp() {
     abort = useRef<AbortController | null>(null),
     pending = useRef(false);
   const records = demo ? samples : real;
+  const [profileId,setProfileId]=useState("");
   const [selectionNow,setSelectionNow]=useState(Date.now());
   useEffect(()=>{const timer=setInterval(()=>setSelectionNow(Date.now()),60000);return()=>clearInterval(timer);},[]);
   const selectionSummary=selectionCounts(records,selectionNow);
@@ -301,6 +313,7 @@ export default function LabApp() {
       const p = new URLSearchParams(location.search);
       const v = p.get("view") || "production";
       setView(navigation.some((n) => n.id === v) ? v : "production");
+      setProfileId(p.get("product")||"");
       setQuery(p.get("q") || "");
       setPage(Math.max(1, Number(p.get("page")) || 1));
     };
@@ -961,7 +974,7 @@ export default function LabApp() {
             </Badge>
           </div>
           <h3>
-            <button onClick={() => openEditor("product", p)}>
+            <button onClick={() => {setProfileId(p.id);navigate("products");const u=new URL(location.href);u.searchParams.set("product",p.id);history.replaceState({},"",u);}}>
               {p.data.name}
             </button>
           </h3>
@@ -1331,7 +1344,7 @@ export default function LabApp() {
                       <button
                         className="pipeline-item"
                         key={p.id}
-                        onClick={() => openEditor("product", p)}
+                        onClick={() => {setProfileId(p.id);navigate("products");const u=new URL(location.href);u.searchParams.set("product",p.id);history.replaceState({},"",u);}}
                       >
                         <span
                           className={`stage-product-icon ${i === 3 ? "green" : ""}`}
@@ -1468,6 +1481,8 @@ export default function LabApp() {
     </div>;
   }
   function productsView() {
+    const profile=allProducts.find(p=>p.id===profileId);
+    if(profile)return <ProductProfile key={profile.id} product={profile} records={records} onEdit={()=>openEditor("product",profile)} onBack={()=>{setProfileId("");const u=new URL(location.href);u.searchParams.delete("product");u.searchParams.delete("product_tab");history.pushState({},"",u);}}/>;
     const rows = filtered(allProducts),
       paged = pageRows(rows);
     return (
@@ -2369,7 +2384,7 @@ export default function LabApp() {
             kind={editor.kind}
             initial={editor.initial}
             fields={fieldDefs()}
-            extra={editor.kind === "product" ? (values, change, errors) => <><SampleCheckFields values={values} change={change} errors={errors} records={records}/><CompetitorVideoFields values={values} change={change} records={records} productId={editor.id}/></> : undefined}
+            extra={editor.kind === "product" ? (values, change, errors) => <><SampleCheckFields values={values} change={change} errors={errors} records={records}/><ProfileExtraFields values={values} change={change}/><CompetitorVideoFields values={values} change={change} records={records} productId={editor.id}/></> : undefined}
             onSave={saveEditor}
             onCancel={() => {
               setEditor(null);

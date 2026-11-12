@@ -1,4 +1,5 @@
 "use client";
+import {Readiness} from './content-readiness';
 import {useRef, useState} from 'react';
 import {z} from 'zod';
 import {Button, Badge, Empty, Modal, RecordForm, type FieldDef} from './primitives';
@@ -19,9 +20,9 @@ export function FormulaDraftPanel({records, production:p, product, disabled, onD
   const suggested=formulasForProduct(Array.isArray(product.traits)?product.traits.filter((v):v is string=>typeof v==='string'):[],library);
   const formulas=[...suggested,...library.filter(formula=>!suggested.includes(formula))];
   const linkedReference=records.find(r=>r.kind==='reference_video_draft'&&r.id===new URLSearchParams(typeof location==='undefined'?'':location.search).get('reference'));
-  const [selected,setSelected]=useState(String(linkedReference?.data.formulaId??'problem-vs-result-cta')),[keyword,setKeyword]=useState('');
-  const [placement,setPlacement]=useState<'overlay'|'caption'>('overlay');
-  const [brandName,setBrandName]=useState(''),[boxText,setBoxText]=useState(''),[situation,setSituation]=useState('');
+  const [selected,setSelected]=useState(String(linkedReference?.data.formulaId??'problem-vs-result-cta')),[keyword,setKeyword]=useState(String(product.ctaKeyword??''));
+  const [placement,setPlacement]=useState<'overlay'|'caption'>(product.ctaPlacement==='caption'?'caption':'overlay');
+  const [brandName,setBrandName]=useState(String(product.brandName??'')),[boxText,setBoxText]=useState(String(product.boxText??'')),[situation,setSituation]=useState(String(product.situation??''));
   const [usCues,setUsCues]=useState(false);
   const [draft,setDraft]=useState<ReturnType<typeof formulaStoryboard>|null>(null);
   const [error,setError]=useState(''),[busy,setBusy]=useState(false),[saved,setSaved]=useState(false);
@@ -30,7 +31,7 @@ export function FormulaDraftPanel({records, production:p, product, disabled, onD
   return <section className="production-card production-card-body formula-composer" aria-label="Khung content từ công thức">
     <h3>Khung content từ công thức</h3>{linkedReference&&<p>Mẫu đã chọn: {linkedReference.data.product} · {linkedReference.data.reaVideo?.shots.length??'Chưa biết'} shot</p>}
     <p>Hai mở đầu A/B dùng chung các shot tiếp theo. Chỉ lưu cảnh nháp, chưa duyệt hoặc gửi Muse.</p>
-    <div className="formula-input-grid">
+    <Readiness product={{...product,ctaKeyword:keyword,situation,brandName,boxText}}/><div className="formula-input-grid">
       <div className="desk-field formula-wide"><label htmlFor="formula-choice">Công thức</label><select id="formula-choice" disabled={locked} value={formula?.id??''} onChange={event=>{setSelected(event.target.value);setSituation('');invalidate();}}>
         {formulas.map(row=><option key={row.id} value={row.id}>{row.name} · v{row.version}{suggested.includes(row)?' · Gợi ý':''}</option>)}
       </select></div>
