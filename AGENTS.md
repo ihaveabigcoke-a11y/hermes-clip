@@ -1,3 +1,5 @@
+Đọc CLAUDE.md (mục tiêu, phạm vi đợt đầu, hợp đồng tích hợp với Office) trước khi làm.
+
 # Hermes Clip — hướng dẫn làm việc
 
 - Chỉ dùng một agent Codex. Không spawn sub-agent, phân vai hoặc khởi chạy hệ thống điều phối cũ.
