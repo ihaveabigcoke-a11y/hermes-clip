@@ -338,7 +338,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
         }}/>} /></details>}
     {view === 'research' && <ViralFormulas records={records} disabled={disabled||demo} onSaveDraft={(draft,revision)=>persist('reference_video_draft','reference_video_draft_'+draft.id,draft,revision)} onSaveFormula={formula=>persist('viral_formula',`viral_formula_${formula.id}_v${formula.version}`,formula,0)}/>}
     {choices.length > 0 && view!=='social' && <div className="field operations-selector"><label htmlFor="operations-selection">{view === "research" ? "Đợt nghiên cứu" : "Sản phẩm"}</label><select id="operations-selection" value={chosen?.id ?? ""} disabled={busy} onChange={event => select(event.target.value)}>{choices.map(record => <option key={record.id} value={record.id}>{record.data.name}</option>)}</select></div>}
-    {chosen && view !== 'research' && <div className="operations-toolbar">
+    {chosen && view !== 'research' && <details className="operations-compose-tools"><summary>Nhập / soạn nội dung</summary><div className="operations-toolbar">
       <TextExchange scope={'task_'+(view==='social'?'content':'landing')+'_'+chosen.id} onMuse={()=>openMuseTask(view==='social'?'content':'landing')} key={view+chosen.id} kind={view==='social'?'content':'landing'} context={{product:chosen.data, metrics:instagramProductSummary(records,chosen.id)}}
         target={'Sản phẩm: '+chosen.data.name} disabled={disabled} demo={demo} onApply={async (text,tool,_importId,provider)=>{
           if(view==='social') planForm(undefined,{...parseTextExchange('content',text,tool),provider,notes:'Nguồn: '+provider});
@@ -347,7 +347,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
         }}/>
 
       <Button tone="neutral" disabled={musePaused || disabled || demo || !desktopBridge()} onClick={() => openMuseTask('analysis')}>Phân tích bằng Muse</Button>
-    </div>}
+    </div></details>}
     {error && <div className="inline-error" role="alert"><p>{error}</p><Button tone="ghost" onClick={reload}>Tải lại dữ liệu</Button></div>}
     {view === "research" ? researchView() : view === "social" ? socialView() : !chosen ? <Empty title="Cần hồ sơ sản phẩm" text="Thêm sản phẩm trước khi soạn landing page."/> : <>
       {sampleWarning && <div className="advice-banner warning" role="status">{sampleWarning}</div>}

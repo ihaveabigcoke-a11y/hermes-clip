@@ -9,7 +9,7 @@ export type VisualState=keyof typeof visualStatus;
 const aliases:Record<string,VisualState>={
   success:'active',approved:'active',ready:'active',done:'active',published:'active',measured:'active',connected:'active',
   warning:'waiting',pending:'waiting',queued:'waiting',paused:'waiting',generating:'waiting',sending:'waiting',checking:'waiting',attention:'waiting',needs_attention:'waiting',refused:'waiting',draft:'waiting',
-  failed:'error',rejected:'error',blocked:'error',
+  danger:'error',failed:'error',rejected:'error',blocked:'error',
   neutral:'empty',info:'empty',unconfigured:'empty',unknown:'empty',missing:'empty',
 };
 export function visualState(value?:string|null):VisualState {
