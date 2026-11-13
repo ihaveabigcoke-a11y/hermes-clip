@@ -32,7 +32,7 @@ await officeUI('T-024b',f.records,async({page,origin,out,screenshot})=>{
  await visit('');assert.deepEqual(await page.locator('.funnel-count').allTextContents(),['2','1','1','1','1','1']);await page.locator('.views-line circle').nth(1).waitFor();await shots('today');
  await visit('?view=products');await page.getByRole('button',{name:'Bảng',exact:true}).click();const table=page.getByRole('region',{name:'Bảng sản phẩm'});await table.waitFor();
  const orders={};for(const col of ['Sản phẩm','Giá bán','Bước hiện tại']){await table.getByRole('button',{name:col,exact:false}).click();orders[col]=await table.locator('tbody tr').evaluateAll(rows=>rows.map(r=>r.getAttribute('data-product-row')));}
- assert.deepEqual(orders['Giá bán'],[f.first.id,f.product.id,f.second.id]);assert.deepEqual(orders['Bước hiện tại'],[f.first.id,f.second.id,f.product.id]);await shots('products-table');
+ assert.deepEqual(orders['Sản phẩm'],[f.first.id,f.product.id,f.second.id]);assert.deepEqual(orders['Giá bán'],[f.first.id,f.product.id,f.second.id]);assert.deepEqual(orders['Bước hiện tại'],[f.first.id,f.second.id,f.product.id]);await shots('products-table');
  await visit('?view=results');await page.locator('.hook-product-row').nth(2).waitFor();assert.equal(await page.locator('.hook-product-row').first().locator('rect').count(),3);assert.equal(await page.locator('tr[data-leading=true]').count(),0);assert.doesNotMatch(await page.locator('.hook-product-list').innerHTML(),/NaN|undefined/);await shots('results');
  await visit('?view=social&ops_id='+f.product.id+'&ig_tab=matrix');
  // Existing product workspace exposes the matrix in its own tab.

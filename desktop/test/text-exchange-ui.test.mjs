@@ -11,9 +11,9 @@ const {researchBatchSchema}=await importModule('lib/lab/operations.ts');
 
 test('T-003: render all three import/prompt entry points; CLI and setting start off without provider calls',()=>{
   let calls=0;
-  for(const [kind,label] of [['research','research'],['content','nội dung'],['landing','landing']]){
+  for(const [kind,label] of [['research','nghiên cứu'],['content','nội dung'],['landing','trang giới thiệu']]){
     const html=renderToStaticMarkup(React.createElement(TextExchange,{kind,context:{},target:'Fixture target',disabled:false,demo:false,onApply:async()=>calls++}));
-    assert.ok(html.includes('Nhập kết quả '+label));assert.ok(html.includes('Copy prompt '+label));assert.match(html,/<button[^>]*disabled=""[^>]*>Chạy Codex CLI<\/button>/);
+    assert.ok(html.includes('Nhập kết quả '+label));assert.ok(html.includes('Sao chép prompt '+label));assert.match(html,/<button[^>]*disabled=""[^>]*>Chạy Codex CLI<\/button>/);
     assert.match(html,/Mặc định: Nhập JSON/);assert.doesNotMatch(html,/Mặc định: (import:json|codex|muse)/);
     assert.match(html,/Fixture target/);
   }

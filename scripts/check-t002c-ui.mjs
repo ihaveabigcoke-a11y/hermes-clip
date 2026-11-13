@@ -142,7 +142,7 @@ try {
   // Fake time belongs only to the polling check; let portal/focus timers run normally.
   await page.clock.resume();
   await page.waitForFunction(()=>window.__textCalls.codex===1);
-  const dialog=page.getByRole('dialog',{name:'Nhập kết quả research',exact:true});
+  const dialog=page.getByRole('dialog',{name:'Nhập kết quả nghiên cứu',exact:true});
   await dialog.waitFor();
   // A wrapping label includes the textarea's initial JSON text in Playwright's
   // label text. Match its stable prefix, then verify the actual returned value.

@@ -83,7 +83,7 @@ export default function ResearchCandidates({record,records,disabled,onEdit,onSel
           <td><Button tone="neutral" onClick={()=>setDetailId(candidate.id)} aria-label={'Xem nguồn và điều kiện '+candidate.name}>Xem</Button><Button tone="ghost" onClick={()=>setCheckId(candidate.id)} aria-label={'Kiểm sản phẩm '+candidate.name}>Kiểm sản phẩm</Button></td>
         </tr>;})}</tbody>
       </table>
-    </div>:<Empty title={selectedOnly?'Chưa chọn ứng viên':'Đang chờ danh sách ứng viên'} text={selectedOnly?'Mở Tất cả rồi chọn tối đa 3 sản phẩm.':'Copy prompt research rồi nhập JSON để lưu danh sách tại đây.'}/>}
+    </div>:<Empty title={selectedOnly?'Chưa chọn ứng viên':'Đang chờ danh sách ứng viên'} text={selectedOnly?'Mở Tất cả rồi chọn tối đa 3 sản phẩm.':'Sao chép prompt nghiên cứu rồi nhập JSON để lưu danh sách tại đây.'}/>}
     <p className="instagram-data-note">Giá vốn có thể yêu cầu mua nhiều sản phẩm. Mở chi tiết để xem số lượng tối thiểu và điều kiện nguồn hàng. Chưa xác nhận phí giao tới Mỹ hoặc lợi nhuận.</p>
     <Modal open={!!checkCandidate} title={'Kiểm sản phẩm · '+(checkCandidate?.name??'')} description="Đã quan sát / Suy luận / Chưa biết" onClose={()=>setCheckId('')}>
       {checkCandidate&&<div className="modal-body research-candidate-detail"><ProductCheck key={checkCandidate.id} candidate={checkCandidate} ceilingUsd={ceilingUsd}/><div className="button-row"><Button tone="neutral" disabled={disabled} onClick={()=>{setCheckId('');onEdit(checkCandidate);}}>Sửa ứng viên</Button></div></div>}

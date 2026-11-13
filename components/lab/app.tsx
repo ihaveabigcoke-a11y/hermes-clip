@@ -141,7 +141,7 @@ const productFields: FieldDef[] = [
   {name:'brandName',label:'Tên thương hiệu'},
   {name:'boxText',label:'Tên in trên hộp'},
   {name:'ctaKeyword',label:'Từ khóa CTA'},
-  {name:'ctaPlacement',label:'Vị trí CTA',type:'select',options:[{value:'overlay',label:'Đè cảnh'},{value:'caption',label:'Caption'}]},
+  {name:'ctaPlacement',label:'Vị trí CTA',type:'select',options:[{value:'overlay',label:'Đè cảnh'},{value:'caption',label:'Chú thích bài đăng'}]},
   {name:'situation',label:'Tình huống mở đầu · tiếng Anh',type:'textarea',full:true},
   {name:'audience',label:'Đối tượng nội dung',type:'textarea'},
   {name:'season',label:'Mùa vụ'},

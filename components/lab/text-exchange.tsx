@@ -6,7 +6,7 @@ import {Button, Modal} from './primitives';
 import {useDesktopStatus} from '@/lib/lab/use-desktop-status';
 import {resolveProvider, textProviderReceipts, type ProviderReceipt} from '@/desktop/src/provider-routing.mjs';
 
-const labels = {research: 'research', content: 'nội dung', landing: 'landing'};
+const labels = {research: 'nghiên cứu', content: 'nội dung', landing: 'trang giới thiệu'};
 const providerLabels: Record<string, string> = {muse:'Muse', codex:'Codex CLI', 'import:json':'Nhập JSON', manual:'Nhập tay'};
 async function readReceipts(kind: TextTaskKind, scope?: string) {
   if (!scope) return [];
@@ -74,7 +74,7 @@ export default function TextExchange({kind, context, target, disabled, demo, onA
     <p role="status">Mặc định: {providerLabels[routing.provider] ?? routing.provider}{routing.blocked?` · ${routing.reason}`:''}{receiptError&&` · ${receiptError}`}</p>
     <div className="button-row">
       <Button tone="neutral" disabled={blocked || busy} onClick={() => {setOpen(true); setError('');}}>Nhập kết quả {labels[kind]}</Button>
-      <Button tone="neutral" disabled={disabled || busy} onClick={() => void action(async () => {await navigator.clipboard.writeText(textTaskPrompt(kind, context)); setNotice('Đã copy prompt ' + labels[kind] + '.');})}>Copy prompt {labels[kind]}</Button>
+      <Button tone="neutral" disabled={disabled || busy} onClick={() => void action(async () => {await navigator.clipboard.writeText(textTaskPrompt(kind, context)); setNotice('Đã sao chép prompt ' + labels[kind] + '.');})}>Sao chép prompt {labels[kind]}</Button>
       <Button tone="neutral" disabled={blocked || busy || demo || !enabled} onClick={() => void action(runCodex)}>{busy ? 'Đang xử lý…' : 'Chạy Codex CLI'}</Button>
     </div>
     <p className="field-help">{target} · {enabled ? 'Codex CLI đã bật; dùng phiên đăng nhập và hạn mức gói hiện có.' : 'Codex CLI mặc định tắt; bật trong Cài đặt nếu muốn dùng.'}</p>

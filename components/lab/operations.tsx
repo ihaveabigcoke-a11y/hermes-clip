@@ -244,7 +244,6 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
         {name: "caption", label: "Chú thích tiếng Anh", type: "textarea", full: true},
         {name:'apiVideoUrl',label:'URL video công khai cho Instagram API',help:'HTTPS của đúng file đã chọn và duyệt. Meta tải từ URL này; không dùng localhost hoặc URL chứa token. App không tự tải video lên dịch vụ khác.',full:true},
         {name: "ctaKeyword", label: "Từ khóa CTA", placeholder: "LED / RUN / HELP", help: "Một từ tiếng Anh. Để trống để dùng từ khóa từ biến thể video đã gắn."},
-        {name: "aiLabel", label: "Nhãn AI khi đăng", type: "select", options: [{value: "off", label: "Không gắn nhãn AI (mặc định)"}, {value: "required", label: "Bắt buộc bật nhãn AI"}], help: "Mặc định không bật nhãn AI. Chọn Bắt buộc để script bật nhãn và dừng trước Share nếu không xác nhận được.", full: true},
         ...(plan?.data.status === 'published_browser' ? [] : [{name: "status", label: "Trạng thái", type: "select" as const, options: [{value: "draft", label: "Nháp"}, {value: "planned", label: "Đã lên kế hoạch"}, {value: "published_manual", label: "Đã đăng · ghi nhận thủ công"}]}]),
         {name: "postUrl", label: "URL bài Instagram", type: "url"}, {name: "notes", label: "Ghi chú", type: "textarea", full: true}],
       save: value => save("content_plan", id, value, plan?.revision ?? 0)});
@@ -297,7 +296,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
   }
 
   function researchView(): ReactNode {
-    if (!chosen) return <Empty title="Chưa có đợt nghiên cứu" text="Copy prompt research rồi nhập JSON; app sẽ tạo đợt mới. Hoặc tạo đợt nhập tay từ nút phía trên."/>;
+    if (!chosen) return <Empty title="Chưa có đợt nghiên cứu" text="Sao chép prompt nghiên cứu rồi nhập JSON; app sẽ tạo đợt mới. Hoặc tạo đợt nhập tay từ nút phía trên."/>;
     const batch = chosen.data as ResearchBatch;
     return <>
       <div className="operations-toolbar"><Badge>{batch.candidates.length}/10 ứng viên</Badge><Badge>{batch.selectedIds.length}/3 đã chọn</Badge>

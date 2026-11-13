@@ -116,7 +116,7 @@ export default function InstagramPanel({product, accounts, plans, records, demo,
       {['queued', 'waiting_login'].includes(job.state) && <Button tone="neutral" disabled={busy || demo} onClick={() => act('instagramCancel', {id: job.id})}>Hủy lượt đăng</Button>}
       {job.state === 'failed' && <Button tone="neutral" disabled={busy || demo} onClick={() => act('instagramRetry', {id: job.id})}>Thử lại lượt đăng</Button>}
       {job.state === 'needs_attention' && (job.attentionReason === 'ai_label'
-        ? <Button disabled={busy || demo} onClick={() => act('instagramOpen', {id: job.snapshot.accountId})}>Mở trình duyệt kiểm tra nhãn AI</Button>
+        ? <Button disabled={busy || demo} onClick={() => act('instagramOpen', {id: job.snapshot.accountId})}>Mở trình duyệt kiểm tra thông tin bài đăng</Button>
         : <Button disabled={busy || demo} onClick={() => act('instagramReconcile', {id: job.id})}>Kiểm tra kết quả</Button>)}
       {job.state === 'published' && job.syncError && <Button tone="neutral" disabled={busy || demo} onClick={() => act('instagramReconcile', {id: job.id})}>Đồng bộ bài đã đăng</Button>}
       {job.postUrl && <a className="lab-button neutral" href={job.postUrl} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Xem trên Instagram</a>}

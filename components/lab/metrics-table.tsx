@@ -3,7 +3,7 @@ import {useState} from 'react';
 import type {LabRecord} from '@/lib/lab/domain';
 import {measuredPosts} from '@/lib/lab/today';
 import {metricDisplay,measuredTime} from './today';
-const columns=[['product','Sản phẩm'],['hook','Hook'],['account','Tài khoản'],['views','Lượt xem'],['likes','Like'],['comments','Comment'],['keywordComments','Comment từ khoá'],['dms','DM'],['utmClicks','Click UTM'],['orders','Đơn'],['observedAt','Thời điểm đo']] as const;
+const columns=[['product','Sản phẩm'],['hook','Hook'],['account','Tài khoản'],['views','Lượt xem'],['likes','Lượt thích'],['comments','Bình luận'],['keywordComments','Bình luận từ khóa'],['dms','DM'],['utmClicks','Click UTM'],['orders','Đơn'],['observedAt','Thời điểm đo']] as const;
 export default function MetricsTable({records}:{records:LabRecord[]}) {
   const [sort,setSort]=useState<{key:string;direction:number}>({key:'observedAt',direction:-1});
   const rows=measuredPosts(records);
