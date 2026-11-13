@@ -178,7 +178,8 @@ try {
     assert.equal(await complete().count(),0);assert.equal(records.filter(row=>row.kind==='product').length,3);
     assert.equal(promoteCalls,6,'one bulk click attempts each missing row once');
     await capture('san-sang',width);await deploy().evaluate(button=>{button.click();button.click();});
-    await page.locator('#production-project').waitFor();assert.equal(new URL(page.url()).searchParams.get('view'),'production');
+    await page.waitForURL(url=>url.searchParams.get('view')==='production');
+    if(await page.getByRole('dialog').isVisible())await page.getByRole('dialog').getByRole('button',{name:'Đóng',exact:true}).click();await page.locator('#production-project').waitFor({state:'visible'});assert.equal(new URL(page.url()).searchParams.get('view'),'production');
     const firstProduct=records.find(row=>row.kind==='product');
     const firstProject=records.find(row=>row.kind==='production'&&row.data.productId===firstProduct.id);
     assert.equal(await page.locator('#production-project').inputValue(),firstProject.id);
@@ -188,7 +189,7 @@ try {
     for(const id of ['muse','grok-cli','fal'])assert.equal(await provider.locator(`option[value="${id}"]`).evaluate(option=>option.disabled),true);
     assert.match(await page.getByRole('status').filter({hasText:'Đã tạo 3 dự án video.'}).innerText(),/Bước tiếp: viết cảnh → duyệt → Xuất gói prompt cho Flow\/Gemini/);
     await capture('tao-video',width);
-    await page.goto(researchUrl);await deploy().click();await page.locator('#production-project').waitFor();
+    await page.goto(researchUrl);await deploy().click();await page.waitForURL(url=>url.searchParams.get('view')==='production');if(await page.getByRole('dialog').isVisible())await page.getByRole('dialog').getByRole('button',{name:'Đóng',exact:true}).click();await page.locator('#production-project').waitFor({state:'visible'});
     assert.equal(records.filter(row=>row.kind==='production').length,3);assert.equal(promoteCalls,6);
     assert.ok(records.filter(row=>row.kind==='production').every(row=>row.data.scenes.length===0));
     assert.deepEqual(records.find(row=>row.kind==='research_batch').data,original);

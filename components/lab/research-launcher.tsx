@@ -51,7 +51,7 @@ export default function ResearchLauncher({disabled,onOpen,actions,scope}:{disabl
   {actions?.({query, maxLandedCostUsd:Number(maximum), market:'United States', locale:'en-US'},!!queryError||busy||active||!!request.current,start,textProviderReceipts({kind:'research',scope,runs}))}
   <p>Prompt bằng tiếng Anh. Mặc định loại pin lithium lớn, chất lỏng, hàng có thương hiệu và hàng theo đời xe. {query&&`${query.length}/1500 ký tự sau khi ghép.`}</p>
   {queryError&&<p className="inline-error" role="alert">{queryError}</p>}
-  {request.current&&error&&<p>Yêu cầu chưa rõ kết quả. Bấm lại để đối soát cùng mã và tiêu chí; không tạo lượt mới.</p>}
+  {request.current&&error&&<div><p>Yêu cầu chưa rõ kết quả. Đối soát cùng mã và tiêu chí đã lưu.</p><Button tone="neutral" disabled={!museReady||disabled||busy||active} onClick={()=>void start()}>Đối soát cùng mã yêu cầu</Button></div>}
   {musePaused&&<p className="field-help">Muse đang tạm dừng, bật lại ở Tài khoản Muse</p>}
   <p>Muse chạy nền, tìm tối đa 10 ứng viên có nguồn cho thị trường Mỹ và tự lưu kết quả. Giữ app mở và máy thức; có thể chuyển sang màn khác. Hermes không giới hạn số lượt theo hồ sơ.</p>
   {latest&&<div className="research-run-progress" role="status"><Badge tone={latest.state==='done'?'success':'neutral'}>{latest.reconciled?'Đã bỏ qua':states[latest.state]??latest.state}</Badge><span>{latest.count}/10 sản phẩm · {latest.step} lượt hoàn tất</span><progress max={10} value={latest.count} aria-label="Số ứng viên đã lưu"/>

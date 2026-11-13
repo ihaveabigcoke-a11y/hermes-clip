@@ -1,3 +1,4 @@
+import {planDailySelection,selectionEntries} from '../lib/lab/daily-selection.ts';
 // Offline QA against local:build output. All HTTP requests are fulfilled from
 // fixture memory/local files or aborted; no server, account, real profile or DB.
 import assert from 'node:assert/strict';
@@ -30,6 +31,12 @@ try {
   if(url.pathname==='/api/lab'){
    if(request.method()==='GET')return json({records});
    const body=request.postDataJSON();posts.push(body);
+   if(body.action==='select_daily'){
+    if(failNextPromotion==='before'){failNextPromotion=false;return json({error:'Fixture unavailable before save'},503);}
+    const rows=planDailySelection(records,body.input);records=[...rows,...records.filter(r=>!rows.some(n=>n.id===r.id))];
+    if(failNextPromotion){failNextPromotion=false;return json({error:'Fixture lost response'},503);}
+    return json({records:rows});
+   }
    const previous=records.find(r=>r.id===body.id);
    if(body.action==='promote'){
     assert.equal(body.kind,'product');assert.equal(body.id,'research_fixture_batch_'+body.data.researchOrigin.candidateId);
@@ -53,11 +60,12 @@ try {
  await page.addInitScript(()=>{
   localStorage.setItem('product-lab-mode','real');
   window.__researchRequests=[];
-  window.productLabDesktop={researchStatus:async()=>({runs:[]}),researchStart:async input=>{window.__researchRequests.push(input);throw Error('Fixture: reply unavailable');}};
+  window.productLabDesktop={status:async()=>({musePaused:false,profiles:[{id:'fixture',enabled:true,health:'ready',session:'signed_in',busy:false,quota:{state:'available'}}],jobs:[],active:0,paused:true,generationReady:true,batch:null}),researchStatus:async()=>({runs:[]}),researchStart:async input=>{window.__researchRequests.push(input);throw Error('Fixture: reply unavailable');}};
  });
  await page.goto('http://127.0.0.1:4174/?view=research&ops_id=fixture_batch');
  await page.locator('.research-candidate-table tbody tr').nth(9).waitFor();await page.evaluate(()=>document.fonts.ready);
  const heights=await page.locator('.research-candidate-table tbody tr').evaluateAll(rows=>rows.map(row=>row.getBoundingClientRect().height));
+ await writeFile(join(temp,'row-layout.json'),JSON.stringify(await page.locator('.research-candidate-table tbody tr').first().locator('td,th').evaluateAll(cells=>cells.map(c=>({text:c.innerText,width:c.clientWidth,height:c.clientHeight,children:[...c.children].map(e=>({text:e.innerText,width:e.clientWidth,height:e.clientHeight}))}))),null,2));
  assert.ok(heights.every(height=>height<=120),JSON.stringify(heights));
  assert.equal(await page.locator('.operations-heading .lab-button.primary').count(),0);
  assert.equal(await page.locator('.research-launcher .lab-button.primary').count(),1);
@@ -65,15 +73,20 @@ try {
  await page.locator('.research-candidate-table').evaluate(element=>element.scrollIntoView({block:'start'}));
  await page.screenshot({path:join(out,'T04-research-table-1080.png')});
  const check=index=>page.getByRole('checkbox',{name:'Chọn '+names[index],exact:true});
- const setChecked=async(index,desired)=>{
+ const setChecked=async(index,desired,{failure=false}={})=>{
   await check(index).click();
+  if(desired){const dialog=page.getByRole('dialog');await dialog.waitFor();const key=dialog.getByLabel('Mã sản phẩm',{exact:true});if(!await key.inputValue())await key.fill('FIXTURE-'+index);
+   const rank=dialog.getByLabel('Thứ hạng hôm nay',{exact:true});if(!await rank.inputValue()){const used=selectionEntries(records).map(r=>r.rank);await rank.fill(String([1,2,3].find(n=>!used.includes(n))));}
+   await dialog.getByRole('button',{name:'Lưu thay đổi',exact:true}).click();
+   if(failure){await dialog.getByRole('alert').waitFor();return;}await dialog.waitFor({state:'hidden'});
+  }
   await page.waitForFunction(({name,desired})=>Array.from(document.querySelectorAll('input[type=checkbox]')).find(input=>input.getAttribute('aria-label')===name)?.checked===desired,{name:'Chọn '+names[index],desired});
  };
- await setChecked(0,true);await page.getByText('Hồ sơ đã tạo',{exact:true}).waitFor();
+ await setChecked(0,true);await page.getByRole('status').filter({hasText:'Đã lưu lựa chọn hôm nay'}).waitFor();
  const product=records.find(r=>r.kind==='product');assert.ok(product);assert.equal(product.data.researchOrigin.candidateId,'fixture0');
- await setChecked(0,false);await page.getByText('Hồ sơ vẫn giữ',{exact:true}).waitFor();
+ await setChecked(0,false);await page.getByRole('status').filter({hasText:'Hồ sơ và lịch sử vẫn giữ'}).waitFor();
  assert.ok(records.some(r=>r.id===product.id));
- await setChecked(0,true);await page.getByText('Hồ sơ đã tạo',{exact:true}).waitFor();
+ await setChecked(0,true);await page.getByRole('status').filter({hasText:'Đã lưu lựa chọn hôm nay'}).waitFor();
  assert.equal(records.filter(r=>r.id===product.id).length,1);
  await setChecked(1,true);await page.waitForFunction(()=>document.querySelectorAll('.research-candidate-table input:checked').length===2);
  await page.waitForFunction(()=>!document.querySelector('.research-candidate-table input').disabled);
@@ -87,24 +100,15 @@ try {
  await page.getByRole('button',{name:/Tất cả.*10/}).click();
  await setChecked(2,false);await page.waitForFunction(()=>document.querySelectorAll('.research-candidate-table input:checked').length===2);
  await page.waitForFunction(()=>!document.querySelector('.research-candidate-table input').disabled);
- failNextPromotion=true;await setChecked(3,true);await page.getByRole('alert').filter({hasText:'chưa xác nhận hồ sơ'}).waitFor();
- assert.equal(records.filter(r=>r.id==='research_fixture_batch_fixture3').length,1);
- // Browser reload reconciles a committed promote with a lost response.
- await page.getByRole('button',{name:'Tải lại dữ liệu',exact:true}).last().click();
- await page.waitForFunction(()=>document.querySelectorAll('.research-candidate-table input:checked').length===3);
+ failNextPromotion=true;await setChecked(3,true,{failure:true});assert.equal(records.filter(r=>r.id==='research_fixture_batch_fixture3').length,1);
+ await page.reload();await page.waitForFunction(()=>document.querySelectorAll('.research-candidate-table input:checked').length===3);
  await setChecked(1,false);await page.waitForFunction(()=>!document.querySelector('.research-candidate-table input').disabled);
- failNextPromotion='before';await setChecked(4,true);
- await page.getByRole('button',{name:'Hoàn tất chọn',exact:true}).waitFor();
- assert.equal(records.filter(r=>r.id==='research_fixture_batch_fixture4').length,0);
- await page.getByRole('button',{name:'Hoàn tất chọn',exact:true}).click();
- await page.waitForFunction(()=>!document.querySelector('.research-candidate-table input').disabled);
- assert.equal(records.filter(r=>r.id==='research_fixture_batch_fixture4').length,1);
- assert.equal(await page.getByRole('button',{name:'Hoàn tất chọn',exact:true}).count(),0);
- await page.getByLabel('Ngách hoặc đối tượng',{exact:true}).fill('night runners');
- await page.getByLabel('Giá vốn + ship tối đa (USD)',{exact:true}).fill('15');
- await page.getByRole('button',{name:'Bắt đầu nghiên cứu',exact:true}).click();
+ failNextPromotion='before';await setChecked(4,true,{failure:true});assert.equal(records.filter(r=>r.id==='research_fixture_batch_fixture4').length,0);
+ await page.getByRole('dialog').getByRole('button',{name:'Lưu thay đổi',exact:true}).click();await page.getByRole('dialog').waitFor({state:'hidden'});assert.equal(records.filter(r=>r.id==='research_fixture_batch_fixture4').length,1);assert.equal(await check(4).isChecked(),true);
+ await page.getByLabel('Ngách hoặc đối tượng',{exact:true}).fill('night runners');await page.getByLabel('Giá vốn + ship tối đa (USD)',{exact:true}).fill('15');
+ await page.getByRole('button',{name:'Bắt đầu bằng Muse',exact:true}).click();
  await page.getByRole('alert').filter({hasText:'Fixture: reply unavailable'}).waitFor();
- await page.getByRole('button',{name:'Bắt đầu nghiên cứu',exact:true}).click();
+ await page.getByRole('button',{name:'Đối soát cùng mã yêu cầu',exact:true}).click();
  const requests=await page.evaluate(()=>window.__researchRequests);assert.equal(requests.length,2);assert.deepEqual(requests[0],requests[1]);assert.match(requests[0].query,/15 USD/);assert.match(requests[0].query,/night runners/);
  for(const width of [1366,800,390]){
   await page.setViewportSize({width,height:width===390?844:900});
@@ -115,7 +119,7 @@ try {
  // Exercise the app's in-memory demo persist branch as well as the API wiring.
  const postCount=posts.length;
  await page.setViewportSize({width:1920,height:1080});
- await page.getByRole('button',{name:'Khám phá bản mẫu',exact:true}).click();
+ await page.goto('http://127.0.0.1:4174/?view=production');await page.getByRole('button',{name:'Xem bản mẫu',exact:true}).click();await page.getByRole('navigation',{name:'Menu chính',exact:true}).getByRole('link',{name:'Săn sản phẩm',exact:true}).click();
  await page.getByRole('button',{name:'Tạo đợt nhập tay',exact:true}).click();
  await page.getByRole('dialog').getByLabel('Tên đợt',{exact:true}).fill('Demo selection fixture');
  await page.getByRole('dialog').getByRole('button',{name:'Lưu thay đổi',exact:true}).click();
@@ -125,9 +129,7 @@ try {
  await page.getByRole('dialog').getByLabel('Thông tin đã kiểm tra tại nguồn',{exact:true}).fill('Synthetic fixture');
  await page.getByRole('dialog').getByRole('button',{name:'Lưu thay đổi',exact:true}).click();
  const demoCheck=page.getByRole('checkbox',{name:'Chọn Demo fixture product',exact:true});
- await demoCheck.click();await page.getByText('Hồ sơ đã tạo',{exact:true}).waitFor();
- await demoCheck.click();await page.getByText('Hồ sơ vẫn giữ',{exact:true}).waitFor();
- await demoCheck.click();await page.getByText('Hồ sơ đã tạo',{exact:true}).waitFor();
+ for(const desired of [true,false,true]){await demoCheck.click();if(desired){const d=page.getByRole('dialog');await d.waitFor();await d.getByLabel('Mã sản phẩm',{exact:true}).fill('DEMO-FIXTURE');await d.getByLabel('Thứ hạng hôm nay',{exact:true}).fill('1');await d.getByRole('button',{name:'Lưu thay đổi',exact:true}).click();await d.waitFor({state:'hidden'});}await page.waitForFunction(desired=>document.querySelector('input[aria-label="Chọn Demo fixture product"]')?.checked===desired,desired);}
  assert.equal(await demoCheck.isChecked(),true);assert.equal(await page.locator('.operations-panel .inline-error').count(),0);assert.equal(posts.length,postCount);
  assert.deepEqual(errors,[]);assert.deepEqual(blocked,[]);
  const report={fixtureOnly:true,networkRequestsSent:0,viewport:'1920x1080',rowHeights:heights,maximumRowHeight:Math.max(...heights),apiFixturePosts:posts.length,checks:['selection promotes','uncheck keeps profile','recheck deduplicates','max three','detail modal','filter keeps full coverage','lost promote response reconciles','failed promote repaired with same selection','launcher retry uses identical request','mobile horizontal table scroll','demo selection replays without CAS error or API mutation'],consoleErrors:errors};

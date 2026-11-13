@@ -187,7 +187,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
   async function deployProducts() {
     if (!chosen) return;
     const products = researchSelection(chosen, records).ready;
-    if(!demo){
+    if(!demo&&desktopStatus?.musePaused===false){
       const bridge=desktopBridge();
       if(!bridge?.deploymentStart)throw new ClientError('Khởi động lại Hermes Clip bản mới để triển khai tự động.');
       const run=await bridge.deploymentStart({batchId:chosen.id,productIds:products.map(p=>p.id),profileId:activeDeploymentProfile||undefined});
