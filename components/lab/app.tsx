@@ -113,6 +113,7 @@ import {referenceDraftRecordId} from '@/lib/lab/viral-reference';
 import {viralFormulaRecordId} from '@/lib/lab/viral-formulas';
 import './department-nav.css';
 import './t024.css';
+import CompactToday from "./compact-today";
 import CompactSignals from "./compact-office";
 import Today,{ProductThumbnail} from './today';
 import QuickVideo from './quick-video';
@@ -1870,7 +1871,7 @@ export default function LabApp() {
         </header>
         <main id="lab-main" tabIndex={-1}>
           {quickProduct&&<QuickVideo key={quickProduct.id} product={quickProduct} records={records} demo={demo} offline={offline} persist={persist} onRecord={r=>{if(demo)putMemory([r]);else setReal(prev=>[r,...prev.filter(x=>x.id!==r.id)]);}} onClose={()=>setQuickProduct(null)} onReady={href=>{setQuickProduct(null);openHref(href);}}/>}
-          <div className="page-heading" hidden={(view==='products'&&!!profileId)||["research", "social", "landing", "accounts", "queue", "chat", "library", "office", "signals"].includes(view)}>
+          <div className="page-heading" hidden={view==='overview'||(view==='products'&&!!profileId)||["research", "social", "landing", "accounts", "queue", "chat", "library", "office", "signals"].includes(view)}>
             <div>
               {view !== "products" && <div className="page-eyebrow">
                 HERMES CLIP <span>/</span>{" "}
@@ -1913,7 +1914,7 @@ export default function LabApp() {
               ) : null}
             </div>
           </div>
-          {view !== "signals" && view !== "products" && (view !== "overview" || demo) && workspaceNotice()}
+          {! ["signals","overview"].includes(view) && view !== "products" && workspaceNotice()}
           {offline && (
             <div className="persistent-error" role="status">
               <Info size={18} />
@@ -1948,7 +1949,7 @@ export default function LabApp() {
           ) : view === "guide" ? (
             <DailyGuide key={demo?"demo-guide":"real-guide"} records={records}/>
           ) : view === "overview" ? (
-            <Today records={records} manual={journeyMedia.status} jobs={journeyWorker.status?.jobs??[]} onNavigate={openHref}/>
+            <CompactToday records={records} onNavigate={openHref}/>
           ) : view === "signals" ? (<CompactSignals records={records} demo={demo}/>) : view === "office" ? (
             <OfficeViews jobs={journeyWorker.status?.jobs??[]} manual={journeyMedia.status} key={demo?"demo-office":"local-office"} mode={view} records={records} demo={demo}/>
           ) : view === "products" ? (
@@ -1979,7 +1980,7 @@ export default function LabApp() {
             window.dispatchEvent(new PopStateEvent('popstate'));
             window.dispatchEvent(new Event('hermes-compose'));
           }}/></div>
-          <footer className="app-footer" hidden={view==="signals"}>
+          <footer className="app-footer" hidden={["signals","overview"].includes(view)}>
             <span>
               <FlaskConical size={14} />
               Hermes Clip
