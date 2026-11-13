@@ -83,9 +83,20 @@ export class MuseAdapter {
     await page.locator(config.prompt).fill(prompt);
   }
 
+  mediaCards(page) {
+    // Suggestions also carry has-presentation=true. Require a media element.
+    return page.locator(this.config.resultCards + (this.chatMode ? `:has(${this.config.readyWithinCard})` : ''));
+  }
+
+  noMedia(page, response) {
+    return Object.assign(new Error('Muse đã trả lời nhưng chưa tạo file.'), {
+      code: 'MUSE_NO_MEDIA', providerUrl: page.url(), providerResponse: response.slice(0, 2000),
+    });
+  }
+
   async submit(page, checkpoint) {
     const config = this.config;
-    const cards = page.locator(config.resultCards);
+    const cards = this.mediaCards(page);
     const oldIds = new Set(await cards.evaluateAll(
       (elements, attribute) => elements.map(element => element.getAttribute(attribute)),
       config.resultIdAttribute,
@@ -97,7 +108,7 @@ export class MuseAdapter {
       elements => elements.map(element => element.getAttribute('data-message-id')),
     ) : []);
     const assistantMessages = this.chatMode
-      ? page.locator('[data-message-id][data-message-role="assistant"]:not([data-message-has-presentation="true"])')
+      ? page.locator('[data-message-id][data-message-role="assistant"]')
       : null;
     const oldAssistantIds = new Set(assistantMessages ? await assistantMessages.evaluateAll(
       elements => elements.map(element => element.getAttribute('data-message-id')),
@@ -142,11 +153,7 @@ export class MuseAdapter {
           if (response.text !== lastResponse || completedAt === null) completedAt = Date.now();
           lastResponse = response.text;
           if (Date.now() - completedAt >= 15000) {
-            const error = new Error('Muse đã trả lời nhưng chưa tạo file.');
-            error.code = 'MUSE_NO_MEDIA';
-            error.providerUrl = page.url();
-            error.providerResponse = response.text.slice(0, 2000);
-            throw error;
+            throw this.noMedia(page, response.text);
           }
         } else {
           completedAt = null;
@@ -177,10 +184,10 @@ export class MuseAdapter {
       if (users.length !== 1 || users[0].unconfirmed || !users[0].text.includes(job.request.prompt)) {
         throw Error('Hội thoại đã thay đổi hoặc chưa xác nhận gửi. Mở nguồn Muse để đối soát.');
       }
-      const ids = await page.locator(this.config.resultCards).evaluateAll((elements, attribute) =>
+      const ids = await this.mediaCards(page).evaluateAll((elements, attribute) =>
         elements.map(element => element.getAttribute(attribute)).filter(Boolean), this.config.resultIdAttribute);
       if (ids.length > 1) throw Error('Có nhiều kết quả. Mở nguồn Muse để chọn đúng file.');
-      const replies = await page.locator('[data-message-id][data-message-role="assistant"]:not([data-message-has-presentation="true"])')
+      const replies = await page.locator('[data-message-id][data-message-role="assistant"]')
         .evaluateAll(elements => elements.map(element => element.innerText?.trim() || element.textContent?.trim() || ''));
       return {providerId: ids[0] ?? null, response: replies.at(-1) ?? ''};
     };
@@ -218,7 +225,24 @@ export class MuseAdapter {
     const exact = page.locator(`${config.resultCards}[${config.resultIdAttribute}=${JSON.stringify(job.providerId)}]`);
     await checkpoint('waiting');
     if (this.chatMode) await exact.scrollIntoViewIfNeeded({timeout: 30000});
-    await exact.locator(config.readyWithinCard).first().waitFor({state: 'visible', timeout: config.timeoutSeconds * 1000});
+    const media = exact.locator(config.readyWithinCard).first();
+    if (this.chatMode) {
+      const deadline = Date.now() + config.timeoutSeconds * 1000;
+      let settledAt = null, lastResponse = '';
+      while (true) {
+        await this.guard?.();
+        if (await media.isVisible()) break;
+        if (Date.now() >= deadline) throw Error('Chưa thấy file của mã kết quả cũ. Cần đối soát trước khi gửi tiếp.');
+        const response = (await exact.innerText()).trim();
+        const generating = await page.getByRole('button', {name: 'Stop', exact: true}).isVisible();
+        if (response && !generating) {
+          if (response !== lastResponse || settledAt === null) settledAt = Date.now();
+          lastResponse = response;
+          if (Date.now() - settledAt >= 15000) throw this.noMedia(page, response);
+        } else settledAt = null;
+        await page.waitForTimeout(750);
+      }
+    } else await media.waitFor({state: 'visible', timeout: config.timeoutSeconds * 1000});
     let downloadButton = exact.getByRole('button', {name: config.downloadButtonName, exact: true});
     if (this.chatMode) {
       const preview = exact.locator('[data-hatch-video-wrapper], button:has(img), [role="button"]:has(img)').first();
