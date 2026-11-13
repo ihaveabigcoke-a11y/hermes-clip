@@ -2,6 +2,7 @@ import {z} from 'zod';
 
 const identifier = z.string().regex(/^[a-zA-Z0-9_-]{0,240}$/);
 const schemas = {
+  productDisplay: z.enum(['cards','table']),
   chatSelection: z.object({profileId: identifier, requestId: identifier.nullable()}),
   chatDrafts: z.record(z.string().max(500), z.string().max(16000)),
   productionDrafts: z.record(z.string().max(260), z.object({

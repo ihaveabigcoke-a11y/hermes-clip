@@ -1027,3 +1027,5 @@ test('T-024: four suggestions use v2 examples and saved brand; generated scenes 
  assert.ok(saved.scenes.every(s=>s.storyboardVersion===2&&!s.storyboardApproved&&s.attempts.length===0&&s.takes.length===0));
  assert.deepEqual(journeyProduction.applyProduction(saved,'formula_draft',draft,'quick_draft'),saved);
 });
+
+import './visual-dashboard.test.mjs';

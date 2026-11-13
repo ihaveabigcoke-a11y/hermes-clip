@@ -1,4 +1,9 @@
 "use client";
+import {ReferenceGallery} from './reference-gallery';
+import {ProductTable} from './visual-dashboard';
+import {useDesktopPreference} from '@/lib/lab/use-desktop-preference';
+import './t024b.css';
+
 import {uiCopy} from '@/desktop/src/ui-copy.mjs';
 import { useState, useEffect, useRef, useCallback } from "react";
 import DesktopConsole from "./desktop-console";
@@ -197,7 +202,7 @@ const productFields: FieldDef[] = [
     label: "Kết quả kiểm mẫu sản phẩm và giới hạn công dụng",
     type: "textarea",
     full: true,
-    help: "Ghi điều hàng thật làm được, trong điều kiện nào. Không dùng cảnh AI làm bằng chứng.",
+    help: "Ghi điều hàng thật làm được, trong điều kiện nào. Không dùng cảnh dựng làm bằng chứng.",
   },
   {
     name: "sampleVerified",
@@ -1129,6 +1134,7 @@ export default function LabApp() {
       </Button>}
     </div>;
   }
+  const productDisplay=useDesktopPreference<'cards'|'table'>('productDisplay','cards');
   function productsView() {
     const profile=allProducts.find(p=>p.id===profileId);
     if(profile)return <ProductProfile key={profile.id} next={productJourneyStep(profile,records,journeyMedia.status,journeyWorker.status?.jobs)} product={profile} records={records} onVideo={()=>setQuickProduct(profile)} onEdit={()=>openEditor("product",profile)} onBack={()=>{setProfileId("");const u=new URL(location.href);u.searchParams.delete("product");u.searchParams.delete("product_tab");history.pushState({},"",u);}}/>;
@@ -1138,15 +1144,11 @@ export default function LabApp() {
     return (
       <>
         {demo&&workspaceNotice(true)}
-        <div className="compact-product-controls">{toolbar()}<div className="product-day-filter"><label htmlFor="product-selection-day">Ngày chọn</label><input id="product-selection-day" type="date" value={selectionDay} onChange={e=>{setSelectionDay(e.target.value);setPage(1);const u=new URL(location.href);if(e.target.value)u.searchParams.set("selection_day",e.target.value);else u.searchParams.delete("selection_day");u.searchParams.delete("page");history.replaceState({},"",u);}}/><Button tone="ghost" onClick={()=>{setSelectionDay("");const u=new URL(location.href);u.searchParams.delete("selection_day");history.replaceState({},"",u);}}>Tất cả ngày</Button></div></div>
+        <div className="compact-product-controls">{toolbar()}<div className="table-mode-switch" role="group" aria-label="Cách xem sản phẩm">{([["cards","Thẻ"],["table","Bảng"]] as const).map(([mode,label])=><button key={mode} aria-pressed={productDisplay.value===mode} onClick={()=>productDisplay.setValue(mode)}>{label}</button>)}</div><div className="product-day-filter"><label htmlFor="product-selection-day">Ngày chọn</label><input id="product-selection-day" type="date" value={selectionDay} onChange={e=>{setSelectionDay(e.target.value);setPage(1);const u=new URL(location.href);if(e.target.value)u.searchParams.set("selection_day",e.target.value);else u.searchParams.delete("selection_day");u.searchParams.delete("page");history.replaceState({},"",u);}}/><Button tone="ghost" onClick={()=>{setSelectionDay("");const u=new URL(location.href);u.searchParams.delete("selection_day");history.replaceState({},"",u);}}>Tất cả ngày</Button></div></div>
         {rows.length ? (
           <>
-            <div className="product-grid compact-product-grid">{paged.rows.map(productCard)}</div>
-            <Pagination
-              page={paged.page}
-              total={rows.length}
-              onPage={changePage}
-            />
+            <>{productDisplay.error&&<p role="alert">{productDisplay.error}<Button onClick={productDisplay.retry}>Thử lưu lại</Button></p>}{productDisplay.value==='table'?<ProductTable products={rows} records={records} manual={journeyMedia.status} jobs={journeyWorker.status?.jobs??[]} onNavigate={openHref}/>:<div className="product-grid compact-product-grid">{paged.rows.map(productCard)}</div>}</>
+            {productDisplay.value==='table'?<p className="chart-note">{rows.length} sản phẩm</p>:<Pagination page={paged.page} total={rows.length} onPage={changePage}/> }
           </>
         ) : (
           <Empty
@@ -1888,7 +1890,7 @@ export default function LabApp() {
                             ? "Từ tham chiếu chuẩn đến từng cảnh, phiên bản và biến thể có thể truy vết."
                           : view === "chat" ? "Hội thoại với Muse qua hồ sơ đã đăng nhập."
                           : view === "accounts" ? "Đăng nhập, kiểm tra phiên và hạn mức Muse."
-                          : view === "guide" ? "Theo một sản phẩm từ lựa chọn đến quyết định." : "Quản lý công cụ, ngân sách và dữ liệu."}
+                          : view === "competitors" ? "Video mẫu, cấu trúc đã đo và nguồn theo từng sản phẩm." : view === "guide" ? "Theo một sản phẩm từ lựa chọn đến quyết định." : "Quản lý công cụ, ngân sách và dữ liệu."}
               </p>
             </div>
             <div className="page-actions">
@@ -1953,7 +1955,7 @@ export default function LabApp() {
           ) : ["research", "social", "landing"].includes(view) ? (
             <OperationsPanel key={`${demo}-${view}`} view={view as "research" | "social" | "landing"} records={records} demo={demo} offline={offline} persist={persist} notify={notify} reload={() => void load()} onRecords={rows=>{if(demo)putMemory(rows);else setReal(previous=>[...rows,...previous.filter(row=>!rows.some(next=>next.id===row.id))]);}}/>
           ) : view === "competitors" ? (
-            <section className="competitor-products"><h2>Video đối thủ theo sản phẩm</h2>{products.map(p=><article key={p.id} className="production-card production-card-body"><h3>{p.data.name}</h3><a href={'?view=products&product='+encodeURIComponent(p.id)+'&product_tab=competitors'}>Mở hồ sơ đối thủ</a><CompetitorVideoList videos={p.data.competitorVideos} records={records} productId={p.id}/></article>)}<ReferenceVideoPanel records={records} disabled={offline||demo} onSaveDraft={(d,revision)=>persist('reference_video_draft',referenceDraftRecordId(d),d,revision)} onSaveFormula={f=>persist('viral_formula',viralFormulaRecordId(f),f,0)}/><ViralFormulas records={records}/></section>
+            <section className="competitor-products"><ReferenceGallery records={records}/><h2>Video đối thủ theo sản phẩm</h2>{products.map(p=><article key={p.id} className="production-card production-card-body"><h3>{p.data.name}</h3><a href={'?view=products&product='+encodeURIComponent(p.id)+'&product_tab=competitors'}>Mở hồ sơ đối thủ</a><CompetitorVideoList videos={p.data.competitorVideos} records={records} productId={p.id}/></article>)}<ReferenceVideoPanel records={records} disabled={offline||demo} onSaveDraft={(d,revision)=>persist('reference_video_draft',referenceDraftRecordId(d),d,revision)} onSaveFormula={f=>persist('viral_formula',viralFormulaRecordId(f),f,0)}/><ViralFormulas records={records}/></section>
           ) : view === "chat" ? (
             null
           ) : view === "experiments" ? (
