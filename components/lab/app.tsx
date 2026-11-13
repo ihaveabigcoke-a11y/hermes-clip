@@ -956,8 +956,8 @@ export default function LabApp() {
     return <article className="product-card compact-product" key={p.id} data-product-card={p.id}>
       <div className="compact-product-top"><ProductThumbnail product={p} records={records}/><div><Badge tone={p.data.archived?'neutral':'info'}>{p.data.archived?'Đã lưu trữ':`Bước ${next.step}/10`}</Badge><h3><button onClick={()=>openHref('?view=products&product='+encodeURIComponent(p.id))}>{p.data.name}</button></h3></div></div>
       <p className="compact-price">{info.price}</p>
-      {info.missing.length>0&&<p className="compact-missing">Thiếu: {info.missing.join(', ')}.</p>}
-      <div className="compact-actions"><Button onClick={()=>openHref(next.href)} title={next.detail}>{next.title}</Button><Button tone="ghost" disabled={p.data.archived||offline} onClick={()=>setQuickProduct(p)}>Làm video cho sản phẩm này</Button></div>
+      {info.missing.length>0&&<div className="compact-missing"><Hint label="Đầu vào còn thiếu">Thiếu: {info.missing.join(', ')}.</Hint><span>Thiếu {info.missing.length} đầu vào</span></div>}
+      <div className="compact-actions"><Button onClick={()=>openHref(next.href)} title={next.detail} aria-label={next.title}>Tiếp tục <ChevronRight size={16}/></Button><Button tone="ghost" aria-label="Làm video cho sản phẩm này" title="Làm video cho sản phẩm này" disabled={p.data.archived||offline} onClick={()=>setQuickProduct(p)}><Clapperboard size={18}/></Button></div>
       <button className="compact-archive icon-button" aria-label={`${p.data.archived?'Khôi phục':'Lưu trữ'} ${p.data.name}`} onClick={()=>p.data.archived?void persist('product',p.id,{...p.data,archived:false},p.revision).catch(e=>notify(e.message,'error')):setArchiveTarget(p)}>{p.data.archived?<RotateCcw size={14}/>:<Archive size={14}/>}</button>
     </article>;
   }
@@ -1869,7 +1869,7 @@ export default function LabApp() {
         </header>
         <main id="lab-main" tabIndex={-1}>
           {quickProduct&&<QuickVideo key={quickProduct.id} product={quickProduct} records={records} demo={demo} offline={offline} persist={persist} onRecord={r=>{if(demo)putMemory([r]);else setReal(prev=>[r,...prev.filter(x=>x.id!==r.id)]);}} onClose={()=>setQuickProduct(null)} onReady={href=>{setQuickProduct(null);openHref(href);}}/>}
-          <div className="page-heading" hidden={["research", "social", "landing", "accounts", "queue", "chat", "library", "office", "signals"].includes(view)}>
+          <div className="page-heading" hidden={(view==='products'&&!!profileId)||["research", "social", "landing", "accounts", "queue", "chat", "library", "office", "signals"].includes(view)}>
             <div>
               {view !== "products" && <div className="page-eyebrow">
                 HERMES CLIP <span>/</span>{" "}
