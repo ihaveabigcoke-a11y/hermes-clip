@@ -1,3 +1,9 @@
+# T-026j — kiểm bổ sung local, 14/11/2026
+
+Đã sửa tràn màn Đăng ở 200%, H1/H2/H3 sau đổi hook và màu theo hệ thống khi tương phản cao. Kiểm local đã khép: đổi hook tới ba MP4 mới giữ thân/lịch sử, tải hash/caption, bàn phím, 28 trạng thái axe và 42 ảnh phóng to/tương phản cao. Full suite 787 đạt/0 skip/0 lỗi; SHA/build/launcher cuối tại STATUS văn phòng và ops/office/reports/T-026j.md. Hai ngưỡng 48 giờ giữ null, không chờ người dùng chốt; Muse thật, dữ liệu người dùng và NVDA vẫn chưa kiểm, không thuộc quyền nghiệm thu local này.
+
+---
+
 # T-026 — bảy màn gọn theo luồng ra video, 13/11/2026
 
 Chỉ đạo trực tiếp T-026 thay T-024b/T-025; phần T-024 đã đạt được giữ. CODEX-BOSS, một main agent. Người dùng cho phép push app origin main sau từng phần đạt full suite và push văn phòng cuối; không force-push/merge. Chỉ đạo này thay các dòng cấm push lịch sử bên dưới trong phạm vi T-026.

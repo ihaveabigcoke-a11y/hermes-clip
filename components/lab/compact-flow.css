@@ -21,3 +21,22 @@
 .compact-toolbar select{min-width:0;max-width:100%}
 /* Keep absolutely positioned accessible labels inside the scrolling post card. */
 .compact-post{position:relative}
+
+/* Honor the user's contrast palette; keep state labels/icons alongside color. */
+@media (forced-colors: active) {
+ .workbench-shell[data-compact=true] {
+  --lab-ink:CanvasText;--lab-muted:CanvasText;--lab-primary-text:ButtonText;
+  --lab-surface:Canvas;--lab-background:Canvas;--lab-border:CanvasText;
+  --lab-lime:LinkText;--lab-accent:Canvas;
+  color:CanvasText;
+ }
+ .workbench-shell[data-compact=true] .compact-flow {
+  --flow-gray:CanvasText;--flow-blue:CanvasText;--flow-amber:CanvasText;
+  --flow-red:CanvasText;--flow-green:CanvasText;
+ }
+ .workbench-shell[data-compact=true] h1 {color:CanvasText}
+ .workbench-shell[data-compact=true] a,
+ .workbench-shell[data-compact=true] a[aria-current=page] {color:LinkText}
+ .workbench-shell[data-compact=true] a[aria-current=page] {outline:2px solid Highlight;outline-offset:-2px}
+ .workbench-shell[data-compact=true] .lab-button {color:ButtonText;background:ButtonFace;border-color:ButtonText}
+}

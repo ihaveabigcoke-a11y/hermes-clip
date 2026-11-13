@@ -31,7 +31,9 @@ const plans=planDistribution(records,{projectId:project.id,revision:project.revi
 records.push(...plans.map(p=>({...p,data:{...p.data,status:'published_manual',postUrl:'https://www.instagram.com/reel/FIXTURE'+p.id+'/',postedAt:new Date(now-49*3600000).toISOString()}})));
 const screens=[['signals','signals'],['overview','today'],['research','research'],['products','products'],['production','video'],['social','publish'],['results','results']];
 const axePath=resolve('outputs/T-022c-audit-tool/package/axe.min.js');
-for(const mode of ['empty','full'])await officeUI('T-026j-'+mode,mode==='full'?records:[],async({page,origin,local,screenshot,out})=>{
+for(const variant of ['empty','full','contrast-empty','contrast-full']){
+ const mode=variant.endsWith('empty')?'empty':'full',contrast=variant.startsWith('contrast-');
+ await officeUI('T-026j-'+variant,mode==='full'?records:[],async({page,origin,local,screenshot,out})=>{
  page.setDefaultTimeout(12000);await page.emulateMedia({reducedMotion:'reduce'});const audits=[],checks=[],issues=[];
  if(mode==='full'){
   for(const a of videoRecords.filter(r=>r.kind==='asset')){const dest=join(local.root,'media',a.data.key);await mkdir(dirname(dest),{recursive:true});await copyFile(join(source,'media',a.data.key),dest);}
@@ -63,17 +65,17 @@ for(const mode of ['empty','full'])await officeUI('T-026j-'+mode,mode==='full'?r
   else {const focus=await primary.evaluate(e=>{const s=getComputedStyle(e);return s.outlineStyle!=='none'&&parseFloat(s.outlineWidth)>0||s.boxShadow!=='none';});checks.push({screen,tabToPrimary:true,focus});if(!focus)issues.push({screen,keyboard:'No visible focus'});}
  }
  for(const [view,screen] of screens){
-  await page.setViewportSize({width:1366,height:768});await cdp.send('Emulation.clearDeviceMetricsOverride');await page.emulateMedia({forcedColors:'none'});
+  await page.setViewportSize({width:1366,height:768});await cdp.send('Emulation.clearDeviceMetricsOverride');await page.emulateMedia({forcedColors:contrast?'active':'none'});
   await page.goto(origin+'/?view='+view+'&product='+product.id);await page.locator('[data-screen='+screen+']').waitFor();
   if(screen==='signals')await page.waitForFunction(()=>document.querySelector('.compact-groups strong')?.textContent!=='—');
   await page.locator('[data-screen] img').evaluateAll(async images=>Promise.all(images.filter(i=>i.checkVisibility()).map(i=>i.decode().catch(()=>{}))));
   await audit(screen);await keyboard(screen);
-  if(mode==='full')for(const treatment of ['zoom200','contrast'])for(const [width,height] of [[1366,768],[1920,1080]]){
+  if(mode==='full'||contrast)for(const treatment of (contrast?['contrast']:['zoom200']))for(const [width,height] of [[1366,768],[1920,1080]]){
    await cdp.send('Emulation.clearDeviceMetricsOverride');await page.setViewportSize(treatment==='zoom200'?{width:Math.floor(width/2),height:Math.floor(height/2)}:{width,height});
    if(treatment==='zoom200')await cdp.send('Emulation.setDeviceMetricsOverride',{width:Math.floor(width/2),height:Math.floor(height/2),deviceScaleFactor:2,mobile:false});
    await page.emulateMedia({forcedColors:treatment==='contrast'?'active':'none'});
-   // Reload after changing forced colors: this Chrome build can retain a stale
-   // composited frame although matchMedia/computed colors already changed.
+   // Contrast uses a separate Chrome process with --force-high-contrast.
+   // Page emulation alone can report forced colors while capturing normal pixels.
    if(treatment==='contrast'){
     await page.reload();await page.locator('[data-screen='+screen+']').waitFor();
     await page.locator('[data-screen] img').evaluateAll(async images=>Promise.all(images.filter(i=>i.checkVisibility()).map(i=>i.decode().catch(()=>{}))));
@@ -94,7 +96,7 @@ for(const mode of ['empty','full'])await officeUI('T-026j-'+mode,mode==='full'?r
    await capture(screen+'-'+treatment+'-'+width);
   }
  }
- await cdp.send('Emulation.clearDeviceMetricsOverride');await page.setViewportSize({width:1366,height:768});await page.emulateMedia({forcedColors:'none'});
+ await cdp.send('Emulation.clearDeviceMetricsOverride');await page.setViewportSize({width:1366,height:768});await page.emulateMedia({forcedColors:contrast?'active':'none'});
  await page.goto(origin+'/?view=products');await page.getByRole('button',{name:'Thêm sản phẩm',exact:true}).focus();await page.keyboard.press('Enter');
  const dialog=page.getByRole('dialog');await dialog.waitFor();await page.keyboard.press('Tab');
  checks.push({modalKeyboard:await dialog.evaluate(d=>d.contains(document.activeElement))});
@@ -115,5 +117,6 @@ for(const mode of ['empty','full'])await officeUI('T-026j-'+mode,mode==='full'?r
  }
  await writeFile(join(out,'checks.json'),JSON.stringify({mode,audits,checks,issues},null,2));
  console.log(JSON.stringify({mode,issues,checks:checks.length}));assert.deepEqual(issues,[],'See checks.json');
- return {mode,shots,audits:audits.length,checks:checks.length,screenReaderTested:false,zoom:'Equivalent 200% layout viewport and raster scale',forcedColors:'Chromium emulation'};
-});
+ return {mode,contrast,shots,audits:audits.length,checks:checks.length,screenReaderTested:false,zoom:'Equivalent 200% layout viewport and raster scale',forcedColors:contrast?'Isolated Chrome force-high-contrast + context emulation':'none'};
+},{forcedColors:contrast});
+}
