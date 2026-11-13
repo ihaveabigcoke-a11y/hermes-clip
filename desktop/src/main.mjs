@@ -7,8 +7,9 @@ import {z} from 'zod';
 import {readFile} from 'node:fs/promises';
 import {guardDesktopStartup} from './startup-guard.mjs';
 app.setPath('userData', process.env.PRODUCT_LAB_QA_USER_DATA || join(app.getPath('appData'),'product-lab-desktop'));
-await app.whenReady();
-await guardDesktopStartup({desktopRoot:dirname(dirname(fileURLToPath(import.meta.url))),showMessage:message=>dialog.showMessageBox({type:'error',title:'Hermes Clip',message,buttons:['Đóng']}),quit:()=>app.quit(),launch:async()=>{
+// Electron waits for its main ESM module before emitting ready. Do not await
+// whenReady at module scope: that would leave startup waiting on itself.
+void app.whenReady().then(()=>guardDesktopStartup({desktopRoot:dirname(dirname(fileURLToPath(import.meta.url))),showMessage:message=>dialog.showMessageBox({type:'error',title:'Hermes Clip',message,buttons:['Đóng']}),quit:()=>app.quit(),launch:async()=>{
 const {registerNewRender}=await import('./asset-compression.mjs');
 const {ProductDeployment}=await import('./product-deployment.mjs');
 const {ManualMedia}=await import('./manual-media.mjs');
@@ -135,4 +136,4 @@ async function startApplication() {
  app.once('before-quit',()=>clearInterval(maintenance));
  if(local&&!museOnly)for(const job of store.jobs().filter(job=>job.state==='ready'&&!job.importedAt))void worker.importReady(job.id);
 }
-}});
+}})).catch(error=>{console.error('Hermes Clip startup failed:',error);dialog.showErrorBox('Hermes Clip','Không thể khởi động Hermes Clip. Kiểm tra bản build và thử mở lại.');app.quit();});

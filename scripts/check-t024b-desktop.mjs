@@ -8,7 +8,7 @@ import {setTimeout as delay} from 'node:timers/promises';
 import {chromium} from '../desktop/node_modules/playwright/index.mjs';
 const out=resolve('outputs/T-024b-desktop-ui');await mkdir(out,{recursive:true});
 const qa=await mkdtemp(join(out,'isolated-')),hook=join(qa,'debug.cjs');
-await writeFile(hook,`if(process.versions.electron&&process.type==='browser'){
+await writeFile(hook,`if(process.versions.electron&&process.type==='browser')setImmediate(()=>{
  const {app,session}=require('electron');
  require('fs').writeFileSync(require('path').join(process.env.PRODUCT_LAB_QA_USER_DATA,'electron.pid'),String(process.pid));
  app.commandLine.appendSwitch('remote-debugging-port','0');
@@ -18,9 +18,9 @@ await writeFile(hook,`if(process.versions.electron&&process.type==='browser'){
  app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest((details,done)=>{
   const u=new URL(details.url);done({cancel:!['127.0.0.1','localhost'].includes(u.hostname)&&!['devtools:','file:','data:','blob:'].includes(u.protocol)});
  }));
-}`);
+});`);
 const log=openSync(join(out,'launcher.log'),'w');
-const launcher=spawn(process.env.ComSpec||'cmd.exe',['/d','/s','/c','START-HERMES-CLIP.cmd'],{cwd:process.cwd(),windowsHide:true,stdio:['ignore',log,log],env:{...process.env,PRODUCT_LAB_QA_USER_DATA:qa,NODE_OPTIONS:'--require "'+hook+'"',PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD:'1',HERMES_INSTAGRAM_API_ENABLED:'0'}});
+const launcher=spawn('powershell.exe',['-NoProfile','-Command',"& '"+resolve('START-HERMES-CLIP.cmd').replaceAll("'","''")+"'"],{cwd:process.cwd(),windowsHide:true,stdio:['ignore',log,log],env:{...process.env,PRODUCT_LAB_QA_USER_DATA:qa,NODE_OPTIONS:'--require='+hook.replaceAll('\\','/'),PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD:'1',HERMES_INSTAGRAM_API_ENABLED:'0'}});
 let browser;const errors=[],consoleErrors=[],screens=[],external=[];
 try{
  let port;for(let i=0;i<300;i++){if(launcher.exitCode!==null)break;try{port=(await readFile(join(qa,'DevToolsActivePort'),'utf8')).split('\n')[0];break;}catch{await delay(200);}}
@@ -28,6 +28,7 @@ try{
  browser=await chromium.connectOverCDP('http://127.0.0.1:'+port);const context=browser.contexts()[0];
  const page=context.pages().find(p=>p.url().includes('127.0.0.1'))??await context.waitForEvent('page');page.setDefaultTimeout(12000);
  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')consoleErrors.push(m.text());});
+ await page.waitForLoadState('load');await page.locator('.sidebar-navigation').waitFor();
  const origin=new URL(page.url()).origin;await context.route('**/*',route=>{if(new URL(route.request().url()).origin!==origin){external.push('blocked external request');return route.abort();}return route.continue();});
  await page.waitForFunction(()=>!!window.productLabDesktop);assert.equal((await page.evaluate(()=>window.productLabDesktop.status())).musePaused,true);
  await page.evaluate(()=>localStorage.setItem('product-lab-mode','real'));await page.reload();
