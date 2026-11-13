@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/dialog";
 import { schemas, validationMessage, productFeeCurrencyHint, type Kind } from "@/lib/lab/domain";
 import { probeFile } from "@/lib/lab/client-media";
+import {visualState} from '@/lib/lab/visual-status';
+import {StatusMark,Hint} from './visual';
 
 export function Button({
   children,
@@ -63,8 +65,8 @@ export function Badge({
   tone?: string;
 }) {
   return (
-    <span className={`badge ${tone}`}>
-      <span aria-hidden="true" className="badge-dot" />
+    <span className={`badge ${tone}`} data-visual-state={visualState(tone)}>
+      <StatusMark state={tone}/>
       {children}
     </span>
   );
@@ -81,10 +83,10 @@ export function Empty({
   return (
     <div className="empty-state">
       <div className="empty-icon">
-        <Inbox size={26} />
+        <Inbox size={56} />
       </div>
       <h3>{title}</h3>
-      <p>{text}</p>
+      {text.length>120?<Hint label={'Hướng dẫn: '+title}>{text}</Hint>:<p>{text}</p>}
       {action}
     </div>
   );

@@ -3,6 +3,9 @@ import {ReferenceGallery} from './reference-gallery';
 import {ProductTable} from './visual-dashboard';
 import {useDesktopPreference} from '@/lib/lab/use-desktop-preference';
 import './t024b.css';
+import './t025.css';
+import {Hint,StatusLegend,VisualGroup,ShortText} from './visual';
+import {visualStatusVariables} from '@/lib/lab/visual-status';
 
 import {uiCopy} from '@/desktop/src/ui-copy.mjs';
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -924,7 +927,7 @@ export default function LabApp() {
       <div className="section-heading">
         <div>
           <h2>{title}</h2>
-          <p>{sub}</p>
+          {sub&&<Hint label={'Giải thích '+title}>{sub}</Hint>}
         </div>
         {action}
       </div>
@@ -1806,7 +1809,7 @@ export default function LabApp() {
     );
   }
   return (
-    <div className={`lab-shell workbench-shell ${["production","images","library","content"].includes(view)?"is-production-route":""}`}>
+    <div style={visualStatusVariables as React.CSSProperties} className={`lab-shell workbench-shell ${["production","images","library","content"].includes(view)?"is-production-route":""}`}>
       <a href="#lab-main" className="skip-link">
         Bỏ qua điều hướng
       </a>
@@ -1835,8 +1838,6 @@ export default function LabApp() {
       <div className="main-shell">
         <header className="topbar">
           <div className="breadcrumbs">
-            <span>Không gian làm việc</span>
-            <ChevronRight size={14} />
             <strong>{label}</strong>
           </div>
           <div className="topbar-right">
@@ -1874,8 +1875,7 @@ export default function LabApp() {
                 HERMES CLIP <span>/</span>{" "}
                 {demo ? "KHÔNG GIAN MẪU" : "KHÔNG GIAN RIÊNG TƯ"}
               </div>}
-              <h1>{view === "overview" ? "Hôm nay" : label}</h1>
-              <p>
+              <h1>{view === "overview" ? "Hôm nay" : label}<Hint label={'Hướng dẫn '+label}>
                 {view === "overview"
                   ? "Tình hình hiện tại và việc tiếp theo của từng sản phẩm."
                   : view === "products"
@@ -1891,7 +1891,7 @@ export default function LabApp() {
                           : view === "chat" ? "Hội thoại với Muse qua hồ sơ đã đăng nhập."
                           : view === "accounts" ? "Đăng nhập, kiểm tra phiên và hạn mức Muse."
                           : view === "competitors" ? "Video mẫu, cấu trúc đã đo và nguồn theo từng sản phẩm." : view === "guide" ? "Theo một sản phẩm từ lựa chọn đến quyết định." : "Quản lý công cụ, ngân sách và dữ liệu."}
-              </p>
+              </Hint></h1>
             </div>
             <div className="page-actions">
               {view === "products" ? (
