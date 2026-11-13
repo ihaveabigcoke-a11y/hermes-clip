@@ -1,11 +1,12 @@
 "use client";
-import {useState} from 'react';import {Button,api} from './primitives';import type {LabRecord} from '@/lib/lab/domain';
+import {useEffect,useState} from 'react';import {Button,api} from './primitives';import type {LabRecord} from '@/lib/lab/domain';
 import {metricColumns,metricLabels,previewMetrics,planMetricImport,type MetricPreview} from '@/lib/lab/metric-import';
 import './metric-import.css';
 import {vietnamDateTimeLocal,vietnamDateTimeIso} from '@/lib/lab/metric-time';
 export default function MetricImport({records,demo,onRecords}:{records:LabRecord[];demo:boolean;onRecords:(rows:LabRecord[])=>void}){
  const plans=records.filter(r=>r.kind==='content_plan'&&['published_manual','published_browser'].includes(r.data.status)&&r.data.postUrl),[selected,setSelected]=useState(()=>new URLSearchParams(location.search).get('product')??''),[values,setValues]=useState<Record<string,string>>({}),[source,setSource]=useState('Instagram Insights · nhập tay'),[observedAt,setObservedAt]=useState(()=>vietnamDateTimeLocal()),[csv,setCsv]=useState(''),[preview,setPreview]=useState<MetricPreview|null>(null),[batchId,setBatchId]=useState(''),[busy,setBusy]=useState(false),[notice,setNotice]=useState(''),[error,setError]=useState('');
  const [entry,setEntry]=useState<'manual'|'csv'|null>(()=>new URLSearchParams(location.search).get('entry')==='manual'?'manual':null);
+ useEffect(()=>{const sync=()=>{const q=new URLSearchParams(location.search);if(q.get('entry')==='manual'||q.has('plan'))setEntry('manual');};sync();window.addEventListener('popstate',sync);return()=>window.removeEventListener('popstate',sync);},[]);
  const planId=plans.some(p=>p.id===selected)?selected:plans.find(p=>p.data.productId===new URLSearchParams(location.search).get('product'))?.id??plans[0]?.id??'';
  const invalidate=()=>{setPreview(null);setError('');setNotice('');};const inspect=(text:string)=>{setPreview(previewMetrics(text,records));setBatchId(crypto.randomUUID());setNotice('');setError('');};
  const quote=(s:string)=>'"'+s.replaceAll('"','""')+'"';const single=()=>['planId,observedAt,source,'+metricColumns.join(','),[planId,vietnamDateTimeIso(observedAt),source,...metricColumns.map(k=>values[k]??'')].map(quote).join(',')].join('\n');

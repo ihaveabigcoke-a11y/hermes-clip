@@ -93,7 +93,7 @@ export function productJourneyStep(product:LabRecord,records:readonly LabRecord[
   const social=url('social',{ops_id:product.id,ig_tab:'content'});
   if(complete.some(r=>!['published_manual','published_browser'].includes(r.data.status)||!r.data.postUrl))return next(8,'publish','Chờ đăng bài đã duyệt','Ba hook đã có nháp. Duyệt nội dung, tài khoản, quyền đăng rồi đăng tay và ghi URL.',social);
   const measured=complete.every(plan=>records.some(r=>r.kind==='social_metric'&&r.data.planId===plan.id&&Number.isFinite(Date.parse(r.data.observedAt))&&r.data.sourceUrl===plan.data.postUrl&&['views','keywordComments','utmClicks','orders'].some(k=>typeof r.data[k]==='number')));
-  if(!measured)return next(9,'metrics','Nhập số liệu cho lượt so sánh','Cần bản đo có nguồn và thời điểm cho từng bài. Ô trống giữ Chưa biết.',url('results'));
+  if(!measured)return next(9,'metrics','Nhập số liệu cho lượt so sánh','Cần bản đo có nguồn và thời điểm cho từng bài. Ô trống giữ Chưa biết.',url('results',{entry:'manual'}));
   const decisions=records.filter(r=>r.kind==='product_decision'&&r.data.productId===product.id);
   return next(10,'decision',decisions.length?'Xem và cập nhật quyết định':'Chờ quyết định',decisions.length?'Đã có lịch sử quyết định. Đọc số mới và lưu lý do nếu đổi hướng.':'So ba hook và tự chọn đẩy, sửa hoặc bỏ. Chưa đặt ngưỡng thì app không tự kết luận.',url('experiments'));
 }

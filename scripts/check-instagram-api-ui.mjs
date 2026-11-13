@@ -20,9 +20,9 @@ const records=fixture.records.map(row=>row.kind==='product'?{...row,data:{...emp
   exports:row.data.exports.map(entry=>({id:'export_'+row.id,filename:'fixture.mp4',createdAt:fixture.at,...entry})),
 }}:row);
 records.find(row=>row.id==='metric_plan_1_1').data={...records.find(row=>row.id==='metric_plan_1_1').data,source:'api',reach:4,viewers:null};
-const profiles=[{id:'account_1',productId:fixture.product.id,name:'Account 1',handle:'',userId:'',session:'unknown',open:false,busy:false,background:false,
+const profiles=[{apiMode:'browser',id:'account_1',productId:fixture.product.id,name:'Account 1',handle:'',userId:'',session:'unknown',open:false,busy:false,background:false,
   checkedAt:null,error:'',vpnEnabled:false,vpn:{state:'off'},proxy:{server:'',username:'',hasPassword:false}}];
-const status=()=>({profiles,jobs:[],active:null,metrics:{rows:[]},api:{enabled:false,resumableEnabled:false}});
+const status=()=>({browserEnabled:true,profiles,jobs:[],active:null,metrics:{rows:[]},api:{enabled:false,resumableEnabled:false}});
 let saves=0,tokenSaves=0,checks=0;
 const errors=[],blocked=[],viewportChecks=[];
 const browser=await chromium.launch({headless:true,executablePath:process.env.HERMES_TEST_CHROME||'C:/Program Files/Google/Chrome/Application/chrome.exe',
@@ -64,7 +64,7 @@ try {
   assert.equal(await token.getAttribute('type'),'password');
   await dialog.getByRole('button',{name:'Lưu thay đổi',exact:true}).click();await dialog.waitFor({state:'hidden'});
   assert.equal(tokenSaves,1);await page.reload();await configure.waitFor();
-  assert.equal(await page.getByRole('button',{name:'Kiểm tra API',exact:true}).isDisabled(),true);
+  assert.equal(await configure.locator('..').getByRole('button',{name:'Kiểm tra kết nối',exact:true}).isDisabled(),true);
   await open();assert.equal(await mode.inputValue(),'api');assert.equal(await token.inputValue(),'');
   assert.match(await dialog.textContent(),/Đã mã hóa token/);
   assert.equal((await page.content()).includes('synthetic-UI-token'),false);
