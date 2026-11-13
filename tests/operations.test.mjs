@@ -1055,3 +1055,10 @@ test('T-026e: compact edits preserve old fields, enforce CAS and unique keys; pa
  assert.equal(pastedProductSource('Tên: Fixture\nGiá vốn: 15 USD\nShip: chưa biết').cost,15);assert.equal(pastedProductSource('Giá vốn: 10–20 CNY').cost,null);
  assert.equal(pastedProductSource('Ảnh: https://user:secret@example.invalid/a').imageUrl,null);
 });
+
+test('T-026f: three techniques are different and names are stable and filesystem safe',async()=>{
+ const {autoVideoShots,videoName,hookTechniques}=await import('../lib/lab/auto-video.ts');
+ const product={id:'p',data:{name:'Đèn',productKey:'DEN',situation:'Reading at night',ctaKeyword:'GLOW'}};
+ const shots=autoVideoShots(product);assert.equal(shots.length,5);assert.equal(new Set(shots.slice(0,3).map(s=>s.prompt)).size,3);assert.deepEqual(hookTechniques,['problem','absurd','curiosity']);assert.ok(shots.every(s=>s.duration===8));
+ assert.equal(videoName(product,1,'problem','account/one',Date.parse('2026-11-13T10:00:00Z')),'DEN_H1-problem_account-one_261113');
+});

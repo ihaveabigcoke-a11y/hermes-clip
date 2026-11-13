@@ -113,6 +113,7 @@ import {referenceDraftRecordId} from '@/lib/lab/viral-reference';
 import {viralFormulaRecordId} from '@/lib/lab/viral-formulas';
 import './department-nav.css';
 import './t024.css';
+import CompactVideo from "./compact-video";
 import CompactProducts from "./compact-products";
 import CompactResearch from "./compact-research";
 import CompactToday from "./compact-today";
@@ -1873,7 +1874,7 @@ export default function LabApp() {
         </header>
         <main id="lab-main" tabIndex={-1}>
           {quickProduct&&<QuickVideo key={quickProduct.id} product={quickProduct} records={records} demo={demo} offline={offline} persist={persist} onRecord={r=>{if(demo)putMemory([r]);else setReal(prev=>[r,...prev.filter(x=>x.id!==r.id)]);}} onClose={()=>setQuickProduct(null)} onReady={href=>{setQuickProduct(null);openHref(href);}}/>}
-          <div className="page-heading" hidden={view==='overview'||view==='products'||["research", "social", "landing", "accounts", "queue", "chat", "library", "office", "signals"].includes(view)}>
+          <div className="page-heading" hidden={view==='overview'||view==='products'||view==='production'||["research", "social", "landing", "accounts", "queue", "chat", "library", "office", "signals"].includes(view)}>
             <div>
               {view !== "products" && <div className="page-eyebrow">
                 HERMES CLIP <span>/</span>{" "}
@@ -1916,7 +1917,7 @@ export default function LabApp() {
               ) : null}
             </div>
           </div>
-          {! ["signals","overview","research"].includes(view) && view !== "products" && workspaceNotice()}
+          {! ["signals","overview","research","production"].includes(view) && view !== "products" && workspaceNotice()}
           {offline && (
             <div className="persistent-error" role="status">
               <Info size={18} />
@@ -1968,12 +1969,12 @@ export default function LabApp() {
             studioView()
           ) : view === "results" ? (
             <><HookAnalytics records={records} threshold={settings.scaleSignalThreshold??null}/><MetricsTable records={records}/><MetricImport records={records} demo={demo} onRecords={rows=>{if(demo)putMemory(rows);else setReal(prev=>[...rows,...prev.filter(r=>!rows.some(n=>n.id===r.id))]);}}/><details><summary>Số liệu bài test đã lưu</summary>{resultsView()}</details></>
-          ) : view === "library" ? (<WorkspaceLibrary key={demo ? 'demo-library' : 'real-library'} records={records} demo={demo}/>) : view === "queue" ? (<DesktopConsole mode="queue" records={records} demo={demo}/>) : ["production","images","content"].includes(view) ? null : view === "accounts" ? (
+          ) : view === "production" ? (<CompactVideo records={records} demo={demo} onRecord={r=>{if(demo)putMemory([r]);else setReal(prev=>[r,...prev.filter(x=>x.id!==r.id)]);}} details={<ProductionStudio onSwitchMode={()=>switchMode(!demo)} active={true} records={records} demo={demo} offline={offline} paused={settings.paused} onRecord={r=>{if(demo)putMemory([r]);else setReal(prev=>[r,...prev.filter(x=>x.id!==r.id)]);}} reload={()=>void load()} notify={notify}/>}/>) : view === "library" ? (<WorkspaceLibrary key={demo ? 'demo-library' : 'real-library'} records={records} demo={demo}/>) : view === "queue" ? (<DesktopConsole mode="queue" records={records} demo={demo}/>) : ["production","images","content"].includes(view) ? null : view === "accounts" ? (
             <section className="accounts-view"><nav className="provider-tabs"><a href="?view=accounts">Tài khoản Muse</a><a href="?view=chat">Chat Muse</a><a href="?view=settings">Cấu hình nhà cung cấp</a></nav><DesktopConsole active={view==="accounts"}/></section>
           ) : (
             settingsView()
           )}
-          <div hidden={!["production","images","content"].includes(view) || !initialModeApplied.current}><ProductionStudio contentMode={view==="content"} key={demo ? "demo-production" : "real-production"} surface={view==="images"?"images":view==="library"?"library":"production"} active={["production","images","content"].includes(view) && initialModeApplied.current} onSwitchMode={()=>switchMode(!demo)} records={records} demo={demo} offline={offline} paused={settings.paused} onRecord={(r)=>{if(demo)putMemory([r]);else setReal(prev=>[r,...prev.filter(x=>x.id!==r.id)]);}} reload={()=>void load()} notify={notify}/></div>
+          <div hidden={!["images","content"].includes(view) || !initialModeApplied.current}><ProductionStudio contentMode={view==="content"} key={demo ? "demo-production" : "real-production"} surface={view==="images"?"images":view==="library"?"library":"production"} active={["images","content"].includes(view) && initialModeApplied.current} onSwitchMode={()=>switchMode(!demo)} records={records} demo={demo} offline={offline} paused={settings.paused} onRecord={(r)=>{if(demo)putMemory([r]);else setReal(prev=>[r,...prev.filter(x=>x.id!==r.id)]);}} reload={()=>void load()} notify={notify}/></div>
           <div hidden={view !== "chat" || !initialModeApplied.current}><nav className="provider-tabs"><a href="?view=accounts">Tài khoản Muse</a><a href="?view=chat">Chat Muse</a></nav><MuseChatPanel key={demo ? 'demo-chat' : 'real-chat'} demo={demo} active={view === "chat" && initialModeApplied.current} records={records} onCompose={(mode, prompt, projectId) => {
             sessionStorage.setItem('hermes-composer-transfer', JSON.stringify({mode, prompt, projectId}));
             const nextView = mode === 'image' ? 'images' : 'production';
