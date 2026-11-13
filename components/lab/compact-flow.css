@@ -14,3 +14,10 @@
 
 /* Compact screens have their own heading; remove duplicate breadcrumbs/footer. */
 .workbench-shell[data-compact=true] .topbar,.workbench-shell[data-compact=true] .app-footer{display:none}
+
+/* Constrain grid items so wide account columns scroll inside their own region. */
+.compact-flow,.compact-flow>*{min-width:0}
+.compact-toolbar{flex-wrap:wrap}
+.compact-toolbar select{min-width:0;max-width:100%}
+/* Keep absolutely positioned accessible labels inside the scrolling post card. */
+.compact-post{position:relative}

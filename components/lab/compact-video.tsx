@@ -13,8 +13,9 @@ export default function CompactVideo({records,demo,onRecord,details}:{records:La
  useEffect(()=>{const u=new URL(location.href);setSelected(u.searchParams.get('new_product')||u.searchParams.get('product')||'');const poll=()=>void desktopBridge()?.status().then(s=>setMusePaused(s.musePaused!==false)).catch(()=>{});poll();const timer=setInterval(poll,5000);return()=>{clearInterval(timer);controller.current?.abort();};},[]);
  const product=products.find(p=>p.id===selected)??products[0],project=active?.data.productId===product?.id?active:records.filter(r=>r.kind==='production'&&r.data.productId===product?.id).sort((a,b)=>b.updatedAt-a.updatedAt)[0];
  const scenes=project?.data.scenes??[],exports=(project?.data.exports??[]).filter((e:any)=>e.kind==='render'&&e.verified&&e.assetId),clips=scenes.flatMap((s:any)=>s.takes.map((t:any)=>({...t,scene:s})));
- const hookScenes=scenes.filter((s:any)=>s.role==='hook'),bodyScenes=scenes.filter((s:any)=>s.role!=='hook');
- const track=scenes.length?[hookScenes[hookIndex]??hookScenes[0],...bodyScenes].filter(Boolean):[null,null,null];
+ const hookScenes=scenes.filter((s:any)=>s.role==='hook').sort((a:any,b:any)=>a.id.localeCompare(b.id)),bodyScenes=scenes.filter((s:any)=>s.role!=='hook');
+ const selectedHook=scenes.find((s:any)=>s.id===project?.data.variants?.[hookIndex]?.hook?.sceneId)??hookScenes[hookIndex]??hookScenes[0];
+ const track=scenes.length?[selectedHook,...bodyScenes].filter(Boolean):[null,null,null];
  const plan=project?.data.renderPlans?.[hookIndex]??project?.data.reuseBodyPlan;
  const spans=track.map((s:any,i:number)=>plan?.segments?.find((seg:any)=>seg.sceneId===s?.id)?((seg:any)=>seg.outSec-seg.inSec)(plan.segments.find((seg:any)=>seg.sceneId===s.id)):(s?.toSec!=null&&s?.fromSec!=null?s.toSec-s.fromSec:[4,4,7][i]??4));
  const trackStyle={gridTemplateColumns:'85px '+spans.map((n:number)=>'minmax(110px,'+n+'fr)').join(' ')};
