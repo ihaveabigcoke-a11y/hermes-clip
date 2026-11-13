@@ -92,6 +92,7 @@ try {
     await page.setViewportSize({width,height:width===390?844:width===1536?864:1080});
     if (width<=1249) await page.locator('.desk-mobile-nav').getByRole('button',{name:'Xem trước',exact:true}).click();
     await page.evaluate(()=>window.scrollTo(0,0));
+    await screenshot('preview-diagnostic-'+width);
     for (const name of ['Duyệt','Từ chối','Tải file']) {
       const button = preview.getByRole('button',{name,exact:true}); assert.ok(await button.isVisible());
       assert.ok(await inViewport(button), name+' outside viewport at '+width);
@@ -135,34 +136,34 @@ try {
   assert.equal(await page.locator('.workspace-mode').count(),0);
   assert.equal(await page.getByRole('button',{name:'Khám phá bản mẫu',exact:true}).count(),0);
   assert.equal(await page.locator('.page-eyebrow').count(),0);
-  assert.equal(await page.locator('.product-info').count(),1);
-  assert.match(await page.locator('.product-card-summary').textContent(), /Vốn.*36.*ship.*4.*1 tài khoản.*Nội dung/);
-  await page.locator('.business-navigation').evaluate(el=>el.open=true);
+  assert.equal(await page.getByRole('heading',{name:'Sản phẩm',exact:true}).count(),1);
+  assert.match(await page.locator('.compact-price').textContent(), /36.*4.*29/);assert.match(await page.locator('.product-card').innerText(),/Gán mã và tự xếp hạng/);
+  await page.locator('.nav-other').evaluate(el=>el.open=true);
   for (const width of [1920,1366,800,390]) {
     await page.setViewportSize({width,height:width===390?844:1080});
     await noOverflow('Products overflow '+width);
     if (width>=1366) {
-      for (const name of ['Tài khoản Muse','Thử nghiệm nội dung','Trang giới thiệu']) {
+      for (const name of ['Tài khoản Muse','Ý tưởng đã lưu','Trang giới thiệu']) {
         const label = page.locator('.sidebar nav a span').filter({hasText:new RegExp('^'+name+'$')});
         assert.ok(await label.evaluate(el=>{const r=el.getBoundingClientRect(),s=getComputedStyle(el); return r.height<=parseFloat(s.lineHeight)+1 && el.scrollWidth<=el.clientWidth+1;}), name+' wraps at '+width);
       }
-      assert.ok(await page.locator('.business-navigation summary span').evaluate(el=>el.getBoundingClientRect().height<=parseFloat(getComputedStyle(el).lineHeight)+1));
-      assert.ok(await inViewport(page.locator('.product-card-footer')));
+      assert.ok(await page.locator('.nav-other summary').evaluate(el=>{const r=document.createRange();r.selectNodeContents(el);return r.getBoundingClientRect().height<=parseFloat(getComputedStyle(el).lineHeight)+1;}));
+      assert.ok(await inViewport(page.locator('.compact-actions')));
     }
     await screenshot('products-'+width); checks.push({screen:'products',width,noOverflow:true});
   }
-  assert.ok(await page.locator('.product-card > .product-art').evaluate(el=>el.getBoundingClientRect().height<=160 && Math.abs(el.clientWidth-el.parentElement.clientWidth)<=2));
+  assert.ok(await page.locator('.compact-product .product-thumbnail').evaluate(el=>el.getBoundingClientRect().height<=120 && el.clientWidth<=120));
 
   records = [];
   await page.setViewportSize({width:1920,height:1080}); await open('products');
-  const explore = page.getByRole('button',{name:'Khám phá bản mẫu',exact:true}); await explore.waitFor();
-  assert.match(await explore.getAttribute('class'), /neutral/);
-  assert.equal(await page.locator('.product-info').count(),1); assert.equal(await page.locator('.workspace-mode').count(),0);
+  await page.getByText('Chưa có sản phẩm ở trạng thái này',{exact:true}).waitFor();
+  assert.match(await page.getByRole('button',{name:'Xóa bộ lọc',exact:true}).getAttribute('class'), /neutral/);
+  assert.equal(await page.getByRole('heading',{name:'Sản phẩm',exact:true}).count(),1); assert.equal(await page.locator('.workspace-mode').count(),0);
   await screenshot('empty-products-1920');
-  await explore.click(); await page.getByRole('button',{name:'Dùng dữ liệu của bạn',exact:true}).waitFor();
+  await open('production');const explore=page.getByRole('button',{name:'Xem bản mẫu',exact:true});await explore.click(); await page.getByRole('button',{name:'Dùng dữ liệu của bạn',exact:true}).waitFor();
   await page.getByRole('button',{name:'Dùng dữ liệu của bạn',exact:true}).click(); await explore.waitFor();
   records = fixtureRecords;
-  await page.reload(); await page.locator('.product-card').waitFor(); assert.equal(await explore.count(),0);
+  await open('products'); await page.locator('.product-card').waitFor(); assert.equal(await explore.count(),0);
   checks.push({screen:'banner',empty:true,populated:false,demoExit:true,neutral:true});
   assert.deepEqual(errors,[]); assert.deepEqual(blocked,[]);
   await writeFile(join(out,'T08-ui-check.json'), JSON.stringify({fixtureOnly:true,realServices:false,checks,writes:writes.map(row=>({action:row.action,review:row.input.review})),errors,blocked},null,2)+'\n');

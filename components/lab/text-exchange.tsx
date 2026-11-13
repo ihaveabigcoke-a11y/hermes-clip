@@ -7,7 +7,7 @@ import {useDesktopStatus} from '@/lib/lab/use-desktop-status';
 import {resolveProvider, textProviderReceipts, type ProviderReceipt} from '@/desktop/src/provider-routing.mjs';
 
 const labels = {research: 'research', content: 'nội dung', landing: 'landing'};
-const providerLabels: Record<string, string> = {muse:'Muse', codex:'Codex CLI', 'import:json':'Nhập JSON', manual:'Manual'};
+const providerLabels: Record<string, string> = {muse:'Muse', codex:'Codex CLI', 'import:json':'Nhập JSON', manual:'Nhập tay'};
 async function readReceipts(kind: TextTaskKind, scope?: string) {
   if (!scope) return [];
   const bridge = desktopBridge();
@@ -82,7 +82,7 @@ export default function TextExchange({kind, context, target, disabled, demo, onA
     {error && !open && <p className="inline-error" role="alert" style={{whiteSpace:'pre-wrap'}}>{error}</p>}
     <Modal open={open} title={'Nhập kết quả ' + labels[kind]} description={target} locked={busy} dirty={!!text} onClose={() => setOpen(false)}>
       <div className="modal-body">
-        <p>Nhà cung cấp kết quả: {origin||`import:${tool.trim()}`}</p>
+        <p>Nhà cung cấp kết quả: {origin?providerLabels[origin]??origin:'Nhập JSON · '+tool.trim()}</p>
         <label className="field">Công cụ tạo JSON<input value={tool} maxLength={80} disabled={busy} onChange={event => {setTool(event.target.value);setOrigin('');}} placeholder="Codex, Claude, Gemini Deep Research…"/></label>
         <label className="field">Chọn file JSON (tối đa 384 KB)<input type="file" accept=".json,application/json" disabled={busy} onChange={event => {
           const file = event.target.files?.[0]; event.target.value = '';

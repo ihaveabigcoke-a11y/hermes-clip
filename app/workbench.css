@@ -478,6 +478,11 @@ input::placeholder,textarea::placeholder { opacity:1; }
 .research-quality-cell .research-warning { color:var(--lab-warning); }
 .research-retail-cell { white-space:normal; overflow-wrap:normal; }
 .research-risk-chips > span { max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+.research-candidate-table col:nth-child(8) { width:190px !important; }
+@media(max-width:620px) {
+  .desk-root:has([data-mobile-pane="preview"]) > .manual-media-tools,
+  .desk-root:has([data-mobile-pane="preview"]) > .field-help { display:none; }
+}
 .product-check-detail { display:flex; flex-direction:column; gap:12px; overflow-wrap:anywhere; }
 .product-check-detail ul,.product-check-detail ol { padding-left:22px; }
 .product-check-detail ul { list-style:disc; }
