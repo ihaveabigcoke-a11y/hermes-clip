@@ -1,4 +1,6 @@
 "use client";
+import {Hint,VisualEmpty} from './visual';
+import {Search as SearchArt} from 'lucide-react';
 
 import { useEffect, useRef, useState, type ReactNode, type ComponentProps } from "react";
 import { z } from "zod";
@@ -296,7 +298,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
   }
 
   function researchView(): ReactNode {
-    if (!chosen) return <Empty title="Chưa có đợt nghiên cứu" text="Sao chép prompt nghiên cứu rồi nhập JSON; app sẽ tạo đợt mới. Hoặc tạo đợt nhập tay từ nút phía trên."/>;
+    if (!chosen) return <VisualEmpty text="Bắt đầu với sản phẩm bạn muốn kiểm chứng." icon={<SearchArt size={56}/>} action={<Button onClick={()=>{const panel=document.querySelector<HTMLDetailsElement>('.research-config');if(panel){panel.open=true;panel.scrollIntoView({block:'start'});}}}>Bắt đầu nghiên cứu</Button>}/>;
     const batch = chosen.data as ResearchBatch;
     return <>
       <div className="operations-toolbar"><Badge>{batch.candidates.length}/10 ứng viên</Badge><Badge>{batch.selectedIds.length}/3 đã chọn</Badge>
@@ -322,8 +324,8 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
   const titles = {research: "Nghiên cứu sản phẩm", social: chosen?chosen.data.name:"Instagram · Tổng quan sản phẩm", landing: "Trang giới thiệu"};
   return <section className="operations-panel">
     {view==='social'&&chosen&&<div><Button tone="ghost" onClick={()=>select('')}><ArrowLeft size={16}/>Tất cả sản phẩm</Button></div>}
-    <header className="operations-heading"><div><h1>{titles[view]}</h1><p>{view === "research" ? "So sánh 10 ứng viên có nguồn, chọn 3 sản phẩm để thử." : view==='social'?'Theo dõi nội dung và kết quả theo sản phẩm.':chosen?.data.name}</p></div>{view === "research" && <Button tone="neutral" disabled={disabled} onClick={batchForm}>Tạo đợt nhập tay</Button>}</header>
-    {view==='research'&&<ResearchLauncher scope={chosen?.id} disabled={disabled||demo} onOpen={id=>{select(id);reload();}}
+    <header className="operations-heading"><div><h1>{titles[view]}</h1><Hint>{view === "research" ? "So sánh ứng viên có nguồn, chọn tối đa 3 sản phẩm." : "Theo dõi theo sản phẩm."}</Hint></div>{view === "research" && <Button tone="neutral" disabled={disabled} onClick={batchForm}>Tạo đợt nhập tay</Button>}</header>
+    {view==='research'&&<details className="research-config"><summary><SearchArt size={20}/> Nhập / nghiên cứu sản phẩm</summary><ResearchLauncher scope={chosen?.id} disabled={disabled||demo} onOpen={id=>{select(id);reload();}}
       actions={(context,invalid,onMuse,previous)=><TextExchange scope={chosen?.id} onMuse={onMuse} previous={previous} key={chosen?.id ?? 'new'} kind="research" demo={demo} disabled={disabled || invalid}
         target={chosen ? 'Nhập vào đợt: '+chosen.data.name : 'Nhập vào đợt mới'}
         context={{...context, remainingSlots:10-(chosen?.data.candidates.length ?? 0), existing:chosen?.data.candidates.map((candidate:Candidate)=>candidate.name) ?? []}}
@@ -333,7 +335,7 @@ export default function OperationsPanel({view, records, demo, offline, persist, 
           const imported=importTextResearch(batch,{...result,candidates:result.candidates.map(candidate=>({...candidate,provider}))},importId);
           if(imported.data!==batch){await execute(()=>save('research_batch',id,imported.data,chosen?.revision ?? 0));select(id);}
           notify(imported.notice);return imported.notice;
-        }}/>} />}
+        }}/>} /></details>}
     {view === 'research' && <ViralFormulas records={records} disabled={disabled||demo} onSaveDraft={(draft,revision)=>persist('reference_video_draft','reference_video_draft_'+draft.id,draft,revision)} onSaveFormula={formula=>persist('viral_formula',`viral_formula_${formula.id}_v${formula.version}`,formula,0)}/>}
     {choices.length > 0 && view!=='social' && <div className="field operations-selector"><label htmlFor="operations-selection">{view === "research" ? "Đợt nghiên cứu" : "Sản phẩm"}</label><select id="operations-selection" value={chosen?.id ?? ""} disabled={busy} onChange={event => select(event.target.value)}>{choices.map(record => <option key={record.id} value={record.id}>{record.data.name}</option>)}</select></div>}
     {chosen && view !== 'research' && <div className="operations-toolbar">

@@ -1,6 +1,7 @@
 "use client";
+import {Hint,StatusMark,ShortText} from './visual';
 import {useEffect,useRef,useState} from 'react';
-import {ExternalLink,Pencil,ImageOff} from 'lucide-react';
+import {ExternalLink,Pencil,ImageOff,Eye,Check,LayoutGrid,Table2} from 'lucide-react';
 import {type LabRecord,formatMoney} from '@/lib/lab/domain';
 import {type ResearchBatch,type Candidate,researchProductId,candidateCurrency} from '@/lib/lab/operations';
 import {annotateResearchQuality,sharedSourceWarning,pageLevelEvidenceWarning} from '@/lib/lab/research-quality';
@@ -13,7 +14,7 @@ import {candidateProductId,selectionEntries,selectionCounts} from '@/lib/lab/dai
 type Props={record:LabRecord;records:LabRecord[];disabled:boolean;onEdit:(candidate:Candidate)=>void;onSelect:(candidate:Candidate,checked:boolean)=>void;promotionErrors?:Record<string,string>;onComplete?:(ids?:string[])=>void;onDeploy?:()=>void};
 function ProductPhoto({candidate}:{candidate:Candidate}){
   const [failed,setFailed]=useState(false);
-  return candidate.imageUrl&&!failed?<img className="research-product-photo" src={candidate.imageUrl} referrerPolicy="no-referrer" loading="lazy" alt={candidate.name} onError={()=>setFailed(true)}/>:<span className="research-photo-empty"><ImageOff size={21}/><small>{failed?'Ảnh nguồn không tải được':'Chưa có ảnh nguồn'}</small></span>;
+  return candidate.imageUrl&&!failed?<img className="research-product-photo" src={candidate.imageUrl} referrerPolicy="no-referrer" loading="lazy" alt={candidate.name} onError={()=>setFailed(true)}/>:<span className="research-photo-empty"><ImageOff size={56}/><small>{failed?'Ảnh nguồn không tải được':'Chưa có ảnh nguồn'}</small></span>;
 }
 const metricNumber=(value:number)=>new Intl.NumberFormat('vi-VN',{maximumFractionDigits:2}).format(value);
 const verdictLabel=(value:Candidate['verdict'])=>value?({try:'Thử',hold:'Giữ',reject:'Loại'}[value]):'Chưa đánh giá';
@@ -28,6 +29,7 @@ export default function ResearchCandidates({record,records,disabled,onEdit,onSel
   const [detailId,setDetailId]=useState('');
   const [checkId,setCheckId]=useState('');
   const [selectedOnly,setSelectedOnly]=useState(false);
+  const [display,setDisplay]=useState<'cards'|'table'>('cards');
   const detail=batch.candidates.find(c=>c.id===detailId);
   const checkCandidate=batch.candidates.find(c=>c.id===checkId);
   const ceilingUsd=batch.maxLandedCostUsd??20;
@@ -53,19 +55,20 @@ export default function ResearchCandidates({record,records,disabled,onEdit,onSel
   const productFor=(c:Candidate)=>records.find(r=>r.id===candidateProductId(record,c.id));
   const price=(candidate:Candidate,key:'cost'|'price'|'shipping')=>candidate[key]==null?'Chưa biết':formatMoney(candidate[key]!,candidateCurrency(candidate,key));
   return <section className="research-comparison" aria-label="So sánh ứng viên sản phẩm">
-    <SourceCheckControls batchId={record.id} disabled={disabled}/>
+    <details className="research-source-tools"><summary>Nguồn & độ đầy đủ</summary><SourceCheckControls batchId={record.id} disabled={disabled}/>
     <div className="research-data-coverage" aria-label="Độ đầy đủ của nghiên cứu">
       <span>Có giá vốn <strong>{coverage.cost}/{coverage.total}</strong></span><span>Có ship <strong>{coverage.shipping}/{coverage.total}</strong></span><span>Đúng SKU <strong>{coverage.exactSku}/{coverage.total}</strong></span><span>Có listing riêng <strong>{coverage.individualListing}/{coverage.total}</strong></span><span>Có chỉ số không phải cấp trang <strong>{coverage.productMetrics}/{coverage.total}</strong></span>
       <small>Listing riêng theo dạng URL hoặc lần đọc nguồn; chưa xác nhận báo giá. Chỉ đếm chỉ số có nguồn, ngày đọc và kỳ đo. Đối chiếu trên toàn bộ đợt.</small>
     </div>
-    <div className="research-selection-bar"><div className="research-selection-heading"><div><strong>Hôm nay {counts.count}/3</strong><p>{counts.selectionsAllDays} lượt chọn qua các ngày · {counts.distinctProducts} sản phẩm khác nhau</p><p>{selected.length?selected.map(c=>c.name).join(' · '):'Chưa chọn sản phẩm. Xem nguồn và điều kiện trước khi chọn.'}</p></div>
+    </details><div className="research-selection-bar"><div className="research-selection-heading"><div><strong>Hôm nay {counts.count}/3</strong><Hint>{counts.selectionsAllDays} lượt chọn · {counts.distinctProducts} sản phẩm qua các ngày.</Hint><span className="sr-only">{selected.map(c=>c.name).join(', ')}</span></div>
       <div className="queue-filters" role="group" aria-label="Lọc ứng viên"><button type="button" aria-pressed={!selectedOnly} onClick={()=>setSelectedOnly(false)}>Tất cả <span>{batch.candidates.length}</span></button><button type="button" aria-pressed={selectedOnly} onClick={()=>setSelectedOnly(true)}>Đã chọn <span>{selected.length}/3</span></button></div>
       </div>
       {missing.length>0&&<div className="research-selection-action"><div role="status"><span className="research-warning">⚠ {missing.length} sản phẩm chưa tạo hồ sơ</span>{missing.filter(candidate=>promotionErrors[candidate.id]).map(candidate=><p className="inline-error" key={candidate.id}>{candidate.name}: {promotionErrors[candidate.id]}</p>)}</div><Button tone="neutral" disabled={disabled||!onComplete} onClick={()=>onComplete?.()}>Hoàn tất tạo hồ sơ</Button></div>}
       {batchSelected.length>0&&<div className="research-selection-action"><span role="status">{ready.length===batchSelected.length?'✓ ':''}{ready.length}/{batchSelected.length} hồ sơ sẵn sàng</span><Button disabled={disabled||!ready.length||!onDeploy} onClick={onDeploy}>Triển khai {ready.length} sản phẩm →</Button></div>}
     </div>
-    <p className="research-selection-note">Chọn để tự gán mã và xếp hạng 1–3. Cùng mã dùng lại hồ sơ. Bỏ chọn hôm nay · Hồ sơ vẫn giữ cùng lịch sử. Triển khai để mở dự án video.</p>
-    {candidates.length?<div className="operations-table-scroll" role="region" aria-label="Bảng 10 ứng viên" tabIndex={0}>
+    <div className="research-display-row"><div className="table-mode-switch" aria-label="Cách xem ứng viên"><button type="button" aria-pressed={display==='cards'} onClick={()=>setDisplay('cards')}><LayoutGrid size={16}/>Thẻ</button><button type="button" aria-pressed={display==='table'} onClick={()=>setDisplay('table')}><Table2 size={16}/>Bảng so sánh</button></div><Hint>Chọn để gán mã và xếp hạng. Bỏ chọn giữ hồ sơ và lịch sử. Kiểm nguồn trước khi quyết định.</Hint></div>
+    {candidates.length>0&&display==='cards'&&<div className="research-card-grid">{candidates.map(candidate=>{const checked=isSelected(candidate.id),cost=landedCostBadge(candidate),markup=cost.amount!==null&&cost.amount>0&&candidate.price!=null&&candidateCurrency(candidate,'price')===cost.currency?candidate.price/cost.amount:null;return <article className="research-visual-card" key={candidate.id} data-selected={checked}><div className="candidate-picture"><button type="button" onClick={()=>setDetailId(candidate.id)} aria-label={'Xem ảnh và số liệu '+candidate.name}><ProductPhoto key={candidate.imageUrl||candidate.id} candidate={candidate}/></button><label className="candidate-check"><input type="checkbox" aria-label={'Chọn '+candidate.name} checked={checked} disabled={disabled||!checked&&counts.count>=3} onChange={e=>onSelect(candidate,e.target.checked)}/><span className="sr-only">Chọn</span></label><span className="candidate-state"><StatusMark state={candidate.verdict==='reject'?'error':checked?'active':'waiting'}/></span></div><div className="candidate-card-body"><h3>{candidate.name}</h3><div className="candidate-prices"><span title={cost.explanation}>Vốn {cost.amount===null?'—':formatMoney(cost.amount,cost.currency!)}</span><span>Bán {candidate.price==null?'—':price(candidate,'price')}</span><span className="markup-chip">{markup===null?'× —':'× '+markup.toLocaleString('vi-VN',{maximumFractionDigits:1})}</span></div><small>{matchLabel(candidate.matchType)}</small><div className="candidate-actions"><Button tone="neutral" onClick={()=>setDetailId(candidate.id)} aria-label={'Xem nguồn và điều kiện '+candidate.name}><Eye size={16}/>Nguồn</Button><Button tone="ghost" onClick={()=>setCheckId(candidate.id)} aria-label={'Kiểm sản phẩm '+candidate.name}>Kiểm</Button>{checked&&productFor(candidate)&&<Button tone="ghost" onClick={()=>onSelect(candidate,true)}>Hạng {todaySelections.find(x=>x.productId===productFor(candidate)!.id)?.rank??'—'}</Button>}</div></div></article>;})}</div>}
+    {candidates.length?(display==='table'?<div className="operations-table-scroll" role="region" aria-label="Bảng 10 ứng viên" tabIndex={0}>
       <table className="operations-comparison research-candidate-table"><caption className="sr-only">Ứng viên nguồn hàng để chọn tối đa ba sản phẩm, giá bán chỉ là giả thuyết.</caption>
         <colgroup>{[42,292,90,178,170,108,150,145,90,240,150].map((width,index)=><col key={index} style={{width}}/>)}</colgroup>
         <thead><tr><th scope="col">Chọn</th><th scope="col">Sản phẩm / nguồn</th><th scope="col">Đối chiếu SKU</th><th scope="col">Giá vốn + ship</th><th scope="col">Bán lẻ Mỹ → vốn tối đa</th><th scope="col">Giá bán giả định</th><th scope="col">Cảnh kết quả</th><th scope="col">Cờ rủi ro</th><th scope="col">Thử / giữ / loại</th><th scope="col">Chất lượng nguồn</th><th scope="col">Chi tiết</th></tr></thead>
@@ -83,8 +86,8 @@ export default function ResearchCandidates({record,records,disabled,onEdit,onSel
           <td><Button tone="neutral" onClick={()=>setDetailId(candidate.id)} aria-label={'Xem nguồn và điều kiện '+candidate.name}>Xem</Button><Button tone="ghost" onClick={()=>setCheckId(candidate.id)} aria-label={'Kiểm sản phẩm '+candidate.name}>Kiểm sản phẩm</Button></td>
         </tr>;})}</tbody>
       </table>
-    </div>:<Empty title={selectedOnly?'Chưa chọn ứng viên':'Đang chờ danh sách ứng viên'} text={selectedOnly?'Mở Tất cả rồi chọn tối đa 3 sản phẩm.':'Sao chép prompt nghiên cứu rồi nhập JSON để lưu danh sách tại đây.'}/>}
-    <p className="instagram-data-note">Giá vốn có thể yêu cầu mua nhiều sản phẩm. Mở chi tiết để xem số lượng tối thiểu và điều kiện nguồn hàng. Chưa xác nhận phí giao tới Mỹ hoặc lợi nhuận.</p>
+    </div>:null):<Empty title={selectedOnly?'Chưa chọn ứng viên':'Đang chờ danh sách ứng viên'} text={selectedOnly?'Mở Tất cả rồi chọn tối đa 3 sản phẩm.':'Sao chép prompt nghiên cứu rồi nhập JSON để lưu danh sách tại đây.'}/>}
+    <Hint label="Điều kiện giá">Giá có thể kèm MOQ. Mở Nguồn để xem điều kiện, kỳ đo và phí ship; giá bán là giả thuyết.</Hint>
     <Modal open={!!checkCandidate} title={'Kiểm sản phẩm · '+(checkCandidate?.name??'')} description="Đã quan sát / Suy luận / Chưa biết" onClose={()=>setCheckId('')}>
       {checkCandidate&&<div className="modal-body research-candidate-detail"><ProductCheck key={checkCandidate.id} candidate={checkCandidate} ceilingUsd={ceilingUsd}/><div className="button-row"><Button tone="neutral" disabled={disabled} onClick={()=>{setCheckId('');onEdit(checkCandidate);}}>Sửa ứng viên</Button></div></div>}
     </Modal>
