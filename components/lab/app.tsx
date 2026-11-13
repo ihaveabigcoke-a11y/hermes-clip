@@ -113,6 +113,7 @@ import {referenceDraftRecordId} from '@/lib/lab/viral-reference';
 import {viralFormulaRecordId} from '@/lib/lab/viral-formulas';
 import './department-nav.css';
 import './t024.css';
+import CompactPublish from "./compact-publish";
 import CompactProducts from "./compact-products";
 import CompactResearch from "./compact-research";
 import CompactToday from "./compact-today";
@@ -1916,7 +1917,7 @@ export default function LabApp() {
               ) : null}
             </div>
           </div>
-          {! ["signals","overview","research"].includes(view) && view !== "products" && workspaceNotice()}
+          {! ["signals","overview","research","social"].includes(view) && view !== "products" && workspaceNotice()}
           {offline && (
             <div className="persistent-error" role="status">
               <Info size={18} />
@@ -1956,7 +1957,7 @@ export default function LabApp() {
             <OfficeViews jobs={journeyWorker.status?.jobs??[]} manual={journeyMedia.status} key={demo?"demo-office":"local-office"} mode={view} records={records} demo={demo}/>
           ) : view === "products" ? (
             <CompactProducts records={records} demo={demo} onRecord={r=>{if(demo)putMemory([r]);else setReal(prev=>[r,...prev.filter(x=>x.id!==r.id)]);}} onNavigate={openHref} details={productsView()}/>
-          ) : ["research", "social", "landing"].includes(view) ? (
+          ) : view === "social" ? (<CompactPublish records={records} demo={demo} persist={persist} onRecords={rows=>{if(demo)putMemory(rows);else setReal(prev=>[...rows,...prev.filter(r=>!rows.some(x=>x.id===r.id))]);}} details={<OperationsPanel onRecords={rows=>{if(demo)putMemory(rows);else setReal(prev=>[...rows,...prev.filter(r=>!rows.some(x=>x.id===r.id))]);}} view="social" records={records} demo={demo} offline={offline} persist={persist} notify={notify} reload={()=>void load()}/>}/>) : ["research", "landing"].includes(view) ? (
             view==="research"?<CompactResearch records={records} demo={demo} onRecords={rows=>{if(demo)putMemory(rows);else setReal(previous=>[...rows,...previous.filter(row=>!rows.some(next=>next.id===row.id))]);}} onNavigate={openHref} details={<OperationsPanel key={`${demo}-${view}`} view={view as "research" | "social" | "landing"} records={records} demo={demo} offline={offline} persist={persist} notify={notify} reload={() => void load()} onRecords={rows=>{if(demo)putMemory(rows);else setReal(previous=>[...rows,...previous.filter(row=>!rows.some(next=>next.id===row.id))]);}}/>}/>:(<OperationsPanel key={`${demo}-${view}`} view={view as "research" | "social" | "landing"} records={records} demo={demo} offline={offline} persist={persist} notify={notify} reload={() => void load()} onRecords={rows=>{if(demo)putMemory(rows);else setReal(previous=>[...rows,...previous.filter(row=>!rows.some(next=>next.id===row.id))]);}}/>)
           ) : view === "competitors" ? (
             <section className="competitor-products"><ReferenceGallery records={records}/><h2>Video đối thủ theo sản phẩm</h2>{products.map(p=><article key={p.id} className="production-card production-card-body"><h3>{p.data.name}</h3><a href={'?view=products&product='+encodeURIComponent(p.id)+'&product_tab=competitors'}>Mở hồ sơ đối thủ</a><CompetitorVideoList videos={p.data.competitorVideos} records={records} productId={p.id}/></article>)}<ReferenceVideoPanel records={records} disabled={offline||demo} onSaveDraft={(d,revision)=>persist('reference_video_draft',referenceDraftRecordId(d),d,revision)} onSaveFormula={f=>persist('viral_formula',viralFormulaRecordId(f),f,0)}/><ViralFormulas records={records}/></section>

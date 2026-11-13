@@ -1,3 +1,4 @@
+import {distributionInput} from '@/lib/lab/publish-board';
 import {compactProductInput} from '@/lib/lab/product-compact';
 import {
   owner,
@@ -67,6 +68,11 @@ export async function POST(request: Request) {
       if(!(env as any).CREATE_HOOK_DRAFTS)throw new ApiError(503,'Tạo nhóm bài nháp cần bản desktop local.');
       try{return Response.json({records:(env as any).CREATE_HOOK_DRAFTS(uid,input.data)});}
       catch(error){throw new ApiError(409,(error as Error).message);}
+    }
+    if(b.action==='distribute_hooks'){
+      const input=distributionInput.safeParse(b.input);if(!input.success)throw new ApiError(422,'Chọn lượt và tài khoản hợp lệ.');
+      if(!(env as any).DISTRIBUTE_HOOKS)throw new ApiError(503,'Cần desktop local.');
+      try{return Response.json({records:(env as any).DISTRIBUTE_HOOKS(uid,input.data)});}catch(e){throw new ApiError(409,(e as Error).message);}
     }
     if(b.action==='compact_product'){
       const input=compactProductInput.safeParse(b.input);

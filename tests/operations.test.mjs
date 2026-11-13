@@ -1055,3 +1055,13 @@ test('T-026e: compact edits preserve old fields, enforce CAS and unique keys; pa
  assert.equal(pastedProductSource('Tên: Fixture\nGiá vốn: 15 USD\nShip: chưa biết').cost,15);assert.equal(pastedProductSource('Giá vốn: 10–20 CNY').cost,null);
  assert.equal(pastedProductSource('Ảnh: https://user:secret@example.invalid/a').imageUrl,null);
 });
+
+test('T-026g: five accounts get balanced hooks without duplicates; CTA price landing and UTM names remain aligned',async()=>{
+ const {publishFixture}=await import('./fixtures/publish-board.mjs');const {planDistribution}=await import('../lib/lab/publish-board.ts');const f=publishFixture(),rows=planDistribution(f.records,f.input);
+ assert.equal(rows.length,5);assert.equal(new Set(rows.map(r=>r.data.accountId)).size,5);assert.equal(new Set(rows.map(r=>r.data.variantId)).size,3);
+ for(const r of rows){assert.equal(r.data.ctaKeyword,'GLOW');assert.equal(r.data.offerPrice,24);assert.equal(r.data.landingBaseUrl,f.product.data.purchaseUrl);assert.equal(new URL(r.data.utmLink).searchParams.get('utm_content'),r.data.name);assert.equal(new URL(r.data.utmLink).searchParams.get('utm_medium'),'organic');}
+ assert.deepEqual(planDistribution([...f.records,...rows],{...f.input,batchId:'retry'}),rows);
+ assert.throws(()=>planDistribution(f.records,{...f.input,accountIds:['account_0','account_0']}));
+ assert.throws(()=>planDistribution(f.records,{...f.input,revision:99}),/thay đổi/);
+ const changed=structuredClone(f.records);changed.find(r=>r.id==='render_project').data.exports[0].verified=false;assert.throws(()=>planDistribution(changed,f.input),/MP4/);
+});
