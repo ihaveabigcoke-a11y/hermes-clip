@@ -1823,7 +1823,7 @@ export default function LabApp() {
     );
   }
   return (
-    <div style={visualStatusVariables as React.CSSProperties} className={`lab-shell workbench-shell ${["production","images","library","content"].includes(view)?"is-production-route":""}`}>
+    <div data-compact={["signals","overview","research","products","production","social","results"].includes(view)||undefined} style={visualStatusVariables as React.CSSProperties} className={`lab-shell workbench-shell ${["production","images","library","content"].includes(view)?"is-production-route":""}`}>
       <a href="#lab-main" className="skip-link">
         Bỏ qua điều hướng
       </a>

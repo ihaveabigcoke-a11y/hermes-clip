@@ -10,6 +10,18 @@ export function resultDecision(records:LabRecord[],plan:LabRecord,thresholds:Res
  const label=!ready?null:signals.views!>=thresholds.minViews!&&signals.keywordComments!>=thresholds.minKeywordComments!?'Đẩy':signals.views!<thresholds.minViews!&&signals.keywordComments!<thresholds.minKeywordComments!?'Bỏ':'Đổi hook';
  return {signals,label,tone:label==='Đẩy'?'green':label==='Bỏ'?'red':label?'amber':'gray'};
 }
+/** Descriptive rank across the three hooks in one product/comparison group. Not a verdict. */
+export function resultHookRank(records:LabRecord[],plan:LabRecord){
+ const group=plan.data.comparison?.sourceGroupId;
+ if(!group||!plan.data.variantId||latestPostSignals(records,plan).views===null)return null;
+ const peers=records.filter(r=>r.kind==='content_plan'&&r.data.productId===plan.data.productId&&r.data.productionId===plan.data.productionId&&r.data.comparison?.sourceGroupId===group);
+ const byHook=new Map<string,number[]>();
+ for(const p of peers){const views=latestPostSignals(records,p).views;if(views!==null)byHook.set(p.data.variantId,[...(byHook.get(p.data.variantId)??[]),views]);}
+ if(byHook.size>3)return null;
+ const means=new Map([...byHook].map(([id,values])=>[id,values.reduce((sum,v)=>sum+v,0)/values.length]));
+ const own=means.get(plan.data.variantId);if(own==null)return null;
+ return 1+[...means.values()].filter(v=>v>own).length;
+}
 export const hookRefreshInput=z.object({planId:z.string().regex(/^[\w-]{1,120}$/),revision:z.number().int().positive(),id:z.string().regex(/^[\w-]{1,80}$/)});
 export function planHookRefresh(records:LabRecord[],raw:unknown,now=Date.now()):LabRecord{
  const input=hookRefreshInput.parse(raw),plan=records.find(r=>r.kind==='content_plan'&&r.id===input.planId);if(!plan||plan.revision!==input.revision)throw Error('Bài đăng đã đổi. Tải lại trước khi tạo hook.');

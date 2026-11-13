@@ -18,7 +18,7 @@ await officeUI('T-026b',f.records,async({page,origin,screenshot})=>{
  for(const [width,height] of [[1366,768],[1920,1080]]){await page.setViewportSize({width,height});await screenshot('signals-full-'+width);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);}
  assert.ok(await page.locator('[data-screen=signals] img').count()>0);assert.ok(await page.locator('[data-screen=signals] img').first().evaluate(i=>i.complete&&i.naturalWidth>0));
  down=true;await page.getByRole('button',{name:'Làm mới',exact:true}).click();await page.getByText('Mất kết nối',{exact:true}).waitFor();assert.equal(await page.locator('[data-run-id]').count(),ids.length);
- down=false;empty=true;await page.getByRole('button',{name:'Làm mới',exact:true}).click();await page.getByText('Chưa có lượt',{exact:true}).waitFor();
+ down=false;empty=true;await page.getByRole('button',{name:'Làm mới',exact:true}).click();await page.getByText('Chờ lượt',{exact:true}).waitFor();
  for(const [width,height] of [[1366,768],[1920,1080]]){await page.setViewportSize({width,height});await screenshot('signals-empty-'+width);}
  return {runs:ids.length,groups:6,disconnectPreserves:true};
 });
