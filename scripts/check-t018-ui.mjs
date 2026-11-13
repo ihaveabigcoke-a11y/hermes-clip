@@ -3,7 +3,7 @@ const p=await importModule('lib/lab/production.ts'),{getRenderPlan}=await import
 const plans=planHookDrafts(f.records,f.input);plans.forEach((p,i)=>{p.data.status='published_manual';p.data.postUrl='https://instagram.com/p/test'+i;});
 const metrics=plans.map((p,i)=>({id:'metric_'+i,kind:'social_metric',revision:1,updatedAt:1,data:{planId:p.id,views:100,keywordComments:i+1,utmClicks:2,orders:null,observedAt:'2026-11-13T00:00:00Z',sourceUrl:p.data.postUrl,source:'manual'}}));
 await officeUI('T-018',[...f.records,...plans,...metrics],async({page,origin,screenshot})=>{
- page.setDefaultTimeout(12000);await page.goto(origin+'/?view=results');await page.getByRole('heading',{name:'So ba hook theo sản phẩm'}).waitFor();assert.equal(await page.locator('.profile-table tbody tr').count(),3);await page.getByText('Chưa đặt ngưỡng',{exact:true}).first().waitFor();
+ page.setDefaultTimeout(12000);await page.goto(origin+'/?view=results');await page.getByRole('heading',{name:'So ba hook theo sản phẩm'}).waitFor();assert.equal(await page.locator('.hook-analytics .profile-table tbody tr').count(),3);await page.getByText('Chưa đặt ngưỡng',{exact:true}).first().waitFor();
  for(const width of [1366,1920]){await page.setViewportSize({width,height:900});await screenshot('hooks-'+width);}
  await page.goto(origin+'/?view=experiments');await page.getByLabel('Lý do quyết định',{exact:true}).fill('Cần thử tình huống rõ hơn trước khi tăng sản lượng.');await page.getByRole('button',{name:'Lưu quyết định',exact:true}).click();await page.getByRole('status').filter({hasText:'Đã lưu quyết định'}).waitFor();
  for(const width of [1366,1920]){await page.setViewportSize({width,height:900});await screenshot('decisions-'+width);}

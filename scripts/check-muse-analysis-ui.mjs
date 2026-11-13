@@ -40,7 +40,7 @@ try {
     localStorage.setItem('product-lab-mode','real');window.__calls=[];window.__chats=[];window.__mode='bad-json';window.__count=0;
     const job={id:'t22_job',projectId:'formula-library',kind:'reference-structure',state:'done',request:{name:'Comment LED original.mp4'}};
     window.productLabDesktop={
-      status:async()=>({version:'fixture',jobs:[],paused:true,active:0,budget:0,freeRamGb:8,generationReady:true,
+      status:async()=>({version:'fixture',musePaused:false,jobs:[],paused:true,active:0,budget:0,freeRamGb:8,generationReady:true,
         profiles:[{id:'off',name:'Disabled fixture',enabled:false},{id:'on',name:'Muse fixture',enabled:true,session:'signed_in',busy:false}],batch:{id:'fixture',perProfileLimit:3,submittedByProfile:{on:window.__count}}}),
       researchStatus:async()=>({runs:[]}),integrationStatus:async()=>({busy:false,jobs:[job]}),
       integrationAnalyzeStructure:async()=>job,
@@ -67,7 +67,7 @@ try {
   await page.goto('http://127.0.0.1:4175/?view=research&ops_id=t22_fixture');
   await page.locator('summary').filter({hasText:/^Công thức video/}).click();
   await page.getByRole('button',{name:'Phân tích video mẫu',exact:true}).click();
-  await page.getByRole('button',{name:'Xem phân tích',exact:true}).click();
+  await page.getByRole('button',{name:'Xem timeline',exact:true}).click();
   const send=page.getByRole('button',{name:'Phân tích bằng Muse',exact:true}),save=page.getByRole('button',{name:'Lưu tham chiếu',exact:true});
   await page.waitForFunction(()=>document.querySelector('select[aria-label="Profile Muse phân tích"]')?.value==='on');
   assert.equal(await page.getByLabel('Profile Muse phân tích').locator('option').count(),1);
@@ -100,13 +100,13 @@ try {
   await page.getByRole('alert').filter({hasText:'Fixture transport interrupted'}).waitFor();assert.equal(await send.isDisabled(),true);
   await page.getByRole('button',{name:'Đọc lại kết quả',exact:true}).click();
   await page.waitForFunction(()=>window.__calls.some(c=>c.method==='recover'));
-  assert.equal(await page.evaluate(()=>window.__count),3);assert.equal(await send.isDisabled(),true);assert.equal(posts.length,1);
+  assert.equal(await page.evaluate(()=>window.__count),3);await page.waitForFunction(()=>!Array.from(document.querySelectorAll('button')).find(b=>b.textContent==='Phân tích bằng Muse')?.disabled);assert.equal(await send.isDisabled(),false);assert.equal(posts.length,1);
   // Reopen the same task: the receipt must remain accessible, with no send.
-  await page.getByRole('button',{name:'Xem phân tích',exact:true}).click();
+  await page.getByRole('button',{name:'Xem timeline',exact:true}).click();
   await page.getByRole('button',{name:'Đọc lại kết quả',exact:true}).waitFor();
   assert.equal(await page.evaluate(()=>window.__calls.filter(c=>c.method==='send').length),3);
   assert.deepEqual(errors,[]);assert.deepEqual(blocked,[]);
   const report={fixtureOnly:true,networkRequestsSent:0,measurements,apiFixturePosts:posts.length,museFixtureSends:3,museFixtureRecoveries:1,
-    checks:['enabled profile only','cost disclosure','job ID only IPC','pending send locks save/collapse','parse error blocks save','repair uses same parent/profile, no upload','parse fills for review only','explicit save only','transport uncertainty blocks resend','recovery without extra turn','three-turn cap','reopen receipt'],consoleErrors:errors};
+    checks:['enabled profile only','cost disclosure','job ID only IPC','pending send locks save/collapse','parse error blocks save','repair uses same parent/profile, no upload','parse fills for review only','explicit save only','transport uncertainty blocks resend','recovery without extra turn','no three-turn cap after reconciled result','reopen receipt'],consoleErrors:errors};
   await writeFile(join(out,'T22-ui-check.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));
 } finally {await browser.close();}

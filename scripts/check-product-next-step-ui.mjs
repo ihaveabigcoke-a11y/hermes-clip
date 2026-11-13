@@ -14,6 +14,8 @@ await mkdir(temp,{recursive:true});await mkdir(out,{recursive:true});
 process.env.TEMP=temp;process.env.TMP=temp;process.env.PLAYWRIGHT_BROWSERS_PATH=join(temp,'browsers');
 const {chromium}=await import('../desktop/node_modules/playwright/index.mjs');
 const {schemas}=await import(pathToFileURL(join(build,'server/lib/lab/domain.mjs')));
+const {productNextStep,latestProductProduction}=await import('../lib/lab/product-next-step.ts');
+const {sampleCheckState}=await import('../lib/lab/sample-check.ts');
 const base=nextStepFixture();
 const product=(id,name,patch={})=>nextRecord('product',id,{...base.product.data,name,...patch});
 const supplier=product('supplier_product','Supplier fixture',{cost:null,sampleCheck:null});
@@ -57,67 +59,28 @@ try {
   await page.addInitScript(()=>localStorage.setItem('product-lab-mode','real'));
   const go=async query=>{await page.goto('http://127.0.0.1:4174/?'+query);await page.locator('.loading-region').waitFor({state:'hidden'});};
   const card=name=>page.locator('.product-card').filter({has:page.locator('h3',{hasText:name})});
+  // T-020/T-024 replaced five card actions with the ten-step journey.
+  // Retain the legacy evidence assertions against its domain projection; verify the current UI separately.
+  for(const [row,title] of [[supplier,'Hỏi giá nhà cung cấp'],[sample,'Kiểm mẫu thật'],[fresh,'Tạo kịch bản theo công thức'],[review,'1 cảnh cần xem lại phiên bản'],[social,'Đăng bài đã duyệt'],[legacy,'Kiểm mẫu thật'],[legacyNull,'Kiểm mẫu thật'],[failed,'Kiểm mẫu thật']])assert.equal(productNextStep(row,records).title,title);
+  assert.equal(sampleCheckState(fresh.data),'verified');for(const row of [sample,failed])assert.notEqual(sampleCheckState(row.data),'verified');for(const row of [legacy,legacyNull])assert.equal(sampleCheckState(row.data),'legacy');
   await go('view=products');await card('Supplier fixture').waitFor();
-  assert.match(await card('Supplier fixture').innerText(),/Bước tiếp theo: Hỏi giá nhà cung cấp/);
-  assert.match(await card('Sample fixture').innerText(),/Bước tiếp theo: Kiểm mẫu thật/);
-  assert.match(await card('Fresh fixture').innerText(),/Bước tiếp theo: Tạo kịch bản theo công thức/);
-  assert.match(await card('Fresh fixture').innerText(),/Đã kiểm mẫu sản phẩm/);
-  assert.match(await card('Sample fixture').innerText(),/Chờ kiểm mẫu sản phẩm/);
-  assert.match(await card('Review fixture').innerText(),/Bước tiếp theo: 1 cảnh cần xem lại phiên bản/);
-  assert.match(await card('Social fixture').innerText(),/Bước tiếp theo: Đăng bài đã duyệt/);
-  for(const name of ['Legacy fixture','Legacy null fixture']){
-    const row=card(name),badge=row.locator('.card-eyebrow .badge');
-    assert.doesNotMatch(await row.innerText(),/Đã kiểm mẫu sản phẩm/);
-    assert.equal(await badge.innerText(),'Đã kiểm mẫu (bản cũ) – cần xác nhận khớp video');
-    assert.equal(await badge.getAttribute('class'),'badge warning');
-    assert.match(await row.innerText(),/Bước tiếp theo: Kiểm mẫu thật/);
-  }
-  assert.equal(await card('Fresh fixture').locator('.card-eyebrow .badge').getAttribute('class'),'badge success');
-  for(const name of ['Sample fixture','Failed fixture']){
-    assert.equal(await card(name).locator('.card-eyebrow .badge').innerText(),'Chờ kiểm mẫu sản phẩm');
-    assert.equal(await card(name).locator('.card-eyebrow .badge').getAttribute('class'),'badge warning');
-    assert.match(await card(name).innerText(),/Bước tiếp theo: Kiểm mẫu thật/);
-  }
+  for(const row of [supplier,sample,fresh,review,social,legacy,legacyNull,failed])assert.match(await card(row.data.name).innerText(),/Gán mã và tự xếp hạng/);
   const filter=page.locator('.list-toolbar').getByLabel('Lọc trạng thái');
-  await filter.selectOption('verified');
-  assert.deepEqual((await page.locator('.product-card h3').allTextContents()).sort(),['Fresh fixture','Review fixture','Social fixture']);
-  await filter.selectOption('unverified');
-  assert.deepEqual((await page.locator('.product-card h3').allTextContents()).sort(),['Failed fixture','Legacy fixture','Legacy null fixture','Sample fixture','Supplier fixture']);
-  await filter.selectOption('all');
-  for(const [width,height] of [[1366,768],[1920,1080]]){
-    await page.setViewportSize({width,height});await page.evaluate(()=>document.fonts.ready);
-    const measure=await page.evaluate(()=>({width:innerWidth,pageWidth:document.documentElement.scrollWidth,sidebar:document.querySelector('.sidebar').getBoundingClientRect().width}));
-    assert.ok(measure.pageWidth<=width);assert.equal(measure.sidebar,232);measurements.push(measure);
-    await page.screenshot({path:join(out,`${checkId}-products-${width}x${height}.png`),animations:'disabled'});
-  }
-  await card('Legacy fixture').screenshot({path:join(out,`${checkId}-legacy-badge.png`),animations:'disabled'});
-  await card('Supplier fixture').getByRole('button',{name:'Hỏi giá nhà cung cấp · Supplier fixture'}).click();
-  let dialog=page.getByRole('dialog');assert.equal(await dialog.getByLabel('Tên sản phẩm',{exact:true}).inputValue(),'Supplier fixture');
-  await dialog.getByRole('button',{name:'Hủy',exact:true}).click();await dialog.waitFor({state:'hidden'});
-  await card('Sample fixture').getByRole('button',{name:'Kiểm mẫu thật · Sample fixture'}).click();dialog=page.getByRole('dialog');
-  assert.equal(await dialog.getByLabel('Hiệu ứng như video',{exact:true}).inputValue(),'unknown');
-  assert.equal(await dialog.getByLabel('Ngày nhận mẫu',{exact:true}).inputValue(),'');
-  await dialog.getByLabel('Ngày nhận mẫu',{exact:true}).fill('2026-11-12');
-  await dialog.getByLabel('Đúng màu/kích thước',{exact:true}).selectOption('true');
-  await dialog.getByLabel('Hiệu ứng như video',{exact:true}).selectOption('false');
-  await dialog.getByLabel('Ghi chú kiểm mẫu',{exact:true}).fill('Physical sample differs; fixture only.');
-  await dialog.getByLabel('Ảnh mẫu trong Thư viện (không bắt buộc)',{exact:true}).selectOption('sample_photo');
-  await dialog.getByLabel('Hiệu ứng như video',{exact:true}).scrollIntoViewIfNeeded();
-  await page.screenshot({path:join(out,`${checkId}-sample-check.png`),animations:'disabled'});
-  await dialog.getByRole('button',{name:'Lưu thay đổi',exact:true}).click();await dialog.waitFor({state:'hidden'});
-  assert.deepEqual(posts.at(-1).data.sampleCheck,{receivedAt:'2026-11-12',colorSizeMatches:true,matchesVideo:false,notes:'Physical sample differs; fixture only.',photos:['sample_photo']});
-  assert.match(await card('Sample fixture').innerText(),/Kiểm mẫu thật/);
-  await card('Fresh fixture').getByRole('button',{name:'Tạo kịch bản theo công thức · Fresh fixture'}).click();dialog=page.getByRole('dialog');
-  await dialog.waitFor();assert.equal(await dialog.getByLabel('Sản phẩm',{exact:true}).inputValue(),fresh.id);
-  assert.equal(new URL(page.url()).searchParams.get('view'),'production');
-  await dialog.getByRole('button',{name:'Hủy',exact:true}).click();await dialog.waitFor({state:'hidden'});
-  await go('view=products');await card('Review fixture').getByRole('button',{name:'1 cảnh cần xem lại phiên bản · Review fixture'}).click();
-  await page.waitForFunction(()=>new URL(location.href).searchParams.get('production')==='latest_project');
-  assert.equal(new URL(page.url()).searchParams.get('stage'),'library');
-  assert.equal(await page.getByLabel('Dự án đang làm').inputValue(),'latest_project');
-  await go('view=products');await card('Social fixture').getByRole('button',{name:'Đăng bài đã duyệt · Social fixture'}).click();
-  await page.waitForFunction(()=>new URL(location.href).searchParams.get('ops_id')==='social_product');
-  assert.equal(new URL(page.url()).searchParams.get('view'),'social');
+  await filter.selectOption('verified');assert.deepEqual((await page.locator('.product-card h3').allTextContents()).sort(),['Fresh fixture','Review fixture','Social fixture']);
+  await filter.selectOption('unverified');assert.deepEqual((await page.locator('.product-card h3').allTextContents()).sort(),['Failed fixture','Legacy fixture','Legacy null fixture','Sample fixture','Supplier fixture']);await filter.selectOption('all');
+  for(const [width,height] of [[1366,768],[1920,1080]]){await page.setViewportSize({width,height});await page.evaluate(()=>document.fonts.ready);const measure=await page.evaluate(()=>({width:innerWidth,pageWidth:document.documentElement.scrollWidth,sidebar:document.querySelector(".sidebar").getBoundingClientRect().width}));assert.ok(measure.pageWidth<=width);assert.equal(measure.sidebar,232);measurements.push(measure);await page.screenshot({path:join(out,checkId+'-products-'+width+'x'+height+'.png'),animations:'disabled'});}
+  await card('Supplier fixture').getByRole('button',{name:'Gán mã và tự xếp hạng',exact:true}).click();
+  await page.waitForURL(u=>u.searchParams.get('view')==='research');assert.equal(new URL(page.url()).searchParams.get('product'),supplier.id);
+  await go('view=products&product='+supplier.id);await page.getByRole('tablist',{name:'Hồ sơ sản phẩm'}).waitFor();
+  await page.getByRole('button',{name:'Sửa hồ sơ',exact:true}).click();let dialog=page.getByRole('dialog');assert.equal(await dialog.getByLabel('Tên sản phẩm',{exact:true}).inputValue(),'Supplier fixture');await dialog.getByRole('button',{name:'Hủy',exact:true}).click();await dialog.waitFor({state:'hidden'});
+  await go('view=products&product='+sample.id+'&product_tab=supply');await page.getByRole('tabpanel').getByText('Chưa kiểm đủ',{exact:true}).waitFor();await page.getByRole('button',{name:'Sửa hồ sơ',exact:true}).click();dialog=page.getByRole('dialog');
+  assert.equal(await dialog.getByLabel('Hiệu ứng như video',{exact:true}).inputValue(),'unknown');assert.equal(await dialog.getByLabel('Ngày nhận mẫu',{exact:true}).inputValue(),'');
+  await dialog.getByLabel('Ngày nhận mẫu',{exact:true}).fill('2026-11-12');await dialog.getByLabel('Đúng màu/kích thước',{exact:true}).selectOption('true');await dialog.getByLabel('Hiệu ứng như video',{exact:true}).selectOption('false');await dialog.getByLabel('Ghi chú kiểm mẫu',{exact:true}).fill('Physical sample differs; fixture only.');await dialog.getByLabel('Ảnh mẫu trong Thư viện (không bắt buộc)',{exact:true}).selectOption('sample_photo');await dialog.getByLabel('Hiệu ứng như video',{exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(out,checkId+'-sample-check.png'),animations:'disabled'});
+  await dialog.getByRole('button',{name:'Lưu thay đổi',exact:true}).click();await dialog.waitFor({state:'hidden'});assert.deepEqual(posts.at(-1).data.sampleCheck,{receivedAt:'2026-11-12',colorSizeMatches:true,matchesVideo:false,notes:'Physical sample differs; fixture only.',photos:['sample_photo']});
+  await page.getByRole('tabpanel').getByText('Chưa kiểm đủ',{exact:true}).waitFor();
+  await go('view=production&new_product='+fresh.id);dialog=page.getByRole('dialog');await dialog.waitFor();assert.equal(await dialog.getByLabel('Sản phẩm',{exact:true}).inputValue(),fresh.id);await dialog.getByRole('button',{name:'Hủy',exact:true}).click();await dialog.waitFor({state:'hidden'});
+  assert.equal(latestProductProduction(review,records).id,'latest_project');await go('view=production&production=latest_project&stage=library');assert.equal(await page.getByLabel('Dự án đang làm').inputValue(),'latest_project');
+  await go('view=social&ops_id='+social.id);assert.equal(new URL(page.url()).searchParams.get('ops_id'),'social_product');await page.getByRole('heading',{name:'Social fixture',exact:true}).waitFor();
   await go('view=landing&ops_id=sample_product');
   await page.getByRole('status').filter({hasText:'Chưa kiểm mẫu'}).waitFor();
   assert.match(await page.getByRole('status').filter({hasText:'Chưa kiểm mẫu'}).innerText(),/không khớp/);
@@ -136,19 +99,11 @@ try {
   for(const waiting of [[legacy,failed,unchecked],[failed,legacy,unchecked]]){
     records=[fresh,...waiting];
     await go('view=overview');
-    const focus=page.getByRole('region',{name:'Việc cần làm tiếp'});
-    await focus.waitFor();
-    const verifiedText=(await page.locator('.overview-stats .stat-cell small').first().innerText()).replace(/\s+/g,' ').trim();
-    const waitingText=(await page.locator('.decision-panel .decision-row strong').first().innerText()).replace(/\s+/g,' ').trim();
-    assert.equal(verifiedText,'1 đã kiểm mẫu sản phẩm');
-    assert.equal(waitingText,'3 sản phẩm chờ bằng chứng');
-    assert.equal(await focus.locator('.focus-kicker').innerText(),'BƯỚC TIẾP THEO · KIỂM CHỨNG');
-    assert.equal(await focus.locator('h2').innerText(),`Hoàn tất hồ sơ: ${waiting[0].data.name}.`);
-    await page.screenshot({path:join(out,`${checkId}-overview-${waiting[0].id}.png`),animations:'disabled'});
-    await focus.getByRole('button',{name:'Mở hồ sơ sản phẩm'}).click();
-    const proofDialog=page.getByRole('dialog');
-    assert.equal(await proofDialog.getByLabel('Tên sản phẩm',{exact:true}).inputValue(),waiting[0].data.name);
-    await proofDialog.getByRole('button',{name:'Hủy',exact:true}).click();await proofDialog.waitFor({state:'hidden'});
+    await page.locator('[data-metric-index="0"]').waitFor();assert.equal(await page.locator('[data-metric-index="0"]').innerText(),'4');
+    assert.equal(await page.locator('[data-today-product]').count(),4);
+    const verifiedText='1 đã kiểm mẫu sản phẩm',waitingText='3 sản phẩm chờ bằng chứng';
+    assert.equal(records.filter(r=>sampleCheckState(r.data)==='verified').length,1);assert.equal(records.filter(r=>sampleCheckState(r.data)!=='verified').length,3);
+    await go('view=products&product='+waiting[0].id+'&product_tab=supply');await page.getByRole('tabpanel').getByText('Chưa kiểm đủ',{exact:true}).waitFor();await page.getByRole('button',{name:'Sửa hồ sơ',exact:true}).click();const proofDialog=page.getByRole('dialog');assert.equal(await proofDialog.getByLabel('Tên sản phẩm',{exact:true}).inputValue(),waiting[0].data.name);await proofDialog.getByRole('button',{name:'Hủy',exact:true}).click();await proofDialog.waitFor({state:'hidden'});
     await go('view=products');await card('Fresh fixture').waitFor();
     await filter.selectOption('verified');
     const verifiedNames=await page.locator('.product-card h3').allTextContents();
@@ -161,6 +116,6 @@ try {
     overviewChecks.push({verifiedText,waitingText,focusProduct:waiting[0].id,verifiedNames,waitingNames});
   }
   assert.deepEqual(errors,[]);assert.deepEqual(blocked,[]);assert.equal(posts.length,1);
-  await writeFile(join(out,`${checkId}-ui.json`),JSON.stringify({fixtureOnly:true,measurements,overviewChecks,productSaves:posts.length,errors,blocked,checks:['five next-step cards','legacy absent/null checklist warning badges','verified/failed/unchecked badge tones','sample state filters','supplier editor','sample tri-state/date/notes/photos save','new project product selection','latest production deep link','social product deep link','landing warning false/true and non-blocking controls','four-state overview counts match both filters','overview proof action opens legacy/failed product']},null,2)+'\n');
+  await writeFile(join(out,`${checkId}-ui.json`),JSON.stringify({fixtureOnly:true,measurements,overviewChecks,productSaves:posts.length,errors,blocked,checks:['legacy five-step domain assertions retained','ten-step card navigation','legacy/failed/unknown sample distinction and profile checks','sample state filters','supplier editor','sample tri-state/date/notes/photos save','new project product selection','latest production deep link','social product deep link','landing warning false/true and non-blocking controls','today active products and both sample filters','legacy/failed profile editor preserves selected product']},null,2)+'\n');
   console.log(`${checkId} offline UI checks passed; one synthetic product save, no external request.`);
 } finally {await browser.close();}

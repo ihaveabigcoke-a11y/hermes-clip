@@ -86,7 +86,7 @@ try {
   for(const [width,height] of [[1366,768],[1920,1080]]) {
     await page.setViewportSize({width,height});
     const selector=page.getByLabel('Nhà cung cấp cảnh',{exact:true});
-    assert.equal(await selector.inputValue(),'manual');
+    assert.equal(await selector.inputValue(),'auto');assert.match(await page.locator('.desk-preview-content').innerText(),/Thủ công/);
     for(const id of ['muse','grok-cli','fal'])assert.equal(await selector.locator(`option[value="${id}"]`).evaluate(option=>option.disabled),true,id);
     for(const state of ['Chờ xuất prompt','Đã xuất','Chờ file','Đã nhận'])assert.match(await page.locator('.desk-job-list').innerText(),new RegExp(state));
     const measure=await page.evaluate(()=>({width:innerWidth,scrollWidth:document.documentElement.scrollWidth,buttons:[...document.querySelectorAll('.manual-action-bar button')].map(button=>{const r=button.getBoundingClientRect();return {text:button.textContent,left:r.left,right:r.right,top:r.top,bottom:r.bottom,visible:r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight};})}));
@@ -95,6 +95,6 @@ try {
   }
   assert.deepEqual(await page.evaluate(()=>window.__manualCalls),{export:1,open:1,muse:0});
   assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
-  const report={fixtureOnly:true,networkRequestsToProviders:0,measurements,errors,checks:['toolbar buttons in viewport','four manual states','provider defaults manual; Muse/grok-cli/fal disabled','export/open bridge calls only','graphite–lime source UI']};
+  const report={fixtureOnly:true,networkRequestsToProviders:0,measurements,errors,checks:['toolbar buttons in viewport','four manual states','auto routes to manual while paused; Muse/grok-cli/fal disabled','export/open bridge calls only','graphite–lime source UI']};
   await writeFile(join(out,'T-002-ui.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report));
 }finally{await browser?.close();processHandle.kill();closeSync(chromeLog);}

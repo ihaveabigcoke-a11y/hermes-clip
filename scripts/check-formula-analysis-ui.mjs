@@ -58,7 +58,7 @@ try{
     await page.goto('http://127.0.0.1:4175/?view=research&ops_id=t21_fixture');
     await page.locator('summary').filter({hasText:/^Công thức video/}).click();
     await page.getByRole('button',{name:'Phân tích video mẫu',exact:true}).click();
-    await page.getByRole('button',{name:'Xem phân tích',exact:true}).click();
+    await page.getByRole('button',{name:'Xem timeline',exact:true}).click();
     await page.getByLabel('Tên file gốc',{exact:true}).waitFor();
   };
   await open();assert.equal(await page.getByLabel('Tên file gốc',{exact:true}).inputValue(),'Comment LED original.mp4');
@@ -67,6 +67,9 @@ try{
   await page.getByRole('button',{name:'Sao chép prompt phân tích',exact:true}).click();
   await page.waitForFunction(()=>window.__copied.includes('ctaSource'));assert.ok((await page.evaluate(()=>window.__copied)).length<=4000);assert.equal(posts.length,0);
   const response={...analysisResponse(),ctaSource:'caption',cutCount:999};
+  // Current v2 formula keeps CTA on the result shot; the old v1 seed had a fourth CTA beat.
+  response.beats=response.beats.filter(b=>b.kind!=='cta');response.beats.at(-1).toSec=response.durationSec;
+  response.beats[0].label='The fixture problem';
   await page.getByLabel('Dán kết quả JSON',{exact:true}).fill(JSON.stringify({...response,hookType:'invalid'}));
   await page.getByRole('button',{name:'Đọc kết quả JSON',exact:true}).click();await page.getByRole('alert').filter({hasText:'Phản hồi chưa đúng cấu trúc'}).waitFor();
   assert.equal(await page.getByRole('button',{name:'Lưu tham chiếu',exact:true}).isDisabled(),true);
@@ -82,9 +85,11 @@ try{
   await page.getByRole('button',{name:'Lưu tham chiếu',exact:true}).click();await page.getByRole('status').filter({hasText:'Đã lưu tham chiếu nháp'}).waitFor();
   const first=records.find(r=>r.kind==='reference_video_draft');assert.equal(first.revision,1);assert.equal(first.data.analysis.cutCount,structure.cutCount);assert.equal(first.data.analysis.ctaSource,'caption');
   assert.ok(first.data.analysis.warnings.some(w=>w.includes('Số lần cắt')));assert.equal(posts.filter(p=>p.kind==='viral_formula').length,0);
-  await page.getByRole('button',{name:'Tạo phiên bản công thức mới',exact:true}).first().click();
+  // A one-reference candidate is intentionally disabled; select an actionable proposal.
+  assert.ok(await page.getByRole('button',{name:'Tạo phiên bản công thức mới',exact:true}).filter({visible:true}).count()>0);
+  await page.locator('button:enabled').filter({hasText:/^Tạo phiên bản công thức mới$/}).first().click();
   await page.getByRole('status').filter({hasText:'Đã tạo phiên bản'}).waitFor();assert.equal(records.filter(r=>r.kind==='viral_formula').length,1);
-  const appended=records.find(r=>r.kind==='viral_formula');assert.equal(appended.data.version,2);assert.equal(posts.at(-1).revision,0);
+  const appended=records.find(r=>r.kind==='viral_formula');assert.equal(appended.data.version,3);assert.equal(posts.at(-1).revision,0);
   await page.getByLabel('Tên file gốc',{exact:true}).fill('Edited Comment LED.mp4');
   assert.equal(await page.getByRole('button',{name:'Lưu tham chiếu',exact:true}).isDisabled(),true);
   await page.getByRole('button',{name:'Đọc kết quả JSON',exact:true}).click();await page.getByRole('button',{name:'Lưu tham chiếu',exact:true}).click();

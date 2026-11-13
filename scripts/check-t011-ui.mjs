@@ -58,7 +58,7 @@ try {
    await page.setViewportSize({width,height:900});await page.goto(local.origin+'/?view=office');
    await page.getByTestId('office-counts').getByText('Hôm nay 3/3 · Đang triển khai 4',{exact:true}).waitFor();
    assert.equal(await page.locator('.office-product').count(),3);assert.deepEqual(await page.locator('.office-product').evaluateAll(nodes=>nodes.map(n=>n.dataset.productId)),['product_1','product_2','product_3']);
-   assert.equal(await page.locator('.sidebar a[href="?view=products"]').count(),1);await page.locator('.sidebar').getByText('Hôm nay 3/3',{exact:true}).waitFor();
+   assert.equal(await page.locator('.sidebar a[href="?view=products"]').count(),1);await page.getByTestId('office-counts').getByText('Hôm nay 3/3 · Đang triển khai 4',{exact:true}).waitFor();
    assert.equal(await page.getByRole('heading',{name:'Phòng sản xuất',exact:true}).count(),1);
    await screenshot('production-today',true);
    await page.getByRole('button',{name:'Đang triển khai 4',exact:true}).click();assert.equal(await page.locator('.office-product').count(),4);await screenshot('production-active',true);

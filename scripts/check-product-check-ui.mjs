@@ -46,7 +46,7 @@ try {
  await page.addInitScript(()=>{
   localStorage.setItem('product-lab-mode','real');window.__copied='';window.__researchRequests=[];
   Object.defineProperty(navigator,'clipboard',{value:{writeText:async value=>{window.__copied=value;}}});
-  window.productLabDesktop={researchStatus:async()=>({runs:[]}),researchStart:async input=>{window.__researchRequests.push(input);throw Error('Fixture reply unavailable');}};
+  window.productLabDesktop={status:async()=>({musePaused:false,profiles:[{id:'fixture',enabled:true,health:'ready',session:'signed_in',busy:false,quota:{state:'available'}}],jobs:[],active:0,paused:true,generationReady:true,batch:null}),researchStatus:async()=>({runs:[]}),researchStart:async input=>{window.__researchRequests.push(input);throw Error('Fixture reply unavailable');}};
  });
  await page.goto('http://127.0.0.1:4174/?view=research&ops_id=t23_fixture');
  await page.locator('.research-candidate-table tbody tr').nth(9).waitFor();await page.evaluate(()=>document.fonts.ready);
@@ -123,8 +123,8 @@ try {
  await page.getByRole('dialog').getByRole('button',{name:'Lưu thay đổi',exact:true}).click();await page.getByRole('dialog').waitFor({state:'hidden'});
  assert.equal(records[0].data.candidates[0].usRetail,null);assert.equal(records[0].data.candidates[0].logisticsFlags.ipRisk,null);
  await page.getByLabel('Giá vốn + ship tối đa (USD)',{exact:true}).fill('11');
- await page.getByRole('button',{name:'Bắt đầu nghiên cứu',exact:true}).click();await page.getByRole('alert').filter({hasText:'Fixture reply unavailable'}).waitFor();
- await page.getByRole('button',{name:'Bắt đầu nghiên cứu',exact:true}).click();
+ await page.getByRole('button',{name:'Bắt đầu bằng Muse',exact:true}).click();await page.getByRole('alert').filter({hasText:'Fixture reply unavailable'}).waitFor();
+ await page.getByRole('button',{name:'Đối soát cùng mã yêu cầu',exact:true}).click();
  const requests=await page.evaluate(()=>window.__researchRequests);assert.equal(requests.length,2);assert.deepEqual(requests[0],requests[1]);assert.equal(requests[0].maxLandedCostUsd,11);
  assert.deepEqual(blocked,[]);assert.deepEqual(errors,[]);
  const report={fixtureOnly:true,networkRequestsSent:0,measurements,apiFixturePosts:posts.length,checks:['retail column and unknown dash','table scroll contained at 1366 and 1080','three evidence sections','try/hold/reject suggestions','saved decision unchanged','clipboard English and IP questions','HTTPS links through existing external-link handler','retail/IP manual save and reload','HTTPS validation','four-source limit','null restored without zero','local receipt preserved','launcher retry keeps ceiling and request'],consoleErrors:errors};

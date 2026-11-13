@@ -79,8 +79,8 @@ try {
   const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
   await page.goto('http://127.0.0.1:4174/?view=production&production=fixture_project');
   await page.locator('.desk-job').nth(3).waitFor();await page.evaluate(()=>document.fonts.ready);
-  await page.getByRole('button',{name:'Mẫu kịch bản',exact:true}).click();
-  const composer=page.getByRole('region',{name:'Kịch bản từ công thức'});
+  await page.locator('.compose-shortcuts').getByRole('button',{name:'Khung content',exact:true}).click();
+  const composer=page.getByRole('region',{name:'Khung content từ công thức'});
   await composer.waitFor();
   assert.equal(await page.locator('#formula-keyword').inputValue(),'');
   await page.getByRole('button',{name:'Soạn hai mở đầu A/B',exact:true}).click();
