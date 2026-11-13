@@ -181,6 +181,7 @@ export const schemas = {
     productId: str(100),
   }),
   settings: z.object({
+    resultThresholds:z.object({minViews:z.number().int().nonnegative().max(1e12).nullable(),minKeywordComments:z.number().int().nonnegative().max(1e12).nullable()}).optional(),
     scaleSignalThreshold:z.number().finite().min(0).max(100).nullable().optional(),
     budgetUsd: money,
     paused: z.boolean().default(false),

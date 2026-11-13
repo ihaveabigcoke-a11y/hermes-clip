@@ -1,3 +1,4 @@
+import {hookRefreshInput} from '@/lib/lab/result-cards';
 import {distributionInput} from '@/lib/lab/publish-board';
 import {compactProductInput} from '@/lib/lab/product-compact';
 import {
@@ -68,6 +69,11 @@ export async function POST(request: Request) {
       if(!(env as any).CREATE_HOOK_DRAFTS)throw new ApiError(503,'Tạo nhóm bài nháp cần bản desktop local.');
       try{return Response.json({records:(env as any).CREATE_HOOK_DRAFTS(uid,input.data)});}
       catch(error){throw new ApiError(409,(error as Error).message);}
+    }
+    if(b.action==='refresh_hooks'){
+      const input=hookRefreshInput.safeParse(b.input);if(!input.success)throw new ApiError(422,'Lượt hook không hợp lệ.');
+      if(!(env as any).REFRESH_HOOKS)throw new ApiError(503,'Cần desktop local.');
+      try{return Response.json({record:(env as any).REFRESH_HOOKS(uid,input.data)});}catch(e){throw new ApiError(409,(e as Error).message);}
     }
     if(b.action==='distribute_hooks'){
       const input=distributionInput.safeParse(b.input);if(!input.success)throw new ApiError(422,'Chọn lượt và tài khoản hợp lệ.');

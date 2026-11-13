@@ -32,6 +32,7 @@ export async function startLocalServer({root, uiDir=join(here,'../local-dist/ui'
   const thumbnails=new ThumbnailCache(root,db,filePath,storagePolicy(workerStore));
   const writes=new Map();
   const selectionDomain=await import(pathToFileURL(join(dirname(resolve(routesPath)), 'lib/lab/daily-selection.mjs')).href);
+  const resultDomain=await import(pathToFileURL(join(dirname(resolve(routesPath)), 'lib/lab/result-cards.mjs')).href);
   const publishDomain=await import(pathToFileURL(join(dirname(resolve(routesPath)), 'lib/lab/publish-board.mjs')).href);
   const productDomain=await import(pathToFileURL(join(dirname(resolve(routesPath)), 'lib/lab/product-compact.mjs')).href);
   const metricDomain=await import(pathToFileURL(join(dirname(resolve(routesPath)), 'lib/lab/metric-import.mjs')).href);
@@ -60,6 +61,12 @@ export async function startLocalServer({root, uiDir=join(here,'../local-dist/ui'
       }catch(error){db.exec('ROLLBACK');throw error;}
     },
     get OFFICE_STATE(){return {jobs:workerStore?.jobs()??[],manual:{receipts:workerStore?.get('manual_receipts',[])??[],exports:workerStore?.get('manual_exports',{})??{},codes:workerStore?.get('manual_codes',{scenes:{}})??{scenes:{}}},integrations:workerStore?.get('integration-jobs',[])??[]};},
+    REFRESH_HOOKS(uid,input){
+      db.exec('BEGIN IMMEDIATE');try{const records=db.prepare('SELECT * FROM lab_records WHERE owner_id=?').all(uid).map(decodeOffice),r=resultDomain.planHookRefresh(records,input,Date.now());
+        if(!records.some(old=>old.id===r.id))db.prepare('INSERT INTO lab_records (owner_id,id,kind,data,revision,created_at,updated_at) VALUES(?,?,?,?,?,?,?)').run(uid,r.id,r.kind,JSON.stringify(r.data),r.revision,r.createdAt,r.updatedAt);
+        db.exec('COMMIT');return r;
+      }catch(e){db.exec('ROLLBACK');throw e;}
+    },
     DISTRIBUTE_HOOKS(uid,input){
       db.exec('BEGIN IMMEDIATE');try{const records=db.prepare('SELECT * FROM lab_records WHERE owner_id=?').all(uid).map(decodeOffice);
         const rows=publishDomain.planDistribution(records,input,Date.now());const put=db.prepare('INSERT INTO lab_records (owner_id,id,kind,data,revision,created_at,updated_at) VALUES(?,?,?,?,?,?,?)');

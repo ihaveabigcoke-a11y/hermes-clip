@@ -160,6 +160,7 @@ export const productionSchema = z.object({
   contentPlanId: id.optional(), contentPlanRevision: z.number().int().positive().optional(),
   locale: z.string().trim().min(2).max(40), paused: z.boolean(),
   references: z.array(referenceSchema).max(120), scenes: z.array(sceneSchema).max(30),
+  reuseBodyPlan:renderPlanSchema.optional(),refreshSourcePlanId:id.optional(),
   renderPlans:z.array(renderPlanSchema).max(60).optional(),
   bodies: z.array(bodySchema).max(30), variants: z.array(variantSchema).max(60),
   measurements: z.array(measurementSchema.and(z.object({updatedAt:z.number()}))).max(60).default([]),
