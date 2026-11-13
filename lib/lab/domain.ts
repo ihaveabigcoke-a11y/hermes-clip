@@ -81,6 +81,7 @@ export const schemas = {
       invariants: str(3000),
       customer: str(600),
       problem: str(1000),
+      purchaseUrl: link.optional(),
       supplierUrl: link,
       referenceUrl: link,
       imageUrl: link,

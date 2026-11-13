@@ -1,3 +1,4 @@
+import {compactProductInput} from '@/lib/lab/product-compact';
 import {
   owner,
   database,
@@ -66,6 +67,12 @@ export async function POST(request: Request) {
       if(!(env as any).CREATE_HOOK_DRAFTS)throw new ApiError(503,'Tạo nhóm bài nháp cần bản desktop local.');
       try{return Response.json({records:(env as any).CREATE_HOOK_DRAFTS(uid,input.data)});}
       catch(error){throw new ApiError(409,(error as Error).message);}
+    }
+    if(b.action==='compact_product'){
+      const input=compactProductInput.safeParse(b.input);
+      if(!input.success)throw new ApiError(422,'Hồ sơ không hợp lệ.');
+      if(!(env as any).SAVE_COMPACT_PRODUCT)throw new ApiError(503,'Cần bản desktop local.');
+      try{return Response.json({record:(env as any).SAVE_COMPACT_PRODUCT(uid,input.data)});}catch(error){throw new ApiError(409,(error as Error).message);}
     }
     if(b.action==='select_daily') {
       const input=dailySelectionInput.safeParse(b.input);

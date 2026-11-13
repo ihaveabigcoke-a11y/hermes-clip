@@ -113,6 +113,7 @@ import {referenceDraftRecordId} from '@/lib/lab/viral-reference';
 import {viralFormulaRecordId} from '@/lib/lab/viral-formulas';
 import './department-nav.css';
 import './t024.css';
+import CompactProducts from "./compact-products";
 import CompactResearch from "./compact-research";
 import CompactToday from "./compact-today";
 import CompactSignals from "./compact-office";
@@ -1872,7 +1873,7 @@ export default function LabApp() {
         </header>
         <main id="lab-main" tabIndex={-1}>
           {quickProduct&&<QuickVideo key={quickProduct.id} product={quickProduct} records={records} demo={demo} offline={offline} persist={persist} onRecord={r=>{if(demo)putMemory([r]);else setReal(prev=>[r,...prev.filter(x=>x.id!==r.id)]);}} onClose={()=>setQuickProduct(null)} onReady={href=>{setQuickProduct(null);openHref(href);}}/>}
-          <div className="page-heading" hidden={view==='overview'||(view==='products'&&!!profileId)||["research", "social", "landing", "accounts", "queue", "chat", "library", "office", "signals"].includes(view)}>
+          <div className="page-heading" hidden={view==='overview'||view==='products'||["research", "social", "landing", "accounts", "queue", "chat", "library", "office", "signals"].includes(view)}>
             <div>
               {view !== "products" && <div className="page-eyebrow">
                 HERMES CLIP <span>/</span>{" "}
@@ -1954,7 +1955,7 @@ export default function LabApp() {
           ) : view === "signals" ? (<CompactSignals records={records} demo={demo}/>) : view === "office" ? (
             <OfficeViews jobs={journeyWorker.status?.jobs??[]} manual={journeyMedia.status} key={demo?"demo-office":"local-office"} mode={view} records={records} demo={demo}/>
           ) : view === "products" ? (
-            productsView()
+            <CompactProducts records={records} demo={demo} onRecord={r=>{if(demo)putMemory([r]);else setReal(prev=>[r,...prev.filter(x=>x.id!==r.id)]);}} onNavigate={openHref} details={productsView()}/>
           ) : ["research", "social", "landing"].includes(view) ? (
             view==="research"?<CompactResearch records={records} demo={demo} onRecords={rows=>{if(demo)putMemory(rows);else setReal(previous=>[...rows,...previous.filter(row=>!rows.some(next=>next.id===row.id))]);}} onNavigate={openHref} details={<OperationsPanel key={`${demo}-${view}`} view={view as "research" | "social" | "landing"} records={records} demo={demo} offline={offline} persist={persist} notify={notify} reload={() => void load()} onRecords={rows=>{if(demo)putMemory(rows);else setReal(previous=>[...rows,...previous.filter(row=>!rows.some(next=>next.id===row.id))]);}}/>}/>:(<OperationsPanel key={`${demo}-${view}`} view={view as "research" | "social" | "landing"} records={records} demo={demo} offline={offline} persist={persist} notify={notify} reload={() => void load()} onRecords={rows=>{if(demo)putMemory(rows);else setReal(previous=>[...rows,...previous.filter(row=>!rows.some(next=>next.id===row.id))]);}}/>)
           ) : view === "competitors" ? (

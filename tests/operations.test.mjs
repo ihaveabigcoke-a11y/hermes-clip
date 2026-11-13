@@ -1042,3 +1042,16 @@ test('T-026d: automatic selection assigns unique keys and free ranks, reuses pro
  const before=structuredClone(records);choose('c0');assert.equal(records.filter(r=>r.kind==='product').length,3);assert.equal(selectionCounts(records,now).count,3);
  assert.throws(()=>choose('c3'),/3|hạng/);assert.deepEqual(batch,initial[0]);assert.deepEqual(records.filter(r=>r.kind==='product').sort((a,b)=>a.id.localeCompare(b.id)),before.filter(r=>r.kind==='product').sort((a,b)=>a.id.localeCompare(b.id)));
 });
+
+test('T-026e: compact edits preserve old fields, enforce CAS and unique keys; pasted unknown prices stay null',async()=>{
+ const {planCompactProduct,pastedProductSource}=await import('../lib/lab/product-compact.ts');
+ const first=planCompactProduct([],{id:'compact_product',revision:0,data:{name:'Đèn đọc sách',cost:null,shipping:null,price:null,purchaseUrl:'https://shop.invalid/lamp'}},123);
+ assert.equal(first.data.productKey,'DEN-DOC-SACH');assert.equal(first.data.cost,null);
+ first.data.allowedClaims='Keep original';first.data.researchOrigin={batchId:'b',candidateId:'c'};
+ const edited=planCompactProduct([first],{id:first.id,revision:1,data:{name:'Đèn mới',productKey:'NEW-LAMP',researchOrigin:{batchId:'evil',candidateId:'x'}}},456);
+ assert.equal(edited.data.allowedClaims,'Keep original');assert.deepEqual(edited.data.researchOrigin,first.data.researchOrigin);assert.equal(edited.data.productKey,'NEW-LAMP');assert.equal(edited.createdAt,123);
+ assert.throws(()=>planCompactProduct([edited],{id:first.id,revision:1,data:{name:'Sai'}}),/thay đổi/);
+ assert.throws(()=>planCompactProduct([edited],{id:'other',revision:0,data:{name:'Đèn khác',productKey:'NEW-LAMP'}}),/Mã/);
+ assert.equal(pastedProductSource('Tên: Fixture\nGiá vốn: 15 USD\nShip: chưa biết').cost,15);assert.equal(pastedProductSource('Giá vốn: 10–20 CNY').cost,null);
+ assert.equal(pastedProductSource('Ảnh: https://user:secret@example.invalid/a').imageUrl,null);
+});

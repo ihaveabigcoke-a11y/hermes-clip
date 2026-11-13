@@ -32,6 +32,7 @@ export async function startLocalServer({root, uiDir=join(here,'../local-dist/ui'
   const thumbnails=new ThumbnailCache(root,db,filePath,storagePolicy(workerStore));
   const writes=new Map();
   const selectionDomain=await import(pathToFileURL(join(dirname(resolve(routesPath)), 'lib/lab/daily-selection.mjs')).href);
+  const productDomain=await import(pathToFileURL(join(dirname(resolve(routesPath)), 'lib/lab/product-compact.mjs')).href);
   const metricDomain=await import(pathToFileURL(join(dirname(resolve(routesPath)), 'lib/lab/metric-import.mjs')).href);
   const hookDomain=await import(pathToFileURL(join(dirname(resolve(routesPath)), 'lib/lab/hook-matrix.mjs')).href);
   const decodeOffice=row=>({id:row.id,kind:row.kind,data:JSON.parse(row.data),revision:row.revision,createdAt:row.created_at,updatedAt:row.updated_at});
@@ -58,6 +59,14 @@ export async function startLocalServer({root, uiDir=join(here,'../local-dist/ui'
       }catch(error){db.exec('ROLLBACK');throw error;}
     },
     get OFFICE_STATE(){return {jobs:workerStore?.jobs()??[],manual:{receipts:workerStore?.get('manual_receipts',[])??[],exports:workerStore?.get('manual_exports',{})??{},codes:workerStore?.get('manual_codes',{scenes:{}})??{scenes:{}}},integrations:workerStore?.get('integration-jobs',[])??[]};},
+    SAVE_COMPACT_PRODUCT(uid,input){
+      db.exec('BEGIN IMMEDIATE');
+      try{const records=db.prepare('SELECT * FROM lab_records WHERE owner_id=?').all(uid).map(decodeOffice);
+        const r=productDomain.planCompactProduct(records,input,Date.now());
+        db.prepare(`INSERT INTO lab_records (owner_id,id,kind,data,revision,created_at,updated_at) VALUES(?,?,?,?,?,?,?) ON CONFLICT(owner_id,id) DO UPDATE SET data=excluded.data,revision=excluded.revision,updated_at=excluded.updated_at`).run(uid,r.id,r.kind,JSON.stringify(r.data),r.revision,r.createdAt,r.updatedAt);
+        db.exec('COMMIT');return r;
+      }catch(error){db.exec('ROLLBACK');throw error;}
+    },
     SELECT_RESEARCH(uid,input){
       db.exec('BEGIN IMMEDIATE');
       try {
