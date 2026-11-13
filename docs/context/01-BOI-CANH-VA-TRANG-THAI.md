@@ -1,3 +1,11 @@
+# Trạng thái hiện hành — T-024b, chiều 13/11/2026
+
+T-024 (`d95f16e`) và T-024b đã hoàn tất phần source/UI trong app chính. Hôm nay có studio năm trạm, phễu sáu bước và đường 14 ngày; Sản phẩm có Bảng nhớ lựa chọn/sắp xếp; Số liệu có mini-chart ba hook, chỉ kết luận sau ngưỡng người dùng; Ma trận có màu/chú giải. Tín hiệu có bốn ô dịch vụ, dòng 50 sự kiện, tách từ chối/giới hạn vùng với lỗi kỹ thuật và bảng đối soát. Khung content, hồ sơ chín tab, video mẫu tham khảo bản mẫu người dùng; giữ font, dữ liệu thật/null và workflow. Nhãn cũ/mã thô được sửa, dữ liệu trường cũ giữ nguyên.
+
+T-024b: typecheck; 777 đạt/1 skip OpenMontage live/0 lỗi; 37/37 script UI. Electron thật qua launcher, workspace QA riêng, đủ 20 menu/0 lỗi console/không tràn ngang 1366. Guard thiếu module build được kiểm bằng Electron thật và unit test; đã sửa cả deadlock top-level await ready. Không mở AppData/DB/profile người dùng, không gọi Muse/Instagram/DM. Muse giữ Tạm dừng. Ảnh app/mẫu 1366/1920 và năm ảnh đối chiếu tại outputs/T-024b-ui; giới hạn thị giác, lỗi/SHA, cách chạy tiếp trong [báo cáo T-024b](../../ops/office/reports/T-024b.md). SHA/giờ build cuối xem STATUS văn phòng và outputs/T-024b-build-result.json. Không push/merge. Chưa nghiệm thu toàn bộ dữ liệu/tài khoản dịch vụ thật sau build.
+
+Các mốc bên dưới là lịch sử, đọc cùng trạng thái T-024b ở trên.
+
 # Trạng thái hiện hành — sáng 13/11/2026
 
 T-012–T-023 trong danh sách người dùng đã triển khai; review cuối T-022 có ba sửa nhỏ về receipt, MP4 cũ và null. Đọc [báo cáo sáng](2026-11-13-OFFICE-MORNING.md) và STATUS văn phòng cho SHA/build/test cuối. Một main agent; không push/merge. Office nằm ngay trong app.
