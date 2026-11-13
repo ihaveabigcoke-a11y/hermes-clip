@@ -15,6 +15,7 @@ await writeFile(hook,`if(process.versions.electron&&process.type==='browser')set
  app.commandLine.appendSwitch('remote-debugging-address','127.0.0.1');
  app.commandLine.appendSwitch('disable-background-networking');
  app.commandLine.appendSwitch('host-resolver-rules','MAP * ~NOTFOUND, EXCLUDE 127.0.0.1');
+ app.on('browser-window-created',(_event,win)=>win.webContents.once('did-finish-load',()=>setImmediate(()=>require('fs').writeFileSync(require('path').join(process.env.PRODUCT_LAB_QA_USER_DATA,'loaded'),'ready'))));
  app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest((details,done)=>{
   const u=new URL(details.url);done({cancel:!['127.0.0.1','localhost'].includes(u.hostname)&&!['devtools:','file:','data:','blob:'].includes(u.protocol)});
  }));
@@ -29,9 +30,13 @@ try{
  const page=context.pages().find(p=>p.url().includes('127.0.0.1'))??await context.waitForEvent('page');page.setDefaultTimeout(12000);
  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')consoleErrors.push(m.text());});
  await page.waitForLoadState('load');await page.locator('.sidebar-navigation').waitFor();
+ // A renderer can paint before the main loadURL promise finishes. Wait for the
+ // actual startup navigation before navigating again (otherwise ERR_ABORTED).
+ let loaded=false;for(let i=0;i<100;i++){try{await readFile(join(qa,'loaded'));loaded=true;break;}catch{await delay(100);}}
+ assert.equal(loaded,true,'Electron startup navigation must complete');
  const origin=new URL(page.url()).origin;await context.route('**/*',route=>{if(new URL(route.request().url()).origin!==origin){external.push('blocked external request');return route.abort();}return route.continue();});
  await page.waitForFunction(()=>!!window.productLabDesktop);assert.equal((await page.evaluate(()=>window.productLabDesktop.status())).musePaused,true);
- await page.evaluate(()=>localStorage.setItem('product-lab-mode','real'));await page.reload();
+ assert.equal(await page.evaluate(()=>localStorage.getItem('product-lab-mode')),'real');
  const nav=page.locator('.sidebar-navigation');await nav.waitFor();
  const links=await nav.locator('a[href]').evaluateAll(nodes=>nodes.map(n=>({label:n.textContent.trim(),href:n.getAttribute('href')})));
  assert.ok(links.length>=20);
