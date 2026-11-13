@@ -40,7 +40,3 @@ test('T-023 fake Muse worker: refusal pauses without profile failover; timeout r
   }finally{store.close();await rm(root,{recursive:true,force:true});}
  }
 });
-
-test('T-026f: configurable session limit persists without clearing receipts or stop latch',async()=>{
- const store=new Store(':memory:');try{let now=Date.now();const n=new MuseNight(store,{now:()=>now,sleep:async ms=>now+=ms});n.configure({intervalSeconds:60,sessionLimit:2});n.begin();await n.admit('a');await n.admit('b');assert.throws(()=>n.assertRoom(),{code:'MUSE_NIGHT_LIMIT'});n.configure({intervalSeconds:60,sessionLimit:5});assert.equal(n.status().remaining,3);assert.equal(new MuseNight(store).status().submitted,2);n.outcome('a',{code:'MUSE_REFUSED'});n.configure({intervalSeconds:60,sessionLimit:10});assert.throws(()=>n.assertRoom(),{code:'MUSE_NIGHT_STOP'});assert.throws(()=>n.configure({intervalSeconds:59,sessionLimit:10}));}finally{store.close();}
-});

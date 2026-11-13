@@ -605,7 +605,6 @@ export class Worker {
       if (!['ready', 'failed', 'cancelled', 'needs_attention'].includes(job.state)) {
         const failed = ['preflight', 'prepared', 'validating'].includes(job.state);
         this.store.transition(id, failed ? 'failed' : 'needs_attention', {
-          failureCode:typeof error.code==='string'?error.code:null,
           ...(error.code === 'MUSE_NO_MEDIA' ? {providerUrl:error.providerUrl,providerResponse:error.providerResponse} : {}),
           note: job.state === 'validating'
             ? 'File không đạt tỷ lệ/thời lượng hoặc không giải mã được. Giữ file trên máy để xem lại.'

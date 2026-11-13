@@ -1,5 +1,5 @@
 import {z} from 'zod';
-const settings=z.object({intervalSeconds:z.number().int().min(60).max(3600),sessionLimit:z.number().int().min(1).max(1000).default(12)});
+const settings=z.object({intervalSeconds:z.number().int().min(60).max(3600)});
 export function museNightKey(now=Date.now()) {
  const local=new Date(now+7*3600000);if(local.getUTCHours()>=10)local.setUTCDate(local.getUTCDate()+1);
  return local.toISOString().slice(0,10);
@@ -8,12 +8,12 @@ export const museFailureKind=error=>['MUSE_LOGIN_REQUIRED','MUSE_QUOTA_EXHAUSTED
 const fail=(message,code)=>Object.assign(Error(message),{code});
 export class MuseNight {
  constructor(store,{now=Date.now,sleep=ms=>new Promise(r=>setTimeout(r,ms))}={}){Object.assign(this,{store,now,sleep});this.tail=Promise.resolve();}
- settings(){return {sessionLimit:12,...this.store.get('muse_pacing',{intervalSeconds:60})};}
+ settings(){return this.store.get('muse_pacing',{intervalSeconds:60});}
  configure(input){this.store.set('muse_pacing',settings.parse(input));return this.status();}
  current(){return this.store.get('muse_nights',{})[museNightKey(this.now())]??null;}
  save(row){this.store.set('muse_nights',{...this.store.get('muse_nights',{}),[row.id]:row});}
- begin(){let row=this.current();if(!row){row={id:museNightKey(this.now()),startedAt:this.now(),limit:this.settings().sessionLimit,submissions:[],outcomes:{},consecutiveErrors:0,stopReason:null};this.save(row);}return this.status();}
- status(){const row=this.current(),submitted=row?.submissions.length??0;return {active:!!row,nightId:row?.id??null,intervalSeconds:this.settings().intervalSeconds,limit:this.settings().sessionLimit,submitted,remaining:Math.max(0,this.settings().sessionLimit-submitted),successful:Object.values(row?.outcomes??{}).filter(v=>v==='success').length,errors:Object.values(row?.outcomes??{}).filter(v=>v!=='success').length,stopped:!!row?.stopReason,stopReason:row?.stopReason??null,nextSubmitAt:row?.submissions.length?row.submissions.at(-1).at+this.settings().intervalSeconds*1000:null};}
+ begin(){let row=this.current();if(!row){row={id:museNightKey(this.now()),startedAt:this.now(),limit:12,submissions:[],outcomes:{},consecutiveErrors:0,stopReason:null};this.save(row);}return this.status();}
+ status(){const row=this.current(),submitted=row?.submissions.length??0;return {active:!!row,nightId:row?.id??null,intervalSeconds:this.settings().intervalSeconds,limit:12,submitted,remaining:12-submitted,successful:Object.values(row?.outcomes??{}).filter(v=>v==='success').length,errors:Object.values(row?.outcomes??{}).filter(v=>v!=='success').length,stopped:!!row?.stopReason,stopReason:row?.stopReason??null,nextSubmitAt:row?.submissions.length?row.submissions.at(-1).at+this.settings().intervalSeconds*1000:null};}
  assertRoom(count=1){const s=this.status();if(s.stopped)throw fail(s.stopReason,'MUSE_NIGHT_STOP');if(count>s.remaining)throw fail('Hết lượt Muse của đêm này. Chuyển cảnh còn lại sang manual.','MUSE_NIGHT_LIMIT');}
  async admit(jobId,allowed=()=>true){
   if(!this.current())return;

@@ -87,7 +87,6 @@ const approvedItemSchema = z.object({ sceneId: id, takeId: id });
 const itemSchema = approvedItemSchema.extend({takeId: id.nullable()});
 const bodySchema = z.object({ id, name: text(150), items: z.array(itemSchema).min(1).max(30), createdAt: z.number() });
 const variantSchema = z.object({
-  hookTechnique:z.enum(["problem","absurd","curiosity"]).optional(),
   id, name: z.string().trim().min(1).max(150), bodyId: id, hook: itemSchema.nullable(), cta: itemSchema.nullable(),
   locale: z.string().trim().min(2).max(40), caption: text(3000), createdAt: z.number(),
   ...ctaFields,
