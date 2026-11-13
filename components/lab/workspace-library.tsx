@@ -1,4 +1,6 @@
 "use client";
+import {Hint,StatusMark} from './visual';
+import {Play,SlidersHorizontal} from 'lucide-react';
 import {CompressionNote} from './compression-note';
 import {uiCopy, reviewLabels} from '@/desktop/src/ui-copy.mjs';
 import {useEffect, useMemo, useRef, useState} from 'react';
@@ -126,8 +128,8 @@ export default function WorkspaceLibrary({records, demo}: {records: LabRecord[];
     finally {lock.current = false; setBusy(false);}
   }
   return <section className="workspace-library">
-    <header className="production-heading"><div><h1><Images size={22}/>Thư viện</h1><p>{entries.length} {versions ? 'phiên bản' : 'cảnh'} · {matching.length} file phù hợp</p></div></header>
-    <fieldset className="catalog-toolbar" disabled={!filters.ready || !organization.ready} aria-label="Lọc thư viện">
+    <header className="production-heading"><div><h1><Images size={22}/>Thư viện</h1><span className="library-count">{entries.length}</span></div></header>
+    <div className="library-filter-chips" role="group" aria-label="Loại media">{[['all','Tất cả'],['video','Video'],['image','Ảnh']].map(([key,label])=><button type="button" key={key} aria-pressed={type===key} onClick={()=>filter('lib_type',key)}>{label}</button>)}<Hint label="Phiên bản trong thư viện">Mỗi cảnh hiện bản chính, bản đã duyệt hoặc bản mới nhất. Mở cảnh để xem lịch sử.</Hint></div><details className="catalog-filter-panel"><summary><SlidersHorizontal size={17}/>Lọc chi tiết</summary><fieldset className="catalog-toolbar" disabled={!filters.ready || !organization.ready} aria-label="Lọc thư viện">
       <label className="field">Sản phẩm<select aria-label="Sản phẩm" value={productId} onChange={event => filter('lib_product', event.target.value)}><option value="all">Tất cả sản phẩm</option>{records.filter(record => record.kind === 'product').map(product => <option key={product.id} value={product.id}>{product.data.name}</option>)}</select></label>
       <label className="field">Loại nội dung<select aria-label="Loại nội dung" value={type} onChange={event => filter('lib_type', event.target.value)}><option value="all">Ảnh và video</option><option value="video">Video</option><option value="image">Ảnh</option></select></label>
       <label className="field">Phân loại<select aria-label="Phân loại" value={category} onChange={event => filter('lib_category', event.target.value)}><option value="content">{uiCopy.content}</option><option value="test">{uiCopy.test}</option><option value="all">Tất cả</option></select></label>
@@ -136,8 +138,7 @@ export default function WorkspaceLibrary({records, demo}: {records: LabRecord[];
       <label className="catalog-check"><input type="checkbox" checked={batch} onChange={event => filter('lib_batch', String(event.target.checked))}/>Đợt hiện tại</label>
       <label className="catalog-check"><input type="checkbox" checked={versions} onChange={event => filter('lib_versions', String(event.target.checked))}/>Hiện mọi phiên bản</label>
       <SearchBox value={query} onChange={value => filter('lib_q', value)} placeholder="Tìm video, sản phẩm…"/>
-    </fieldset>
-    {!versions && <p className="catalog-hint">Mỗi cảnh hiện phiên bản bạn đã chọn, bản đã duyệt hoặc bản mới nhất. Mở cảnh để xem các phiên bản còn lại.</p>}
+    </fieldset></details>
     {(error || filters.error || organization.error) && !entry && <div role="alert" className="inline-error"><p>{error || filters.error || organization.error}</p>
       {filters.error && <Button tone="neutral" disabled={filters.pending} onClick={filters.retry}>Lưu lại bộ lọc</Button>}
       {organization.error && <Button tone="neutral" disabled={organization.pending} onClick={organization.retry}>Lưu lại phân loại</Button>}
@@ -145,9 +146,9 @@ export default function WorkspaceLibrary({records, demo}: {records: LabRecord[];
     <div className="media-grid workspace-media-grid">{entries.slice((currentPage - 1) * 12, currentPage * 12).map(item => {
       const job = status?.jobs.find(job => job.uploadedAssetId === item.take.assetId);
       return <article className="media-card" key={item.key}>
-        <button className="media-cover" aria-label={`Xem ${item.scene.name}`} onClick={() => selectEntry(item.key)}><MediaThumbnail take={item.take}/></button>
+        <button className="media-cover" aria-label={`Xem ${item.scene.name}`} onClick={() => selectEntry(item.key)}><MediaThumbnail take={item.take}/>{item.take.type.startsWith('video/')&&<span className="cover-play"><Play size={24}/></span>}</button>
         <div><strong>{item.product?.data.name ?? item.project.data.name}</strong><span>{item.scene.name}</span><small>{item.scene.ratio} · {item.take.metadata.duration ?? 'Ảnh'}{item.take.metadata.duration ? 's' : ''} · {status?.profiles.find(profile => profile.id === job?.profileId)?.name ?? 'Đã nhập'}</small>
-          <Badge tone={mediaReview(item) === 'approved' ? 'success' : item.take.review === 'rejected' ? 'danger' : 'warning'}>{reviewLabels[mediaReview(item)]}</Badge><small>{catalog.filter(version => version.project.id === item.project.id && version.scene.id === item.scene.id).length} phiên bản · {formatTime(item.take.createdAt)}</small></div>
+          <Badge tone={mediaReview(item) === 'approved' ? 'success' : item.take.review === 'rejected' ? 'danger' : 'warning'}>{reviewLabels[mediaReview(item)]}</Badge><Hint label="Lịch sử phiên bản">{catalog.filter(version => version.project.id === item.project.id && version.scene.id === item.scene.id).length} phiên bản · {formatTime(item.take.createdAt)}</Hint></div>
       </article>;
     })}</div>
     {!entries.length && <Empty title="Chưa có file phù hợp" text="Đổi bộ lọc hoặc tạo video từ một sản phẩm." action={<Button tone="neutral" onClick={clearFilters}>Xóa bộ lọc</Button>}/>}
