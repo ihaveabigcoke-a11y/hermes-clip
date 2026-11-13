@@ -130,7 +130,7 @@ async function startApplication() {
  win.webContents.on('will-navigate',(event,url)=>{try{const u=new URL(url);if(!(u.origin===appOrigin||(!local&&u.protocol==='https:'&&(u.hostname==='chatgpt.com'||u.hostname==='auth.openai.com'||u.hostname.endsWith('.openai.com')))))event.preventDefault();}catch{event.preventDefault();}});
  app.on('second-instance',()=>{win.show();win.focus();});let quitting=false;app.on('before-quit',event=>{worker.pause();integrations.shutdown();if(local&&!quitting){event.preventDefault();quitting=true;void (async()=>{deployments?.shutdown();research?.shutdown();await manual?.close();await instagram?.shutdown();await local.close();})().finally(()=>app.quit());}});app.on('window-all-closed',()=>app.quit());
  if(local)await win.webContents.session.cookies.set({url:local.origin,name:sessionCookie,value:local.session,httpOnly:true,sameSite:'strict'});
- await win.loadURL(appOrigin+'/?view=signals');
+ await win.loadURL(appOrigin+'/?view=overview');
  if(!museOnly){manual?.start();research?.boot();deployments?.boot();bootInstagram(instagram);}
  const maintenance=setInterval(()=>{if(!museOnly)void maintainStorage(root,store).catch(error=>console.warn('Storage maintenance:',error.message));},60*60*1000);maintenance.unref();
  app.once('before-quit',()=>clearInterval(maintenance));
