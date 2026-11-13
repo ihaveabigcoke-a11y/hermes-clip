@@ -140,7 +140,7 @@ try {
           const selector=page.getByLabel('Nhà cung cấp cảnh',{exact:true});assert.equal(await selector.inputValue(),'auto');
           assert.equal(await selector.locator('option[value="muse"]').evaluate(option=>option.disabled),paused);
           for(const id of ['grok-cli','fal'])assert.equal(await selector.locator('option[value="'+id+'"]').evaluate(option=>option.disabled),true);
-          assert.match(await page.locator('.desk-job-list').innerText(),new RegExp(paused?'manual':'muse'));
+          assert.match(await page.locator('.desk-job-list').innerText(),new RegExp(paused?'Thủ công':'muse'));
           if(paused)for(const state of ['Chờ xuất prompt','Đã xuất','Chờ file','Đã nhận'])assert.ok((await page.locator('.desk-job-list').innerText()).includes(state));
         }
         const measure=await page.evaluate(()=>({width:innerWidth,scrollWidth:document.documentElement.scrollWidth}));
