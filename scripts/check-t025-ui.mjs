@@ -65,8 +65,8 @@ await officeUI('T-025',f.records,async({page,origin})=>{
   for(const [width,height] of [[1366,768],[1920,1080]]){
    await page.setViewportSize({width,height});await page.waitForTimeout(150);
    const metrics=await page.evaluate(()=>{
-    const visible=(el,r)=>{
-     if(!el.checkVisibility({checkOpacity:true,checkVisibilityCSS:true})||el.closest('[aria-hidden=true],.sr-only,option,script,style'))return false;
+    const visible=(el,r,decorative=false)=>{
+     if(!el.checkVisibility({checkOpacity:true,checkVisibilityCSS:true})||el.closest('.sr-only,option,script,style')||(!decorative&&el.closest('[aria-hidden=true]')))return false;
      let left=Math.max(0,r.left),right=Math.min(innerWidth,r.right),top=Math.max(0,r.top),bottom=Math.min(innerHeight,r.bottom);
      for(let p=el;p;p=p.parentElement){const s=getComputedStyle(p),b=p.getBoundingClientRect();if(/hidden|clip|auto|scroll/.test(s.overflowX)){left=Math.max(left,b.left);right=Math.min(right,b.right);}if(/hidden|clip|auto|scroll/.test(s.overflowY)){top=Math.max(top,b.top);bottom=Math.min(bottom,b.bottom);}}
      return right>left&&bottom>top;
@@ -78,7 +78,7 @@ await officeUI('T-025',f.records,async({page,origin})=>{
     // Selected option labels are rendered by the native select, not the option node.
     for(const el of document.querySelectorAll('select'))if(visible(el,el.getBoundingClientRect()))text+=(el.selectedOptions[0]?.textContent??'')+' ';
     text=text.replace(/\s+/g,' ').trim();
-    const visuals=[...document.querySelectorAll('img,svg,canvas')].filter(el=>{const r=el.getBoundingClientRect();return r.width>=48&&r.height>=48&&visible(el,r);}).map(el=>({tag:el.tagName,cls:el.getAttribute('class')}));
+    const visuals=[...document.querySelectorAll('img,svg,canvas')].filter(el=>{const r=el.getBoundingClientRect();return r.width>=48&&r.height>=48&&visible(el,r,true);}).map(el=>({tag:el.tagName,cls:el.getAttribute('class')}));
     const paragraphs=[...document.querySelectorAll('#lab-main p')].filter(el=>visible(el,el.getBoundingClientRect())).map(el=>el.innerText.trim()).filter(t=>t.length>120);
     return {characters:text.length,text,visuals,paragraphs,overflow:document.documentElement.scrollWidth>innerWidth};
    });

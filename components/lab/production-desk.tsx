@@ -17,7 +17,8 @@ import {z} from 'zod';
 import {ManualToolbar, ProviderSelect, SkipReconciliation, useManualMedia} from './manual-media';
 import MuseChatPanel from './muse-chat';
 import WorkerActivity from './worker-activity';
-import {MediaPlayer, MediaThumbnail} from './media-preview';
+import {MediaPlayer, MediaThumbnail,VideoOnDemand} from './media-preview';
+import {Hint,ShortText,StatusMark} from './visual';
 import {canSaveSceneDraft} from "@/lib/lab/ui-state";
 import {promptWarnings} from "@/lib/lab/intelligence";
 
@@ -179,7 +180,7 @@ export default function ProductionDesk(props: Props) {
   async function download(){if(!take)return;setActionError("");setDownloadBusy(true);const c=new AbortController();downloadAbort.current=c;try{await downloadOwnedMedia(take.assetId,take.name,c.signal);}catch(e){if(!c.signal.aborted)setActionError((e as Error).message);}finally{setDownloadBusy(false);}}
   async function copy(text:string){try{await copyWorkbenchText(text);props.onNotice("Đã sao chép prompt.");}catch{setActionError("Không sao chép được. Mở Prompt đầy đủ, chọn văn bản rồi nhấn Ctrl+C.");}}
   const blocked=disabled||busy||submitting||!p, pause=props.paused||p?.paused;
-  return <div className="desk-root"><ManualToolbar projectId={projectId} production={p} status={workerStatus} paused={musePaused} disabled={blocked||demo} manual={manual} onAction={props.onAction}/>{musePaused&&<p className="field-help">{musePauseHelp}</p>}<div className="desk-mobile-nav" aria-label="Vùng làm việc">{[["compose","Cấu hình"],["queue",`Hàng đợi (${scenes.length})`],["preview",uiCopy.preview]].map(([key,label])=><Button key={key} tone={mobile===key?"primary":"ghost"} aria-pressed={mobile===key} onClick={()=>setMobile(key)}>{label}</Button>)}</div>
+  return <div className="desk-root">{!props.contentMode&&scenes.length>0&&<section className="media-take-board" aria-label="Các cảnh và phiên bản"><div className="media-take-strip">{scenes.map((row,i)=>{const latest=row.takes.at(-1);return <article key={row.id} data-selected={s?.id===row.id}><div className="media-take-cover">{latest?.type.startsWith('video/')?<VideoOnDemand assetId={latest.assetId} name={row.name}/>:latest?<MediaThumbnail take={latest}/>:<Film size={56}/>}<span>{i+1}</span></div><button type="button" aria-label={'Mở cảnh '+row.name} onClick={()=>selectScene(row.id)}><StatusMark state={jobState(row)}/><strong>{row.name}</strong><small>{row.duration}s</small></button></article>;})}</div></section>}<ManualToolbar projectId={projectId} production={p} status={workerStatus} paused={musePaused} disabled={blocked||demo} manual={manual} onAction={props.onAction}/><div className="desk-mobile-nav" aria-label="Vùng làm việc">{[["compose","Cấu hình"],["queue",`Hàng đợi (${scenes.length})`],["preview",uiCopy.preview]].map(([key,label])=><Button key={key} tone={mobile===key?"primary":"ghost"} aria-pressed={mobile===key} onClick={()=>setMobile(key)}>{label}</Button>)}</div>
     <div className="production-desk" data-mobile-pane={mobile}>
       <section className="desk-pane desk-compose" aria-label="Cấu hình tạo nội dung"><header className="desk-pane-heading"><span>{mediaType==="video"?<Video size={17}/>:<ImageIcon size={17}/>} Tạo {mediaType==="video"?"video":"ảnh"}</span><SlidersHorizontal size={15}/></header>
       <form noValidate onKeyDown={e=>{if(e.key==="Enter"&&e.nativeEvent.isComposing)e.preventDefault();}} onSubmit={save} className="desk-form"><fieldset className="desk-form-content" disabled={busy||submitting||!draftPreference.ready}>

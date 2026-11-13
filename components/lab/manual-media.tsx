@@ -8,6 +8,7 @@ import type {Production, Scene} from '@/lib/lab/production';
 import {MuseSwitch, musePauseHelp} from './muse-switch';
 import {resolveProvider, mediaProviderReceipts} from '@/desktop/src/provider-routing.mjs';
 import {Button, Badge, Modal} from './primitives';
+import {Hint} from './visual';
 
 type Receipt = {sha256:string;name:string;warning:string;error?:string;metadata:{width:number;height:number;duration:number|null}};
 export type ManualStatus = {inbox:string;scenes:{projectId:string;sceneId:string;code:string;state:string;exportedPath:string|null}[];unmatched:Receipt[];errors:{name:string;message:string}[]};
@@ -32,7 +33,7 @@ export function SkipReconciliation({blocked,disabled,onSkip}:{blocked:boolean;di
   </>;
 }
 export function ProviderSelect({value,paused,disabled,onChange,label}:{value:MediaProvider|'auto';paused:boolean;disabled:boolean;onChange:(value:MediaProvider|'auto')=>void;label:string}) {
-  return <label className="manual-provider"><span>{label}</span><select aria-label={label} value={value} disabled={disabled} onChange={e=>onChange(e.target.value as MediaProvider|'auto')}><option value="auto">Tự động theo trạng thái Muse</option>{mediaProviders.map(provider=><option key={provider.id} value={provider.id} disabled={mediaProviderDisabled(provider.id,paused)}>{provider.id==='muse'&&paused?'Muse đang tạm dừng':provider.label}</option>)}</select>{paused&&<small>{musePauseHelp}</small>}</label>;
+  return <label className="manual-provider"><span>{label}</span><select aria-label={label} value={value} disabled={disabled} onChange={e=>onChange(e.target.value as MediaProvider|'auto')}><option value="auto">Tự động theo trạng thái Muse</option>{mediaProviders.map(provider=><option key={provider.id} value={provider.id} disabled={mediaProviderDisabled(provider.id,paused)}>{provider.id==='muse'&&paused?'Muse đang tạm dừng':provider.label}</option>)}</select></label>;
 }
 export function ManualMediaSettings({demo=false}:{demo?:boolean}) {
   const {status,refresh}=useDesktopStatus(!demo), manual=useManualMedia(!demo);
