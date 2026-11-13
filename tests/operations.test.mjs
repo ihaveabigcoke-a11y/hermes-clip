@@ -1,3 +1,4 @@
+import './auto-video.test.mjs';
 import './product-next-step.test.mjs';
 import './metric-import.test.mjs';
 import './hook-analytics.test.mjs';
@@ -1072,4 +1073,11 @@ test('T-026h: 48h decisions need timestamps, both thresholds and known values; r
  assert.equal(resultDecision(records,plan,thresholds,now).label,'Đẩy');assert.equal(resultDecision(records,plan,{},now).label,null);assert.equal(resultDecision(records,{...plan,data:{...plan.data,postedAt:null}},thresholds,now).label,null);assert.equal(resultDecision(records,plan,thresholds,now-2*3600000).label,null);
  metric.data.keywordComments=0;assert.equal(resultDecision(records,plan,thresholds,now).label,'Đổi hook');metric.data.views=0;assert.equal(resultDecision(records,plan,thresholds,now).label,'Bỏ');metric.data.views=null;assert.equal(resultDecision(records,plan,thresholds,now).label,null);
  const before=structuredClone(records),fresh=planHookRefresh(records,{planId:plan.id,revision:plan.revision,id:'fresh_hooks'},now);assert.equal(fresh.data.scenes.filter(s=>s.role==='hook').length,3);assert.equal(new Set(fresh.data.scenes.filter(s=>s.role==='hook').map(s=>s.prompt)).size,3);const source=f.project.data.renderPlans.find(p=>p.variantId===plan.data.variantId);assert.deepEqual(fresh.data.reuseBodyPlan.segments.slice(1),source.segments.slice(1));for(const s of fresh.data.scenes.filter(s=>s.role!=='hook'))assert.deepEqual(s,f.project.data.scenes.find(x=>x.id===s.id));assert.deepEqual(records,before);assert.deepEqual(planHookRefresh([...records,fresh],{planId:plan.id,revision:plan.revision,id:'fresh_hooks'},now),fresh);
+});
+
+test('T-026f: three techniques are different and names are stable and filesystem safe',async()=>{
+ const {autoVideoShots,videoName,hookTechniques}=await import('../lib/lab/auto-video.ts');
+ const product={id:'p',data:{name:'Đèn',productKey:'DEN',situation:'Reading at night',ctaKeyword:'GLOW'}};
+ const shots=autoVideoShots(product);assert.equal(shots.length,5);assert.equal(new Set(shots.slice(0,3).map(s=>s.prompt)).size,3);assert.deepEqual(hookTechniques,['problem','absurd','curiosity']);assert.ok(shots.every(s=>s.duration===8));
+ assert.equal(videoName(product,1,'problem','account/one',Date.parse('2026-11-13T10:00:00Z')),'DEN_H1-problem_account-one_261113');
 });
