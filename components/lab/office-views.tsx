@@ -1,4 +1,5 @@
 "use client";
+import {Hint} from './visual';
 import {useEffect,useMemo,useState} from 'react';
 import {Activity,ArrowRight,CheckCircle2,Copy,Layers3,RefreshCw} from 'lucide-react';
 import {type LabRecord,VIETNAM_TIME_ZONE} from '@/lib/lab/domain';
@@ -48,7 +49,7 @@ export default function OfficeViews({mode,records,demo,manual,jobs}:{jobs:Parame
   const cards=(view?.products??[]).filter(p=>(scope==='today'?p.lastSelectedDay===view?.today:p.active)&&(!query||[p.name,p.key??''].join(' ').toLocaleLowerCase('vi').includes(query.toLocaleLowerCase('vi')))&&(!day||view?.selection.days.some(d=>d.day===day&&d.productIds.includes(p.id))))
     .sort((a,b)=>(a.priorityRank??4)-(b.priorityRank??4)||a.name.localeCompare(b.name,'vi'));
   return <section className="office-view" aria-label={mode==='signals'?'Tín hiệu & Phòng chờ':'Phòng sản xuất'}>
-    <header className="office-heading"><div><div className="office-eyebrow">HERMES CLIP · THEO DÕI TIẾN ĐỘ</div><h1>{mode==='signals'?'Tín hiệu & Phòng chờ':'Phòng sản xuất'}</h1><p>{mode==='signals'?'Mỗi lượt chạy có một trạng thái. Xem lượt đang kẹt và việc cần xử lý.':'Ba lựa chọn hôm nay, cùng những sản phẩm từ trước còn việc.'}</p></div>
+    <header className="office-heading"><div><h1>{mode==='signals'?'Tín hiệu & Phòng chờ':'Phòng sản xuất'}</h1><Hint>{mode==='signals'?'Theo dõi trạng thái và việc cần xử lý.':'Lựa chọn hôm nay và sản phẩm đang làm.'}</Hint></div>
       <div className="office-freshness" role="status"><Badge tone={state==='live'?'success':state==='disconnected'?'error':'neutral'}>{stateLabel}</Badge><small>Cập nhật lúc {clock(view?.generatedAt??null)}{state==='stale'&&view?' · '+Math.floor((tick-Date.parse(view.generatedAt))/60000)+' phút trước':''}</small>{state==='disconnected'&&<Button tone="ghost" onClick={()=>setRetry(n=>n+1)}><RefreshCw size={14}/>Thử lại</Button>}</div>
     </header>
     {view?<>

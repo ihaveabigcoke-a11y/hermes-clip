@@ -1963,7 +1963,7 @@ export default function LabApp() {
           ) : view === "studio" ? (
             studioView()
           ) : view === "results" ? (
-            <><MetricsTable records={records}/><MetricImport records={records} demo={demo} onRecords={rows=>{if(demo)putMemory(rows);else setReal(prev=>[...rows,...prev.filter(r=>!rows.some(n=>n.id===r.id))]);}}/><HookAnalytics records={records} threshold={settings.scaleSignalThreshold??null}/><details><summary>Số liệu bài test đã lưu</summary>{resultsView()}</details></>
+            <><HookAnalytics records={records} threshold={settings.scaleSignalThreshold??null}/><MetricsTable records={records}/><MetricImport records={records} demo={demo} onRecords={rows=>{if(demo)putMemory(rows);else setReal(prev=>[...rows,...prev.filter(r=>!rows.some(n=>n.id===r.id))]);}}/><details><summary>Số liệu bài test đã lưu</summary>{resultsView()}</details></>
           ) : view === "library" ? (<WorkspaceLibrary key={demo ? 'demo-library' : 'real-library'} records={records} demo={demo}/>) : view === "queue" ? (<DesktopConsole mode="queue" records={records} demo={demo}/>) : ["production","images","content"].includes(view) ? null : view === "accounts" ? (
             <section className="accounts-view"><nav className="provider-tabs"><a href="?view=accounts">Tài khoản Muse</a><a href="?view=chat">Chat Muse</a><a href="?view=settings">Cấu hình nhà cung cấp</a></nav><DesktopConsole active={view==="accounts"}/></section>
           ) : (
