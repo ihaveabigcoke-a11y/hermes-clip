@@ -4,7 +4,7 @@ import {researchProductId, type ResearchBatch} from './operations.ts';
 
 export const dailySelectionInput = z.object({
   batchId:z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/),candidateId:z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/),
-  revision:z.number().int().positive(),checked:z.boolean(),
+  revision:z.number().int().positive(),checked:z.boolean(),autoIdentity:z.boolean().optional(),
   productKey:z.string().trim().regex(/^[A-Z0-9][A-Z0-9_-]{1,63}$/, 'Nhập mã 2–64 chữ in hoa, số, gạch ngang hoặc gạch dưới.').optional(),
   rank:z.number().int().min(1).max(3).optional(),reason:z.string().trim().max(1000).default(''),
 });
@@ -43,6 +43,17 @@ export function planDailySelection(records:LabRecord[],raw:unknown,now=Date.now(
   const candidate=batch.data.candidates.find((c:any)=>c.id===input.candidateId);
   if(!candidate)throw Error('Ứng viên không còn trong đợt.');
   const linked=records.find(r=>r.kind==='product'&&r.id===candidateProductId(batch,input.candidateId));
+  if(input.checked&&input.autoIdentity){
+    const existing=selectionEntries(records).filter(s=>s.selectionDay===day);
+    if(!input.productKey){
+      let key=linked?.data.productKey??suggestProductKey(candidate.name).slice(0,54);
+      if(key.length<2)key='SP-'+candidate.id.replace(/[^A-Za-z0-9]/g,'').toUpperCase().slice(0,40);
+      const base=key;let suffix=2;
+      while(records.some(r=>r.kind==='product'&&r.id!==linked?.id&&r.data.productKey===key))key=base+'-'+suffix++;
+      input.productKey=key;
+    }
+    input.rank??=existing.find(s=>s.productId===linked?.id)?.rank??[1,2,3].find(rank=>!existing.some(s=>s.rank===rank));
+  }
   if(input.checked&&(!input.productKey||!input.rank))throw Error('Tự nhập mã sản phẩm và chọn thứ hạng 1–3 trước khi lưu.');
   if(linked?.data.productKey&&input.checked&&linked.data.productKey!==input.productKey)throw Error('Mã sản phẩm đã gán không được thay đổi.');
   const matches=records.filter(r=>r.kind==='product'&&r.data.productKey===input.productKey&&input.productKey);

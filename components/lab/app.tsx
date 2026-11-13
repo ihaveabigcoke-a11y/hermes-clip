@@ -113,6 +113,7 @@ import {referenceDraftRecordId} from '@/lib/lab/viral-reference';
 import {viralFormulaRecordId} from '@/lib/lab/viral-formulas';
 import './department-nav.css';
 import './t024.css';
+import CompactResearch from "./compact-research";
 import CompactToday from "./compact-today";
 import CompactSignals from "./compact-office";
 import Today,{ProductThumbnail} from './today';
@@ -1914,7 +1915,7 @@ export default function LabApp() {
               ) : null}
             </div>
           </div>
-          {! ["signals","overview"].includes(view) && view !== "products" && workspaceNotice()}
+          {! ["signals","overview","research"].includes(view) && view !== "products" && workspaceNotice()}
           {offline && (
             <div className="persistent-error" role="status">
               <Info size={18} />
@@ -1955,7 +1956,7 @@ export default function LabApp() {
           ) : view === "products" ? (
             productsView()
           ) : ["research", "social", "landing"].includes(view) ? (
-            <OperationsPanel key={`${demo}-${view}`} view={view as "research" | "social" | "landing"} records={records} demo={demo} offline={offline} persist={persist} notify={notify} reload={() => void load()} onRecords={rows=>{if(demo)putMemory(rows);else setReal(previous=>[...rows,...previous.filter(row=>!rows.some(next=>next.id===row.id))]);}}/>
+            view==="research"?<CompactResearch records={records} demo={demo} onRecords={rows=>{if(demo)putMemory(rows);else setReal(previous=>[...rows,...previous.filter(row=>!rows.some(next=>next.id===row.id))]);}} onNavigate={openHref} details={<OperationsPanel key={`${demo}-${view}`} view={view as "research" | "social" | "landing"} records={records} demo={demo} offline={offline} persist={persist} notify={notify} reload={() => void load()} onRecords={rows=>{if(demo)putMemory(rows);else setReal(previous=>[...rows,...previous.filter(row=>!rows.some(next=>next.id===row.id))]);}}/>}/>:(<OperationsPanel key={`${demo}-${view}`} view={view as "research" | "social" | "landing"} records={records} demo={demo} offline={offline} persist={persist} notify={notify} reload={() => void load()} onRecords={rows=>{if(demo)putMemory(rows);else setReal(previous=>[...rows,...previous.filter(row=>!rows.some(next=>next.id===row.id))]);}}/>)
           ) : view === "competitors" ? (
             <section className="competitor-products"><ReferenceGallery records={records}/><h2>Video đối thủ theo sản phẩm</h2>{products.map(p=><article key={p.id} className="production-card production-card-body"><h3>{p.data.name}</h3><a href={'?view=products&product='+encodeURIComponent(p.id)+'&product_tab=competitors'}>Mở hồ sơ đối thủ</a><CompetitorVideoList videos={p.data.competitorVideos} records={records} productId={p.id}/></article>)}<ReferenceVideoPanel records={records} disabled={offline||demo} onSaveDraft={(d,revision)=>persist('reference_video_draft',referenceDraftRecordId(d),d,revision)} onSaveFormula={f=>persist('viral_formula',viralFormulaRecordId(f),f,0)}/><ViralFormulas records={records}/></section>
           ) : view === "chat" ? (
@@ -1980,7 +1981,7 @@ export default function LabApp() {
             window.dispatchEvent(new PopStateEvent('popstate'));
             window.dispatchEvent(new Event('hermes-compose'));
           }}/></div>
-          <footer className="app-footer" hidden={["signals","overview"].includes(view)}>
+          <footer className="app-footer" hidden={["signals","overview","research"].includes(view)}>
             <span>
               <FlaskConical size={14} />
               Hermes Clip

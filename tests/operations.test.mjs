@@ -1029,3 +1029,16 @@ test('T-024: four suggestions use v2 examples and saved brand; generated scenes 
 });
 
 import './visual-dashboard.test.mjs';
+
+test('T-026d: automatic selection assigns unique keys and free ranks, reuses profile and preserves cap',async()=>{
+ const {planDailySelection,selectionCounts}=await import('../lib/lab/daily-selection.ts');
+ const {researchBatchSchema}=await import('../lib/lab/operations.ts');
+ const now=Date.parse('2026-11-13T07:00:00Z'),batch={id:'compact',kind:'research_batch',revision:1,createdAt:now,updatedAt:now,data:researchBatchSchema.parse({name:'Compact fixture',candidates:[0,1,2,3].map(i=>({id:'c'+i,name:i<2?'Đèn đọc sách':'Sản phẩm '+i,supplierUrl:'https://fixture.invalid/'+i,evidenceNotes:'Fixture',cost:null,shipping:null,price:null}))})};
+ let records=[batch];const initial=structuredClone(records);
+ const choose=id=>{const input={batchId:'compact',candidateId:id,revision:records.find(r=>r.id==='compact').revision,checked:true,autoIdentity:true};const changed=planDailySelection(records,input,now);records=[...changed,...records.filter(r=>!changed.some(c=>c.id===r.id))];};
+ choose('c0');choose('c1');choose('c2');
+ assert.equal(selectionCounts(records,now).count,3);assert.equal(new Set(records.filter(r=>r.kind==='product').map(r=>r.data.productKey)).size,3);
+ assert.deepEqual(records.filter(r=>r.kind==='product_selection').map(r=>r.data.rank).sort(),[1,2,3]);
+ const before=structuredClone(records);choose('c0');assert.equal(records.filter(r=>r.kind==='product').length,3);assert.equal(selectionCounts(records,now).count,3);
+ assert.throws(()=>choose('c3'),/3|hạng/);assert.deepEqual(batch,initial[0]);assert.deepEqual(records.filter(r=>r.kind==='product').sort((a,b)=>a.id.localeCompare(b.id)),before.filter(r=>r.kind==='product').sort((a,b)=>a.id.localeCompare(b.id)));
+});
