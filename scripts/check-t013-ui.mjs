@@ -13,7 +13,7 @@ await officeUI('T-013',[product,reference,project],async({page,origin,screenshot
  for(const width of [1366,1920]){await page.setViewportSize({width,height:900});await dialog.getByRole('link',{name:'Dùng làm khung content'}).scrollIntoViewIfNeeded();await screenshot('competitors-'+width);}
  await dialog.getByRole('button',{name:'Lưu thay đổi',exact:true}).click();await dialog.waitFor({state:'hidden'});
  await page.getByRole('tab',{name:'Đối thủ',exact:true}).click();await page.getByRole('link',{name:'Dùng làm khung content'}).click();
- await page.getByRole('button',{name:'Khung content',exact:true}).click();await page.getByText('Mẫu đã chọn:',{exact:false}).waitFor();
+ await page.getByRole('dialog').waitFor();await page.getByText('Mẫu đã chọn:',{exact:false}).waitFor();
  assert.equal(new URL(page.url()).searchParams.get('production'),project.id);assert.equal(new URL(page.url()).searchParams.get('reference'),reference.id);
  for(const width of [1366,1920]){await page.setViewportSize({width,height:900});await screenshot('content-'+width);}
  return {saved:true,productAndReference:true};
