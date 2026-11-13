@@ -1,0 +1,71 @@
+import assert from 'node:assert/strict';
+import {officeUI} from './office-ui.mjs';
+import {importModule} from '../desktop/test/helpers/local-server.mjs';
+import {todayFixture} from '../tests/fixtures/t024.mjs';
+const p=await importModule('lib/lab/production.ts'),{emptyProduct}=await importModule('lib/lab/domain.ts'),{getRenderPlan}=await importModule('lib/lab/render-plan.ts'),{planHookDrafts}=await importModule('lib/lab/hook-matrix.ts');
+const f=todayFixture({...p,emptyProduct,getRenderPlan,planHookDrafts});
+await officeUI('T-024',f.records,async({page,origin,screenshot})=>{
+ page.setDefaultTimeout(15000);let museRequests=0,clicks=0;const mutations=[];
+ page.on('request',r=>{if(/muse/i.test(r.url())&&r.method()!=='GET')museRequests++;if(r.url().endsWith('/api/production')&&r.method()==='POST')mutations.push(r.postDataJSON().action);});
+ const visit=async query=>{await page.goto(origin+'/'+query);await page.waitForFunction(()=>!document.body.innerText.includes('Đang mở không gian làm việc…'));};
+ const shots=async name=>{for(const [width,height] of [[1366,768],[1920,1080]]){await page.setViewportSize({width,height});await page.evaluate(()=>window.scrollTo(0,0));assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await screenshot(name+'-'+width);}};
+ await visit('');await page.getByRole('heading',{name:'Hôm nay',exact:true}).waitFor();
+ assert.deepEqual(await page.locator('[data-metric-index]').allTextContents(),['3','4','3','1','2','2.000','20','5']);
+ assert.equal(await page.locator('[data-today-product]').count(),3);
+ assert.equal(await page.getByRole('region',{name:'Kết quả gần nhất',exact:true}).locator('tbody tr').count(),2);
+ assert.deepEqual(await page.locator('[data-today-product]').evaluateAll(rows=>rows.map(r=>r.getAttribute('data-today-product'))),[f.product.id,f.second.id,f.first.id]);
+ for(const row of await page.locator('[data-today-product]').all())assert.equal(await row.getByRole('button').count(),1);
+ assert.equal(await page.getByRole('navigation',{name:'Menu chính',exact:true}).getByRole('link').count(),9);
+ await shots('today-data');
+ await visit('?view=results');await page.getByRole('heading',{name:'Số liệu đã lưu',exact:true}).waitFor();
+ const table=page.getByRole('region',{name:'Bảng số liệu bài đăng',exact:true});assert.equal(await table.locator('tbody tr').count(),2);
+ assert.equal(await page.locator('input[type=datetime-local]:visible').count(),0);
+ assert.equal(await page.locator('.hook-chart rect').count(),3);assert.doesNotMatch(await page.locator('.hook-chart').getAttribute('innerHTML')??'',/NaN|undefined/);
+ await table.getByRole('button',{name:'Lượt xem',exact:true}).click();assert.match(await table.locator('tbody tr').first().innerText(),/800/);
+ await shots('results');
+ await page.getByRole('button',{name:'Nhập số liệu',exact:true}).click();await page.locator('input[type=datetime-local]').fill('2026-11-13T09:42');
+ await page.getByLabel('Lượt xem',{exact:true}).fill('1500');await page.getByRole('button',{name:'Xem trước bài này',exact:true}).click();
+ await page.getByRole('region',{name:'Bảng xem trước số liệu',exact:true}).getByText('2026-11-13T02:42:00.000Z',{exact:false}).waitFor();
+ const tableBox=await table.boundingBox(),formBox=await page.locator('input[type=datetime-local]').boundingBox();assert.ok(tableBox.y<formBox.y);
+ await page.getByRole('button',{name:'Dán CSV',exact:true}).click();assert.equal(await page.getByLabel('CSV / bảng số liệu',{exact:true}).isVisible(),true);
+ // Extend only the isolated fixture to six product cards.
+ await page.evaluate(async data=>{for(let i=0;i<3;i++){const response=await fetch('/api/lab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:'card_extra_'+i,kind:'product',revision:0,data:{...data,name:['Bình nước đi bộ','Đèn bàn nhỏ','Túi đeo dã ngoại'][i]},action:'save'})});if(!response.ok)throw Error(await response.text());}},emptyProduct);
+ await visit('?view=products');await page.locator('[data-product-card]').nth(5).waitFor();await page.setViewportSize({width:1366,height:768});
+ const dimensions=await page.locator('[data-product-card]').evaluateAll(cards=>cards.map(c=>{const r=c.getBoundingClientRect();return {top:r.top,bottom:r.bottom,height:r.height,left:r.left};}));
+ assert.ok(dimensions.filter(r=>r.top>=0&&r.bottom<=768).length>=6,JSON.stringify(dimensions));
+ assert.doesNotMatch(await page.locator('.compact-product-grid').innerText(),/Ghi vấn đề khách hàng để bắt đầu đánh giá sản phẩm|Vốn chưa biết|Chưa biết|Chưa đủ dữ liệu|acquisition/);
+ await shots('products');
+ await page.locator('[data-product-card="'+f.first.id+'"]').getByRole('button',{name:'Làm video cho sản phẩm này',exact:true}).click();clicks++;
+ const dialog=page.getByRole('dialog');await dialog.waitFor();assert.equal(await dialog.locator('input,textarea').count(),4);for(const input of await dialog.locator('input,textarea').all())assert.ok((await input.inputValue()).trim());
+ await shots('quick-video');await dialog.getByRole('button',{name:'Dùng gợi ý',exact:true}).click();clicks++;
+ await dialog.waitFor({state:'hidden'});await page.getByRole('button',{name:'Xuất gói prompt',exact:true}).waitFor();assert.ok(clicks<=3);assert.equal(museRequests,0);assert.deepEqual(mutations,['create','formula_draft']);
+ const after=await page.evaluate(async()=> (await (await fetch('/api/lab')).json()).records);
+ const created=after.filter(r=>r.kind==='production'&&r.data.productId===f.first.id);assert.equal(created.length,1);assert.ok(created[0].data.scenes.length>0);assert.ok(created[0].data.scenes.every(s=>s.storyboardVersion===2&&!s.storyboardApproved&&s.attempts.length===0));
+ await visit('?view=products&product='+f.first.id);await page.getByRole('button',{name:'Làm video cho sản phẩm này',exact:true}).waitFor();
+ const originalProject=created[0],oldScenes=originalProject.data.scenes;
+ await page.getByRole('button',{name:'Làm video cho sản phẩm này',exact:true}).click();
+ // Simulate a lost response after the local server has saved a draft.
+ let dropped=false;await page.route('**/api/production',async route=>{const body=route.request().postDataJSON();if(body?.action==='formula_draft'&&!dropped){dropped=true;await route.fetch();await route.abort('failed');}else await route.continue();});
+ await page.getByRole('dialog').getByRole('button',{name:'Dùng gợi ý',exact:true}).click();
+ await page.getByRole('dialog').getByRole('alert').waitFor();
+ await page.getByRole('dialog').getByRole('button',{name:'Dùng gợi ý',exact:true}).click();
+ await page.getByRole('dialog').waitFor({state:'hidden'});await page.getByRole('button',{name:'Xuất gói prompt',exact:true}).waitFor();
+ await page.getByRole('navigation',{name:'Menu chính',exact:true}).getByRole('link',{name:'Số liệu',exact:true}).click();await page.getByRole('heading',{name:'Số liệu đã lưu',exact:true}).waitFor();
+ assert.equal(await page.locator('[data-slot="dialog-overlay"]:visible').count(),0);
+ const retried=await page.evaluate(async()=> (await (await fetch('/api/lab')).json()).records);
+ const reused=retried.filter(r=>r.kind==='production'&&r.data.productId===f.first.id);assert.equal(reused.length,1);assert.equal(reused[0].id,originalProject.id);
+ assert.deepEqual(reused[0].data.scenes.slice(0,oldScenes.length),oldScenes);assert.equal(reused[0].data.scenes.length,oldScenes.length*2);assert.equal(museRequests,0);
+ await page.unroute('**/api/production');
+ const views=['overview','office','signals','products','research','social','landing','competitors','chat','experiments','studio','results','library','queue','production','images','content','accounts','settings','guide'];
+ const titles=['Hôm nay','Phòng sản xuất','Tín hiệu & Phòng chờ','Sản phẩm','Săn sản phẩm','Đăng bài','Trang giới thiệu','Đối thủ & video','Chat Muse','Quyết định','Ý tưởng đã lưu','Số liệu','Thư viện','Hàng đợi','Làm video','Tạo ảnh','Khung content','Tài khoản Muse','Cài đặt','Hướng dẫn'];
+ for(const [i,view] of views.entries()){await visit('?view='+view);assert.equal(new URL(page.url()).searchParams.get('view'),view);assert.equal(await page.title(),titles[i]+' · Hermes Clip');assert.doesNotMatch(await page.locator('#lab-main').innerText(),/Application error|undefined|NaN/);}
+ return {counts:[3,4,3,1,2,2000,20,5],tasks:3,results:2,cardDimensions:dimensions,visibleCards:6,clicksToPrompt:clicks,museRequests,reuseProject:true,reconciledLostResponse:true,legacyViews:views,localOnly:true};
+});
+await officeUI('T-024-empty',[],async({page,origin,screenshot})=>{
+ await page.goto(origin+'/');await page.getByRole('button',{name:'Săn 10 sản phẩm',exact:true}).waitFor();
+ const main=page.locator('#lab-main');assert.equal(await main.getByRole('button').count(),1);assert.doesNotMatch(await main.innerText(),/\b0\b/);
+ for(const [width,height] of [[1366,768],[1920,1080]]){await page.setViewportSize({width,height});await screenshot('today-empty-'+width);}
+ await page.goto(origin+'/?view=production');await page.getByRole('button',{name:'Xem bản mẫu',exact:true}).click();await page.getByRole('navigation',{name:'Menu chính',exact:true}).getByRole('link',{name:'Hôm nay',exact:true}).click();
+ await page.getByRole('button',{name:'Dùng dữ liệu của bạn',exact:true}).waitFor();await page.getByText('Dữ liệu mẫu để xem thử.',{exact:true}).waitFor();
+ return {singleAction:true,noFalseZeros:true,demoLabelPreserved:true};
+});

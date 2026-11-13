@@ -1,6 +1,6 @@
 "use client";
 import {uiCopy} from '@/desktop/src/ui-copy.mjs';
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import DesktopConsole from "./desktop-console";
 import WorkspaceLibrary from "./workspace-library";
 import MuseConnectionStrip from "./muse-connection-strip";
@@ -72,8 +72,7 @@ import MuseChatPanel from "./muse-chat";
 import { creativeDuration } from "@/lib/lab/production";
 import { desktopBridge } from "@/lib/lab/desktop-client";
 import { demoRecords } from "@/lib/lab/demo";
-import {productCardDetails, showWorkspaceBanner} from "@/lib/lab/ui-state";
-import { productStage } from "@/lib/lab/product-stage";
+import {showWorkspaceBanner} from "@/lib/lab/ui-state";
 import { productJourneyStep } from "@/lib/lab/product-next-step";
 import { sampleCheckState } from "@/lib/lab/sample-check";
 import { SampleCheckFields } from "./sample-check-fields";
@@ -82,14 +81,12 @@ import {
   type Kind,
   emptyProduct,
   emptySettings,
-  unitMargin,
   productGate,
   metricAdvice,
   makeBriefs,
   classifyComment,
   formatMoney,
   productFinancials,
-  productMarginLabel,
   formatTime,
 } from "@/lib/lab/domain";
 import DailyGuide from './daily-guide';
@@ -107,6 +104,11 @@ import ViralFormulas from './viral-formulas';
 import {referenceDraftRecordId} from '@/lib/lab/viral-reference';
 import {viralFormulaRecordId} from '@/lib/lab/viral-formulas';
 import './department-nav.css';
+import './t024.css';
+import Today,{ProductThumbnail} from './today';
+import QuickVideo from './quick-video';
+import MetricsTable from './metrics-table';
+import {compactProductInfo} from '@/lib/lab/today';
 const businessViews = new Set(["overview", "studio", "experiments", "results", "social", "landing"]);
 const navigation = [
   {id:"guide",label:"Hướng dẫn",icon:BookOpen},
@@ -114,7 +116,7 @@ const navigation = [
   {id:"competitors",label:"Đối thủ & video",icon:Search},
   {id:"office",label:"Phòng sản xuất",icon:LayoutDashboard},
   {id:"signals",label:"Tín hiệu & Phòng chờ",icon:BarChart3},
-  { id: "production", label: "Tạo nội dung", icon: Video },
+  { id: "production", label: "Làm video", icon: Video },
   { id: "images", label: "Tạo ảnh", icon: ImageIcon },
   { id: "queue", label: "Hàng đợi", icon: Clapperboard },
   { id: "chat", label: uiCopy.chat, icon: MessageSquare },
@@ -122,11 +124,11 @@ const navigation = [
   { id: "research", label: "Săn sản phẩm", icon: Search },
   { id: "products", label: "Sản phẩm", icon: Package },
   { id: "accounts", label: uiCopy.accounts, icon: UsersRound },
-  { id: "overview", label: "Tổng quan", icon: LayoutDashboard },
+  { id: "overview", label: "Hôm nay", icon: LayoutDashboard },
   { id: "studio", label: "Ý tưởng đã lưu", icon: Clapperboard },
   { id: "experiments", label: "Quyết định", icon: FlaskConical },
   { id: "results", label: "Số liệu", icon: BarChart3 },
-  { id: "social", label: "Instagram", icon: Globe2 },
+  { id: "social", label: "Đăng bài", icon: Globe2 },
   { id: "landing", label: "Trang giới thiệu", icon: FileText },
   { id: "settings", label: "Cài đặt", icon: PlugZap },
 ];
@@ -243,7 +245,6 @@ function recordId() {
     "r_" + Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("")
   );
 }
-const stageNames = ["Ý tưởng", "Kiểm chứng", "Nội dung", "Đo nhu cầu"];
 const categoryNames: Record<string, string> = {
   sample: "Mẫu sản phẩm",
   video: "Sản xuất video",
@@ -259,11 +260,13 @@ type Editor = {
   id: string;
 };
 export default function LabApp() {
+  const [quickProduct,setQuickProduct]=useState<LabRecord|null>(null);
+  const openHref=(href:string)=>{history.pushState({},"",href);window.dispatchEvent(new PopStateEvent("popstate"));window.scrollTo(0,0);};
   const [editorSaving, setEditorSaving] = useState(false);
   const [real, setReal] = useState<LabRecord[]>([]),
     [samples, setSamples] = useState<LabRecord[]>(() => demoRecords()),
     [demo, setDemo] = useState(true),
-    [view, setView] = useState("production"),
+    [view, setView] = useState("overview"),
     [query, setQuery] = useState(""),
     [page, setPage] = useState(1),
     [filter, setFilter] = useState("all"),
@@ -324,8 +327,8 @@ export default function LabApp() {
   useEffect(() => {
     const sync = () => {
       const p = new URLSearchParams(location.search);
-      const v = p.get("view") || "production";
-      setView(navigation.some((n) => n.id === v) ? v : "production");
+      const v = p.get("view") || "overview";
+      setView(navigation.some((n) => n.id === v) ? v : "overview");
       setProfileId(p.get("product")||"");
       setSelectionDay(p.get("selection_day")||"");
       setQuery(p.get("q") || "");
@@ -922,10 +925,6 @@ export default function LabApp() {
       </div>
     );
   }
-  const pipeline = stageNames.map((name, i) => ({
-    name,
-    items: products.filter((p) => productStage(p, records) === i),
-  }));
   function productVisual(p: LabRecord, cls = "") {
     const reference = records.filter(record => record.kind === 'production' && record.data.productId === p.id).flatMap(record => record.data.references ?? []).find(ref => ref.role === 'product');
     const imageUrl = p.data.imageUrl || (reference?.assetId ? '/api/assets/' + reference.assetId : '');
@@ -945,93 +944,14 @@ export default function LabApp() {
     );
   }
   function productCard(p: LabRecord) {
-    const margin = unitMargin(p.data);
-    const details = productCardDetails(p, records);
-    const next = productJourneyStep(p, records, journeyMedia.status,journeyWorker.status?.jobs);
-    const sampleState = sampleCheckState(p.data);
-    const openNextStep = () => { history.pushState({}, "", next.href); window.dispatchEvent(new PopStateEvent("popstate")); };
-    return (
-      <article className="product-card" key={p.id}>
-        {productVisual(p)}
-        <div className="product-card-body">
-          <div className="card-eyebrow">
-            <span>{p.data.niche || "Chưa chọn nhóm"}</span>
-            <Badge
-              tone={
-                p.data.archived
-                  ? "neutral"
-                  : sampleState === "verified"
-                    ? "success"
-                    : "warning"
-              }
-            >
-              {p.data.archived
-                ? "Đang lưu trữ"
-                : sampleState === "verified"
-                  ? "Đã kiểm mẫu sản phẩm"
-                  : sampleState === "legacy"
-                    ? "Đã kiểm mẫu (bản cũ) – cần xác nhận khớp video"
-                    : "Chờ kiểm mẫu sản phẩm"}
-            </Badge>
-          </div>
-          <h3>
-            <button onClick={() => {setProfileId(p.id);navigate("products");const u=new URL(location.href);u.searchParams.set("product",p.id);history.replaceState({},"",u);}}>
-              {p.data.name}
-            </button>
-          </h3>
-          <p className="clamp-two">
-            {p.data.problem ||
-              "Ghi vấn đề khách hàng để bắt đầu đánh giá sản phẩm."}
-          </p>
-          <p className="product-card-summary">{details.costLabel} · {details.accountCount} tài khoản · {stageNames[details.stage]}</p>
-          <p className="product-card-summary" title={next.detail}>Bước tiếp theo: {next.title}</p>
-          <div className="product-finance">
-            <div>
-              <span>Giá dự kiến</span>
-              <strong>{productFinancials(p.data).price === null ? "Chưa biết" : formatMoney(p.data.price, p.data.currency)}</strong>
-            </div>
-            <div>
-              <span>Biên trước acquisition</span>
-              <strong className={margin !== null && margin > 0 ? "success-text" : "warning-text"}>
-                {productMarginLabel(p.data)}
-              </strong>
-            </div>
-          </div>
-          <div className="product-card-footer">
-            <Button tone="neutral" onClick={openNextStep} title={next.detail} aria-label={`${next.title} · ${p.data.name}`}>
-              Tiếp tục
-              <ArrowUpRight size={15} />
-            </Button>
-            <button
-              className="icon-button"
-              aria-label={
-                p.data.archived
-                  ? `Khôi phục ${p.data.name}`
-                  : `Lưu trữ ${p.data.name}`
-              }
-              onClick={() =>
-                p.data.archived
-                  ? void persist(
-                      "product",
-                      p.id,
-                      { ...p.data, archived: false },
-                      p.revision,
-                    )
-                      .then(() => notify("Đã khôi phục sản phẩm."))
-                      .catch((e) => notify(e.message, "error"))
-                  : setArchiveTarget(p)
-              }
-            >
-              {p.data.archived ? (
-                <RotateCcw size={17} />
-              ) : (
-                <Archive size={17} />
-              )}
-            </button>
-          </div>
-        </div>
-      </article>
-    );
+    const info=compactProductInfo(p),next=productJourneyStep(p,records,journeyMedia.status,journeyWorker.status?.jobs);
+    return <article className="product-card compact-product" key={p.id} data-product-card={p.id}>
+      <div className="compact-product-top"><ProductThumbnail product={p} records={records}/><div><Badge tone={p.data.archived?'neutral':'info'}>{p.data.archived?'Đã lưu trữ':`Bước ${next.step}/10`}</Badge><h3><button onClick={()=>openHref('?view=products&product='+encodeURIComponent(p.id))}>{p.data.name}</button></h3></div></div>
+      <p className="compact-price">{info.price}</p>
+      {info.missing.length>0&&<p className="compact-missing">Thiếu: {info.missing.join(', ')}.</p>}
+      <div className="compact-actions"><Button onClick={()=>openHref(next.href)} title={next.detail}>{next.title}</Button><Button tone="ghost" disabled={p.data.archived||offline} onClick={()=>setQuickProduct(p)}>Làm video cho sản phẩm này</Button></div>
+      <button className="compact-archive icon-button" aria-label={`${p.data.archived?'Khôi phục':'Lưu trữ'} ${p.data.name}`} onClick={()=>p.data.archived?void persist('product',p.id,{...p.data,archived:false},p.revision).catch(e=>notify(e.message,'error')):setArchiveTarget(p)}>{p.data.archived?<RotateCcw size={14}/>:<Archive size={14}/>}</button>
+    </article>;
   }
   function toolbar() {
     return (
@@ -1195,279 +1115,6 @@ export default function LabApp() {
       </div>
     );
   }
-  function overview() {
-    const leads = metrics.reduce((n, m) => n + m.data.leads, 0);
-    const needsProof = products.find((p) => sampleCheckState(p.data) !== "verified");
-    const focus = !products.length
-      ? {
-          label: "BẮT ĐẦU MỘT VÒNG THỬ",
-          title: "Đặt sản phẩm đầu tiên lên bàn thử.",
-          detail:
-            "Ghi nguồn hàng, giá và điều muốn kiểm chứng. Mọi bằng chứng sẽ theo sản phẩm suốt vòng thử.",
-          action: "Thêm sản phẩm",
-          run: () => openEditor("product"),
-        }
-      : needsProof
-        ? {
-            label: "BƯỚC TIẾP THEO · KIỂM CHỨNG",
-            title: `Hoàn tất hồ sơ: ${needsProof.data.name}.`,
-            detail:
-              "Kiểm mẫu sản phẩm và ghi kết quả thật trước khi khởi chạy bài test. Một bước nhỏ để nội dung bám đúng sản phẩm.",
-            action: "Mở hồ sơ sản phẩm",
-            run: () => openEditor("product", needsProof),
-          }
-        : !experiments.length
-          ? {
-              label: "BƯỚC TIẾP THEO · THIẾT KẾ TEST",
-              title: "Biến sản phẩm thành một giả thuyết.",
-              detail:
-                "Chốt khách, thị trường và điều kiện thử trước khi sản xuất nội dung.",
-              action: "Tạo bài test",
-              run: () => openEditor("experiment"),
-            }
-          : {
-              label: "BƯỚC TIẾP THEO · NỘI DUNG",
-              title: "Đưa ý tưởng tiếp theo vào Studio.",
-              detail:
-                "Rà khung content, hoàn thiện prompt và duyệt video theo đúng phiên bản. Tất cả nằm trong bài test đã chọn.",
-              action: "Mở Studio video",
-              run: () => navigate("studio"),
-            };
-    return (
-      <>
-        <section
-          className="focus-workbench"
-          aria-label="Việc cần làm tiếp"
-        >
-          <div className="focus-copy">
-            <span className="focus-kicker">
-              <span />
-              {focus.label}
-            </span>
-            <h2>{focus.title}</h2>
-            <p>{focus.detail}</p>
-            <Button onClick={focus.run}>
-              {focus.action}
-              <ArrowUpRight size={16} />
-            </Button>
-          </div>
-          <div className="focus-art" aria-hidden="true">
-            <div className="focus-frame frame-back">
-              <span>01 / Ý TƯỞNG</span>
-              <Package size={30} />
-              <i />
-            </div>
-            <div className="focus-frame frame-front">
-              <span>02 / BẰNG CHỨNG</span>
-              <div className="focus-proof">
-                <Check size={24} />
-              </div>
-              <i />
-              <i />
-            </div>
-            <span className="focus-note">MỖI VÒNG THỬ, MỘT ĐIỀU HỌC.</span>
-          </div>
-        </section>
-        <div className="overview-stats">
-          <div className="stat-cell">
-            <span>Sản phẩm đang quản lý</span>
-            <div>
-              <strong>{products.length.toString().padStart(2, "0")}</strong>
-              <span className="stat-icon purple">
-                <Package size={19} />
-              </span>
-            </div>
-            <small>
-              {products.filter((p) => sampleCheckState(p.data) === "verified").length} đã kiểm
-              mẫu sản phẩm
-            </small>
-          </div>
-          <div className="stat-cell">
-            <span>Ý tưởng đang chuẩn bị</span>
-            <div>
-              <strong>{creatives.length.toString().padStart(2, "0")}</strong>
-              <span className="stat-icon blue">
-                <Clapperboard size={19} />
-              </span>
-            </div>
-            <small>
-              {creatives.filter((c) => c.data.status === "approved").length}{" "}
-              video đã duyệt
-            </small>
-          </div>
-          <div className="stat-cell">
-            <span>Quan tâm sau khi thấy giá</span>
-            <div>
-              <strong>{leads.toString().padStart(2, "0")}</strong>
-              <span className="stat-icon green">
-                <Target size={19} />
-              </span>
-            </div>
-            <small>Lead từ số liệu {demo ? "mẫu" : "đã nhập"}</small>
-          </div>
-          <div className="stat-cell">
-            <span>Chi phí vận hành · USD</span>
-            <div>
-              <strong>{formatMoney(spent)}</strong>
-              <span className="stat-icon peach">
-                <Wallet size={19} />
-              </span>
-            </div>
-            <small>
-              {settings.budgetUsd
-                ? `Ngân sách ${formatMoney(settings.budgetUsd)}`
-                : "Chưa đặt ngân sách"}
-            </small>
-          </div>
-        </div>
-        <section className="pipeline-panel">
-          {sectionTitle(
-            "Từ ý tưởng đến bằng chứng",
-            "Mỗi sản phẩm có một bước tiếp theo.",
-            <button className="text-link" onClick={() => navigate("guide")}>
-              Xem quy trình
-              <ArrowUpRight size={15} />
-            </button>,
-          )}
-          <div className="pipeline-grid">
-            {pipeline.map((s, i) => (
-              <div className="pipeline-stage" key={s.name}>
-                <div className="pipeline-stage-title">
-                  <span className="stage-number">0{i + 1}</span>
-                  <h3>{s.name}</h3>
-                  <span className="stage-count">{s.items.length}</span>
-                  {i < 3 && (
-                    <ChevronRight size={16} className="stage-chevron" />
-                  )}
-                </div>
-                <div className="stage-items">
-                  {s.items.length ? (
-                    s.items.slice(0, 2).map((p) => (
-                      <button
-                        className="pipeline-item"
-                        key={p.id}
-                        onClick={() => {setProfileId(p.id);navigate("products");const u=new URL(location.href);u.searchParams.set("product",p.id);history.replaceState({},"",u);}}
-                      >
-                        <span
-                          className={`stage-product-icon ${i === 3 ? "green" : ""}`}
-                        >
-                          <Package size={15} />
-                        </span>
-                        <span>{p.data.name}</span>
-                        <ArrowUpRight size={13} />
-                      </button>
-                    ))
-                  ) : (
-                    <span className="stage-empty">Chưa có sản phẩm</span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-        <div className="workbench-grid">
-          <section className="panel experiments-panel">
-            {sectionTitle(
-              "Thử nghiệm đang mở",
-              `${experiments.length} bài test · theo dõi từng giả thuyết`,
-              <button
-                className="text-link"
-                onClick={() => navigate("experiments")}
-              >
-                Xem tất cả
-                <ArrowRight size={15} />
-              </button>,
-            )}
-            {experiments.length ? (
-              experimentRows(experiments.slice(0, 4), true)
-            ) : (
-              <Empty
-                title="Một sản phẩm. Một giả thuyết."
-                text="Thêm sản phẩm rồi tạo bài test đầu tiên để bắt đầu học từ dữ liệu."
-                action={
-                  <Button onClick={() => openEditor("product")}>
-                    <Plus size={16} />
-                    Thêm sản phẩm đầu tiên
-                  </Button>
-                }
-              />
-            )}
-          </section>
-          <aside className="decision-panel">
-            <div className="decision-title">
-              <span className="stat-icon purple">
-                <Lightbulb size={19} />
-              </span>
-              <h2>Việc cần quyết định</h2>
-            </div>
-            <button
-              className="decision-row"
-              onClick={() => navigate("products")}
-            >
-              <span>
-                <strong>
-                  {products.filter((p) => sampleCheckState(p.data) !== "verified").length} sản
-                  phẩm chờ bằng chứng
-                </strong>
-                <small>Kiểm mẫu sản phẩm trước khi chạy test.</small>
-              </span>
-              <ChevronRight size={17} />
-            </button>
-            <button className="decision-row" onClick={() => navigate("studio")}>
-              <span>
-                <strong>
-                  {creatives.filter((c) => c.data.status !== "approved").length}{" "}
-                  ý tưởng chưa duyệt
-                </strong>
-                <small>Hoàn thiện script và gắn video.</small>
-              </span>
-              <ChevronRight size={17} />
-            </button>
-            <button
-              className="decision-row"
-              onClick={() => navigate("settings")}
-            >
-              <span>
-                <strong>Chọn công cụ tạo video</strong>
-                <small>Cần link tài liệu API chính thức.</small>
-              </span>
-              <ChevronRight size={17} />
-            </button>
-            <div className="founder-note">
-              <ShieldCheck size={17} />
-              <p>
-                Quyết định theo nhu cầu sau giá, đơn giao được và tiền còn lại.
-              </p>
-            </div>
-          </aside>
-        </div>
-        <section className="overview-products">
-          {sectionTitle(
-            "Trên bàn thử nghiệm",
-            "Hàng thật trước. Nội dung theo sau.",
-            <button className="text-link" onClick={() => navigate("products")}>
-              Quản lý sản phẩm
-              <ArrowRight size={15} />
-            </button>,
-          )}
-          <div className="product-grid overview-product-grid">
-            {products.slice(0, 2).map(productCard)}
-            {products.length === 0 && (
-              <Empty
-                title="Chưa có sản phẩm"
-                text="Bắt đầu bằng món hàng bạn có thể kiểm chứng và giao được."
-                action={
-                  <Button onClick={() => openEditor("product")}>
-                    Thêm sản phẩm
-                  </Button>
-                }
-              />
-            )}
-          </div>
-        </section>
-      </>
-    );
-  }
   function workspaceNotice(productScreen = false) {
     const visible = showWorkspaceBanner(records, demo, loading);
     if (!productScreen && !visible) return null;
@@ -1484,17 +1131,17 @@ export default function LabApp() {
   }
   function productsView() {
     const profile=allProducts.find(p=>p.id===profileId);
-    if(profile)return <ProductProfile key={profile.id} next={productJourneyStep(profile,records,journeyMedia.status,journeyWorker.status?.jobs)} product={profile} records={records} onEdit={()=>openEditor("product",profile)} onBack={()=>{setProfileId("");const u=new URL(location.href);u.searchParams.delete("product");u.searchParams.delete("product_tab");history.pushState({},"",u);}}/>;
+    if(profile)return <ProductProfile key={profile.id} next={productJourneyStep(profile,records,journeyMedia.status,journeyWorker.status?.jobs)} product={profile} records={records} onVideo={()=>setQuickProduct(profile)} onEdit={()=>openEditor("product",profile)} onBack={()=>{setProfileId("");const u=new URL(location.href);u.searchParams.delete("product");u.searchParams.delete("product_tab");history.pushState({},"",u);}}/>;
     const selectedIds=new Set(selectionEntries(records).filter(s=>s.selectionDay===selectionDay).map(s=>s.productId));
     const rows = filtered(allProducts).filter(p=>!selectionDay||selectedIds.has(p.id)),
       paged = pageRows(rows);
     return (
       <>
-        {workspaceNotice(true)}
-        {toolbar()}<div className="product-day-filter"><label htmlFor="product-selection-day">Ngày chọn</label><input id="product-selection-day" type="date" value={selectionDay} onChange={e=>{setSelectionDay(e.target.value);setPage(1);const u=new URL(location.href);if(e.target.value)u.searchParams.set("selection_day",e.target.value);else u.searchParams.delete("selection_day");u.searchParams.delete("page");history.replaceState({},"",u);}}/><Button tone="ghost" onClick={()=>{setSelectionDay("");const u=new URL(location.href);u.searchParams.delete("selection_day");history.replaceState({},"",u);}}>Tất cả ngày</Button></div>
+        {demo&&workspaceNotice(true)}
+        <div className="compact-product-controls">{toolbar()}<div className="product-day-filter"><label htmlFor="product-selection-day">Ngày chọn</label><input id="product-selection-day" type="date" value={selectionDay} onChange={e=>{setSelectionDay(e.target.value);setPage(1);const u=new URL(location.href);if(e.target.value)u.searchParams.set("selection_day",e.target.value);else u.searchParams.delete("selection_day");u.searchParams.delete("page");history.replaceState({},"",u);}}/><Button tone="ghost" onClick={()=>{setSelectionDay("");const u=new URL(location.href);u.searchParams.delete("selection_day");history.replaceState({},"",u);}}>Tất cả ngày</Button></div></div>
         {rows.length ? (
           <>
-            <div className="product-grid">{paged.rows.map(productCard)}</div>
+            <div className="product-grid compact-product-grid">{paged.rows.map(productCard)}</div>
             <Pagination
               page={paged.page}
               total={rows.length}
@@ -2167,7 +1814,7 @@ export default function LabApp() {
           href="?view=production"
           onClick={(e) => {
             e.preventDefault();
-            navigate("production");
+            navigate("overview");
           }}
         >
           <span className="brand-mark">
@@ -2179,21 +1826,8 @@ export default function LabApp() {
           </span>
         </a>
         <div className="sidebar-navigation">
-          {[
-            {label:'',items:[['office','Tổng quan']]},
-            {label:'PHÒNG NGHIÊN CỨU',items:[['research','Săn sản phẩm'],['competitors','Đối thủ & video']]},
-            {label:'',items:[['products','Sản phẩm']]},
-            {label:'PHÒNG SẢN XUẤT',items:[['content','Khung content'],['production','Tạo media'],['signals','Tín hiệu & Phòng chờ'],['library','Thư viện']]},
-            {label:'PHÒNG PHÁT HÀNH',items:[['social','Instagram'],['landing','Trang giới thiệu']]},
-            {label:'PHÒNG SỐ LIỆU',items:[['results','Số liệu'],['experiments','Quyết định']]},
-          ].map((group,i)=><section key={i}>{group.label&&<p className="department-label">{group.label}</p>}<nav aria-label={group.label||(i===0?'Tổng quan':'Sản phẩm')}>{group.items.map(([id,label])=>{const item=navigation.find(x=>x.id===id)!;const active=view===id||(id==='production'&&view==='images');return <a key={id} href={'?view='+id} aria-current={active?'page':undefined} className={active?'active':''} onClick={e=>{e.preventDefault();navigate(id);}}><item.icon size={17}/><span>{label}</span></a>;})}</nav></section>)}
-        </div>
-        <div className="sidebar-bottom">
-          <nav aria-label="Tiện ích"><a href="?view=accounts" className={["accounts","chat"].includes(view)?"active":""} onClick={e=>{e.preventDefault();navigate("accounts");}}><UsersRound size={18}/><span>Nhà cung cấp AI</span></a>
-            <a href="?view=settings" aria-current={view === "settings" ? "page" : undefined} className={view === "settings" ? "active" : ""}
-              onClick={event => { event.preventDefault(); navigate("settings"); }}><PlugZap size={18}/><span>Cài đặt</span></a>
-          </nav>
-          <button className="sidebar-help" onClick={() => navigate("guide")}><BookOpen size={18}/><span>Hướng dẫn</span></button>
+          <nav aria-label="Menu chính">{['overview','research','products','production','library','social','results','experiments','settings'].map(id=>{const item=navigation.find(n=>n.id===id)!;return <a key={id} href={'?view='+id} aria-current={view===id?'page':undefined} className={view===id?'active':''} onClick={e=>{e.preventDefault();navigate(id);}}><item.icon size={17}/><span>{item.label}</span></a>;})}</nav>
+          <details className="nav-other"><summary>Khác</summary><nav aria-label="Menu khác">{navigation.filter(n=>!['overview','research','products','production','library','social','results','experiments','settings'].includes(n.id)).map(item=><a key={item.id} href={'?view='+item.id} aria-current={view===item.id?'page':undefined} onClick={e=>{e.preventDefault();navigate(item.id);}}><item.icon size={17}/><span>{item.label}</span></a>)}</nav></details>
         </div>
       </aside>
       <div className="main-shell">
@@ -2231,16 +1865,17 @@ export default function LabApp() {
           </div>
         </header>
         <main id="lab-main" tabIndex={-1}>
+          {quickProduct&&<QuickVideo key={quickProduct.id} product={quickProduct} records={records} demo={demo} offline={offline} persist={persist} onRecord={r=>{if(demo)putMemory([r]);else setReal(prev=>[r,...prev.filter(x=>x.id!==r.id)]);}} onClose={()=>setQuickProduct(null)} onReady={href=>{setQuickProduct(null);openHref(href);}}/>}
           <div className="page-heading" hidden={["research", "social", "landing", "accounts", "queue", "chat", "library", "office", "signals"].includes(view)}>
             <div>
               {view !== "products" && <div className="page-eyebrow">
                 HERMES CLIP <span>/</span>{" "}
                 {demo ? "KHÔNG GIAN MẪU" : "KHÔNG GIAN RIÊNG TƯ"}
               </div>}
-              <h1>{view === "overview" ? "Bàn thử nghiệm" : label}</h1>
+              <h1>{view === "overview" ? "Hôm nay" : label}</h1>
               <p>
                 {view === "overview"
-                  ? "Biến ý tưởng thành những bài test có thể đo được."
+                  ? "Tình hình hiện tại và việc tiếp theo của từng sản phẩm."
                   : view === "products"
                     ? "Những món hàng đáng để kiểm chứng."
                     : view === "experiments"
@@ -2257,7 +1892,7 @@ export default function LabApp() {
               </p>
             </div>
             <div className="page-actions">
-              {view === "overview" || view === "products" ? (
+              {view === "products" ? (
                 <Button onClick={() => openEditor("product")}>
                   <Plus size={17} />
                   Thêm sản phẩm
@@ -2275,7 +1910,7 @@ export default function LabApp() {
               ) : null}
             </div>
           </div>
-          {view !== "products" && workspaceNotice()}
+          {view !== "products" && (view !== "overview" || demo) && workspaceNotice()}
           {offline && (
             <div className="persistent-error" role="status">
               <Info size={18} />
@@ -2310,7 +1945,7 @@ export default function LabApp() {
           ) : view === "guide" ? (
             <DailyGuide key={demo?"demo-guide":"real-guide"} records={records}/>
           ) : view === "overview" ? (
-            overview()
+            <Today records={records} manual={journeyMedia.status} jobs={journeyWorker.status?.jobs??[]} onNavigate={openHref}/>
           ) : view === "office" || view === "signals" ? (
             <OfficeViews jobs={journeyWorker.status?.jobs??[]} manual={journeyMedia.status} key={demo?"demo-office":"local-office"} mode={view} records={records} demo={demo}/>
           ) : view === "products" ? (
@@ -2326,7 +1961,7 @@ export default function LabApp() {
           ) : view === "studio" ? (
             studioView()
           ) : view === "results" ? (
-            <><MetricImport records={records} demo={demo} onRecords={rows=>{if(demo)putMemory(rows);else setReal(prev=>[...rows,...prev.filter(r=>!rows.some(n=>n.id===r.id))]);}}/><HookAnalytics records={records} threshold={settings.scaleSignalThreshold??null}/><details><summary>Số liệu bài test đã lưu</summary>{resultsView()}</details></>
+            <><MetricsTable records={records}/><MetricImport records={records} demo={demo} onRecords={rows=>{if(demo)putMemory(rows);else setReal(prev=>[...rows,...prev.filter(r=>!rows.some(n=>n.id===r.id))]);}}/><HookAnalytics records={records} threshold={settings.scaleSignalThreshold??null}/><details><summary>Số liệu bài test đã lưu</summary>{resultsView()}</details></>
           ) : view === "library" ? (<WorkspaceLibrary key={demo ? 'demo-library' : 'real-library'} records={records} demo={demo}/>) : view === "queue" ? (<DesktopConsole mode="queue" records={records} demo={demo}/>) : ["production","images","content"].includes(view) ? null : view === "accounts" ? (
             <section className="accounts-view"><nav className="provider-tabs"><a href="?view=accounts">Tài khoản Muse</a><a href="?view=chat">Chat Muse</a><a href="?view=settings">Cấu hình nhà cung cấp</a></nav><DesktopConsole active={view==="accounts"}/></section>
           ) : (

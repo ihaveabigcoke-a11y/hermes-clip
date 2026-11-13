@@ -961,3 +961,69 @@ test('normal production entry saves drafts and never auto-approves before sendin
   assert.ok(!desk.includes('value="run"'));
   assert.ok(desk.includes('!s.storyboardApproved||!!pause'));
 });
+
+// T-024: saved observations, compact cards and Vietnam time.
+import {todaySummary,compactProductInfo,measuredPosts} from '../lib/lab/today.ts';
+import {vietnamDateTimeLocal,vietnamDateTimeIso} from '../lib/lab/metric-time.ts';
+import {quickVideoSuggestions} from '../lib/lab/quick-video.ts';
+import {formulaStoryboard as quickStoryboard} from '../lib/lab/formula-storyboard.ts';
+import {todayFixture} from './fixtures/t024.mjs';
+import * as journeyProduction from '../lib/lab/production.ts';
+import {getRenderPlan as todayRenderPlan} from '../lib/lab/render-plan.ts';
+import {planHookDrafts as todayHookDrafts} from '../lib/lab/hook-matrix.ts';
+import {emptyProduct as todayEmptyProduct} from '../lib/lab/domain.ts';
+const todayDomain={...journeyProduction,emptyProduct:todayEmptyProduct,getRenderPlan:todayRenderPlan,planHookDrafts:todayHookDrafts};
+test('T-024: eight facts, three ordered next steps and two recent posts from records',()=>{
+ const now=Date.parse('2026-11-13T03:00:00Z'),f=todayFixture(todayDomain,now),s=todaySummary(f.records,now);
+ assert.deepEqual(s.counts,[3,4,3,1,2,2000,20,5]);
+ assert.deepEqual(s.tasks.map(r=>r.next.step),[8,2,1]);
+ assert.deepEqual(s.results.map(r=>r.metric.data.views),[1200,800]);
+ assert.equal(new Set(s.tasks.map(r=>r.next.href)).size,3);
+ const desktopEntry=readFileSync(new URL('../desktop/src/main.mjs',import.meta.url),'utf8');
+ assert.match(desktopEntry,/win\.loadURL\(appOrigin\+'\/\?view=overview'\)/);
+});
+test('T-024: empty observations stay null; latest null never borrows old counts; reject wrong source/account/future/stale',()=>{
+ const now=Date.parse('2026-11-13T03:00:00Z'),f=todayFixture(todayDomain,now);
+ assert.deepEqual(todaySummary([],now).counts,[0,0,0,0,0,null,null,null]);
+ const latest={...f.measurements[0],id:'newest',updatedAt:now,data:{...f.measurements[0].data,observedAt:new Date(now).toISOString(),views:null}};
+ assert.equal(todaySummary([...f.records,latest],now).counts[5],null);
+ const cleared={...latest,data:{...latest.data,...Object.fromEntries(['views','likes','comments','keywordComments','dms','utmClicks','orders'].map(k=>[k,null]))}};
+ assert.equal(todaySummary([...f.records,cleared],now).counts[5],null);
+ for(const patch of [{sourceUrl:'https://instagram.com/p/wrong/'},{accountId:'wrong'}])assert.equal(measuredPosts([...f.records,{...latest,data:{...latest.data,...patch,views:9999}}])[0].metric.data.views,1200);
+ const future=f.measurements.map(m=>({...m,data:{...m.data,observedAt:new Date(now+1).toISOString()}}));
+ assert.equal(todaySummary([...f.records.filter(r=>r.kind!=='social_metric'),...future],now).counts[5],null);
+ assert.equal(todaySummary(f.records,now+8*86400000).counts[5],null);
+});
+test('T-024: counts deduplicate takes/renders/posts and reject unverified render records',()=>{
+ const f=todayFixture(todayDomain),original=todaySummary(f.records);
+ const duplicate=structuredClone(f.project);duplicate.id='copy_project';
+ assert.deepEqual(todaySummary([...f.records,duplicate]).counts,original.counts);
+ assert.equal(todaySummary(f.records.filter(r=>r.kind!=='asset')).counts[2],0);
+ const plan=f.records.find(r=>r.kind==='content_plan'&&r.data.status==='published_manual');
+ assert.equal(todaySummary([...f.records,{...plan,id:'alias_post'}]).counts[4],2);
+});
+test('T-024: datetime-local uses Vietnam offset even across UTC day boundaries',()=>{
+ assert.equal(vietnamDateTimeLocal(Date.parse('2026-11-12T22:37:39.223Z')),'2026-11-13T05:37');
+ assert.equal(vietnamDateTimeIso('2026-11-13T05:37'),'2026-11-12T22:37:00.000Z');
+ assert.equal(vietnamDateTimeIso('2026-01-01T00:01'),'2025-12-31T17:01:00.000Z');
+ for(const value of ['','bad','2026-02-30T10:00','2026-11-13T25:00'])assert.throws(()=>vietnamDateTimeIso(value));
+});
+test('T-024: concise card lists actual missing fields and preserves zero prices',()=>{
+ const p={id:'p',kind:'product',data:{...todayEmptyProduct,name:'Đèn'}};
+ assert.equal(compactProductInfo(p).price,'Chưa có giá');
+ assert.deepEqual(compactProductInfo(p).missing,['giá vốn','ship','giá bán','từ khóa CTA','tình huống','tên hộp','chữ trên hộp']);
+ assert.ok(!compactProductInfo({...p,data:{...p.data,cost:0,shipping:0,price:0}}).missing.includes('giá vốn'));
+ const source=readFileSync(new URL('../components/lab/app.tsx',import.meta.url),'utf8');
+ const card=source.slice(source.indexOf('function productCard'),source.indexOf('function toolbar'));
+ assert.doesNotMatch(card,/Ghi vấn đề khách hàng để bắt đầu đánh giá sản phẩm|Vốn chưa biết|Chưa đủ dữ liệu|Chưa biết|Biên trước acquisition|ProductArt/);
+});
+test('T-024: four suggestions use v2 examples and saved brand; generated scenes stay unapproved with no jobs',()=>{
+ const f=todayFixture(todayDomain),suggest=quickVideoSuggestions(f.first,f.records);
+ assert.equal(suggest.formula.storyboardVersion,2);assert.ok(suggest.formula.situationExamples.includes(suggest.values.situation));
+ assert.match(suggest.values.ctaKeyword,/^[A-Z]{2,20}$/);assert.notEqual(suggest.values.ctaKeyword,'LINK');
+ const existing=quickVideoSuggestions(f.product,f.records);assert.equal(existing.values.brandName,f.product.data.brandName);
+ const project=journeyProduction.newProduction('Nháp nhanh',f.first.id,1),draft=quickStoryboard(f.first.data,project,suggest.formula,{...suggest.values,packaging:{brandName:suggest.values.brandName,boxText:suggest.values.boxText}});
+ const saved=journeyProduction.applyProduction(project,'formula_draft',draft,'quick_draft');
+ assert.ok(saved.scenes.every(s=>s.storyboardVersion===2&&!s.storyboardApproved&&s.attempts.length===0&&s.takes.length===0));
+ assert.deepEqual(journeyProduction.applyProduction(saved,'formula_draft',draft,'quick_draft'),saved);
+});
