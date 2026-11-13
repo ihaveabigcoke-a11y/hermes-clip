@@ -980,7 +980,7 @@ test('T-024: eight facts, three ordered next steps and two recent posts from rec
  assert.deepEqual(s.results.map(r=>r.metric.data.views),[1200,800]);
  assert.equal(new Set(s.tasks.map(r=>r.next.href)).size,3);
  const desktopEntry=readFileSync(new URL('../desktop/src/main.mjs',import.meta.url),'utf8');
- assert.match(desktopEntry,/win\.loadURL\(appOrigin\+'\/\?view=overview'\)/);
+ assert.match(desktopEntry,/win\.loadURL\(appOrigin\+'\/\?view=signals'\)/);
 });
 test('T-024: empty observations stay null; latest null never borrows old counts; reject wrong source/account/future/stale',()=>{
  const now=Date.parse('2026-11-13T03:00:00Z'),f=todayFixture(todayDomain,now);

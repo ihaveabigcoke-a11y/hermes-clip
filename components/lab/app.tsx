@@ -124,6 +124,7 @@ import Today,{ProductThumbnail} from './today';
 import QuickVideo from './quick-video';
 import MetricsTable from './metrics-table';
 import {compactProductInfo} from '@/lib/lab/today';
+const primaryViews = ["signals","overview","research","products","production","social","results","settings"];
 const businessViews = new Set(["overview", "studio", "experiments", "results", "social", "landing"]);
 const navigation = [
   {id:"guide",label:"Hướng dẫn",icon:BookOpen},
@@ -131,7 +132,7 @@ const navigation = [
   {id:"competitors",label:"Đối thủ & video",icon:Search},
   {id:"office",label:"Phòng sản xuất",icon:LayoutDashboard},
   {id:"signals",label:"Tín hiệu & Phòng chờ",icon:BarChart3},
-  { id: "production", label: "Làm video", icon: Video },
+  { id: "production", label: "Video", icon: Video },
   { id: "images", label: "Tạo ảnh", icon: ImageIcon },
   { id: "queue", label: "Hàng đợi", icon: Clapperboard },
   { id: "chat", label: uiCopy.chat, icon: MessageSquare },
@@ -142,8 +143,8 @@ const navigation = [
   { id: "overview", label: "Hôm nay", icon: LayoutDashboard },
   { id: "studio", label: "Ý tưởng đã lưu", icon: Clapperboard },
   { id: "experiments", label: "Quyết định", icon: FlaskConical },
-  { id: "results", label: "Số liệu", icon: BarChart3 },
-  { id: "social", label: "Đăng bài", icon: Globe2 },
+  { id: "results", label: "Kết quả", icon: BarChart3 },
+  { id: "social", label: "Đăng", icon: Globe2 },
   { id: "landing", label: "Trang giới thiệu", icon: FileText },
   { id: "settings", label: "Cài đặt", icon: PlugZap },
 ];
@@ -275,13 +276,15 @@ type Editor = {
   id: string;
 };
 export default function LabApp() {
+  const [advancedScreens,setAdvancedScreens]=useState(false);
+  useEffect(()=>{setAdvancedScreens(localStorage.getItem("hermes-advanced-screens")==="true");},[]);
   const [quickProduct,setQuickProduct]=useState<LabRecord|null>(null);
   const openHref=(href:string)=>{history.pushState({},"",href);window.dispatchEvent(new PopStateEvent("popstate"));window.scrollTo(0,0);};
   const [editorSaving, setEditorSaving] = useState(false);
   const [real, setReal] = useState<LabRecord[]>([]),
     [samples, setSamples] = useState<LabRecord[]>(() => demoRecords()),
     [demo, setDemo] = useState(true),
-    [view, setView] = useState("overview"),
+    [view, setView] = useState("signals"),
     [query, setQuery] = useState(""),
     [page, setPage] = useState(1),
     [filter, setFilter] = useState("all"),
@@ -342,8 +345,8 @@ export default function LabApp() {
   useEffect(() => {
     const sync = () => {
       const p = new URLSearchParams(location.search);
-      const v = p.get("view") || "overview";
-      setView(navigation.some((n) => n.id === v) ? v : "overview");
+      const v = p.get("view") || "signals";
+      setView(navigation.some((n) => n.id === v) ? v : "signals");
       setProfileId(p.get("product")||"");
       setSelectionDay(p.get("selection_day")||"");
       setQuery(p.get("q") || "");
@@ -1720,6 +1723,8 @@ export default function LabApp() {
             Cập nhật cài đặt
           </Button>
         </div>
+        <label className="advanced-toggle"><input type="checkbox" checked={advancedScreens} onChange={e=>{setAdvancedScreens(e.target.checked);localStorage.setItem("hermes-advanced-screens",String(e.target.checked));}}/>Hiện màn nâng cao</label>
+        <nav className="provider-tabs"><a href="?view=accounts">Tài khoản Muse</a><a href="?view=chat">Chat Muse</a></nav>
         <MuseConnectionStrip onNavigate={navigate} />
         <ResultThresholdSettings settings={settings} revision={records.find(r=>r.kind==="settings")?.revision??0} persist={persist}/>
         <p>{settings.scaleSignalThreshold==null?"Chưa đặt ngưỡng tín hiệu":`Ngưỡng comment đúng từ khóa / lượt xem: ${settings.scaleSignalThreshold}%`} · dùng Cập nhật cài đặt để sửa.</p><ManualMediaSettings demo={demo}/><AssistantSettings demo={demo}/><InstagramSettings records={records} demo={demo}/>
@@ -1824,10 +1829,10 @@ export default function LabApp() {
       <aside className="sidebar department-sidebar">
         <a
           className="brand"
-          href="?view=production"
+          href="?view=signals"
           onClick={(e) => {
             e.preventDefault();
-            navigate("overview");
+            navigate("signals");
           }}
         >
           <span className="brand-mark">
@@ -1839,8 +1844,8 @@ export default function LabApp() {
           </span>
         </a>
         <div className="sidebar-navigation">
-          <nav aria-label="Menu chính">{['overview','research','products','production','library','social','results','experiments','settings'].map(id=>{const item=navigation.find(n=>n.id===id)!;return <a key={id} href={'?view='+id} aria-current={view===id?'page':undefined} className={view===id?'active':''} onClick={e=>{e.preventDefault();navigate(id);}}><item.icon size={17}/><span>{item.label}</span></a>;})}</nav>
-          <details className="nav-other"><summary>Khác</summary><nav aria-label="Menu khác">{navigation.filter(n=>!['overview','research','products','production','library','social','results','experiments','settings'].includes(n.id)).map(item=><a key={item.id} href={'?view='+item.id} aria-current={view===item.id?'page':undefined} onClick={e=>{e.preventDefault();navigate(item.id);}}><item.icon size={17}/><span>{item.label}</span></a>)}</nav></details>
+          <nav aria-label="Menu chính">{primaryViews.map(id=>{const item=navigation.find(n=>n.id===id)!;return <a key={id} href={'?view='+id} aria-current={view===id?'page':undefined} className={view===id?'active':''} onClick={e=>{e.preventDefault();navigate(id);}}><item.icon size={17}/><span>{item.label}</span></a>;})}</nav>
+          {advancedScreens&&<details className="nav-other"><summary>Nâng cao</summary><nav aria-label="Menu khác">{navigation.filter(n=>!primaryViews.includes(n.id)).map(item=><a key={item.id} href={'?view='+item.id} aria-current={view===item.id?'page':undefined} onClick={e=>{e.preventDefault();navigate(item.id);}}><item.icon size={17}/><span>{item.label}</span></a>)}</nav></details>}
         </div>
       </aside>
       <div className="main-shell">
