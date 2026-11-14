@@ -24,6 +24,31 @@ const {formulaStoryboard}=await import(compiledUrl('formula-storyboard.mjs'));
 const {draftReferenceVideo}=await import(compiledUrl('viral-reference.mjs'));
 const {parseFormulaAnalysis}=await import(compiledUrl('formula-analysis.mjs'));
 
+test('profile removal reads the current persisted scene skip and keeps non-production records out',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'hermes-removal-reader-')),workerStore=new Store(':memory:');let server;
+  const request=async(path,payload)=>{
+    const response=await fetch(server.origin+path,{method:'POST',headers:{Cookie:sessionCookie+'='+server.session,Origin:server.origin,'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    assert.equal(response.status,200);return response.json();
+  };
+  try{
+    server=await startLocalServer({root,seedPath:join(root,'no-seed.json'),workerStore});
+    await request('/api/lab',{id:'skip_product',kind:'product',revision:0,data:{...emptyProduct,name:'Synthetic skip test'}});
+    const created=await request('/api/production',{id:'skip_project',revision:0,commandId:'create_skip_test',action:'create',input:{name:'Skip test',productId:'skip_product',locale:'en-US'}});
+    const drafted=await request('/api/production',{id:'skip_project',revision:created.record.revision,commandId:'draft_skip_test',action:'formula_draft',input:formulaStoryboard({},created.record.data,viralFormulas[0],'LED')});
+    const sceneId=drafted.record.data.scenes[0].id;
+    assert.equal(server.readProductionForProfileRemoval('skip_product'),null);
+    assert.equal(server.readProductionForProfileRemoval('missing'),null);
+    assert.equal(server.readProductionForProfileRemoval('skip_project').data.scenes[0].museReconciledAt,undefined);
+    const job=workerStore.enqueue({projectId:'skip_project',sceneId,references:[]},'synthetic_uncertain').job;
+    workerStore.put({...job,state:'needs_attention'});
+    const skipped=await request('/api/production',{id:'skip_project',revision:drafted.record.revision,commandId:'explicit_skip_test',action:'skip_reconciliation',input:{sceneId}});
+    assert.deepEqual(server.readProductionForProfileRemoval('skip_project'),skipped.record);
+    assert.ok(skipped.record.data.scenes[0].museReconciledAt>0);
+    await server.close();server=await startLocalServer({root,seedPath:join(root,'no-seed.json')});
+    assert.deepEqual(server.readProductionForProfileRemoval('skip_project'),skipped.record);
+  }finally{await server?.close();workerStore.close();await rm(root,{recursive:true,force:true});}
+});
+
 test('caption, editable filename, dense metadata and parsed analysis survive isolated local SQLite restart',async()=>{
   const root=await mkdtemp(join(tmpdir(),'t21-local-analysis-'));let server;
   const request=async payload=>{

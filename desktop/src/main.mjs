@@ -70,6 +70,7 @@ async function startApplication() {
  if(manual){
   worker.validateMediaProvider=(request,options)=>manual.assertMuseScene(request,options);
   worker.readProductionRecord=async id=>(await manual.records()).find(row=>row.kind==='production'&&row.id===id);
+  worker.readProductionForProfileRemoval=id=>local.readProductionForProfileRemoval(id);
  }
  const integrations=new Integrations(store,root);
  const reaVideo=new ReaVideoService({store,root,run:integrations.run,domain:reaDomain,secret,config:()=>integrations.config()});

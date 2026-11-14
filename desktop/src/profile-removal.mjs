@@ -1,12 +1,25 @@
 import {lstat, realpath, rm} from 'node:fs/promises';
 import {join, resolve, dirname} from 'node:path';
 
+function explicitlySkipped(worker, job) {
+  if ((job.provider ?? 'muse') !== 'muse' || !['needs_attention','unknown'].includes(job.state)) return false;
+  // Read the authoritative scene, not a cached UI label or a job-history note.
+  // A missing/unreadable record or timestamp must continue to block deletion.
+  try {
+    const record=worker.readProductionForProfileRemoval?.(job.request?.projectId);
+    if(record?.kind!=='production'||record.id!==job.request?.projectId)return false;
+    const scene=record.data.scenes.find(row=>row.id===job.request.sceneId);
+    return Number.isFinite(job.createdAt)&&Number.isFinite(scene?.museReconciledAt)
+      &&job.createdAt<=scene.museReconciledAt;
+  } catch {return false;}
+}
+
 export function profileRemovalBlocker(worker, id) {
   if (!/^[a-zA-Z0-9_-]{1,120}$/.test(id ?? '')) return 'Mã hồ sơ không hợp lệ.';
   if ([worker.contexts,worker.opening,worker.active,worker.checking,worker.closing,worker.chatting,worker.connectingVpn,worker.deleting].some(lock=>lock?.has(id)))
     return 'Đóng trình duyệt và chờ tác vụ của hồ sơ kết thúc trước khi xóa.';
   const pending = new Set(['queued','preflight','prepared','submitting','submitted','waiting','downloading','validating','needs_attention','unknown']);
-  if (worker.store.jobs().some(j=>(j.profileId===id||j.preferredProfileId===id)&&pending.has(j.state)))
+  if (worker.store.jobs().some(j=>(j.profileId===id||j.preferredProfileId===id)&&pending.has(j.state)&&!explicitlySkipped(worker,j)))
     return 'Hồ sơ còn tác vụ đang chờ, đang chạy hoặc cần đối soát. Giữ hồ sơ để lấy đúng kết quả.';
   const db=worker.store.db;
   if (db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='muse_chats'").get()) {

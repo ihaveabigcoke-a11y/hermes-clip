@@ -198,6 +198,12 @@ export async function startLocalServer({root, uiDir=join(here,'../local-dist/ui'
   await new Promise((yes,no)=>{app.once('error',no);app.listen(0,'127.0.0.1',yes);});
   host='127.0.0.1:'+app.address().port;origin='http://'+host;
   return {origin,session,root,registerPreparedMedia:(result,onStored)=>compression.register(result,onStored),
+    // Main-process only, fresh and synchronous so profile removal can recheck
+    // the scene's explicit skip immediately before its deletion transaction.
+    readProductionForProfileRemoval:id=>{
+      const row=db.prepare("SELECT * FROM lab_records WHERE owner_id='local-owner' AND kind='production' AND id=?").get(id);
+      return row?decodeOffice(row):null;
+    },
     compressionStatus:()=>{const sources=new Map();for(const row of db.prepare("SELECT data FROM lab_records WHERE kind='asset'").all()){const c=JSON.parse(row.data).compression;if(c)sources.set(c.sourceSha256,Math.max(sources.get(c.sourceSha256)??0,c.sourceSize-c.size));}return {enabled:true,maxBytes:6*1024**2,savedBytes:[...sources.values()].reduce((a,b)=>a+b,0)};},
     reuseWorkerOutput:async(job,assetId)=>{
     if(job.state!=='ready'||!job.output?.path)return false;
