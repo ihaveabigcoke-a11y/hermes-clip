@@ -131,3 +131,31 @@ test('Video project recovery ignores stale localStorage and reuses the existing 
  const product={id:'p',revision:2},current={id:'current',kind:'production',updatedAt:10,data:{productId:'p',productRevision:2,scenes:[{id:'auto_0'}]}},old={...current,id:'old',data:{...current.data,productRevision:1}};
  assert.equal(resumableVideoProject([old,current],product,'old').id,'current');assert.equal(resumableVideoProject([old],product,'old'),null);
 });
+
+test('T-030: editing a scene reapproves its current revision and preserves old approval receipts on retry',async()=>{
+ const product={id:'p',kind:'product',revision:1,data:{...emptyProduct,name:'Fixture'}};
+ let project,starts=0;const commands=[];
+ const request=async(path,body)=>{
+  if(!body)return {records:[product,...(project?[project]:[])]};
+  commands.push(body);
+  project={id:body.id,kind:'production',revision:(project?.revision??0)+1,data:body.action==='create'?newProduction(body.input.name,product.id,1):applyProduction(project.data,body.action,body.input,body.commandId)};
+  return {record:project};
+ };
+ const options={productId:'p',projectId:'auto_revision',request,mediaMode:'muse',maxPolls:0,upload:()=>assert.fail('No clip in this fixture'),bridge:{status:async()=>({musePaused:false,generationReady:true,jobs:[]}),musePackagePreview:async()=>{assert.ok(project.data.scenes.every(s=>s.storyboardApproved));return {count:starts?0:5,blocked:0,night:{remaining:null}};},musePackageStart:async()=>{starts++;}}};
+ await runVideoFlow(options);
+ // Include the legacy receipt used by installed versions before this fix.
+ project.data.receipts.push(project.id+'_board_auto_0');
+ const oldReceipts=[...project.data.receipts],scene=project.data.scenes[0];
+ project={...project,revision:project.revision+1,data:applyProduction(project.data,'scene',{...scene,referenceIds:[],prompt:'Updated camera direction'},'edited_scene')};
+ assert.equal(project.data.scenes[0].storyboardApproved,false);
+ await runVideoFlow(options);
+ assert.equal(project.data.scenes[0].revision,2);
+ assert.equal(project.data.scenes[0].storyboardApproved,true);
+ assert.ok(oldReceipts.every(id=>project.data.receipts.includes(id)));
+ const approvals=commands.filter(c=>c.action==='storyboard');
+ assert.equal(approvals.length,6);
+ assert.equal(new Set(approvals.map(c=>c.commandId)).size,6);
+ await runVideoFlow(options);
+ assert.equal(commands.filter(c=>c.action==='storyboard').length,6);
+ assert.equal(starts,1,'Reapproval must not manufacture another dispatch when the preview has no new job');
+});

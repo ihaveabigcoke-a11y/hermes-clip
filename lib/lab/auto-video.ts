@@ -69,7 +69,7 @@ export async function runVideoFlow(o:FlowOptions){
  if(!project!.data.scenes.length){const rows=autoVideoShots(product),match=String(product.data.imageUrl??'').match(/^\/api\/assets\/([\w-]+)/),asset=match?records.find(r=>r.kind==='asset'&&r.id===match[1]&&r.data.type?.startsWith('image/')&&r.data.metadata):null;
  if(asset){await command('reference',{id:'auto_reference',name:product.data.name,role:'product',assetId:asset.id,sourceUrl:'',notes:'Ảnh đã lưu trong hồ sơ'},'reference');for(const row of rows)row.referenceIds=['auto_reference'];}
  await command('import',{rows},'shots');}
- for(const s of project!.data.scenes)if(!s.storyboardApproved)await command('storyboard',{sceneId:s.id},'board_'+s.id);
+ for(const s of project!.data.scenes)if(!s.storyboardApproved)await command('storyboard',{sceneId:s.id},'board_'+s.id+'_r'+s.revision);
  const missing=()=>project!.data.scenes.filter((s:any)=>!s.takes.some((t:any)=>t.sceneRevision===s.revision&&t.review!=='rejected'));
  async function manual(){
   const status=await o.bridge.status();
