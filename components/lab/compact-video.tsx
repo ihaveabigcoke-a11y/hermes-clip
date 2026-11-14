@@ -2,7 +2,7 @@
 import {useEffect,useRef,useState,type ReactNode} from 'react';
 import {Film,Play,Image as ImageIcon} from 'lucide-react';
 import {type LabRecord} from '@/lib/lab/domain';
-import {runVideoFlow,productVideoLibrary,videoRecovery,resumableVideoProject,museVideoLabel} from '@/lib/lab/auto-video';
+import {runVideoFlow,productVideoLibrary,videoRecovery,resumableVideoProject,museVideoLabel,hookTechniques} from '@/lib/lab/auto-video';
 import {desktopBridge,uploadDesktopOutput} from '@/lib/lab/desktop-client';
 import {Button,api} from './primitives';
 import {Hint} from './visual';
@@ -16,16 +16,18 @@ export default function CompactVideo({records,demo,onRecord,details}:{records:La
  const autoStarted=useRef(false),lock=useRef(false),controller=useRef<AbortController|null>(null),callback=useRef(onRecord);callback.current=onRecord;
  useEffect(()=>{const u=new URL(location.href);setSelected(u.searchParams.get('new_product')||u.searchParams.get('product')||'');return()=>{controller.current?.abort();};},[]);
  const product=products.find(p=>p.id===selected)??products[0],activeRecord=active?(records.find(r=>r.id===active.id&&r.revision>=active.revision)??active):null,project=activeRecord?.data.productId===product?.id?activeRecord:(product?resumableVideoProject(records,product,typeof window!=='undefined'?localStorage.getItem('hermes-video-'+product.id):null):null)??records.filter(r=>r.kind==='production'&&r.data.productId===product?.id).sort((a,b)=>b.updatedAt-a.updatedAt)[0];
- const scenes=project?.data.scenes??[],exports=(project?.data.exports??[]).filter((e:any)=>e.kind==='render'&&e.verified&&e.assetId).sort((a:any,b:any)=>(project?.data.variants??[]).findIndex((v:any)=>v.id===a.variantId)-(project?.data.variants??[]).findIndex((v:any)=>v.id===b.variantId));
+ const variantOrder=(id:string)=>{const v=project?.data.variants?.find((v:any)=>v.id===id);const index=hookTechniques.indexOf(v?.hookTechnique);return index<0?3:index;};
+ const scenes=project?.data.scenes??[],exports=(project?.data.exports??[]).filter((e:any)=>e.kind==='render'&&e.verified&&e.assetId).sort((a:any,b:any)=>variantOrder(a.variantId)-variantOrder(b.variantId));
  const library=productVideoLibrary(activeRecord?[activeRecord,...records.filter(r=>r.id!==activeRecord.id)]:records,product?.id??''),recovery=videoRecovery(project,status);
  const packs=[...new Set((manual.status?.scenes??[]).filter(s=>s.projectId===project?.id&&s.exportedPath).map(s=>s.exportedPath!))];
  async function reconcile(){if(!project||lock.current)return;lock.current=true;setBusy(true);setError('');setProgress('Đang kiểm kết quả Muse cũ, không gửi mới');try{const bridge=desktopBridge()!,latest=await bridge.status();const jobs=latest.jobs.filter(j=>j.request.projectId===project.id&&j.state==='needs_attention');if(!jobs.length)throw Error('Không có lượt cần đối soát. Bấm Làm video để tiếp tục.');for(const job of jobs){const checked=job.providerId?job:await bridge.recheckResult({id:job.id,recoverExisting:true});if(checked.providerId)await bridge.resume({id:job.id,recoverExisting:true});}await refreshStatus();setProgress('Đã kiểm kết quả cũ. Bấm Làm video để tiếp tục.');}catch(e){setError((e as Error).message);}finally{lock.current=false;setBusy(false);}}
  async function openInbox(){if(!project||lock.current)return;setError('');try{await desktopBridge()!.manualMediaOpen({projectId:project.id});await manual.refresh();}catch(e){setError((e as Error).message);}}
  async function exportPack(){if(!project||lock.current)return;lock.current=true;setBusy(true);setError('');try{const sceneIds=scenes.filter((s:any)=>s.mediaProvider==='manual'&&!s.takes.some((t:any)=>t.sceneRevision===s.revision&&t.review!=='rejected')).map((s:any)=>s.id);await desktopBridge()!.manualMediaExport({projectId:project.id,sceneIds});await manual.refresh();}catch(e){setError((e as Error).message);}finally{lock.current=false;setBusy(false);}}
  const hookScenes=scenes.filter((s:any)=>s.role==='hook').sort((a:any,b:any)=>a.id.localeCompare(b.id)),bodyScenes=scenes.filter((s:any)=>s.role!=='hook');
- const selectedHook=scenes.find((s:any)=>s.id===project?.data.variants?.[hookIndex]?.hook?.sceneId)??hookScenes[hookIndex]??hookScenes[0];
+ const selectedHook=hookScenes[hookIndex]??hookScenes[0];
+ const selectedVariant=project?.data.variants?.find((v:any)=>v.hook?.sceneId===selectedHook?.id);
  const track=scenes.length?[selectedHook,...bodyScenes].filter(Boolean):[null,null,null];
- const plan=project?.data.renderPlans?.[hookIndex]??project?.data.reuseBodyPlan;
+ const plan=project?.data.renderPlans?.find((p:any)=>p.variantId===selectedVariant?.id)??project?.data.reuseBodyPlan;
  const spans=track.map((s:any,i:number)=>plan?.segments?.find((seg:any)=>seg.sceneId===s?.id)?((seg:any)=>seg.outSec-seg.inSec)(plan.segments.find((seg:any)=>seg.sceneId===s.id)):(s?.toSec!=null&&s?.fromSec!=null?s.toSec-s.fromSec:[4,4,7][i]??4));
  const trackStyle={gridTemplateColumns:'85px '+spans.map((n:number)=>'minmax(110px,'+n+'fr)').join(' ')};
  const marks=spans.reduce((a:number[],n:number)=>[...a,a.at(-1)!+n],[0]);

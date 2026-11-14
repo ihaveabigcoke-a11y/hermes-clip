@@ -29,7 +29,7 @@ test('T-033: separate profiles send together, same profile waits 60s, cap and du
 
 test('T-033 fake Muse: refusal or two errors keep every switch on and another profile can complete',async t=>{
  for(const code of ['MUSE_NO_MEDIA','MUSE_CAPTCHA','MUSE_LOGIN_REQUIRED','TIMEOUT'])await fixture(async(store,root)=>{
-  const w=new Worker(store,root,{},{});let now=Date.now();w.night=new MuseNight(store,{now:()=>now,sleep:async ms=>now+=ms});w.night.begin();w.paused=false;
+  const w=new Worker(store,root,{},{},()=>8*1024**3);let now=Date.now();w.night=new MuseNight(store,{now:()=>now,sleep:async ms=>now+=ms});w.night.begin();w.paused=false;
   let fail=true;const page={url:()=>'',screenshot:async()=>{}};w.context=async()=>({pages:()=>[],newPage:async()=>page});w.setProfileVisibility=async()=>{};w.measureQuota=async()=>{};w.checkToolchain=async()=>{};
   w.validateOutput=async()=>({sha256:'a'.repeat(64),metadata:{duration:8}});
   const prepare=t.mock.method(MuseAdapter.prototype,'prepare',async()=>{}),submit=t.mock.method(MuseAdapter.prototype,'submit',async(_,checkpoint)=>{await checkpoint('submitting');if(fail)throw Object.assign(Error('Exact provider reason'),{code,providerResponse:'Exact provider reason'});await checkpoint('submitted',{providerId:'result',providerUrl:'https://muse.invalid/thread/result'});}),fetch=t.mock.method(MuseAdapter.prototype,'fetch',async(_,job,checkpoint,path)=>{await checkpoint('waiting');await checkpoint('downloading');return path;});
