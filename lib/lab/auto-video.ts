@@ -17,8 +17,12 @@ export function videoRecovery(project:LabRecord|undefined,status:any){
  const noMedia=unresolved.some((j:any)=>j.failureCode==='MUSE_NO_MEDIA');
  const attention=unresolved.some((j:any)=>!['MUSE_NO_MEDIA','MUSE_REFUSED'].includes(j.failureCode));
  const manual=missing.some((s:any)=>s.mediaProvider==='manual');
- const message=noMedia?'Muse đã trả lời nhưng chưa tạo video. Lượt cũ được giữ; xem phản hồi trước khi gửi lại.':attention?'Kết quả lượt Muse chưa rõ. Mở Tín hiệu để đối soát trước khi gửi lại.':missing.length&&manual?'Cảnh còn thiếu đang chờ file nhập tay. Xuất gói prompt, tạo clip rồi chép vào Hộp nhận.':missing.length&&status?.musePaused?'Muse đang tạm dừng nên chưa tạo clip mới. Kiểm tra trong Tài khoản hoặc dùng file nhập tay.':'';
+ const message=noMedia?'Muse đã trả lời nhưng chưa tạo video. Lượt cũ được giữ; xem phản hồi trước khi gửi lại.':attention?'Kết quả lượt Muse chưa rõ. Mở Tín hiệu để đối soát trước khi gửi lại.':missing.length&&manual?'Dự án đang ở chế độ nhập tay, không có tác vụ tự tạo video. Bấm Làm video để chuyển các cảnh còn thiếu sang Muse.':missing.length&&status?.musePaused?'Chưa tạo clip mới. Kiểm tra công tắc và phiên trong Tài khoản trước khi tiếp tục.':'';
  return {message,manual,attention,noMedia};
+}
+export function resumableVideoProject(records:LabRecord[],product:LabRecord,savedId:string|null){
+ const projects=records.filter(r=>r.kind==='production'&&r.data.productId===product.id&&r.data.productRevision===product.revision&&r.data.scenes?.length&&r.data.scenes.some((s:any)=>s.id==='auto_0')&&r.data.scenes.every((s:any)=>/^auto_[0-4]$/.test(s.id)||r.data.reuseBodyPlan?.segments.slice(1).some((segment:any)=>segment.sceneId===s.id))).sort((a,b)=>b.updatedAt-a.updatedAt);
+ return projects.find(p=>p.id===savedId)??projects[0]??null;
 }
 export const hookTechniques=['problem','absurd','curiosity'] as const;
 export function videoName(product:LabRecord,hook:number,technique:string,account='draft',now=Date.now()){
@@ -31,7 +35,7 @@ export function autoVideoShots(product:LabRecord){
  const prompts=[`Exaggerate the inconvenience through obviously staged visual comedy: ${problem}. Do not exaggerate product performance.`, `Show an absurd homemade workaround for ${problem}, visibly awkward and ineffective.`, `Start with an unexpected close-up that creates curiosity about ${identity}, then reveal the everyday context.`, `Versus: unpack and show how ${identity} is handled. Do not invent packaging text.`, `Result: show the same product clearly in its ordinary setting. Use only the supplied verified claims.`];
  return prompts.map((prompt,i)=>sceneInputSchema.extend({id:sceneInputSchema.shape.name}).parse({id:'auto_'+i,name:['Phóng đại vấn đề','Tự chế ngớ ngẩn','Gây tò mò','Mở hộp','Kết quả'][i],role:i<3?'hook':'body',prompt:context+'\n'+prompt,ratio:'9:16',duration:8,mediaType:'video',referenceIds:[],fromSec:i<3?0:i===3?4:8,toSec:i<3?4:i===3?8:15,overlayText:i<3?null:i===3?'Vs…':null}));
 }
-type FlowOptions={productId:string;projectId:string;request:(path:string,body?:any)=>Promise<any>;bridge:any;upload:(result:any,signal:AbortSignal)=>Promise<{id:string;sha256:string}>;onRecord?:(r:LabRecord)=>void;onProgress?:(s:string)=>void;signal?:AbortSignal;wait?:(ms:number)=>Promise<void>;maxPolls?:number;now?:()=>number};
+type FlowOptions={mediaMode?:'muse'|'manual';productId:string;projectId:string;request:(path:string,body?:any)=>Promise<any>;bridge:any;upload:(result:any,signal:AbortSignal)=>Promise<{id:string;sha256:string}>;onRecord?:(r:LabRecord)=>void;onProgress?:(s:string)=>void;signal?:AbortSignal;wait?:(ms:number)=>Promise<void>;maxPolls?:number;now?:()=>number};
 /** Same durable production commands as the detailed editor. No publishing; retries reuse receipts. */
 export async function runVideoFlow(o:FlowOptions){
  const now=o.now??Date.now,signal=o.signal??new AbortController().signal,wait=o.wait??(ms=>new Promise(r=>setTimeout(r,ms)));
@@ -39,6 +43,8 @@ export async function runVideoFlow(o:FlowOptions){
  const product=records.find(r=>r.kind==='product'&&r.id===o.productId&&!r.data.archived);if(!product)throw Error('Chọn sản phẩm hiện hành.');
  let project=records.find(r=>r.id===o.projectId&&r.kind==='production');
  const progress=(s:string)=>o.onProgress?.(s);
+ function stop(reason:string,state='blocked'){progress(reason);return {state,project,reason};}
+ const museOnly=o.mediaMode==='muse';
  async function refresh(){signal.throwIfAborted();records=(await o.request('/api/lab')).records;project=records.find(r=>r.id===o.projectId&&r.kind==='production');if(project)o.onRecord?.(project);}
  async function command(action:string,input:any,key:string){signal.throwIfAborted();const commandId=o.projectId+'_'+key;if(project?.data.receipts.includes(commandId))return;const body={id:o.projectId,revision:project?.revision??0,action,input,commandId};project=(await o.request('/api/production',body)).record;o.onRecord?.(project!);}
  progress('Khung');
@@ -57,26 +63,32 @@ export async function runVideoFlow(o:FlowOptions){
   for(const j of refused)await command('skip_reconciliation',{sceneId:j.request.sceneId},'refused_'+j.id);
   const blocked=new Set(jobs.filter((j:any)=>!refused.includes(j)&&['unknown','needs_attention','submitting','submitted','waiting','downloading'].includes(j.state)).map((j:any)=>j.request.sceneId));
   for(const j of jobs.filter((j:any)=>j.state==='queued'))await o.bridge.cancel({id:j.id});
-  const scenes=missing().filter((s:any)=>!blocked.has(s.id));for(const s of scenes)await command('media_provider',{sceneId:s.id,provider:'manual'},'manual_'+s.id);
+  const scenes=missing().filter((s:any)=>!blocked.has(s.id));for(const s of scenes)if(s.mediaProvider!=='manual')await command('media_provider',{sceneId:s.id,provider:'manual'},'manual_'+s.id+'_'+project!.revision);
   const pack=scenes.length?await o.bridge.manualMediaExport({projectId:project!.id,sceneIds:scenes.map((s:any)=>s.id)}):null;
   const state=scenes.length?'manual':blocked.size?'attention':'waiting';progress(state==='manual'?'Chờ file tay':state==='attention'?'Cần đối soát':'Đang tạo');return {state,project,pack};
  }
  if(missing().length){
   if(!o.bridge)throw Error('Mở app desktop để tạo video.');
   let status=await o.bridge.status();
-  if(status.musePaused!==false||!status.generationReady||missing().some((s:any)=>s.mediaProvider==='manual'))return manual();
-  await command('media_provider',{provider:'muse'},'muse');
+  if(o.mediaMode==='manual')return manual();
+  if(status.musePaused!==false||!status.generationReady)return museOnly?stop(status.museNight?.stopReason||'Muse chưa sẵn sàng. Bật Muse và kiểm tra phiên trong Tài khoản; chưa gửi cảnh nào.') : manual();
+  if(museOnly){
+   // Explicit Làm video resumes Muse for missing scenes, including old manual fallbacks.
+   // Provider commands never clear receipts or reconciliation marks.
+   for(const s of missing())if(s.mediaProvider==='manual')await command('media_provider',{sceneId:s.id,provider:'muse'},'resume_muse_'+s.id+'_'+project!.revision);
+  }else if(missing().some((s:any)=>s.mediaProvider==='manual'))return manual();
+  if(project!.data.mediaProvider!=='muse')await command('media_provider',{provider:'muse'},'muse_'+project!.revision);
   const preview=await o.bridge.musePackagePreview({projectId:project!.id});
-  if(preview.night?.stopped||(preview.night?.remaining!=null&&preview.count>preview.night.remaining))return manual();
-  if(preview.blocked){progress('Cần đối soát');return {state:'attention',project};}
+  if(preview.blocked)return stop('Có lượt Muse cần đối soát. Mở Tín hiệu để kiểm tra kết quả cũ; app chưa gửi thêm.','attention');
+  if(preview.night?.stopped||(preview.night?.remaining!=null&&preview.count>preview.night.remaining))return museOnly?stop(preview.night?.stopReason||'Số lượt còn lại chưa đủ. Kiểm tra giới hạn trong Cài đặt; chưa gửi cảnh nào.'):manual();
   progress('Đang tạo');
-  if(preview.count){try{await o.bridge.musePackageStart({projectId:project!.id,revision:project!.revision});}catch(error){status=await o.bridge.status();const night=await o.bridge.museNightStatus();if(status.musePaused||night.stopped)return manual();throw error;}}
+  if(preview.count){try{await o.bridge.musePackageStart({projectId:project!.id,revision:project!.revision});}catch(error){status=await o.bridge.status();const night=await o.bridge.museNightStatus();if(status.musePaused||night.stopped)return museOnly?stop(night.stopReason||(error as Error).message):manual();throw error;}}
   for(let i=0;missing().length&&i<(o.maxPolls??240);i++){
-   await wait(5000);await refresh();if(!missing().length)break;
-   status=await o.bridge.status();const night=await o.bridge.museNightStatus();if(status.musePaused||night.stopped)return manual();
-   if((status.jobs??[]).some((j:any)=>j.request?.projectId===project!.id&&['unknown','needs_attention'].includes(j.state))){progress('Cần đối soát');return {state:'attention',project};}
+   await wait(5000);await refresh();progress('Đã nhận '+(project!.data.scenes.length-missing().length)+'/'+project!.data.scenes.length+' clip');if(!missing().length)break;
+   status=await o.bridge.status();const night=await o.bridge.museNightStatus();if(status.musePaused||night.stopped)return museOnly?stop(night.stopReason||'Muse đã dừng. Mở Tín hiệu để xem lý do; các cảnh chưa tự chuyển sang nhập tay.'):manual();
+   if((status.jobs??[]).some((j:any)=>j.request?.projectId===project!.id&&['unknown','needs_attention'].includes(j.state)))return stop('Lượt Muse chưa rõ kết quả. Mở Tín hiệu để đối soát; chưa gửi lại.','attention');
   }
-  if(missing().length){progress('Đang tạo');return {state:'waiting',project};}
+  if(missing().length)return stop('Muse vẫn đang xử lý hoặc chưa có clip. Mở Tín hiệu xem tiến độ; bấm Làm video để tiếp tục kiểm kết quả, không tạo dự án mới.','waiting');
  }
  progress('Chọn đoạn');
  for(const s of project!.data.scenes){const t=[...s.takes].reverse().find((t:any)=>t.sceneRevision===s.revision&&t.review!=='rejected');if(!t)throw Error('Chưa có clip hiện hành.');if(t.review!=='approved')await command('review',{sceneId:s.id,takeId:t.id,review:'approved',notes:'Chọn kỹ thuật tự động; người dùng xem nội dung ở ba MP4 trước khi đăng.'},'review_'+t.id);}

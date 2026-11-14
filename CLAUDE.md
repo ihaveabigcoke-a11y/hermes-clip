@@ -1,3 +1,9 @@
+# M-20261114-muse-flow — Muse luôn do người dùng bật/tắt
+
+Chỉ đạo trực tiếp mới nhất: không tắt Muse. Làm video ưu tiên Muse, tiếp tục dự án/nháp cũ; nhập tay chỉ khi người dùng chọn. Lỗi không tự tắt công tắc Muse. Giữ chặn dispatch theo quota/phiên/captcha/receipt chưa rõ, cho tiếp tục sau khi kiểm tra mà không cần tắt/bật. Kiểm tra kết quả Muse chỉ đọc hội thoại và lấy clip cũ, không gửi mới. Bản sửa chờ media tới timeout cấu hình thay vì kết luận sau 15 giây. Người dùng cho phép kiểm Muse thật và push GitHub; không đăng/DM/paid API. Các chỉ đạo dừng Muse/chuyển manual tự động bên dưới là lịch sử. Kết quả mới nhất ở STATUS văn phòng và ops/office/reports/M-20261114-muse-flow.md.
+
+---
+
 # M-20261114-enable — bật lại Muse, 14/11/2026
 
 Yêu cầu trực tiếp mới nhất: bật Muse và sửa lỗi giới hạn. Công tắc cho xác nhận Bật lại Muse sau khi dừng; lưu lịch sử bật lại và giữ submissions/outcomes/receipt, không chạy lại job cũ. Lỗi dịch vụ mới vẫn tạm dừng, hạn mức Muse/captcha/đăng nhập và chống gửi trùng giữ nguyên.

@@ -26,7 +26,7 @@ test('T-023 captcha and account notice detection ignores prompt text',async()=>{
  const page=(captcha,notices)=>({locator:selector=>selector.startsWith('iframe')?{first:()=>({isVisible:async()=>captcha})}:{allTextContents:async()=>notices}});
  await assert.rejects(assertMusePage(page(true,[])),{code:'MUSE_CAPTCHA'});await assert.rejects(assertMusePage(page(false,['Account suspended'])),{code:'MUSE_ACCOUNT_WARNING'});await assertMusePage(page(false,[]));
 });
-test('T-023 fake Muse worker: refusal pauses without profile failover; timeout retains needs_attention',async t=>{
+test('T-023 fake Muse worker: refusal stops dispatch, keeps Muse enabled, without profile failover; timeout retains needs_attention',async t=>{
  for(const code of ['MUSE_NO_MEDIA','TIMEOUT']){
   const root=await mkdtemp(join(tmpdir(),'hermes-night-fake-')),store=new Store(':memory:');
   try{
@@ -35,7 +35,7 @@ test('T-023 fake Muse worker: refusal pauses without profile failover; timeout r
    const prepare=t.mock.method(MuseAdapter.prototype,'prepare',async()=>{});const submit=t.mock.method(MuseAdapter.prototype,'submit',async(_,checkpoint)=>{await checkpoint('submitting');throw Object.assign(Error('fake failure'),{code});});
    const job=store.enqueue({projectId:'p',sceneId:'s',references:[]},'fake').job;store.transition(job.id,'preflight',{profileId:'one'});await worker.run(job.id,'one');
    assert.equal(submit.mock.callCount(),1);assert.equal(store.job(job.id).state,'needs_attention');assert.equal(worker.night.status().submitted,1);assert.equal(worker.night.status().stopped,code==='MUSE_NO_MEDIA');assert.equal(worker.approvedIds.length,0);
-   if(code==='MUSE_NO_MEDIA'){assert.equal(store.get('muse_paused'),true);await assert.rejects(worker.setMusePaused({paused:false}));}
+   if(code==='MUSE_NO_MEDIA'){assert.equal(store.get('muse_paused'),false);assert.equal(worker.status().generationReady,true);assert.equal(worker.paused,true);assert.equal(worker.night.current().submissions.length,1);await assert.rejects(worker.setMusePaused({paused:false}),{code:'MUSE_NIGHT_STOP'});}
    prepare.mock.restore();submit.mock.restore();
   }finally{store.close();await rm(root,{recursive:true,force:true});}
  }

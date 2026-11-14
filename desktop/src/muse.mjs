@@ -2,6 +2,8 @@ import {saveDownload} from './storage-policy.mjs';
 import {extname} from 'node:path';
 import {readFile} from 'node:fs/promises';
 
+export const explicitMediaRefusal = text => /(?:could not|cannot|can't|unable to)\s+(?:create|generate|make)\b.{0,60}\b(?:video|image|file)\b|\b(?:video|image)\s+generation\s+(?:isn't|is not|is currently not|is not currently)\s+available\b/i.test(text);
+
 // Selectors are configured from the signed-in provider UI.
 export class MuseAdapter {
   constructor(config) {
@@ -152,7 +154,7 @@ export class MuseAdapter {
         if (response && !generating) {
           if (response.text !== lastResponse || completedAt === null) completedAt = Date.now();
           lastResponse = response.text;
-          if (Date.now() - completedAt >= 15000) {
+          if (Date.now() - completedAt >= 15000 && explicitMediaRefusal(lastResponse)) {
             throw this.noMedia(page, response.text);
           }
         } else {
@@ -161,6 +163,7 @@ export class MuseAdapter {
       }
       await page.waitForTimeout(750);
     }
+    if(lastResponse)throw this.noMedia(page,lastResponse);
     throw Error('Chưa thấy mã kết quả mới. Cần đối soát trước khi gửi tiếp.');
   }
 
@@ -238,7 +241,7 @@ export class MuseAdapter {
         if (response && !generating) {
           if (response !== lastResponse || settledAt === null) settledAt = Date.now();
           lastResponse = response;
-          if (Date.now() - settledAt >= 15000) throw this.noMedia(page, response);
+          if (Date.now() - settledAt >= 15000 && explicitMediaRefusal(response)) throw this.noMedia(page, response);
         } else settledAt = null;
         await page.waitForTimeout(750);
       }

@@ -397,3 +397,14 @@ test('Muse resumed-result waiting checks account guard before downloading',async
   await assert.rejects(adapter.fetch(page,{providerId:'saved',providerUrl:config.startUrl},async()=>{},'unused.mp4'),{code:'MUSE_ACCOUNT_WARNING'});
   assert.equal(downloads,0);
 });
+
+test('Muse waits past a stable text acknowledgement for a late video without resending',async t=>{
+ let now=0,sent=false,clicks=0;t.mock.method(Date,'now',()=>now);
+ const page={locator:selector=>({evaluateAll:async()=>selector==='[data-message-id][data-message-role="assistant"]'?(sent?[{id:'reply',text:'I am preparing your video.'}]:[]):selector.includes('role="user"')?[]:sent&&now>=22000?['late-video']:[]}),getByRole:(_r,{name})=>({click:async()=>{assert.equal(name,'Send');sent=true;clicks++;},isVisible:async()=>false}),waitForTimeout:async()=>{now+=1000;},url:()=>config.startUrl};
+ const states=[];assert.equal(await new MuseAdapter(config).submit(page,async s=>states.push(s)),'late-video');assert.equal(clicks,1);assert.ok(now>=22000);assert.deepEqual(states,['submitting','submitted']);
+});
+test('A neutral text-only reply times out with its receipt and does not retry forever',async t=>{
+ let now=0,sent=false,clicks=0;t.mock.method(Date,'now',()=>now);const timeoutSeconds=25;
+ const page={locator:selector=>({evaluateAll:async()=>selector==='[data-message-id][data-message-role="assistant"]'&&sent?[{id:'reply',text:'Preparing your video.'}]:[]}),getByRole:()=>({click:async()=>{sent=true;clicks++;},isVisible:async()=>false}),waitForTimeout:async()=>{now+=1000;},url:()=>config.startUrl};
+ await assert.rejects(new MuseAdapter({...config,timeoutSeconds}).submit(page,async()=>{}),e=>e.code==='MUSE_NO_MEDIA'&&e.providerResponse==='Preparing your video.');assert.equal(clicks,1);assert.equal(now,25000);
+});

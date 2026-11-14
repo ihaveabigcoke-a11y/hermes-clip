@@ -29,11 +29,12 @@ export function MuseSwitch({demo=false}:{demo?:boolean}) {
     </label>
     {stopReason&&<p id={reasonId} role="status" className="inline-error">{stopReason}</p>}
     {error&&!confirm&&<p role="alert" className="inline-error">{error}</p>}
+    {stopReason&&!paused&&<Button tone="neutral" disabled={demo||busy} onClick={()=>{setError('');setConfirm(true);}}>Tiếp tục Muse sau khi kiểm tra</Button>}
     {stopReason&&<a className="lab-button neutral" href="?view=queue">Xem lượt cần đối soát</a>}
-    <Modal open={confirm} title={stopReason?"Bật lại Muse":"Bật Muse"} description="Cho phép tạo mới và chat bằng Muse. Các lượt cũ không tự chạy lại; bạn chọn tác vụ cần chạy." locked={busy} onClose={closeConfirm}>
+    <Modal open={confirm} title={!paused?"Tiếp tục Muse":stopReason?"Bật lại Muse":"Bật Muse"} description="Cho phép tạo mới và chat bằng Muse. Các lượt cũ không tự chạy lại; bạn chọn tác vụ cần chạy." locked={busy} onClose={closeConfirm}>
       <div className="modal-body">
         {(error||stopReason)&&<p role="alert" className="inline-error">{error||stopReason}</p>}
-        <div className="button-row"><Button busy={busy} disabled={busy} onClick={()=>void save(false)}>{stopReason?'Bật lại Muse':'Bật Muse'}</Button><Button tone="neutral" disabled={busy} onClick={closeConfirm}>Giữ Tạm dừng</Button></div>
+        <div className="button-row"><Button busy={busy} disabled={busy} onClick={()=>void save(false)}>{!paused?'Tiếp tục Muse':stopReason?'Bật lại Muse':'Bật Muse'}</Button><Button tone="neutral" disabled={busy} onClick={closeConfirm}>{paused?'Giữ Tạm dừng':'Để sau'}</Button></div>
       </div>
     </Modal>
   </section>;

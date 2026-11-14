@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {runVideoFlow,productVideoLibrary,videoRecovery} from '../lib/lab/auto-video.ts';
+import {runVideoFlow,productVideoLibrary,videoRecovery,resumableVideoProject} from '../lib/lab/auto-video.ts';
 import {newProduction,applyProduction} from '../lib/lab/production.ts';
 import {emptyProduct} from '../lib/lab/domain.ts';
 
@@ -91,4 +91,21 @@ test('Video recovery explains no-media, isolates products and revisions, and pre
  assert.equal(videoRecovery(project,{...state,jobs:[{...job,failureCode:'TIMEOUT'}]}).attention,true);
  const delivered=structuredClone(project);delivered.data.scenes[0].takes=[{sceneRevision:2,review:'pending'}];
  assert.equal(videoRecovery(delivered,state).message,'');
+});
+
+test('Explicit Muse mode escapes manual scenes and never silently exports manual packs',async()=>{
+ for(const paused of [false,true]){
+ const product={id:'p',kind:'product',revision:1,data:{...emptyProduct,name:'Fixture'}};
+ let project={id:'auto_existing',kind:'production',revision:1,data:newProduction('Existing','p',1)};
+ project.data=applyProduction(project.data,'scene',{id:'auto_0',name:'Hook',prompt:'Show the product',mediaType:'video',ratio:'9:16',duration:8,referenceIds:[]},'scene',1);
+ project.data=applyProduction(project.data,'storyboard',{sceneId:'auto_0'},'board',1);
+ project.data=applyProduction(project.data,'media_provider',{sceneId:'auto_0',provider:'manual'},'manual',1);
+ let starts=0;const request=async(path,body)=>{if(!body)return {records:[product,project]};project={...project,revision:project.revision+1,data:applyProduction(project.data,body.action,body.input,body.commandId,2)};return {record:project};};
+ const result=await runVideoFlow({mediaMode:'muse',productId:'p',projectId:project.id,request,maxPolls:0,upload:()=>assert.fail('No media yet'),bridge:{status:async()=>({musePaused:paused,generationReady:!paused,jobs:[]}),musePackagePreview:async()=>({count:1,blocked:0,night:{remaining:null}}),musePackageStart:async()=>{starts++;},manualMediaExport:()=>assert.fail('Muse mode must not request user files')}});
+ assert.equal(result.state,paused?'blocked':'waiting');assert.equal(starts,paused?0:1);assert.equal(project.data.scenes[0].mediaProvider,paused?'manual':'muse');assert.equal(project.data.exports.length,0);
+ }
+});
+test('Video project recovery ignores stale localStorage and reuses the existing automatic project',()=>{
+ const product={id:'p',revision:2},current={id:'current',kind:'production',updatedAt:10,data:{productId:'p',productRevision:2,scenes:[{id:'auto_0'}]}},old={...current,id:'old',data:{...current.data,productRevision:1}};
+ assert.equal(resumableVideoProject([old,current],product,'old').id,'current');assert.equal(resumableVideoProject([old],product,'old'),null);
 });

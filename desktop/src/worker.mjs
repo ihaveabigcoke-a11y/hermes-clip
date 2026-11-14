@@ -298,8 +298,9 @@ export class Worker {
     }
   }
 
-  async recheckResult({id}) {
-    await this.assertJobNotSkipped(id);
+  async recheckResult({id,recoverExisting=false}) {
+    if(!recoverExisting)await this.assertJobNotSkipped(id);
+    // Inspection reads the saved thread; a manual fallback must not forbid finding a late file.
     assertMuseNewTask(this.store);
     const job = this.store.job(id);
     const profileId = job.profileId;
@@ -324,7 +325,7 @@ export class Worker {
         this.linkResult({id, providerId: result.providerId, url: result.providerUrl});
         this.note(id, 'Đã tìm thấy file trong hội thoại cũ. Chọn Tiếp tục lấy kết quả.');
       } else {
-        this.store.transition(id, 'failed', {note: 'Đã kiểm tra lại hội thoại Muse. Phản hồi đã kết thúc và chỉ có văn bản. Có thể thêm lượt tạo nháp để thử lại.'});
+        this.store.transition(id, 'failed', {reconciled:true,reconciledAt:Date.now(),note: 'Đã kiểm tra lại hội thoại Muse. Phản hồi đã kết thúc và chỉ có văn bản. Có thể thêm lượt tạo nháp để thử lại.'});
       }
       return this.store.job(id);
     } finally {
@@ -521,8 +522,8 @@ export class Worker {
       this.tick();
     }
   }
-  async run(id, profileId, resume = false) {
-    const check = this.assertJobNotSkipped(id);
+  async run(id, profileId, resume = false, {recoverExisting=false}={}) {
+    const check = !(resume&&recoverExisting) && this.assertJobNotSkipped(id);
     if (check) await check;
     return runMuseTask(this.store, {jobId:id, profileId}, () => this.runAdmitted(id, profileId, resume));
   }
@@ -598,7 +599,7 @@ export class Worker {
       await this.measureQuota(profileId,context);
     } catch (error) {
       const night=this.night.outcome(id,error);
-      if(this.night.current()){this.store.put({...this.store.job(id),errorKind:museFailureKind(error)});if(night.stopped||['MUSE_NIGHT_STOP','MUSE_NIGHT_LIMIT'].includes(error.code)){this.store.set('muse_paused',true);this.pause();}}
+      if(this.night.current()){this.store.put({...this.store.job(id),errorKind:museFailureKind(error)});if(night.stopped||['MUSE_NIGHT_STOP','MUSE_NIGHT_LIMIT'].includes(error.code)){this.pause();}} // Keep the user's Muse switch unchanged on a service block.
       const job = this.store.job(id);
       if(job.state==='preflight'&&error.code==='STORAGE_LOW'){this.store.transition(id,'queued',{note:error.message});this.paused=true;return;}
       if (!this.night.current() && job.state === 'preflight' && ['MUSE_LOGIN_REQUIRED', 'MUSE_PROFILE_UNAVAILABLE', 'MUSE_VPN_REQUIRED', 'MUSE_QUOTA_EXHAUSTED', 'MUSE_QUOTA_UNCONFIRMED'].includes(error.code)) {
@@ -666,8 +667,9 @@ export class Worker {
     await this.assertJobNotSkipped(id);
     return this.store.retry(id);
   }
-  async resume(id) {
-    await this.assertJobNotSkipped(id);
+  async resume(id,{recoverExisting=false}={}) {
+    if(!recoverExisting)await this.assertJobNotSkipped(id);
+    // A known provider result is downloaded, never resubmitted, even after manual fallback.
     assertMuseNewTask(this.store);
     const job = this.store.job(id);
     if (this.chatting.has(job.profileId)) throw Error('Chờ chat Muse kết thúc trước khi tiếp tục job.');
@@ -681,7 +683,7 @@ export class Worker {
     if (!this.contexts.has(job.profileId) && this.memory() / 1024 ** 3 < 1.5) throw Error('RAM trống chưa đủ để mở thêm browser.');
     this.store.transition(id, 'submitted', {note: 'Tiếp tục mã kết quả cũ; không bấm tạo mới.'});
     this.active.set(job.profileId, id);
-    void this.run(id, job.profileId, true).finally(() => {
+    void this.run(id, job.profileId, true, {recoverExisting}).finally(() => {
       this.active.delete(job.profileId);
       this.tick();
     });
