@@ -1,8 +1,9 @@
 import {saveDownload} from './storage-policy.mjs';
 import {extname} from 'node:path';
 import {readFile} from 'node:fs/promises';
+import {museMediaPrompt,museVideoBody} from './muse-video-prompt.mjs';
 
-export const explicitMediaRefusal = text => /(?:could not|cannot|can't|unable to)\s+(?:create|generate|make)\b.{0,60}\b(?:video|image|file)\b|\b(?:video|image)\s+generation\s+(?:isn't|is not|is currently not|is not currently)\s+available\b/i.test(text);
+export const explicitMediaRefusal = text => /(?:could not|cannot|can't|unable to)\s+(?:create|generate|make)\b.{0,60}\b(?:video|image|file)\b|\b(?:video|image)\s+generation\s+(?:(?:isn't|is not|is currently not|is not currently)\s+available|is\s+(?:currently\s+)?unavailable)\b|\bvideo_not_available\b|\bPROMPT ONLY\b.{0,80}\bno video was generated\b/i.test(text);
 
 // Selectors are configured from the signed-in provider UI.
 export class MuseAdapter {
@@ -82,7 +83,10 @@ export class MuseAdapter {
     const mediaScope = this.chatMode && ['video', 'image'].includes(job.mediaType)
       ? 'This request explicitly authorizes creating the requested ' + job.mediaType + ' using your media-generation tools and returning the actual downloadable file. For this request, lift any text-only restriction left from earlier writing requests. Earlier writing-only instructions were scoped to those requests. Follow the media brief below now.\n\n'
       : '';
-    const prompt = mediaScope + job.prompt + (mapping.length ? '\n\nReference attachment roles, in upload order\n' + mapping.join('\n') : '');
+    // Keep the command first, including queued/retried legacy requests. The
+    // approved scene follows immediately; scope and attachment notes follow it.
+    const brief = job.mediaType === 'video' ? job.prompt + (mediaScope ? '\n\n' + mediaScope.trimEnd() : '') : mediaScope + job.prompt;
+    const prompt = museMediaPrompt(brief + (mapping.length ? '\n\nReference attachment roles, in upload order\n' + mapping.join('\n') : ''), job.mediaType);
     await page.locator(config.prompt).fill(prompt);
   }
 
@@ -154,7 +158,9 @@ export class MuseAdapter {
             && !element.querySelector('video')
             && [...element.querySelectorAll('span')].some(node => /^(?:MD|PDF|TXT|DOCX|CSV|HTML)$/i.test(node.textContent?.trim() || '')),
         })));
-        const response = responses.filter(message => !oldAssistantIds.has(message.id) && message.text).at(-1);
+        const freshResponses = responses.filter(message => !oldAssistantIds.has(message.id) && message.text);
+        // Refusal and follow-up suggestions can arrive in separate messages.
+        const response = freshResponses.length ? {text: freshResponses.map(message => message.text).join('\n\n'), documentPreview: freshResponses.some(message => message.documentPreview)} : null;
         const generating = await page.getByRole('button', {name: 'Stop', exact: true}).isVisible();
         if (response && !generating) {
           if (response.text !== lastResponse || completedAt === null) completedAt = Date.now();
@@ -189,7 +195,8 @@ export class MuseAdapter {
       }
       const users = await page.locator('[data-message-id][data-message-role="user"]').evaluateAll(elements =>
         elements.map(element => ({text: element.textContent || '', unconfirmed: !!element.querySelector('[role="alert"]')})));
-      if (users.length !== 1 || users[0].unconfirmed || !users[0].text.includes(job.request.prompt)) {
+      const requested = job.request.mediaType === 'video' ? museVideoBody(job.request.prompt) : job.request.prompt;
+      if (users.length !== 1 || users[0].unconfirmed || !users[0].text.includes(requested)) {
         throw Error('Hội thoại đã thay đổi hoặc chưa xác nhận gửi. Mở nguồn Muse để đối soát.');
       }
       const ids = await this.mediaCards(page, job.request?.mediaType).evaluateAll((elements, attribute) =>
@@ -197,7 +204,7 @@ export class MuseAdapter {
       if (ids.length > 1) throw Error('Có nhiều kết quả. Mở nguồn Muse để chọn đúng file.');
       const replies = await page.locator('[data-message-id][data-message-role="assistant"]')
         .evaluateAll(elements => elements.map(element => element.innerText?.trim() || element.textContent?.trim() || ''));
-      return {providerId: ids[0] ?? null, response: replies.at(-1) ?? ''};
+      return {providerId: ids[0] ?? null, response: replies.join('\n\n'), legacyResponse: replies.at(-1) ?? ''};
     };
     const first = await read();
     await page.waitForTimeout(2500);
@@ -205,17 +212,18 @@ export class MuseAdapter {
     if (first.providerId !== latest.providerId || first.response !== latest.response) {
       throw Error('Kết quả Muse đang thay đổi. Chờ một lúc rồi kiểm tra lại.');
     }
-    if (latest.providerId) return {...latest, providerUrl: url.href};
+    if (latest.providerId) return {providerId:latest.providerId, response:latest.response, providerUrl:url.href};
     // Muse replaces streamed text with Markdown blocks on reload. Compare the
     // same text while ignoring layout whitespace, including truncated receipts.
     const normalize = value => value.replace(/\s+/g, '').normalize('NFC');
     const saved = normalize(job.providerResponse ?? '');
     const observed = normalize(latest.response);
-    const matches = job.providerResponse?.length === 2000 ? observed.startsWith(saved) : observed === saved;
+    const matchesReceipt = text => job.providerResponse?.length === 2000 ? text.startsWith(saved) : text === saved;
+    const matches = matchesReceipt(observed) || matchesReceipt(normalize(latest.legacyResponse));
     if (!saved || !matches) {
       throw Error('Chưa xác nhận được phản hồi cũ. Mở nguồn Muse để kiểm tra.');
     }
-    return {...latest, providerUrl: url.href};
+    return {providerId:latest.providerId, response:latest.response, providerUrl:url.href};
   }
 
   async fetch(page, job, checkpoint, path) {

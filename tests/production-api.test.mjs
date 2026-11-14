@@ -1,5 +1,6 @@
 import {importApiModule} from '../desktop/test/helpers/local-server.mjs';
 import test from 'node:test';
+import {MUSE_VIDEO_COMMAND} from '../desktop/src/muse-video-prompt.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync,mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
@@ -211,6 +212,6 @@ test('worker receipt route derives metadata from owned asset and replay adds no 
  assert.equal((await post('worker_result',{...receipt,assetId:replacementAsset.id,providerId:'different_result'},'conflicting_worker_replay')).status,422);
  assert.equal((await post('worker_result',{...receipt,providerId:'different_result'},'conflicting_provider_replay')).status,422);
  assert.equal(project.data.scenes[0].takes.length,1);assert.equal(project.data.scenes[0].takes[0].assetId,a.id);
- const workerSnapshot=JSON.parse(project.data.scenes[0].takes[0].snapshot);assert.equal(workerSnapshot.prompt,'Test scene');assert.equal(workerSnapshot.ratio,'9:16');assert.equal(workerSnapshot.duration,5);assert.equal(workerSnapshot.action,'');assert.equal(workerSnapshot.camera,'');assert.equal(workerSnapshot.voice,'');
+ const workerSnapshot=JSON.parse(project.data.scenes[0].takes[0].snapshot);assert.equal(workerSnapshot.prompt,MUSE_VIDEO_COMMAND+'\nTest scene');assert.equal(workerSnapshot.ratio,'9:16');assert.equal(workerSnapshot.duration,5);assert.equal(workerSnapshot.action,'');assert.equal(workerSnapshot.camera,'');assert.equal(workerSnapshot.voice,'');
  assert.equal((await post('worker_result',{...receipt,sceneRevision:99})).status,422);assert.equal((await post('worker_result',{...receipt,assetId:'foreign_file'})).status,422);}finally{rmSync(dir,{recursive:true,force:true});}
 });

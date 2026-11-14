@@ -6,6 +6,7 @@ import {mkdir,writeFile,readFile,stat,rename,unlink} from 'node:fs/promises';
 import {join,extname} from 'node:path';
 import {freemem} from 'node:os';
 import {profileInput,adapterInput,museConnectionInput,jobInput,jobFingerprint,labels,safeMessage} from './contracts.mjs';
+import {museMediaPrompt} from './muse-video-prompt.mjs';
 import {validateMedia,toolchain,renderClips,hasAudio} from './media.mjs';
 import {MuseAdapter} from './muse.mjs';
 import {TouchVpn,TOUCH_VPN_ID} from './touch-vpn.mjs';
@@ -379,6 +380,7 @@ export class Worker {
     assertMuseAvailable(this.store);
     assertDiskSpace(this.root,32*1024**2,storagePolicy(this.store));
     const d=jobInput.parse(payload);
+    d.prompt=museMediaPrompt(d.prompt,d.mediaType);
     for(const r of d.references)if(createHash('sha256').update(r.bytes).digest('hex')!==r.sha256)throw Error('Reference tải về sai checksum.');
     const fp=jobFingerprint(d),refDir=join(this.root,'references');
     await mkdir(refDir,{recursive:true});
@@ -665,7 +667,8 @@ export class Worker {
   }
   async retry(id) {
     await this.assertJobNotSkipped(id);
-    return this.store.retry(id);
+    const job=this.store.retry(id);
+    return this.store.put({...job,request:{...job.request,prompt:museMediaPrompt(job.request.prompt,job.request.mediaType)}});
   }
   async resume(id,{recoverExisting=false}={}) {
     if(!recoverExisting)await this.assertJobNotSkipped(id);

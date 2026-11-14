@@ -328,6 +328,8 @@ export type FieldDef = {
   upload?: "image" | "video";
   uploadValue?: "id";
   nullable?: boolean;
+  beforeInput?: (values:Record<string,any>)=>ReactNode;
+  editValue?: (value:any,values:Record<string,any>)=>any;
 };
 export function SecretInput({label,...props}:React.InputHTMLAttributes<HTMLInputElement>&{label:string}) {
   const [visible,setVisible]=useState(false);
@@ -546,15 +548,16 @@ export function RecordForm({
               className={`field ${f.full ? "full" : ""} ${f.type === "checkbox" ? "checkbox-field" : ""}`}
             >
               <label htmlFor={`field-${f.name}`}>{f.label}</label>
+              {f.beforeInput?.(values)}
               {f.type === "textarea" ? (
                 <textarea
                   className="resize-none"
                   id={`field-${f.name}`}
                   rows={f.name === "prompt" || f.name === "script" ? 7 : 3}
                   style={{ resize: "none" }}
-                  value={values[f.name] ?? ""}
+                  value={f.editValue?f.editValue(values[f.name],values):values[f.name] ?? ""}
                   placeholder={f.placeholder}
-                  onChange={(e) => change(f.name, e.target.value)}
+                  onChange={(e) => change(f.name, f.editValue?f.editValue(e.target.value,values):e.target.value)}
                   aria-invalid={!!errors[f.name]}
                   aria-describedby={
                     errors[f.name]

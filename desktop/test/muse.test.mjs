@@ -2,6 +2,7 @@ import {runMediaTool,probeMedia} from '../src/compress.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {MuseAdapter} from '../src/muse.mjs';
+import {MUSE_VIDEO_COMMAND} from '../src/muse-video-prompt.mjs';
 import {jobInput,jobFingerprint} from '../src/contracts.mjs';
 import {Store} from '../src/store.mjs';
 import {mkdtemp, writeFile, rm} from 'node:fs/promises';
@@ -96,7 +97,8 @@ test('media tasks lift earlier writing-only scope while keeping the brief and at
   const page={locator:()=>({inputValue:async()=>'',fill:async value=>fills.push(value),setInputFiles:async()=>{},waitFor:async()=>{}}),getByRole:()=>({waitFor:async()=>{}}),goto:async()=>{}};
   const brief='Create one video of the exact referenced product';
   await adapter.prepare(page,{mediaType:'video',prompt:brief,references:[{path:'product.png',role:'product'}]});
-  assert.match(fills.at(-1),/^This request explicitly authorizes creating the requested video/);
+  assert.ok(fills.at(-1).startsWith(MUSE_VIDEO_COMMAND+'\n'+brief));
+  assert.match(fills.at(-1),/This request explicitly authorizes creating the requested video/);
   assert.match(fills.at(-1),/lift any text-only restriction/);
   assert.ok(fills.at(-1).includes(brief));
   assert.match(fills.at(-1),/Attachment 1 is the product identity/);

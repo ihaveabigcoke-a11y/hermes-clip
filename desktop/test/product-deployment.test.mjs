@@ -5,6 +5,7 @@ import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
+import {MUSE_VIDEO_COMMAND} from '../src/muse-video-prompt.mjs';
 import {Store} from '../src/store.mjs';
 import {Worker} from '../src/worker.mjs';
 import {ProductDeployment} from '../src/product-deployment.mjs';
@@ -51,6 +52,7 @@ test('deployment: three chosen products become three real imported MP4 takes awa
  const records=await runner.records();const productions=records.filter(r=>r.kind==='production');assert.equal(productions.length,3);
  for(const project of productions){assert.equal(project.data.scenes.length,1);assert.equal(project.data.scenes[0].takes.length,1);assert.equal(project.data.scenes[0].takes[0].review,'pending');assert.equal(project.data.scenes[0].takes[0].metadata.duration,10);}
  assert.ok(store.jobs().every(j=>j.importedAt&&j.preferredProfileId==='chi'));
+ assert.ok(store.jobs().every(j=>j.request.prompt.startsWith(MUSE_VIDEO_COMMAND+'\n')&&j.request.prompt.split(MUSE_VIDEO_COMMAND).length===2));
  const restarted=new ProductDeployment({worker,local});assert.equal((await restarted.start({batchId:'research_test',productIds:[...ids].reverse()})).id,run.id);restarted.boot();assert.equal(restarted.running,null);assert.equal(counts(),3);
 }));
 

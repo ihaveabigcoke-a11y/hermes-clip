@@ -1,4 +1,5 @@
 import {vietnamDay,type LabRecord} from './domain.ts';
+import {museMediaPrompt} from '../../desktop/src/muse-video-prompt.mjs';
 import {getRenderPlan} from './render-plan.ts';
 import {productionSchema,sceneInputSchema} from './production.ts';
 import {suggestProductKey} from './daily-selection.ts';
@@ -48,7 +49,7 @@ export function autoVideoShots(product:LabRecord){
  const identity=product.data.name,problem=product.data.situation||product.data.problem||'an everyday inconvenience';
  const context=`Product: ${identity}. Verified claims only: ${product.data.allowedClaims||'none supplied; show appearance and handling only'}. Preserve its physical appearance. No logos or invented performance claims. Vertical 9:16. Keep natural sound. No on-screen text.`;
  const prompts=[`Exaggerate the inconvenience through obviously staged visual comedy: ${problem}. Do not exaggerate product performance.`, `Show an absurd homemade workaround for ${problem}, visibly awkward and ineffective.`, `Start with an unexpected close-up that creates curiosity about ${identity}, then reveal the everyday context.`, `Versus: unpack and show how ${identity} is handled. Do not invent packaging text.`, `Result: show the same product clearly in its ordinary setting. Use only the supplied verified claims.`];
- return prompts.map((prompt,i)=>sceneInputSchema.extend({id:sceneInputSchema.shape.name}).parse({id:'auto_'+i,name:['Phóng đại vấn đề','Tự chế ngớ ngẩn','Gây tò mò','Mở hộp','Kết quả'][i],role:i<3?'hook':'body',prompt:context+'\n'+prompt,ratio:'9:16',duration:8,mediaType:'video',referenceIds:[],fromSec:i<3?0:i===3?4:8,toSec:i<3?4:i===3?8:15,overlayText:i<3?null:i===3?'Vs…':null}));
+ return prompts.map((prompt,i)=>sceneInputSchema.extend({id:sceneInputSchema.shape.name}).parse({id:'auto_'+i,name:['Phóng đại vấn đề','Tự chế ngớ ngẩn','Gây tò mò','Mở hộp','Kết quả'][i],role:i<3?'hook':'body',prompt:museMediaPrompt(context+'\n'+prompt,'video'),ratio:'9:16',duration:8,mediaType:'video',referenceIds:[],fromSec:i<3?0:i===3?4:8,toSec:i<3?4:i===3?8:15,overlayText:i<3?null:i===3?'Vs…':null}));
 }
 type FlowOptions={mediaMode?:'muse'|'manual';productId:string;projectId:string;request:(path:string,body?:any)=>Promise<any>;bridge:any;upload:(result:any,signal:AbortSignal)=>Promise<{id:string;sha256:string}>;onRecord?:(r:LabRecord)=>void;onProgress?:(s:string)=>void;signal?:AbortSignal;wait?:(ms:number)=>Promise<void>;maxPolls?:number;now?:()=>number};
 /** Same durable production commands as the detailed editor. No publishing; retries reuse receipts. */

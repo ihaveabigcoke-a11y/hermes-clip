@@ -3,6 +3,7 @@ import {z} from 'zod';
 import {sessionCookie} from '../local/server.mjs';
 import {assertMuseNewTask,museIsPaused} from './muse-pause.mjs';
 import {fetchProductImage} from './product-image.mjs';
+import {museMediaPrompt,museVideoBody} from './muse-video-prompt.mjs';
 
 const id=z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/);
 const input=z.object({batchId:id,productIds:z.array(id).min(1).max(3),profileId:id.optional()});
@@ -17,7 +18,7 @@ export function deploymentImageSource(product,records){
 }
 export function deploymentPrompt(product) {
   // Template derived from the chosen product. No invented performance, sales or safety claim.
-  return `Create a 10-second vertical 9:16 product showcase video using the attached product photo as the exact visual reference. Product: ${product.name}. Keep the entire product visible, with the same shape, color, markings, components and proportions as the reference. Place it on a neutral tabletop with soft studio light. Use a fixed camera and subtle natural lighting movement; do not morph or add parts. Do not invent a product demonstration, performance claim, certification, price or discount. No text, captions, logos added by you, speech or music. This is an internal product concept for a US English-speaking audience. Product details supplied by the user: ${String(product.invariants||'Match the reference photo.').slice(0,2000)}`;
+  return museMediaPrompt(`Create a 10-second vertical 9:16 product showcase video using the attached product photo as the exact visual reference. Product: ${product.name}. Keep the entire product visible, with the same shape, color, markings, components and proportions as the reference. Place it on a neutral tabletop with soft studio light. Use a fixed camera and subtle natural lighting movement; do not morph or add parts. Do not invent a product demonstration, performance claim, certification, price or discount. No text, captions, logos added by you, speech or music. This is an internal product concept for a US English-speaking audience. Product details supplied by the user: ${String(product.invariants||'Match the reference photo.').slice(0,2000)}`, 'video');
 }
 
 export class ProductDeployment {
@@ -106,7 +107,7 @@ export class ProductDeployment {
       project=await this.command(project.id,`${row.id}_scene${index}`,'scene',{id:sceneId,name:`Tự động · ${product.data.name}`.slice(0,150),role:'body',mediaType:'video',prompt:deploymentPrompt(product.data),ratio:'9:16',duration:10,referenceIds:[refId],camera:'Fixed camera',action:'Subtle lighting movement; preserve product',voice:''});
       scene=project.data.scenes.find(s=>s.id===sceneId);
     }
-    if(scene.prompt!==deploymentPrompt(product.data)||(item.sceneRevision&&scene.revision!==item.sceneRevision))throw Error('Cảnh tự động đã được chỉnh sửa; giữ lại để bạn kiểm tra trước khi gửi.');
+    if(museVideoBody(scene.prompt)!==museVideoBody(deploymentPrompt(product.data))||(item.sceneRevision&&scene.revision!==item.sceneRevision))throw Error('Cảnh tự động đã được chỉnh sửa; giữ lại để bạn kiểm tra trước khi gửi.');
     project=await this.command(project.id,`${row.id}_provider${index}`,'media_provider',{sceneId,provider:'muse'});
     // The launch click explicitly delegates script preparation. Final take.review remains pending.
     project=await this.command(project.id,`${row.id}_storyboard${index}`,'storyboard',{sceneId});

@@ -5,6 +5,7 @@ import {MuseNight} from '../src/muse-night.mjs';
 import {MusePackage} from '../src/muse-package.mjs';
 import {renderFixture} from '../../tests/fixtures/render-plan.mjs';
 import {sceneGate} from '../../lib/lab/production.ts';
+import {MUSE_VIDEO_COMMAND} from '../src/muse-video-prompt.mjs';
 test('T-023 package preview counts before send, retains unknown jobs and rejects excess/stale/paused requests',async()=>{
  const store=new Store(':memory:');try{
  const p=renderFixture().production;p.scenes.forEach(s=>s.takes=[]);
@@ -15,6 +16,7 @@ test('T-023 package preview counts before send, retains unknown jobs and rejects
  await assert.rejects(service.start({projectId:'render_project',revision:2}),/đổi/);assert.equal(calls,0);
  p.paused=true;await assert.rejects(service.start({projectId:'render_project',revision:1}),/tạm dừng/);p.paused=false;
  const result=await service.start({projectId:'render_project',revision:1});assert.equal(result.count,5);assert.equal(calls,5);
+ for(const job of store.jobs()){assert.ok(job.request.prompt.startsWith(MUSE_VIDEO_COMMAND+'\nCreate a vertical'));assert.equal(job.request.prompt.split(MUSE_VIDEO_COMMAND).length,2);}
  await assert.rejects(service.start({projectId:'render_project',revision:1}),/Không có lượt mới/);assert.equal(calls,5);
  const job=store.jobs()[0];store.put({...job,state:'needs_attention'});assert.equal((await service.preview({projectId:'render_project'})).public.blocked,1);
  }finally{store.close();}

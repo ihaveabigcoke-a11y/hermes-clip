@@ -1,4 +1,5 @@
 import { z } from "zod";
+import {museMediaPrompt,museVideoBody} from '../../desktop/src/muse-video-prompt.mjs';
 import {renderPlanSchema,validateRenderPlan,getRenderPlan} from "./render-plan.ts";
 
 const id = z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/);
@@ -184,7 +185,7 @@ export function storyboardShotGate(s: Omit<z.infer<typeof sceneInputSchema>,"ref
   if(s.generationUnit.fromSec>s.fromSec||s.generationUnit.toSec<s.toSec||s.generationUnit.toSec-s.generationUnit.fromSec>8)return 'Shot nằm ngoài nhóm tạo 8 giây.';
   if(s.overlay.fromSec>s.fromSec||s.overlay.toSec<s.toSec)return 'Chữ đè phải bao phủ shot.';
   if(s.resultStyle==='story_cards'&&!s.metadata?.dramatization)return 'Thẻ chuyện cần metadata tình huống hư cấu.';
-  if(s.constraints.length>3||s.prompt.split('\n').filter(Boolean).length<1.5*s.constraints.length)return 'Mô tả hình cần ít nhất 60% số dòng; tối đa 3 dòng giới hạn.';
+  if(s.constraints.length>3||museVideoBody(s.prompt).split('\n').filter(Boolean).length<1.5*s.constraints.length)return 'Mô tả hình cần ít nhất 60% số dòng; tối đa 3 dòng giới hạn.';
   return '';
 }
 export class ProductionError extends Error {}
@@ -296,6 +297,7 @@ export function applyProduction(p0: Production, action: string, input: unknown, 
   const saveScene=(d:any)=>{
     const refs=d.referenceIds.map((rid:string)=>{const r=latestReferences(p).find(x=>x.id===rid);if(!r)throw new ProductionError("Tham chiếu không thuộc dự án/sản phẩm này.");return {id:r.id,version:r.version};});
     const prior=p.scenes.find(s=>s.id===d.id);const {referenceIds,...values}=d;
+    values.prompt=museMediaPrompt(values.prompt,values.mediaType);
     if(prior){
       for(const take of prior.takes)if(!take.snapshot&&take.sceneRevision===prior.revision)take.snapshot=snapshotScene(prior);
       Object.assign(prior,values,{revision:prior.revision+1,references:refs,storyboardApproved:false});
