@@ -2,6 +2,7 @@ import {z} from 'zod';
 import {museMediaPrompt} from './muse-video-prompt.mjs';
 import {createHash} from 'node:crypto';
 import {assertMuseNewTask} from './muse-pause.mjs';
+import {canBundle} from './muse-bundle.mjs';
 const input=z.object({projectId:z.string().regex(/^[\w-]{1,120}$/),revision:z.number().int().positive().optional()});
 const activeStates=['preflight','prepared','preparing','submitting','submitted','waiting','downloading','validating'];
 const uncertainStates=['needs_attention','unknown'];
@@ -19,7 +20,7 @@ export class MusePackage {
    if(all.some(j=>uncertainStates.includes(j.state)))blocked.add(scene.id);
    if(!scene.storyboardApproved||scene.mediaType!=='video'||scene.takes.some(t=>t.sceneRevision===scene.revision&&t.review!=='rejected'))continue;
    const matching=all.filter(j=>j.request.sceneRevision===scene.revision).sort((a,b)=>b.createdAt-a.createdAt);
-   if(all.some(j=>activeStates.includes(j.state))){pending.add(scene.id);continue;}
+   if(all.some(j=>activeStates.includes(j.state)||(j.bundleParentId&&(activeStates.includes(jobs.find(parent=>parent.id===j.bundleParentId)?.state)||(this.worker.approvedIds??[]).includes(j.bundleParentId))))){pending.add(scene.id);continue;}
    if(blocked.has(scene.id))continue;
    const latest=matching[0];
    if(latest?.state==='ready'){blocked.add(scene.id);continue;} // Download/import must be reconciled, never regenerate.
@@ -34,7 +35,9 @@ export class MusePackage {
    else if(latest.state==='queued')queued.push(latest);
    else retryable.push(latest);
   }
-  return {project,product,records,scenes,queued,retryable,public:{projectId:project.id,revision:project.revision,count:scenes.length+queued.length+retryable.length,newCount:scenes.length,queuedCount:queued.length,retryableCount:retryable.length,pending:pending.size,blocked:blocked.size,night:this.worker.night.status()}};
+  const ready=this.worker.profiles?.().filter(p=>p.enabled&&p.health==='ready'&&p.quota?.state==='available'&&!this.worker.night.profileStatus(p.id).stopped)??[];
+  const count=scenes.length+queued.length+retryable.length,sendCount=count-(ready.length>0&&ready.length<3&&!this.worker.store.get('muse_bundle_unmapped',false)&&canBundle(scenes)?2:0);
+  return {project,product,records,scenes,queued,retryable,public:{projectId:project.id,revision:project.revision,count,sendCount,newCount:scenes.length,queuedCount:queued.length,retryableCount:retryable.length,pending:pending.size,blocked:blocked.size,night:this.worker.night.status()}};
  }
  async start(raw){if(this.busy)throw Error('Đang chuẩn bị gói Muse.');this.busy=true;
   try{
@@ -44,7 +47,8 @@ export class MusePackage {
    if(plan.public.blocked)throw Error('Có kết quả Muse cần kiểm trong dự án. Đối soát trước khi gửi gói mới.');
    if(!plan.public.count)throw Error('Không có lượt mới đã duyệt; giữ job cũ để đối soát.');
    if(!this.worker.config()?.enabled)throw Error('Cấu hình luồng Muse trước khi gửi.');
-   this.worker.night.begin();this.worker.night.assertRoom(plan.public.count);
+   this.worker.night.begin();this.worker.night.assertRoom(plan.public.sendCount);
+   const ready=this.worker.profiles?.().filter(p=>p.enabled&&p.health==='ready'&&p.quota?.state==='available'&&!this.worker.night.profileStatus(p.id).stopped)??[];
    const requests=[];
    for(const scene of plan.scenes){const references=[];
     for(const pin of scene.references){const ref=plan.project.data.references.find(r=>r.id===pin.id&&r.version===pin.version),asset=plan.records.find(r=>r.kind==='asset'&&r.id===ref?.assetId);if(!asset?.data.type.startsWith('image/')||!asset.data.sha256)throw Error('Tham chiếu phải là ảnh đã kiểm.');
@@ -55,12 +59,23 @@ export class MusePackage {
    const current=await this.preview(raw);
    const signature=p=>JSON.stringify({scenes:p.scenes.map(s=>s.id),queued:p.queued.map(j=>j.id),retry:p.retryable.map(j=>j.id),blocked:p.public.blocked});
    if(signature(current)!==signature(plan))throw Error('Hàng chờ Muse đã đổi. Tải lại trước khi tiếp tục.');
+   // On a fresh five-scene project the shared body must arrive before any hook can render.
+   requests.sort((a,b)=>Number(plan.scenes.find(s=>s.id===a.sceneId)?.role==='hook')-Number(plan.scenes.find(s=>s.id===b.sceneId)?.role==='hook'));
    const jobIds=plan.queued.map(j=>j.id);
    for(const old of plan.retryable){const job=await this.worker.retry(old.id);jobIds.push(job.id);}
-   for(const request of requests){const result=await this.worker.enqueue(request);if(result.job.state==='queued')jobIds.push(result.job.id);}
-   const started=await this.worker.start({count:jobIds.length,jobIds,maxConcurrent:1});
+   const fresh=[];
+   for(const request of requests){const result=await this.worker.enqueue(request);if(result.job.state==='queued')fresh.push(result.job);}
+   let mode='parallel';
+   if(ready.length>0&&ready.length<3&&!this.worker.store.get('muse_bundle_unmapped',false)&&canBundle(requests)&&fresh.length===requests.length){
+    const group=fresh.splice(0,3),leader=group[0];mode='bundle';
+    this.worker.store.put({...leader,bundleJobIds:group.map(j=>j.id)});
+    for(const child of group.slice(1))this.worker.store.put({...child,bundleParentId:leader.id});
+    jobIds.push(leader.id);
+   }
+   jobIds.push(...fresh.map(j=>j.id));
+   const started=await this.worker.start({count:jobIds.length,jobIds,maxConcurrent:Math.max(1,Math.min(3,ready.length))});
    if(started===false)throw Error('Muse đã dừng trước khi giao việc. Nháp được giữ để tiếp tục.');
-   return {jobIds,count:jobIds.length,night:this.worker.night.status()};
+   return {jobIds,count:jobIds.length,mode,night:this.worker.night.status()};
   }finally{this.busy=false;}
  }
 }

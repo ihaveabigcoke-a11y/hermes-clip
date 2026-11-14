@@ -49,6 +49,8 @@ export function runJson(command,args,{input,timeout=60000,cwd,format='json',maxB
 }
 
 export class Integrations {
+ rendering=0;
+ renderTasks=new Set();
  constructor(store,root,run=runJson,referenceRun=runReferenceCommand){this.store=store;this.root=root;this.run=run;this.referenceRun=referenceRun;this.busy=false;this.pending=[];this.current=null;this.stopped=false;const jobs=this.jobs();if(jobs.some(j=>['queued','running'].includes(j.state)))this.store.set('integration-jobs',jobs.map(j=>['queued','running'].includes(j.state)?{...j,state:'interrupted',finishedAt:Date.now(),error:'Ứng dụng đã dừng giữa tác vụ. Không tự chạy lại; file cũ được giữ.'}:j));}
  config(){return this.store.get('integrations',null);}
  jobs(){return this.store.get('integration-jobs',[]);}
@@ -141,10 +143,10 @@ export class Integrations {
   const {job,fn}=this.pending.shift();
   this.current=this.task(job.kind,job.projectId,job.request,fn,job).catch(()=>{}).finally(()=>{this.current=null;this.drain();});
  }
- async idle(){while(this.current)await this.current;}
+ async idle(){while(this.current||this.renderTasks.size)await Promise.allSettled([...(this.current?[this.current]:[]),...this.renderTasks]);}
  shutdown(){this.stopped=true;for(const {job} of this.pending)this.update({...job,state:'interrupted',finishedAt:Date.now(),error:'App đã đóng trước khi kiểm nguồn; không tự chạy lại.'});this.pending=[];}
  update(job){const jobs=this.jobs(),i=jobs.findIndex(x=>x.id===job.id);if(i<0){if(jobs.length>=100)throw Error('Đã chạm 100 tác vụ tích hợp local; sao lưu trước khi mở rộng.');jobs.unshift(job);}else jobs[i]=job;this.store.set('integration-jobs',jobs);return job;}
- async task(kind,projectId,request,fn,queuedJob){if(this.busy)throw Error('Một tác vụ tích hợp đang chạy; chờ kết quả trước.');this.busy=true;let job=queuedJob;try{assertDiskSpace(this.root,128*1024**2,storagePolicy(this.store));job=this.update({...queuedJob,id:queuedJob?.id??randomUUID(),kind,projectId,request,state:'running',createdAt:queuedJob?.createdAt??Date.now(),usageUsd:kind==='research'?null:0});const dir=join(this.root,'integrations',job.id);await mkdir(dir,{recursive:true});const result=await fn(dir,job);return this.update({...this.job(job.id),...result,state:this.stopped?'interrupted':'done',finishedAt:Date.now()});}catch(e){if(job)this.update({...this.job(job.id),state:'failed',finishedAt:Date.now(),error:e.message});throw e;}finally{this.busy=false;this.drain();}}
+ async task(kind,projectId,request,fn,queuedJob){const parallel=kind==='compose';if(this.stopped)throw Error('App đang đóng.');if(this.busy&&(!parallel||!this.rendering))throw Error('Một tác vụ tích hợp đang chạy; chờ kết quả trước.');if(parallel&&this.rendering>=3)throw Error('Đang dựng ba MP4. Chờ một bản hoàn tất.');if(parallel)this.rendering++;this.busy=true;let job=queuedJob;try{assertDiskSpace(this.root,128*1024**2,storagePolicy(this.store));job=this.update({...queuedJob,id:queuedJob?.id??randomUUID(),kind,projectId,request,state:'running',createdAt:queuedJob?.createdAt??Date.now(),usageUsd:kind==='research'?null:0});const dir=join(this.root,'integrations',job.id);await mkdir(dir,{recursive:true});const result=await fn(dir,job);return this.update({...this.job(job.id),...result,state:this.stopped?'interrupted':'done',finishedAt:Date.now()});}catch(e){if(job)this.update({...this.job(job.id),state:'failed',finishedAt:Date.now(),error:e.message});throw e;}finally{if(parallel)this.rendering--;this.busy=this.rendering>0;this.drain();}}
  async research(input){const d=researchInput.parse(input),c=this.config();if(!c)throw Error('Chưa có cấu hình local.');return this.task('research',d.projectId,d,async dir=>{const args=[d.channel,'search',d.query,'--limit','5','--timeout','45'];if(d.channel!=='web')args.push('--backend','public-web');const r=await this.reach(args,{timeout:60000});const path=join(dir,'research.json.gz');await writeArchive(path,JSON.stringify({collectedAt:Date.now(),query:d.query,channel:d.channel,result:r,scope:'public-web',interpretation:'unreviewed'},null,2));return {path,result:r,scope:'public-web',interpretation:'unreviewed'};});}
  async analyze(input){const d=referenceInput.parse(input);return this.task('reference',d.projectId,{assetId:d.assetId,name:d.name,sha256:d.sha256},async dir=>{await toolchain();const path=join(dir,'source.mp4');await this.writeSource(d,path);const r=await this.montage('analyze',{source:path,outputDir:dir});const frames=await Promise.all(r.result.frames.map(async frame=>{const framePath=await this.confinedPath(dir,frame.path);const file=await stat(framePath);if(!file.isFile()||file.size===0||file.size>5*1024*1024)throw Error('Khung hình rỗng hoặc vượt giới hạn.');
  const frameBytes=await readFile(framePath);
@@ -153,7 +155,7 @@ export class Integrations {
  return {...frame,path:framePath};}));await writeArchive(join(dir,'reference-analysis.json.gz'),JSON.stringify(r.result,null,2));return {path:join(dir,'reference-analysis.json.gz'),result:{...r.result,frames:undefined},frames};});}
  async compose(input){
   const d=composeInput.parse(input);
-  return this.task('compose',d.projectId,{variantId:d.variantId,ratio:d.ratio,sources:d.clips.map(({bytes,...c})=>c),overlays:d.overlays,audio:'keep'},async dir=>{
+  const pending=this.task('compose',d.projectId,{variantId:d.variantId,ratio:d.ratio,sources:d.clips.map(({bytes,...c})=>c),overlays:d.overlays,audio:'keep'},async dir=>{
    await toolchain();const clips=[];
    for(const [i,c] of d.clips.entries()){const path=join(dir,`${i}.mp4`);await this.writeSource(c,path);await validateMedia(path,{mediaType:'video',ratio:d.ratio,duration:c.duration});clips.push({path,duration:c.duration,inSec:c.inSec,outSec:c.outSec??c.duration});}
    const [rw,rh]=d.ratio.split(':').map(Number),width=d.ratio==='9:16'?720:d.ratio==='16:9'?1280:960,height=Math.round(width*rh/rw/2)*2;
@@ -168,6 +170,7 @@ export class Integrations {
    if(d.planVersion&&(!audio||!Number.isFinite(Number(audio.duration))||!Number.isFinite(Number(video.duration))||Math.abs(Number(audio.duration)-Number(video.duration))>.1))throw Error('Âm thanh và hình lệch quá 0,1 giây. Giữ file để kiểm tra.');
    return {path:outputPath,result:r.result,output:{path:outputPath,name:`openmontage_${jobSafe(d.variantId)}.mp4`,type:'video/mp4',...report,audio:audio?{mode:'keep',duration:Number(audio.duration),videoDuration:Number(video.duration)}:null}};
   });
+  this.renderTasks.add(pending);try{return await pending;}finally{this.renderTasks.delete(pending);}
  }
  async analyzeStructure(input){
   const d=referenceInput.parse(input);

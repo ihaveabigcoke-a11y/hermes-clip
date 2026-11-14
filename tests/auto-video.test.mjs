@@ -166,3 +166,19 @@ test('T-030: editing a scene reapproves its current revision and preserves old a
  assert.equal(commands.filter(c=>c.action==='storyboard').length,6);
  assert.equal(starts,1,'Reapproval must not manufacture another dispatch when the preview has no new job');
 });
+
+test('T-033: starts each render as its hook arrives and completes three concurrent renders with serialized writes',async()=>{
+ const {publishFixture}=await import('./fixtures/publish-board.mjs');const {planDistribution}=await import('../lib/lab/publish-board.ts');const {planHookRefresh}=await import('../lib/lab/result-cards.ts');const {getRenderPlan}=await import('../lib/lab/render-plan.ts');
+ const f=publishFixture(),plans=planDistribution(f.records,f.input);let project=planHookRefresh([...f.records,...plans],{planId:plans[0].id,revision:1,id:'streaming_auto'}),poll=0,active=0,peak=0;
+ const starts=[],gates=[],body=structuredClone(project.data.reuseBodyPlan.segments.slice(1));
+ const request=async(path,command)=>{if(!command)return {records:[...f.records,project]};assert.equal(command.revision,project.revision);const input=command.action==='export'?{...command.input,verified:true,sha256:String(starts.findIndex(v=>v===command.input.variantId)+1).repeat(64)}:command.input;project={...project,revision:project.revision+1,data:applyProduction(project.data,command.action,input,command.commandId)};return {record:project};};
+ const bridge={status:async()=>({musePaused:false,generationReady:true,jobs:[]}),musePackagePreview:async()=>({count:3,blocked:0,night:{remaining:null,stopped:false}}),musePackageStart:async()=>{},museNightStatus:async()=>({stopped:false}),renderPlannedVideo:async({variantId})=>{starts.push(variantId);const plan=getRenderPlan(project.data,project.id,variantId);assert.deepEqual(plan.segments.slice(1),body);active++;peak=Math.max(peak,active);await new Promise(resolve=>{gates.push(resolve);if(gates.length===3)gates.forEach(r=>r());});active--;return {sha256:String(starts.indexOf(variantId)+1).repeat(64)};}};
+ const result=await runVideoFlow({mediaMode:'muse',productId:f.product.id,projectId:project.id,request,bridge,upload:async output=>({id:'asset_'+output.sha256[0],sha256:output.sha256}),wait:async ms=>{assert.equal(ms,2000);if(poll)assert.equal(starts.length,poll,'previous hook must render before the next clip arrives');const scene=project.data.scenes.find(s=>s.id==='auto_'+poll);project={...project,revision:project.revision+1,data:applyProduction(project.data,'attach',{sceneId:scene.id,attemptId:null,take:{assetId:'clip_'+poll,name:'clip.mp4',type:'video/mp4',size:100,sha256:'b'.repeat(64),metadata:{width:720,height:1280,duration:8,verifiedBy:'container'}}},'stream_'+poll)};poll++;}});
+ assert.equal(result.state,'done');assert.equal(peak,3);assert.equal(project.data.exports.length,3);assert.equal(new Set(project.data.exports.map(e=>e.sha256)).size,3);
+});
+
+test('T-033: concurrent render accepts unrelated revisions only with the exact validated plan',async()=>{
+ const {assertRenderRevision}=await import('../lib/lab/render-plan.ts');const {renderFixture}=await import('./fixtures/render-plan.mjs');const {plan}=renderFixture(),signature=JSON.stringify(plan);
+ assert.doesNotThrow(()=>assertRenderRevision(8,8,plan));assert.doesNotThrow(()=>assertRenderRevision(9,8,plan,signature));
+ assert.throws(()=>assertRenderRevision(9,8,plan),/thay đổi/);assert.throws(()=>assertRenderRevision(7,8,plan,signature),/thay đổi/);assert.throws(()=>assertRenderRevision(9,8,{...plan,overlays:[]},signature),/thay đổi/);
+});

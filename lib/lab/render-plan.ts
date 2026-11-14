@@ -12,6 +12,10 @@ export const renderPlanSchema=z.object({
 });
 export type RenderPlan=z.infer<typeof renderPlanSchema>;
 export const renderDuration=(p:RenderPlan)=>p.segments.reduce((n,s)=>n+s.outSec-s.inSec,0);
+/** Other hook exports may advance the record while this unchanged plan is queued. */
+export function assertRenderRevision(current:number,expected:number,plan:RenderPlan,signature?:string){
+ if(current<expected||(signature?JSON.stringify(plan)!==signature:current!==expected))throw Error('Dự án hoặc nguồn dựng đã thay đổi. Tải lại trước khi dựng.');
+}
 export function validateRenderPlan(p:Production,raw:unknown):RenderPlan {
  const plan=renderPlanSchema.parse(raw),v=p.variants.find(v=>v.id===plan.variantId),items=variantItems(p,plan.variantId);
  if(v?.bodyId!==plan.bodyId||items.length!==plan.segments.length)throw Error('Plan không khớp biến thể/thân video.');

@@ -2,6 +2,7 @@ import {saveDownload} from './storage-policy.mjs';
 import {extname} from 'node:path';
 import {readFile} from 'node:fs/promises';
 import {museMediaPrompt,museVideoBody} from './muse-video-prompt.mjs';
+import {mapBundleCards} from './muse-bundle.mjs';
 
 export const explicitMediaRefusal = text => /(?:could not|cannot|can't|unable to)\s+(?:create|generate|make)\b.{0,60}\b(?:video|image|file)\b|\b(?:video|image)\s+generation\s+(?:(?:isn't|is not|is currently not|is not currently)\s+available|is\s+(?:currently\s+)?unavailable)\b|\bvideo_not_available\b|\bPROMPT ONLY\b.{0,80}\bno video was generated\b/i.test(text);
 
@@ -122,6 +123,7 @@ export class MuseAdapter {
       elements => elements.map(element => element.getAttribute('data-message-id')),
     ) : []);
     await checkpoint('submitting');
+    this.timings={sentAt:Date.now()};
     await page.getByRole('button', {name: config.submitName, exact: true}).click({timeout: 30000});
     // Muse creates its media message after generation finishes. Its result ID can
     // therefore arrive several minutes after the send button was clicked.
@@ -136,8 +138,18 @@ export class MuseAdapter {
         config.resultIdAttribute,
       );
       const fresh = ids.filter(id => !oldIds.has(id));
-      if (fresh.length > 1) throw Error('Có nhiều kết quả mới; không xác định được job.');
-      if (fresh.length === 1) {
+      if(this.expectedScenes?.length){
+        const generating=await page.getByRole('button',{name:'Stop',exact:true}).isVisible();
+        if(fresh.length&&!generating){
+          const rows=await cards.evaluateAll((elements,attribute)=>elements.map(e=>({id:e.getAttribute(attribute),text:e.innerText||e.textContent||''})),config.resultIdAttribute);
+          const mapped=mapBundleCards(rows.filter(r=>fresh.includes(r.id)),this.expectedScenes);
+          if(mapped){this.timings.resultAt=Date.now();this.bundleProviderIds=mapped;await checkpoint('submitted',{providerId:mapped[0],providerUrl:page.url(),bundleProviderIds:mapped});return mapped[0];}
+          this.bundleSettledAt??=Date.now();
+          if(fresh.length>this.expectedScenes.length||Date.now()-this.bundleSettledAt>=15000)throw Object.assign(Error('Muse trả thiếu clip hoặc chưa xác định được clip nào thuộc cảnh nào. Giữ kết quả để đối soát; gói mới dùng gửi riêng.'),{code:'MUSE_BUNDLE_UNMAPPED',providerUrl:page.url(),providerIds:fresh,providerResponse:rows.map(r=>r.text).join('\n').slice(0,2000)});
+        }else this.bundleSettledAt=null;
+      }else if (fresh.length > 1) throw Object.assign(Error('Có nhiều kết quả mới; không xác định được job.'),{code:'MUSE_MULTIPLE_RESULTS',providerUrl:page.url?.(),providerIds:fresh});
+      if (!this.expectedScenes?.length&&fresh.length === 1) {
+        this.timings.resultAt=Date.now();
         await checkpoint('submitted', {providerId: fresh[0], providerUrl: page.url()});
         return fresh[0];
       }
@@ -271,6 +283,7 @@ export class MuseAdapter {
       await downloadButton.waitFor({state: 'visible', timeout: 15000});
     }
     await checkpoint('downloading');
+    this.timings={...this.timings,downloadStartedAt:Date.now()};
     const [download] = await Promise.all([
       page.waitForEvent('download', {timeout: 30000}),
       downloadButton.click(),
