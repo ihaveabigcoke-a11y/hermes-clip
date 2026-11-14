@@ -8,7 +8,11 @@ try {
   $qaWindow.Refresh()
   $handle=$qaWindow.MainWindowHandle
   if(-not $qaWindow.CloseMainWindow()){throw 'QA window did not accept normal close'}
-  if(-not $qaWindow.WaitForExit(15000)){throw 'QA Electron did not exit'}
+  if(-not $qaWindow.WaitForExit(1000)){
+    $qaWindow.Refresh()
+    if(-not $qaWindow.CloseMainWindow()){throw 'QA did not accept the second normal close'}
+    if(-not $qaWindow.WaitForExit(15000)){throw 'QA Electron did not exit'}
+  }
   if($uiCode -ne 0){throw 'QA UI checks failed'}
   & node scripts/check-muse-resume-desktop.mjs --verify
   if($LASTEXITCODE -ne 0){throw 'QA persistence checks failed'}
