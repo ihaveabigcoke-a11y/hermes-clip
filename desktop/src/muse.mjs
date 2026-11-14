@@ -31,6 +31,7 @@ export class MuseAdapter {
   }
 
   async prepare(page, job) {
+    this.mediaType = job.mediaType;
     await this.guard?.();
     if (!await this.session(page)) {
       const error = new Error('Phiên Muse cần đăng nhập.');
@@ -85,9 +86,10 @@ export class MuseAdapter {
     await page.locator(config.prompt).fill(prompt);
   }
 
-  mediaCards(page) {
-    // Suggestions also carry has-presentation=true. Require a media element.
-    return page.locator(this.config.resultCards + (this.chatMode ? `:has(${this.config.readyWithinCard})` : ''));
+  mediaCards(page, mediaType = this.mediaType) {
+    // A Markdown/PDF preview is an image too; video jobs require a video element.
+    const media = mediaType === 'video' ? 'video' : mediaType === 'image' ? 'img' : this.config.readyWithinCard;
+    return page.locator(this.config.resultCards + (this.chatMode ? `:has(${media})` : ''));
   }
 
   noMedia(page, response) {
@@ -148,13 +150,16 @@ export class MuseAdapter {
       if (assistantMessages) {
         const responses = await assistantMessages.evaluateAll(elements => elements.map(element => ({
           id: element.getAttribute('data-message-id'), text: element.textContent?.trim() || '',
+          documentPreview: element.getAttribute('data-message-has-presentation') === 'true'
+            && !element.querySelector('video')
+            && [...element.querySelectorAll('span')].some(node => /^(?:MD|PDF|TXT|DOCX|CSV|HTML)$/i.test(node.textContent?.trim() || '')),
         })));
         const response = responses.filter(message => !oldAssistantIds.has(message.id) && message.text).at(-1);
         const generating = await page.getByRole('button', {name: 'Stop', exact: true}).isVisible();
         if (response && !generating) {
           if (response.text !== lastResponse || completedAt === null) completedAt = Date.now();
           lastResponse = response.text;
-          if (Date.now() - completedAt >= 15000 && explicitMediaRefusal(lastResponse)) {
+          if (Date.now() - completedAt >= 15000 && (explicitMediaRefusal(lastResponse) || (this.mediaType === 'video' && response.documentPreview))) {
             throw this.noMedia(page, response.text);
           }
         } else {
@@ -187,7 +192,7 @@ export class MuseAdapter {
       if (users.length !== 1 || users[0].unconfirmed || !users[0].text.includes(job.request.prompt)) {
         throw Error('Hội thoại đã thay đổi hoặc chưa xác nhận gửi. Mở nguồn Muse để đối soát.');
       }
-      const ids = await this.mediaCards(page).evaluateAll((elements, attribute) =>
+      const ids = await this.mediaCards(page, job.request?.mediaType).evaluateAll((elements, attribute) =>
         elements.map(element => element.getAttribute(attribute)).filter(Boolean), this.config.resultIdAttribute);
       if (ids.length > 1) throw Error('Có nhiều kết quả. Mở nguồn Muse để chọn đúng file.');
       const replies = await page.locator('[data-message-id][data-message-role="assistant"]')
@@ -228,7 +233,7 @@ export class MuseAdapter {
     const exact = page.locator(`${config.resultCards}[${config.resultIdAttribute}=${JSON.stringify(job.providerId)}]`);
     await checkpoint('waiting');
     if (this.chatMode) await exact.scrollIntoViewIfNeeded({timeout: 30000});
-    const media = exact.locator(config.readyWithinCard).first();
+    const media = exact.locator(this.chatMode && job.request?.mediaType === 'video' ? 'video' : config.readyWithinCard).first();
     if (this.chatMode) {
       const deadline = Date.now() + config.timeoutSeconds * 1000;
       let settledAt = null, lastResponse = '';
@@ -241,7 +246,11 @@ export class MuseAdapter {
         if (response && !generating) {
           if (response !== lastResponse || settledAt === null) settledAt = Date.now();
           lastResponse = response;
-          if (Date.now() - settledAt >= 15000 && explicitMediaRefusal(response)) throw this.noMedia(page, response);
+          // A saved receipt can point at a document thumbnail from older versions.
+          // Wait for a stable, finished reply before ruling out a late video.
+          const documentPreview = job.request?.mediaType === 'video' && exact.getByText
+            && await exact.getByText(/^(?:MD|PDF|TXT|DOCX|CSV|HTML)$/i, {exact:true}).first().isVisible();
+          if (Date.now() - settledAt >= 15000 && (explicitMediaRefusal(response) || documentPreview)) throw this.noMedia(page, response);
         } else settledAt = null;
         await page.waitForTimeout(750);
       }
@@ -258,7 +267,7 @@ export class MuseAdapter {
       page.waitForEvent('download', {timeout: 30000}),
       downloadButton.click(),
     ]);
-    if (this.chatMode && job.request.mediaType === 'image') {
+    if (this.chatMode && job.request?.mediaType === 'image') {
       const extension = extname(download.suggestedFilename()).toLowerCase();
       if (!['.png', '.jpg', '.jpeg', '.webp'].includes(extension)) {
         throw Error('Ảnh Muse cần định dạng PNG, JPEG hoặc WebP để nhập thư viện.');
