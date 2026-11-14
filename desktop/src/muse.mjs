@@ -255,7 +255,12 @@ export class MuseAdapter {
     } catch {throw Object.assign(Error('Phiên Muse cần đăng nhập.'),{code:'MUSE_LOGIN_REQUIRED'});}
     const exact = page.locator(`${config.resultCards}[${config.resultIdAttribute}=${JSON.stringify(job.providerId)}]`);
     await checkpoint('waiting');
-    if (this.chatMode) await exact.scrollIntoViewIfNeeded({timeout: 30000});
+    if (this.chatMode) {
+      // Chat cards animate while the assistant is still writing. Native scroll
+      // does not wait for that unrelated animation to become stable.
+      if(exact.evaluate)await exact.evaluate(element=>element.scrollIntoView({block:'nearest',behavior:'instant'}));
+      else await exact.scrollIntoViewIfNeeded({timeout: 30000});
+    }
     const media = exact.locator(this.chatMode && job.request?.mediaType === 'video' ? 'video' : config.readyWithinCard).first();
     if (this.chatMode) {
       const deadline = Date.now() + config.timeoutSeconds * 1000;
@@ -284,6 +289,7 @@ export class MuseAdapter {
     if(this.chatMode && job.request?.mediaType==='video' && media.evaluate && page.request){
       const source=await media.evaluate(video=>video.currentSrc||video.src||video.querySelector('source')?.src||'');
       let url;try{url=new URL(source);}catch{}
+      this.timings.videoSourceScheme=url?.protocol??'empty';
       if(url?.protocol==='https:'&&!url.username&&!url.password){
         await checkpoint('downloading');
         downloadStarted=true;
@@ -306,7 +312,8 @@ export class MuseAdapter {
     let downloadButton = exact.getByRole('button', {name: config.downloadButtonName, exact: true});
     if (this.chatMode) {
       const preview = exact.locator('[data-hatch-video-wrapper], button:has(img), [role="button"]:has(img)').first();
-      await preview.click({timeout: 15000});
+      await preview.click({timeout: 15000,force:true});
+      this.timings.previewOpenedAt=Date.now();
       downloadButton = page.getByRole('button', {name: config.downloadButtonName, exact: true});
       await downloadButton.waitFor({state: 'visible', timeout: 15000});
     }

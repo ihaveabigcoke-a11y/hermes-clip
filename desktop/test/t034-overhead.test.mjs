@@ -12,7 +12,7 @@ test('T-034: fetches the exact video URL while chat is streaming, without openin
   const source=join(root,'source.mp4');await runMediaTool('ffmpeg',['-v','error','-f','lavfi','-i','color=c=blue:s=90x160:r=30:d=1','-c:v','libx264','-pix_fmt','yuv420p',source]);
   const bytes=await readFile(source),events=[],config={startUrl:'https://muse.ai/',resultIdAttribute:'data-message-id',resultCards:'[data-message-id]',loggedIn:'textarea',readyWithinCard:'video',downloadButtonName:'Download',timeoutSeconds:30};
   const media={isVisible:async()=>true,evaluate:async()=> 'https://media.muse.ai/this-receipt.mp4'};
-  const exact={scrollIntoViewIfNeeded:async()=>{},locator:selector=>{assert.equal(selector,'video');return {first:()=>media};}};
+  const exact={scrollIntoViewIfNeeded:async()=>assert.fail('Animated chat must not delay scrolling'),evaluate:async fn=>fn({scrollIntoView:options=>assert.deepEqual(options,{block:'nearest',behavior:'instant'})}),locator:selector=>{assert.equal(selector,'video');return {first:()=>media};}};
   const page={url:()=>config.startUrl,locator:selector=>{if(selector==='textarea')return {waitFor:async()=>{},isVisible:async()=>true};assert.equal(selector,'[data-message-id][data-message-id="this-result"]');return exact;},
     getByRole:()=>assert.fail('Download must not wait for Stop to disappear or open the preview'),
     request:{get:async url=>{assert.equal(url,'https://media.muse.ai/this-receipt.mp4');events.push('transfer');return {ok:()=>true,headers:()=>({'content-length':String(bytes.length)}),body:async()=>bytes,dispose:async()=>events.push('disposed')};}}};
@@ -23,7 +23,7 @@ test('T-034: fetches the exact video URL while chat is streaming, without openin
   // downloading transition or contaminating the next member of a bundle.
   events.length=0;
   page.request.get=async()=>({ok:()=>false,dispose:async()=>{}});
-  exact.locator=selector=>({first:()=>selector==='video'?media:{click:async()=>events.push('preview')}});
+  exact.locator=selector=>({first:()=>selector==='video'?media:{click:async options=>{assert.equal(options.force,true);events.push('preview');}}});
   exact.getByRole=()=>({});page.getByRole=()=>({waitFor:async()=>{},click:async()=>events.push('button')});
   page.keyboard={press:async()=>events.push('escape')};
   page.waitForEvent=async()=>({saveAs:p=>writeFile(p,bytes),failure:async()=>null});
