@@ -81,7 +81,8 @@ try{
  await writeFile(join(out,'ui-result.json'),JSON.stringify({passed:true,actualLauncher:true,actualElectron:true,installedUserData:false,isolatedWorkspace:true,screens,errors,consoleErrors,external,defaultSignals:true,musePaused:false,explicitResume:true,receiptPreserved:true,unlimited:true,submitted:1},null,2));
  console.log(JSON.stringify({passed:true,menus:screens.length,errors,consoleErrors,defaultSignals:true}));
 }finally{
- // Close only the window launched by this check, using the normal Windows close request.
+ // Release the debugger before sending a normal Windows close request.
+ await browser?.close().catch(()=>{});browser=null;
  const pid=Number(await readFile(join(qa,'electron.pid'),'utf8').catch(()=>'0'));
  if(pid>0){
   const close=JSON.parse((await execFileAsync('pwsh.exe',['-NoProfile','-Command','$qaWindow=Get-Process -Id '+pid+' -ErrorAction Stop; $qaWindow.Refresh(); [pscustomobject]@{Id=$qaWindow.Id;Window=$qaWindow.MainWindowHandle;Close=$qaWindow.CloseMainWindow();Exited=$qaWindow.WaitForExit(15000)} | ConvertTo-Json'],{windowsHide:true,encoding:'utf8'})).stdout);
