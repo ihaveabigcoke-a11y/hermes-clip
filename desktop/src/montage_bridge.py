@@ -13,6 +13,28 @@ import sys
 from pathlib import Path
 
 
+def single_pass(cuts, width, height, subtitle, out):
+    """One accurate seek per input, one encode including captions and audio."""
+    args = ["ffmpeg", "-y", "-v", "error", "-xerror", "-filter_complex_threads", "1"]
+    filters, inputs = [], []
+    duration = sum(c["out_seconds"] - c["in_seconds"] for c in cuts)
+    for i, cut in enumerate(cuts):
+        length = cut["out_seconds"] - cut["in_seconds"]
+        args += ["-ss", str(cut["in_seconds"]), "-t", str(length), "-i", cut["source"]]
+        probe = json.loads(subprocess.check_output(["ffprobe", "-v", "error", "-show_streams", "-of", "json", cut["source"]], text=True))
+        filters.append(f"[{i}:v]setpts=PTS-STARTPTS,scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30,trim=duration={length},format=yuv420p[v{i}]")
+        audio = f"[{i}:a]asetpts=PTS-STARTPTS,aresample=48000,aformat=channel_layouts=stereo,apad" if any(s["codec_type"] == "audio" for s in probe["streams"]) else "anullsrc=r=48000:cl=stereo"
+        filters.append(f"{audio},atrim=duration={length},asetpts=PTS-STARTPTS[a{i}]")
+        inputs.append(f"[v{i}][a{i}]")
+    filters.append("".join(inputs) + f"concat=n={len(cuts)}:v=1:a=1[base][audio]")
+    filters.append("[base]ass=overlays.ass[video]" if subtitle else "[base]null[video]")
+    rate = max(32000, int(.88 * 6 * 1024 * 1024 * 8 / duration - 96000))
+    args += ["-filter_complex", ";".join(filters), "-map", "[video]", "-map", "[audio]", "-t", str(duration),
+             "-c:v", "libx264", "-preset", "veryfast", "-crf", "26", "-threads", "2", "-maxrate", str(rate), "-bufsize", str(rate),
+             "-c:a", "aac", "-b:a", "96k", "-map_metadata", "-1", "-movflags", "+faststart", str(out / "output.mp4")]
+    subprocess.run(args, cwd=out, check=True, capture_output=True, timeout=240)
+
+
 def execute(request):
     root = Path(request["checkout"]).resolve()
     expected = request["expectedCommit"]
@@ -72,6 +94,9 @@ def execute(request):
             if subtitle.parent != out or subtitle.name != "overlays.ass":
                 raise ValueError("Subtitle must be inside this job.")
             options.update({"subtitle_path": str(subtitle), "subtitle_style": {"font": "Arial", "font_size": 70, "alignment": 8, "margin_v": 90, "outline_width": 3}})
+        if request.get("singlePass"):
+            single_pass(cuts, width, height, subtitle, out)
+            return {"output": str(out / "output.mp4"), "engine": "hermes_ffmpeg_single_pass", "commit": head, "cutCount": len(cuts), "usageUsd": 0, "creativeReview": "pending"}
         # No audio_path: upstream keeps each source's audio instead of replacing it.
         result = VideoCompose().execute(options)
         if not result.success:

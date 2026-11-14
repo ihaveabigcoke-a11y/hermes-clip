@@ -627,9 +627,15 @@ export class Worker {
         failedFilePath: null,
         output: {path: output, name: output.split(/[\\/]/).at(-1), ...(adapter.compression?{compression:adapter.compression}:{}), ...report},
         note: 'Đã ghi file và giải mã toàn bộ; vẫn cần người duyệt nội dung.',
+        timings:{...timings,...adapter.timings,validatedAt:Date.now()},
+      });
+      // A registered video flow can encode the verified file while its durable
+      // library import runs. Rendering failure must not discard the Muse receipt.
+      Promise.resolve().then(()=>this.onReadyOutput?.(this.store.job(member))).catch(error=>{
+        const latest=this.store.job(member);this.store.put({...latest,earlyRenderError:String(error.message).slice(0,600)});
       });
       await this.importReady(member);
-      timings.importedAt=Date.now();this.store.put({...this.store.job(member),timings:{...timings,...adapter.timings}});
+      timings.importedAt=Date.now();this.store.put({...this.store.job(member),timings:{...this.store.job(member).timings,...timings,...adapter.timings}});
       }
       this.night.outcome(id,null,profileId);
       await this.measureQuota(profileId,context);

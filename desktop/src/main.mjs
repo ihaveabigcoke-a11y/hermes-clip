@@ -20,6 +20,7 @@ const {Store}=await import('./store.mjs');
 const {Worker}=await import('./worker.mjs');
 const {initializeMuseConnection}=await import('./defaults.mjs');
 const {Integrations}=await import('./integrations.mjs');
+const {EarlyVideoRender}=await import('./early-video-render.mjs');
 const {startLocalServer,sessionCookie}=await import('../local/server.mjs');
 const {importWorkerOutput}=await import('../local/import-worker.mjs');
 const {SITE,assertSender,safeMessage}=await import('./contracts.mjs');
@@ -73,6 +74,8 @@ async function startApplication() {
   worker.readProductionForProfileRemoval=id=>local.readProductionForProfileRemoval(id);
  }
  const integrations=new Integrations(store,root);
+ const earlyRenders=manual?new EarlyVideoRender({records:()=>manual.records(),readOutput:id=>worker.output(id),readAsset:async id=>{const response=await manual.request('/api/assets/'+id);if(!response.ok)throw Error('Không đọc được nguồn dựng.');return new Uint8Array(await response.arrayBuffer());},compose:input=>integrations.compose(input),onTiming:(id,stage)=>{const job=store.job(id);store.put({...job,timings:{...job.timings,[stage]:Date.now()}});}}):null;
+ worker.onReadyOutput=job=>earlyRenders?.start(job);
  const reaVideo=new ReaVideoService({store,root,run:integrations.run,domain:reaDomain,secret,config:()=>integrations.config()});
  integrations.rea=reaVideo;
  const museChat = new MuseChat(worker);
@@ -95,10 +98,13 @@ async function startApplication() {
   const plan=getRenderPlan(record.data,record.id,d.variantId),clips=[];
   assertRenderRevision(record.revision,d.revision,plan,d.planSignature);
   for(const segment of plan.segments){const asset=records.find(r=>r.id===segment.assetId&&r.kind==='asset');if(!asset||asset.data.sha256!==segment.sha256)throw Error('Nguồn dựng đã thay đổi.');const response=await manual.request('/api/assets/'+segment.assetId);if(!response.ok)throw Error('Không đọc được nguồn dựng.');clips.push({bytes:new Uint8Array(await response.arrayBuffer()),sha256:segment.sha256,duration:asset.data.metadata.duration,inSec:segment.inSec,outSec:segment.outSec});}
-  const job=await integrations.compose({planVersion:1,projectId:record.id,variantId:d.variantId,ratio:plan.ratio,clips,overlays:plan.overlays}),result=await integrations.output(job.id);
+  const composition={planVersion:1,projectId:record.id,variantId:d.variantId,ratio:plan.ratio,clips,overlays:plan.overlays};
+  await earlyRenders?.prepared(composition);
+  const job=await (earlyRenders?.get(composition)??integrations.compose(composition)),result=await integrations.output(job.id);
   if(d.filename){const {copyFile}=await import('node:fs/promises');const named=join(dirname(result.path),d.filename);if(named!==result.path)await copyFile(result.path,named);result.path=named;result.name=d.filename;}
   return {...result,renderPlan:plan,preparedToken:local.registerPreparedMedia(result)};
  }});
+ Object.assign(calls,{prepareVideoRenders:p=>{if(!earlyRenders)throw Error('Cần workspace local.');return earlyRenders.arm(z.object({projectId:z.string().regex(/^[\w-]{1,120}$/)}).parse(p).projectId);}});
  Object.assign(calls,{setMusePaused:p=>worker.setMusePaused(p)});
  Object.assign(calls,{warmMuseProfiles:()=>worker.warmProfiles()});
  const musePackage=manual?new MusePackage({worker,manual,domain:await import('../local-dist/server/lib/lab/production.mjs')}):null;

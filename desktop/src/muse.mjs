@@ -1,6 +1,6 @@
 import {saveDownload} from './storage-policy.mjs';
 import {extname} from 'node:path';
-import {readFile} from 'node:fs/promises';
+import {readFile,writeFile} from 'node:fs/promises';
 import {museMediaPrompt,museVideoBody} from './muse-video-prompt.mjs';
 import {mapBundleCards} from './muse-bundle.mjs';
 
@@ -138,10 +138,12 @@ export class MuseAdapter {
         config.resultIdAttribute,
       );
       const fresh = ids.filter(id => !oldIds.has(id));
+      if(fresh.length)this.timings.firstResultAt??=Date.now();
       if(this.expectedScenes?.length){
         const generating=await page.getByRole('button',{name:'Stop',exact:true}).isVisible();
         if(fresh.length&&!generating){
-          const rows=await cards.evaluateAll((elements,attribute)=>elements.map(e=>({id:e.getAttribute(attribute),text:e.innerText||e.textContent||''})),config.resultIdAttribute);
+          const rows=await cards.evaluateAll((elements,attribute)=>elements.map(e=>({id:e.getAttribute(attribute),text:e.innerText||e.textContent||'',clipCount:e.querySelectorAll('video').length})),config.resultIdAttribute);
+          this.timings.observedClipCount=rows.filter(r=>fresh.includes(r.id)).reduce((n,r)=>n+(r.clipCount??1),0);
           const mapped=mapBundleCards(rows.filter(r=>fresh.includes(r.id)),this.expectedScenes);
           if(mapped){this.timings.resultAt=Date.now();this.bundleProviderIds=mapped;await checkpoint('submitted',{providerId:mapped[0],providerUrl:page.url(),bundleProviderIds:mapped});return mapped[0];}
           this.bundleSettledAt??=Date.now();
@@ -240,6 +242,7 @@ export class MuseAdapter {
 
   async fetch(page, job, checkpoint, path) {
     const config = this.config;
+    let downloadStarted=false;
     const url = new URL(job.providerUrl);
     if (url.origin !== new URL(config.startUrl).origin) throw Error('Link kết quả không thuộc Muse.');
     if (page.url() !== url.href) {
@@ -275,6 +278,31 @@ export class MuseAdapter {
         await page.waitForTimeout(750);
       }
     } else await media.waitFor({state: 'visible', timeout: config.timeoutSeconds * 1000});
+    this.timings={...this.timings,mediaVisibleAt:Date.now()};
+    // The actual video URL is ready before the chat/preview animation settles.
+    // Read only this receipt's element; never select a neighbouring result.
+    if(this.chatMode && job.request?.mediaType==='video' && media.evaluate && page.request){
+      const source=await media.evaluate(video=>video.currentSrc||video.src||video.querySelector('source')?.src||'');
+      let url;try{url=new URL(source);}catch{}
+      if(url?.protocol==='https:'&&!url.username&&!url.password){
+        await checkpoint('downloading');
+        downloadStarted=true;
+        this.timings.downloadStartedAt=Date.now();
+        let response,bytes;
+        try{
+          response=await page.request.get(url.href,{timeout:15000});
+          if(!response.ok())throw Error('Video URL is not ready');
+          if(Number(response.headers()['content-length'])>64*1024**2)throw Error('Video URL exceeds download budget');
+          bytes=await response.body();
+          if(!bytes.length||bytes.length>64*1024**2||bytes.subarray(4,8).toString()!=='ftyp')throw Error('Video URL did not return MP4');
+        }catch{bytes=null;this.timings.directDownloadFallbackAt=Date.now();}
+        finally{await response?.dispose();}
+        if(bytes){
+          this.timings.transferFinishedAt=Date.now();this.timings.downloadMethod='video-url';
+          return saveDownload({saveAs:p=>writeFile(p,bytes),failure:async()=>null},path,{compress:true,onCompression:c=>{this.compression=c;}});
+        }
+      }
+    }
     let downloadButton = exact.getByRole('button', {name: config.downloadButtonName, exact: true});
     if (this.chatMode) {
       const preview = exact.locator('[data-hatch-video-wrapper], button:has(img), [role="button"]:has(img)').first();
@@ -282,8 +310,8 @@ export class MuseAdapter {
       downloadButton = page.getByRole('button', {name: config.downloadButtonName, exact: true});
       await downloadButton.waitFor({state: 'visible', timeout: 15000});
     }
-    await checkpoint('downloading');
-    this.timings={...this.timings,downloadStartedAt:Date.now()};
+    if(!downloadStarted)await checkpoint('downloading');
+    this.timings={...this.timings,downloadStartedAt:Date.now(),downloadMethod:'preview-button'};
     const [download] = await Promise.all([
       page.waitForEvent('download', {timeout: 30000}),
       downloadButton.click(),

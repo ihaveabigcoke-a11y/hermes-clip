@@ -78,7 +78,7 @@ export class Integrations {
    }).superRefine((value,context)=>{
     if(value.frames.some(frame=>frame.timestamp_seconds>value.source.duration))context.addIssue({code:'custom',message:'Khung hình vượt thời lượng nguồn.'});
    }),
-   compose:z.object({output:z.string().min(1).refine(isAbsolute),engine:z.literal('openmontage_ffmpeg'),commit:z.literal(lock.openMontage.commit),cutCount:z.number().int().min(1).max(30),usageUsd:z.literal(0),creativeReview:z.literal('pending')})
+   compose:z.object({output:z.string().min(1).refine(isAbsolute),engine:z.enum(['openmontage_ffmpeg','hermes_ffmpeg_single_pass']),commit:z.literal(lock.openMontage.commit),cutCount:z.number().int().min(1).max(30),usageUsd:z.literal(0),creativeReview:z.literal('pending')})
   };
   if(!response||response.ok!==true||!schemas[operation]?.safeParse(response.result).success)throw Error('OpenMontage không trả kết quả hợp lệ.');
   return response;
@@ -160,10 +160,17 @@ export class Integrations {
    for(const [i,c] of d.clips.entries()){const path=join(dir,`${i}.mp4`);await this.writeSource(c,path);await validateMedia(path,{mediaType:'video',ratio:d.ratio,duration:c.duration});clips.push({path,duration:c.duration,inSec:c.inSec,outSec:c.outSec??c.duration});}
    const [rw,rh]=d.ratio.split(':').map(Number),width=d.ratio==='9:16'?720:d.ratio==='16:9'?1280:960,height=Math.round(width*rh/rw/2)*2;
    let subtitlePath=null;if(d.overlays.length){subtitlePath=join(dir,'overlays.ass');await writeFile(subtitlePath,renderPlanAss(d.overlays),{flag:'wx'});}
-   const r=await this.montage('compose',{outputDir:dir,size:[width,height],clips,subtitlePath,audio:'keep'});
+   const r=await this.montage('compose',{outputDir:dir,size:[width,height],clips,subtitlePath,audio:'keep',singlePass:d.planVersion===1});
    const outputPath=await this.confinedPath(dir,join(dir,'output.mp4')),duration=clips.reduce((n,c)=>n+c.outSec-c.inSec,0);
    let report=await validateMedia(outputPath,{mediaType:'video',ratio:d.ratio,duration,maxBytes:2*1024**3});
-   const compressed=await compressMedia(outputPath);try{if(compressed.path!==outputPath)await copyFile(compressed.path,outputPath);report={...await validateMedia(outputPath,{mediaType:'video',ratio:d.ratio,duration,maxBytes:2*1024**3}),compression:compressed.compression};}finally{await compressed.cleanup();}
+   if(d.planVersion===1&&report.size<6*1024**2){
+    // Our final encoder already applied the cap, codecs and faststart. Full
+    // decode above is authoritative; a remux and two more decodes add no value.
+    report={...report,compression:{version:1,sourceSha256:report.sha256,sha256:report.sha256,sourceSize:report.size,size:report.size,mode:'original',overLimit:false,maxBytes:6*1024**2}};
+   }else{
+    const compressed=await compressMedia(outputPath);try{if(compressed.path!==outputPath)await copyFile(compressed.path,outputPath);report={...await validateMedia(outputPath,{mediaType:'video',ratio:d.ratio,duration,maxBytes:2*1024**3}),compression:compressed.compression};}finally{await compressed.cleanup();}
+   }
+   if(d.planVersion&&report.size>6*1024**2)throw Error('MP4 vượt 6 MB; giữ file để kiểm tra, chưa xuất.');
    const probe=JSON.parse((await captureMediaTool('ffprobe',['-v','error','-show_streams','-of','json',outputPath],{timeout:15000,windowsHide:true})).stdout);
    const audio=probe.streams.find(s=>s.codec_type==='audio'),video=probe.streams.find(s=>s.codec_type==='video');
    if(d.planVersion&&(video?.width!==720||video?.height!==1280||Math.abs(report.metadata.duration-duration)>.1))throw Error('Bản dựng cần 720×1280 và thời lượng khớp trong 0,1 giây.');
