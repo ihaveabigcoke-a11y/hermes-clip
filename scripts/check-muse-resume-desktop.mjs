@@ -3,11 +3,26 @@ import assert from 'node:assert/strict';
 import {mkdir,mkdtemp,writeFile,readFile} from 'node:fs/promises';
 import {openSync,closeSync} from 'node:fs';
 import {resolve,join} from 'node:path';
-import {spawn,execFile} from 'node:child_process';
-import {promisify} from 'node:util';
-const execFileAsync=promisify(execFile);
+import {spawn} from 'node:child_process';
 import {setTimeout as delay} from 'node:timers/promises';
 import {chromium} from '../desktop/node_modules/playwright/index.mjs';
+// The PowerShell wrapper closes Electron after this CDP process has exited.
+if(process.argv.includes('--verify')){
+ const output=resolve('outputs/M-20261114-enable-desktop-ui');
+ const {qa}=JSON.parse(await readFile(join(output,'shutdown.json'),'utf8'));
+ assert.equal(resolve(qa).startsWith(output+'\\'),true,'Only read the isolated QA workspace');
+ const {Store}=await import('../desktop/src/store.mjs');
+ const {MuseNight}=await import('../desktop/src/muse-night.mjs');
+ const persisted=new Store(join(qa,'worker','worker.sqlite'));
+ try{
+  const night=new MuseNight(persisted),status=night.status();
+  assert.equal(persisted.get('muse_paused'),false);assert.equal(status.limit,null);assert.equal(status.submitted,1);assert.equal(status.errors,1);assert.equal(status.stopped,false);
+  assert.equal(night.current().resumptions.length,1);assert.equal(persisted.jobs()[0].providerId,'fixture-receipt');
+  await writeFile(join(output,'result.json'),JSON.stringify({...JSON.parse(await readFile(join(output,'ui-result.json'),'utf8')),persistedAfterElectronClose:true},null,2));
+  console.log(JSON.stringify({passed:true,persistedAfterElectronClose:true,receiptPreserved:true,unlimited:true}));
+ }finally{persisted.close();}
+ process.exit(0);
+}
 const out=resolve('outputs/M-20261114-enable-desktop-ui');await mkdir(out,{recursive:true});
 const qa=await mkdtemp(join(out,'isolated-')),hook=join(qa,'debug.cjs');
 await writeFile(hook,`if(process.versions.electron&&process.type==='browser')setImmediate(()=>{
@@ -81,23 +96,8 @@ try{
  await writeFile(join(out,'ui-result.json'),JSON.stringify({passed:true,actualLauncher:true,actualElectron:true,installedUserData:false,isolatedWorkspace:true,screens,errors,consoleErrors,external,defaultSignals:true,musePaused:false,explicitResume:true,receiptPreserved:true,unlimited:true,submitted:1},null,2));
  console.log(JSON.stringify({passed:true,menus:screens.length,errors,consoleErrors,defaultSignals:true}));
 }finally{
- // Release the debugger before sending a normal Windows close request.
- await browser?.close().catch(()=>{});browser=null;
- const pid=Number(await readFile(join(qa,'electron.pid'),'utf8').catch(()=>'0'));
- if(pid>0){
-  const close=JSON.parse((await execFileAsync('pwsh.exe',['-NoProfile','-Command','$qaWindow=Get-Process -Id '+pid+' -ErrorAction Stop; $qaWindow.Refresh(); [pscustomobject]@{Id=$qaWindow.Id;Window=$qaWindow.MainWindowHandle;Close=$qaWindow.CloseMainWindow();Exited=$qaWindow.WaitForExit(15000)} | ConvertTo-Json'],{windowsHide:true,encoding:'utf8'})).stdout);
-  assert.equal(close.Close,true,'QA window must accept normal close');assert.equal(close.Exited,true,'QA Electron must finish closing');
- }
  await browser?.close().catch(()=>{});closeSync(log);
+ const pid=Number(await readFile(join(qa,'electron.pid'),'utf8').catch(()=>'0'));
+ await writeFile(join(out,'shutdown.json'),JSON.stringify({qa,pid}));launcher.unref();
 }
-
-// Read only the isolated workspace created above, never the installed user data.
-
-const persisted=new Store(join(qa,'worker','worker.sqlite'));
-try{
- const status=new MuseNight(persisted).status();
- assert.equal(persisted.get('muse_paused'),false);assert.equal(status.limit,null);assert.equal(status.submitted,1);assert.equal(status.errors,1);assert.equal(status.stopped,false);
- assert.equal(new MuseNight(persisted).current().resumptions.length,1);assert.equal(persisted.jobs()[0].providerId,'fixture-receipt');
- await writeFile(join(out,'result.json'),JSON.stringify({...JSON.parse(await readFile(join(out,'ui-result.json'),'utf8')),persistedAfterElectronClose:true},null,2));
- console.log(JSON.stringify({persistedAfterElectronClose:true,receiptPreserved:true,unlimited:true}));
-}finally{persisted.close();}
+process.exit(0);
