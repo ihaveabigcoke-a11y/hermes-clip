@@ -768,6 +768,8 @@ export class Worker {
     // A known provider result is downloaded, never resubmitted, even after manual fallback.
     assertMuseNewTask(this.store);
     const job = this.store.job(id);
+    const bundleLeader=job.bundleParentId?this.store.job(job.bundleParentId):job;
+    if(bundleLeader.bundleMapping==='appearance-v1')throw Error('Gói ba video chưa được nhận trọn bộ. Không lấy lẻ một thẻ để bỏ qua kiểm thiếu/trùng; giữ các file và đối soát cả gói trước.');
     if (this.chatting.has(job.profileId)) throw Error('Chờ chat Muse kết thúc trước khi tiếp tục job.');
     if (job.state !== 'needs_attention' || !job.providerId || !job.providerUrl || !job.profileId) {
       throw Error('Thiếu mã kết quả để tiếp tục an toàn. Mở profile và đối soát thủ công.');

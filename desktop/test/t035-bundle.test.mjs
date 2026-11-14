@@ -17,6 +17,17 @@ const request=i=>({projectId:'project',productId:'product',productRevision:1,sce
 const config={startUrl:'https://muse.ai/',loggedIn:'textarea',resultCards:'[data-message-id]',resultIdAttribute:'data-message-id',submitName:'Send',downloadButtonName:'Download',timeoutSeconds:60};
 const turn=()=>new Promise(r=>setImmediate(r));
 
+test('T-035 interrupted ordered bundles cannot bypass whole-set validation through individual resume',async()=>{
+ const store=new Store(':memory:');try{
+  store.set('muse_paused',false);const jobs=[0,1,2].map(i=>store.enqueue(request(i),'interrupted_'+i).job),leader=jobs[0];
+  store.put({...leader,bundleMapping:'appearance-v1',bundleJobIds:jobs.map(j=>j.id)});
+  for(const j of jobs){store.put({...store.job(j.id),state:'needs_attention',profileId:'p',providerId:'r'+j.id,providerUrl:config.startUrl,...(j.id!==leader.id?{bundleParentId:leader.id}:{})});}
+  const w=new Worker(store,'unused',{},{});w.run=async()=>assert.fail('No individual fetch');const before=store.jobs();
+  for(const j of jobs)await assert.rejects(w.resume(j.id,{recoverExisting:true}),/Không lấy lẻ/);
+  assert.deepEqual(store.jobs(),before);assert.equal(store.get('muse_paused'),false);assert.equal(w.active.size,0);
+ }finally{store.close();}
+});
+
 test('T-035 two simultaneous bundles queue six speculative renders through three slots without rejecting a hook',async()=>{
  const service=new EarlyVideoRender({}),scope={};service.scopes.set('project',scope);
  let active=0,peak=0;const gates=[];service.compose=async()=>{active++;peak=Math.max(peak,active);await new Promise(r=>gates.push(r));active--;return {ok:true};};
