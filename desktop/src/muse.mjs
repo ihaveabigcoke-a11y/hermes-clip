@@ -105,7 +105,9 @@ export class MuseAdapter {
 
   async submit(page, checkpoint) {
     const config = this.config;
-    const cards = this.mediaCards(page);
+    // Bundle ordinals belong to the first card appearance, even while a card
+    // is still an empty media placeholder. Single jobs still require media.
+    const cards = this.expectedScenes?.length ? page.locator(config.resultCards) : this.mediaCards(page);
     const oldIds = new Set(await cards.evaluateAll(
       (elements, attribute) => elements.map(element => element.getAttribute(attribute)),
       config.resultIdAttribute,
@@ -146,16 +148,17 @@ export class MuseAdapter {
           const rows=await cards.evaluateAll((elements,attribute)=>elements.map(e=>({id:e.getAttribute(attribute),text:e.innerText||e.textContent||'',clipCount:e.querySelectorAll('video').length})),config.resultIdAttribute);
           this.timings.observedClipCount=rows.filter(r=>fresh.includes(r.id)).reduce((n,r)=>n+(r.clipCount??1),0);
           const current=rows.filter(r=>fresh.includes(r.id));
-          for(const row of current)if(!observedCards.some(c=>c.id===row.id))observedCards.push(row);
+          for(const row of current){
+            const observed=observedCards.find(c=>c.id===row.id);
+            if(observed)Object.assign(observed,row);else observedCards.push(row);
+          }
           this.timings.observedCardCount=observedCards.length;
-          const invalid=current.some(r=>r.clipCount!==1)||observedCards.length>this.expectedScenes.length;
+          const invalid=current.some(r=>r.clipCount>1)||new Set(current.map(r=>r.id)).size!==current.length||observedCards.length>this.expectedScenes.length;
           if(invalid)throw Object.assign(Error('Muse trả số thẻ/clip không đúng gói. Giữ kết quả để đối soát.'),{code:'MUSE_BUNDLE_UNMAPPED',providerUrl:page.url(),providerIds:observedCards.map(c=>c.id)});
-          if(this.bundleAppearance)for(const [index,row] of observedCards.entries())this.onBundleCard?.(index,row.id,page.url());
+          if(this.bundleAppearance)for(const [index,row] of observedCards.entries())if(row.clipCount===1)this.onBundleCard?.(index,row.id,page.url());
           const mapped=mapBundleCards(this.bundleAppearance?observedCards:current,this.expectedScenes,{appearance:this.bundleAppearance===true});
           if(mapped){this.timings.resultAt=Date.now();this.bundleProviderIds=mapped;await checkpoint('submitted',{providerId:mapped[0],providerUrl:page.url(),bundleProviderIds:mapped});return mapped[0];}
-          if(!generating)this.bundleSettledAt??=Date.now();else this.bundleSettledAt=null;
-          if(this.bundleSettledAt&&Date.now()-this.bundleSettledAt>=15000)throw Object.assign(Error('Muse trả thiếu clip hoặc chưa xác định được clip nào thuộc cảnh nào. Giữ kết quả để đối soát; gói mới dùng gửi riêng.'),{code:'MUSE_BUNDLE_UNMAPPED',providerUrl:page.url(),providerIds:fresh,providerResponse:rows.map(r=>r.text).join('\n').slice(0,2000)});
-        }else this.bundleSettledAt=null;
+        }
       }else if (fresh.length > 1) throw Object.assign(Error('Có nhiều kết quả mới; không xác định được job.'),{code:'MUSE_MULTIPLE_RESULTS',providerUrl:page.url?.(),providerIds:fresh});
       if (!this.expectedScenes?.length&&fresh.length === 1) {
         this.timings.resultAt=Date.now();
@@ -195,7 +198,7 @@ export class MuseAdapter {
       }
       await page.waitForTimeout(750);
     }
-    if(this.expectedScenes?.length&&observedCards.length)throw Object.assign(Error('Hết thời gian chờ đủ ba thẻ video. Giữ kết quả để đối soát.'),{code:'MUSE_BUNDLE_UNMAPPED',providerUrl:page.url(),providerIds:observedCards.map(c=>c.id)});
+    if(this.expectedScenes?.length)throw Object.assign(Error('Hết thời gian chờ đủ ba thẻ video. Giữ kết quả để đối soát.'),{code:'MUSE_BUNDLE_TIMEOUT',providerUrl:page.url(),providerIds:observedCards.map(c=>c.id)});
     if(lastResponse)throw this.noMedia(page,lastResponse);
     throw Error('Chưa thấy mã kết quả mới. Cần đối soát trước khi gửi tiếp.');
   }
@@ -318,12 +321,21 @@ export class MuseAdapter {
             bytes=Buffer.from(base64,'base64');
           }else{
           response=await page.request.get(url.href,{timeout:15000});
-          if(!response.ok())throw Error('Video URL is not ready');
-          if(Number(response.headers()['content-length'])>64*1024**2)throw Error('Video URL exceeds download budget');
+          if(!response.ok())throw Object.assign(Error('Video URL is not ready'),{downloadReason:'http_not_ready'});
+          if(Number(response.headers()['content-length'])>64*1024**2)throw Object.assign(Error('Video URL exceeds download budget'),{downloadReason:'size_limit'});
           bytes=await response.body();
           }
-          if(!bytes.length||bytes.length>64*1024**2||bytes.subarray(4,8).toString()!=='ftyp')throw Error('Video URL did not return MP4');
-        }catch{bytes=null;this.timings.directDownloadFallbackAt=Date.now();}
+          if(!bytes.length||bytes.length>64*1024**2||bytes.subarray(4,8).toString()!=='ftyp')throw Object.assign(Error('Video URL did not return MP4'),{downloadReason:'invalid_mp4_or_size'});
+        }catch(error){
+          // Persist only a bounded category, never the exception text (which
+          // Playwright may populate with signed URLs, headers or tokens).
+          const reason=['http_not_ready','size_limit','invalid_mp4_or_size'].includes(error.downloadReason)?error.downloadReason
+            : /timeout|timed out/i.test(error.name+' '+error.message)?'timeout'
+            : url.protocol==='blob:'?'blob_read_failed':'network_or_read_failed';
+          bytes=null;this.timings.directDownloadFallbackAt=Date.now();this.timings.directDownloadFallbackReason=reason;
+          if(this.onDiagnostic)this.onDiagnostic(`Tải trực tiếp chuyển sang nút tải: ${reason}.`);
+          else console.warn(`[Muse] direct download fallback: ${reason}`);
+        }
         finally{await response?.dispose();}
         if(bytes){
           this.timings.transferFinishedAt=Date.now();this.timings.downloadMethod=url.protocol==='blob:'?'video-blob':'video-url';

@@ -67,6 +67,7 @@ test('T-035 streaming worker downloads concurrently, renders per verified clip, 
   w.night.begin();w.paused=false;const page={url:()=>config.startUrl,screenshot:async()=>{}};w.context=async()=>({pages:()=>[],newPage:async()=>page});w.setProfileVisibility=async()=>{};w.measureQuota=async()=>{};
   const downloaded=[],rendered=[],imported=[],gates=[];let active=0,peak=0,discarded=false;
   w.validateOutput=async path=>{const i=jobs.findIndex(j=>path.includes(j.id));return {sha256:(scenario==='duplicate'?'a':String(i)).repeat(64),metadata:{width:scenario==='invalid'?360:720,height:1280,duration:8}};};
+  w.readBundleFrame=async path=>Buffer.alloc(32*32*3,40+jobs.findIndex(j=>path.includes(j.id))*80);
   w.onReadyOutput=async j=>{assert.equal(imported.length,0);assert.equal(store.job(j.id).state,'validating');await assert.rejects(w.output(j.id),/Chưa có file/);rendered.push(j.id);};
   w.onRejectedBundle=()=>discarded=true;w.receiveOutput=async id=>imported.push(id);
   const prepare=t.mock.method(MuseAdapter.prototype,'prepare',async function(_,r){assert.ok(r.prompt.startsWith(MUSE_VIDEO_COMMAND+'\n'));}),
@@ -83,7 +84,7 @@ test('T-035 streaming worker downloads concurrently, renders per verified clip, 
    });
   try{await w.run(leader.id,'a');assert.equal(peak,scenario==='missing'?2:3);assert.equal(w.night.status().submitted,1);assert.equal(submit.mock.callCount(),1);
    if(scenario==='valid'){assert.deepEqual(imported,jobs.map(j=>j.id));assert.equal(rendered.length,3);assert.ok(jobs.every(j=>store.job(j.id).state==='ready'));assert.equal(store.get('muse_bundle_order_verified'),true);}
-   else {assert.equal(imported.length,0);assert.ok(jobs.every(j=>store.job(j.id).state!=='ready'));assert.equal(store.get('muse_bundle_order_failed'),true);assert.equal(discarded,true);assert.ok(jobs.every(j=>!store.job(j.id).uploadedAssetId));}
+   else {assert.equal(imported.length,0);assert.ok(jobs.every(j=>store.job(j.id).state!=='ready'));assert.equal(store.get('muse_bundle_order_failed',false),scenario!=='invalid','Only mapping/duplicate failures disable auto bundles; invalid dimensions only fail this run');assert.equal(discarded,true);assert.ok(jobs.every(j=>!store.job(j.id).uploadedAssetId));}
    assert.equal(store.get('muse_paused'),false);assert.ok(store.get('profiles').every(p=>p.enabled));
   }finally{prepare.mock.restore();submit.mock.restore();fetch.mock.restore();store.close();await rm(root,{recursive:true,force:true});}
  }

@@ -8,6 +8,7 @@ import {freemem} from 'node:os';
 import {profileInput,adapterInput,museConnectionInput,jobInput,jobFingerprint,labels,safeMessage} from './contracts.mjs';
 import {museMediaPrompt} from './muse-video-prompt.mjs';
 import {bundlePrompt} from './muse-bundle.mjs';
+import {bundleMidpointFrame,assertDistinctBundleFrames} from './muse-bundle-visual.mjs';
 import {validateMedia,toolchain,renderClips,hasAudio} from './media.mjs';
 import {MuseAdapter} from './muse.mjs';
 import {TouchVpn,TOUCH_VPN_ID} from './touch-vpn.mjs';
@@ -16,6 +17,7 @@ import {mediaProviderReceipts} from './provider-routing.mjs';
 import {removeProfile,profileRemovalBlocker} from './profile-removal.mjs';
 export class Worker {
   validateOutput = validateMedia;
+  readBundleFrame = bundleMidpointFrame;
   checkToolchain = toolchain;
   chatting = new Set();
   deleting = new Set();
@@ -24,7 +26,11 @@ export class Worker {
   reclaimingMemory = false;
   memoryRecoveryAttempts = new Set();
   warmed = new Map();
-  constructor(store,root,browser,secret,memory=freemem){this.memory=memory;this.store=store;this.night=new MuseNight(store);this.root=root;this.browser=browser;this.secret=secret;this.contexts=new Map();this.opening=new Map();this.bridges=new Map();this.active=new Map();this.paused=true;this.budget=0;this.approvedIds=[];this.maxConcurrent=1;this.attemptedProfiles=new Map();this.backgroundProfiles=new Set();this.store.recover();this.vpn=new TouchVpn(join(root,'extensions'));this.checking=new Map();this.connectingVpn=new Map();}
+  constructor(store,root,browser,secret,memory=freemem){this.memory=memory;this.store=store;this.night=new MuseNight(store);this.root=root;this.browser=browser;this.secret=secret;this.contexts=new Map();this.opening=new Map();this.bridges=new Map();this.active=new Map();this.paused=true;this.budget=0;this.approvedIds=[];this.maxConcurrent=1;this.attemptedProfiles=new Map();this.backgroundProfiles=new Set();this.store.recover();this.vpn=new TouchVpn(join(root,'extensions'));this.checking=new Map();this.connectingVpn=new Map();
+    // Mapping failures disable auto bundles only for this app session. Keep
+    // all receipts, pacing, profile stops and the user's switches intact.
+    if(this.store.get('muse_bundle_order_failed',false))this.store.set('muse_bundle_order_failed',false);
+  }
   async setMusePaused({paused,resumeStopped=false}) {
     if (typeof paused !== 'boolean') throw Error('Chọn trạng thái tạm dừng Muse.');
     if(typeof resumeStopped!=='boolean')throw Error('Xác nhận bật lại Muse không hợp lệ.');
@@ -572,6 +578,7 @@ export class Worker {
       this.note(id, 'Browser Muse đang chạy nền.');
       if (this.store.get('profiles',[]).find(profile => profile.id === profileId)?.vpnEnabled) this.note(id,'Touch VPN đã kết nối trong profile.');
       adapter = new MuseAdapter(this.config());
+      adapter.onDiagnostic=message=>this.note(id,message);
       if(this.night.current())adapter.guard=()=>assertMusePage(page);
       const checkpoint = (state, patch = {}) => {
         const transition=()=>{assertMuseAvailable(this.store, {jobId:id, profileId});
@@ -617,6 +624,7 @@ export class Worker {
             const member=bundle[index];if(bundleTasks.has(member))return;
             this.store.transition(member,'submitted',{providerId,providerUrl,profileId,bundleOrdinal:index+1,note:`Thẻ video ${index+1} theo thứ tự xuất hiện.`});
             const receiver=new MuseAdapter(this.config());receiver.bundleAppearance=true;receiver.guard=adapter.guard;receiver.acquirePreview=acquirePreview;
+            receiver.onDiagnostic=message=>this.note(member,message);
             receiver.timings={...timings,...adapter.timings,resultAt:Date.now()};
             const task=this.stageBundleOutput(member,page,receiver);
             // Capture rejection immediately; the whole set is adjudicated below.
@@ -633,9 +641,11 @@ export class Worker {
         await adapter.submit(page, checkpoint);
       }
       if(adapter.bundleAppearance){
-        const results=await Promise.all([...bundleTasks.values()]);
-        if(results.length!==bundle.length)throw Object.assign(Error('Thiếu file trong gói ba video; chưa nhập cảnh nào.'),{code:'MUSE_BUNDLE_UNMAPPED'});
+        const results=await Promise.all(bundle.map(member=>bundleTasks.get(member)));
+        if(results.some(result=>!result))throw Object.assign(Error('Thiếu file trong gói ba video; chưa nhập cảnh nào.'),{code:'MUSE_BUNDLE_UNMAPPED'});
         for(const key of ['sha256','sourceSha256'])if(new Set(results.map(r=>r[key])).size!==bundle.length)throw Object.assign(Error('Các thẻ Muse trả video trùng hash; từ chối cả gói, chưa nhập cảnh nào.'),{code:'MUSE_BUNDLE_DUPLICATE'});
+        const visualCheck=assertDistinctBundleFrames(await Promise.all(results.map(r=>this.readBundleFrame(r.output.path,r.output.metadata.duration))));
+        for(const result of results)result.output.bundleVisualCheck=visualCheck;
         for(const result of results){const {member,output,timings:memberTimings}=result;this.store.transition(member,'ready',{output,failedFilePath:null,timings:{...this.store.job(member).timings,...memberTimings,allCardsAt:adapter.timings.resultAt,observedCardCount:adapter.timings.observedCardCount,observedClipCount:adapter.timings.observedClipCount,bundleAcceptedAt:Date.now()},note:'Đủ ba clip đã kiểm, khác hash; gắn theo thứ tự thẻ 1/2/3.'});}
         // Production commands share a revision; import serially while encoders run.
         for(const result of results){await this.importReady(result.member);this.store.put({...this.store.job(result.member),timings:{...this.store.job(result.member).timings,importedAt:Date.now()}});}
@@ -669,7 +679,10 @@ export class Worker {
       await this.measureQuota(profileId,context);
     } catch (error) {
       await Promise.allSettled([...bundleTasks.values()]);
-      if(adapter?.bundleAppearance){this.store.set('muse_bundle_order_failed',true);this.onRejectedBundle?.(this.store.job(id).request.projectId);}
+      if(adapter?.bundleAppearance){
+        if(['MUSE_BUNDLE_UNMAPPED','MUSE_BUNDLE_DUPLICATE','MUSE_BUNDLE_SIMILAR'].includes(error.code))this.store.set('muse_bundle_order_failed',true);
+        this.onRejectedBundle?.(this.store.job(id).request.projectId);
+      }
       if(error.code==='MUSE_BUNDLE_UNMAPPED')this.store.set('muse_bundle_unmapped',true);
       this.store.put({...this.store.job(id),timings:{...this.store.job(id).timings,...timings,...adapter?.timings,stoppedAt:Date.now()}});
       const night=this.night.outcome(id,error,profileId);
@@ -690,7 +703,7 @@ export class Worker {
         this.store.transition(member, failed ? 'failed' : 'needs_attention', {
           failureCode:typeof error.code==='string'?error.code:null,
           failureDetail:String(error.message??'').replace(/https?:\/\/\S+/g,'[URL]').slice(0,1200),
-          ...(['MUSE_NO_MEDIA','MUSE_BUNDLE_UNMAPPED','MUSE_MULTIPLE_RESULTS'].includes(error.code) ? {providerUrl:error.providerUrl,providerResponse:error.providerResponse,unmappedProviderIds:error.providerIds} : {}),
+          ...(['MUSE_NO_MEDIA','MUSE_BUNDLE_UNMAPPED','MUSE_BUNDLE_TIMEOUT','MUSE_MULTIPLE_RESULTS'].includes(error.code) ? {providerUrl:error.providerUrl,providerResponse:error.providerResponse,unmappedProviderIds:error.providerIds} : {}),
           note: job.state === 'validating'
             ? 'File không đạt tỷ lệ/thời lượng hoặc không giải mã được. Giữ file trên máy để xem lại.'
             : safeMessage(error),
