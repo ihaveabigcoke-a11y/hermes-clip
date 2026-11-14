@@ -221,7 +221,12 @@ export function checkMedia(s: Pick<Scene, "ratio" | "duration" | "mediaType">, t
   const [w,h] = s.ratio.split(":").map(Number);
   if (Math.abs((m.width / m.height) / (w / h) - 1) > 0.01) issues.push(`Tỷ lệ ${m.width}×${m.height} khác ${s.ratio} (sai số tối đa 1%).`);
   if (!t.type.startsWith(s.mediaType + "/")) issues.push("Loại file không khớp cảnh.");
-  if (s.mediaType === "video" && (m.duration === null || Math.abs(m.duration - s.duration) > 0.25)) issues.push(`Thời lượng ${m.duration ?? "chưa đo"}s khác ${s.duration}s (sai số tối đa 0,25s).`);
+  if (s.mediaType === "video" && (m.duration === null || Math.abs(m.duration - s.duration) > 0.25)) {
+    const next = m.duration === null ? 'Kiểm tra lại thời lượng file trước khi duyệt.'
+      : m.duration > s.duration ? `Cắt clip còn ${s.duration}s rồi nhập lại, hoặc sửa thời lượng cảnh và duyệt lại kịch bản.`
+      : `Chọn clip đủ ${s.duration}s, hoặc sửa thời lượng cảnh và duyệt lại kịch bản.`;
+    issues.push(`Thời lượng ${m.duration ?? "chưa đo"}s khác ${s.duration}s (sai số tối đa 0,25s). Chưa duyệt clip; không tự cắt hoặc kéo dài. ${next}`);
+  }
   return issues;
 }
 export function takeGate(p: Production, s: Scene, t: Take) {

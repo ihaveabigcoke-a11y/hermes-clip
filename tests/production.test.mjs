@@ -242,6 +242,19 @@ test('pause remains effective when adding another draft',()=>{let p=run(start(),
 test('storyboard review gates attempt preparation',()=>{const p=run(start(),'scene',input());assert.throws(()=>run(p,'prepare',{sceneId:'scene1'}),/Duyệt kịch bản/);});
 test('wrong aspect and wrong duration cannot be approved despite receiving a file',()=>{let p=run(start(),'scene',input());p=run(p,'storyboard',{sceneId:'scene1'});p=run(p,'attach',{sceneId:'scene1',attemptId:null,take:media({metadata:{width:832,height:1104,duration:10,verifiedBy:'container'}})});const s=p.scenes[0],t=s.takes[0];assert.equal(checkMedia(s,t).length,2);assert.throws(()=>run(p,'review',{sceneId:s.id,takeId:t.id,review:'approved',notes:''}),/Tỷ lệ/);assert.equal(t.review,'pending');});
 test('near 9:16 is accepted at the documented one-percent tolerance',()=>{assert.equal(checkMedia(input(),media({metadata:{width:704,height:1248,duration:5.035,verifiedBy:'container'}})).length,0);});
+
+test('T-030: a 10-second clip in an 8-second scene stays pending with explicit correction steps and unchanged media',()=>{
+ let p=run(start(),'scene',input('scene1',{duration:8}));
+ p=run(p,'storyboard',{sceneId:'scene1'});
+ p=run(p,'attach',{sceneId:'scene1',attemptId:null,take:media({metadata:{width:720,height:1280,duration:10,verifiedBy:'container'}})});
+ const before=structuredClone(p),s=p.scenes[0],t=s.takes[0];
+ assert.throws(()=>run(p,'review',{sceneId:s.id,takeId:t.id,review:'approved',notes:''}),/Cắt clip còn 8s rồi nhập lại/);
+ assert.equal(t.review,'pending');assert.deepEqual(p,before);
+ assert.match(checkMedia(s,{...t,metadata:{...t.metadata,duration:6}}).join(' '),/Chọn clip đủ 8s/);
+ assert.match(checkMedia(s,{...t,metadata:{...t.metadata,duration:null}}).join(' '),/Kiểm tra lại thời lượng/);
+ assert.deepEqual(checkMedia(s,{...t,metadata:{...t.metadata,duration:8.25}}),[]);
+ assert.ok(checkMedia(s,{...t,metadata:{...t.metadata,duration:8.251}}).length);
+});
 test('reference updates preserve the old version and invalidate dependent reviews',()=>{let p=start();const ref={id:'ref1',name:'Product',role:'product',assetId:'asset1',sourceUrl:'',notes:'Dimensions unknown'};p=run(p,'reference',ref);p=withApproved(p,'scene1',{referenceIds:['ref1'],camera:'Slow push',voice:'Exact spoken line'});p=run(p,'prepare',{sceneId:'scene1'});const snapshot=JSON.parse(p.scenes[0].attempts[0].snapshot);assert.deepEqual(snapshot.references,[{id:'ref1',version:1,assetId:'asset1'}]);assert.equal(snapshot.camera,'Slow push');assert.equal(snapshot.voice,'Exact spoken line');assert.equal(snapshot.model,null);const oldTake=p.scenes[0].takes[0].id;p=run(p,'reference',{...ref,assetId:'asset2'});assert.equal(p.references.length,2);assert.equal(p.references[0].assetId,'asset1');assert.equal(p.scenes[0].takes[0].id,oldTake);assert.ok(takeGate(p,p.scenes[0],p.scenes[0].takes[0]));assert.throws(()=>run(p,'prepare',{sceneId:'scene1'}),/Tham chiếu/);});
 test('editing one scene preserves old takes and leaves another scene unchanged',()=>{let p=withApproved();p=run(p,'scene',input('scene2'));const second=structuredClone(p.scenes[1]);p=run(p,'scene',input('scene1',{prompt:'Changed action'}));assert.deepEqual(p.scenes[1],second);assert.equal(p.scenes[0].takes.length,1);assert.equal(p.scenes[0].takes[0].sceneRevision,1);assert.equal(p.scenes[0].revision,2);assert.equal(p.scenes[0].storyboardApproved,false);});
 test('approved manual take retains full instructions after scene edits and serialization',()=>{
