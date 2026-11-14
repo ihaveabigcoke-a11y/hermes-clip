@@ -1,8 +1,30 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {runVideoFlow,productVideoLibrary,videoRecovery,resumableVideoProject} from '../lib/lab/auto-video.ts';
+import {runVideoFlow,productVideoLibrary,videoRecovery,resumableVideoProject,museVideoLabel} from '../lib/lab/auto-video.ts';
 import {newProduction,applyProduction} from '../lib/lab/production.ts';
 import {emptyProduct} from '../lib/lab/domain.ts';
+
+test('T-030: readiness uses the latest video outcome per profile without clearing a restriction with another profile or an image',()=>{
+ const profile=(id)=>({id,name:id,enabled:true,health:'ready',quota:{state:'available'}});
+ const status={musePaused:false,generationReady:true,profiles:[profile('Chi'),profile('Cho')],jobs:[]};
+ assert.equal(museVideoLabel(status),'Muse sẵn sàng');
+ status.jobs.push({id:'refusal',profileId:'Chi',createdAt:10,state:'needs_attention',failureCode:'MUSE_NO_MEDIA',providerResponse:'Video generation is unavailable for this account in this country/region',request:{mediaType:'video'}});
+ const before=structuredClone(status);
+ assert.equal(museVideoLabel(status),'Chi: Muse hạn chế tạo video theo vùng/quyền');
+ assert.deepEqual(status,before);
+ status.jobs.push({profileId:'Cho',createdAt:20,state:'ready',output:{sha256:'a'.repeat(64)},request:{mediaType:'video'}});
+ status.jobs.push({profileId:'Chi',createdAt:30,state:'ready',output:{sha256:'b'.repeat(64)},request:{mediaType:'image'}});
+ status.jobs.push({profileId:'Chi',createdAt:40,state:'queued',request:{mediaType:'video'}});
+ status.profiles[0].enabled=false;
+ assert.equal(museVideoLabel(status),'Chi: Muse hạn chế tạo video theo vùng/quyền');
+ status.jobs.push({profileId:'Chi',createdAt:50,state:'ready',output:{sha256:'c'.repeat(64)},request:{mediaType:'video'}});
+ assert.equal(museVideoLabel(status),'Muse sẵn sàng');
+ status.jobs.push({profileId:'Chi',createdAt:60,state:'needs_attention',failureCode:'MUSE_NO_MEDIA',providerResponse:'Want a still image instead?',request:{mediaType:'video'}});
+ assert.equal(museVideoLabel(status),'Chi: Muse chưa trả video');
+ assert.equal(museVideoLabel({...status,musePaused:true}),'Muse đang tạm dừng');
+ assert.equal(museVideoLabel({...status,profiles:[]}),'Muse chưa sẵn sàng');
+ assert.equal(museVideoLabel(null),'Đang kiểm tra Muse');
+});
 
 test('T-026f: explicit refusal routes to manual and preserves receipt; unknown submission requires reconciliation',async()=>{
  for(const failureCode of ['MUSE_REFUSED','MUSE_NO_MEDIA',null]){
