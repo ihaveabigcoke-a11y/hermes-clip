@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import {mkdir,mkdtemp,writeFile,readFile} from 'node:fs/promises';
 import {openSync,closeSync} from 'node:fs';
 import {resolve,join} from 'node:path';
-import {spawn,execFileSync} from 'node:child_process';
+import {spawn,execFile} from 'node:child_process';
+import {promisify} from 'node:util';
+const execFileAsync=promisify(execFile);
 import {setTimeout as delay} from 'node:timers/promises';
 import {chromium} from '../desktop/node_modules/playwright/index.mjs';
 const out=resolve('outputs/M-20261114-enable-desktop-ui');await mkdir(out,{recursive:true});
@@ -82,7 +84,7 @@ try{
  // Close only the window launched by this check, using the normal Windows close request.
  const pid=Number(await readFile(join(qa,'electron.pid'),'utf8').catch(()=>'0'));
  if(pid>0){
-  const close=JSON.parse(execFileSync('pwsh.exe',['-NoProfile','-Command','$qaWindow=Get-Process -Id '+pid+' -ErrorAction Stop; $qaWindow.Refresh(); [pscustomobject]@{Id=$qaWindow.Id;Window=$qaWindow.MainWindowHandle;Close=$qaWindow.CloseMainWindow();Exited=$qaWindow.WaitForExit(15000)} | ConvertTo-Json'],{windowsHide:true,encoding:'utf8'}));
+  const close=JSON.parse((await execFileAsync('pwsh.exe',['-NoProfile','-Command','$qaWindow=Get-Process -Id '+pid+' -ErrorAction Stop; $qaWindow.Refresh(); [pscustomobject]@{Id=$qaWindow.Id;Window=$qaWindow.MainWindowHandle;Close=$qaWindow.CloseMainWindow();Exited=$qaWindow.WaitForExit(15000)} | ConvertTo-Json'],{windowsHide:true,encoding:'utf8'})).stdout);
   assert.equal(close.Close,true,'QA window must accept normal close');assert.equal(close.Exited,true,'QA Electron must finish closing');
  }
  await browser?.close().catch(()=>{});closeSync(log);
