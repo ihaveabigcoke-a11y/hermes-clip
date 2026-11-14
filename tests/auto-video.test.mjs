@@ -58,3 +58,17 @@ test('T-026i: rank distinct hooks by mean measured views in the same product/gro
  assert.deepEqual(plans.map(p=>resultHookRank(records,p)),[1,2,3,1,null]);
  assert.equal(resultHookRank(records,{...plans[0],data:{...plans[0].data,comparison:undefined}}),null);
 });
+
+test('Muse unlimited null starts the package; finite zero remains manual; unresolved receipts still block',async()=>{
+ for(const [remaining,blocked,expected] of [[null,0,'waiting'],[0,0,'manual'],[null,1,'attention']]){
+  const product={id:'p',kind:'product',revision:1,createdAt:1,updatedAt:1,data:{...emptyProduct,name:'Fixture',ctaKeyword:'GLOW'}};
+  let project,starts=0,manual=0;
+  const request=async(path,body)=>{
+   if(!body)return {records:[product,...(project?[project]:[])]};
+   const data=body.action==='create'?newProduction(body.input.name,product.id,product.revision):applyProduction(project.data,body.action,body.input,body.commandId,123);
+   project={id:body.id,kind:'production',revision:(project?.revision??0)+1,createdAt:1,updatedAt:123,data};return {record:project};
+  };
+  const result=await runVideoFlow({productId:'p',projectId:'auto_unlimited',request,upload:()=>assert.fail('No media fixture'),maxPolls:0,bridge:{status:async()=>({musePaused:false,generationReady:true,jobs:[]}),musePackagePreview:async()=>({count:5,blocked,night:{remaining,stopped:false}}),musePackageStart:async()=>{starts++;},manualMediaExport:async()=>{manual++;}},wait:async()=>{}});
+  assert.equal(result.state,expected);assert.equal(starts,expected==='waiting'?1:0);assert.equal(manual,expected==='manual'?1:0);
+ }
+});

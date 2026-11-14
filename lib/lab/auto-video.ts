@@ -49,7 +49,7 @@ export async function runVideoFlow(o:FlowOptions){
   if(status.musePaused!==false||!status.generationReady||missing().some((s:any)=>s.mediaProvider==='manual'))return manual();
   await command('media_provider',{provider:'muse'},'muse');
   const preview=await o.bridge.musePackagePreview({projectId:project!.id});
-  if(preview.night?.stopped||preview.count>preview.night?.remaining)return manual();
+  if(preview.night?.stopped||(preview.night?.remaining!=null&&preview.count>preview.night.remaining))return manual();
   if(preview.blocked){progress('Cần đối soát');return {state:'attention',project};}
   progress('Đang tạo');
   if(preview.count){try{await o.bridge.musePackageStart({projectId:project!.id,revision:project!.revision});}catch(error){status=await o.bridge.status();const night=await o.bridge.museNightStatus();if(status.musePaused||night.stopped)return manual();throw error;}}

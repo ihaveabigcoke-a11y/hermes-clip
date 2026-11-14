@@ -14,14 +14,14 @@ export function MuseSwitch({demo=false}:{demo?:boolean}) {
     ? status.museNight.stopReason||'Phiên Muse đã dừng. Giữ các lượt cũ để đối soát; nhập file cho cảnh còn lại.' : '';
   function closeConfirm(){setConfirm(false);setError('');}
   async function save(paused:boolean) {
-    if(busy||(!paused&&stopReason))return;setBusy(true);setError('');
+    if(busy)return;setBusy(true);setError('');
     try {
-      await desktopBridge()!.setMusePaused({paused});
+      await desktopBridge()!.setMusePaused({paused,resumeStopped:!paused&&!!stopReason});
       await refresh();window.dispatchEvent(new Event('product-lab:workspace-changed'));closeConfirm();
     }catch(failure){setError((failure as Error).message);await refresh().catch(()=>{});}finally{setBusy(false);}
   }
   return <section className="production-card production-card-body muse-switch-card" aria-label="Công tắc Muse">
-    <label className="account-toggle muse-switch-control"><input type="checkbox" role="switch" aria-label="Muse: Bật / Tạm dừng" aria-checked={!paused} aria-describedby={[helpId,stopReason?reasonId:''].filter(Boolean).join(' ')} checked={!paused} disabled={demo||busy||!status||(paused&&!!stopReason)}
+    <label className="account-toggle muse-switch-control"><input type="checkbox" role="switch" aria-label="Muse: Bật / Tạm dừng" aria-checked={!paused} aria-describedby={[helpId,stopReason?reasonId:''].filter(Boolean).join(' ')} checked={!paused} disabled={demo||busy||!status}
       onChange={event=>{setError('');if(event.target.checked)setConfirm(true);else void save(true);}}/>
       <span className="muse-switch-copy"><strong role="status">Muse: {paused?'Đang tạm dừng':'Đang bật'}</strong>
         <span id={helpId}>Tạm dừng chặn tác vụ mới; tác vụ đang chạy vẫn hoàn tất.</span>
@@ -30,10 +30,10 @@ export function MuseSwitch({demo=false}:{demo?:boolean}) {
     {stopReason&&<p id={reasonId} role="status" className="inline-error">{stopReason}</p>}
     {error&&!confirm&&<p role="alert" className="inline-error">{error}</p>}
     {stopReason&&<a className="lab-button neutral" href="?view=queue">Xem lượt cần đối soát</a>}
-    <Modal open={confirm} title="Bật Muse" description="Cho phép tạo mới và chat bằng Muse. Các lượt cũ không tự chạy lại; bạn chọn tác vụ cần chạy." locked={busy} onClose={closeConfirm}>
+    <Modal open={confirm} title={stopReason?"Bật lại Muse":"Bật Muse"} description="Cho phép tạo mới và chat bằng Muse. Các lượt cũ không tự chạy lại; bạn chọn tác vụ cần chạy." locked={busy} onClose={closeConfirm}>
       <div className="modal-body">
         {(error||stopReason)&&<p role="alert" className="inline-error">{error||stopReason}</p>}
-        <div className="button-row"><Button busy={busy} disabled={busy||!!stopReason} onClick={()=>void save(false)}>Bật Muse</Button><Button tone="neutral" disabled={busy} onClick={closeConfirm}>Giữ Tạm dừng</Button></div>
+        <div className="button-row"><Button busy={busy} disabled={busy} onClick={()=>void save(false)}>{stopReason?'Bật lại Muse':'Bật Muse'}</Button><Button tone="neutral" disabled={busy} onClick={closeConfirm}>Giữ Tạm dừng</Button></div>
       </div>
     </Modal>
   </section>;

@@ -1,5 +1,5 @@
 import {z} from 'zod';
-const settings=z.object({intervalSeconds:z.number().int().min(60).max(3600),sessionLimit:z.number().int().min(1).max(1000).default(12)});
+const settings=z.object({intervalSeconds:z.number().int().min(60).max(3600),sessionLimit:z.number().int().min(1).max(1000).nullable().default(12)});
 export function museNightKey(now=Date.now()) {
  const local=new Date(now+7*3600000);if(local.getUTCHours()>=10)local.setUTCDate(local.getUTCDate()+1);
  return local.toISOString().slice(0,10);
@@ -13,8 +13,13 @@ export class MuseNight {
  current(){return this.store.get('muse_nights',{})[museNightKey(this.now())]??null;}
  save(row){this.store.set('muse_nights',{...this.store.get('muse_nights',{}),[row.id]:row});}
  begin(){let row=this.current();if(!row){row={id:museNightKey(this.now()),startedAt:this.now(),limit:this.settings().sessionLimit,submissions:[],outcomes:{},consecutiveErrors:0,stopReason:null};this.save(row);}return this.status();}
- status(){const row=this.current(),submitted=row?.submissions.length??0;return {active:!!row,nightId:row?.id??null,intervalSeconds:this.settings().intervalSeconds,limit:this.settings().sessionLimit,submitted,remaining:Math.max(0,this.settings().sessionLimit-submitted),successful:Object.values(row?.outcomes??{}).filter(v=>v==='success').length,errors:Object.values(row?.outcomes??{}).filter(v=>v!=='success').length,stopped:!!row?.stopReason,stopReason:row?.stopReason??null,nextSubmitAt:row?.submissions.length?row.submissions.at(-1).at+this.settings().intervalSeconds*1000:null};}
- assertRoom(count=1){const s=this.status();if(s.stopped)throw fail(s.stopReason,'MUSE_NIGHT_STOP');if(count>s.remaining)throw fail('Hết lượt Muse của đêm này. Chuyển cảnh còn lại sang manual.','MUSE_NIGHT_LIMIT');}
+ status(){const row=this.current(),submitted=row?.submissions.length??0;return {active:!!row,nightId:row?.id??null,intervalSeconds:this.settings().intervalSeconds,limit:this.settings().sessionLimit,submitted,remaining:this.settings().sessionLimit===null?null:Math.max(0,this.settings().sessionLimit-submitted),successful:Object.values(row?.outcomes??{}).filter(v=>v==='success').length,errors:Object.values(row?.outcomes??{}).filter(v=>v!=='success').length,stopped:!!row?.stopReason,stopReason:row?.stopReason?.replace('Dừng hết đêm; dùng manual.','Kiểm tra Muse trước khi bật lại.')??null,nextSubmitAt:row?.submissions.length?row.submissions.at(-1).at+this.settings().intervalSeconds*1000:null};}
+ assertRoom(count=1){const s=this.status();if(s.stopped)throw fail(s.stopReason,'MUSE_NIGHT_STOP');if(s.remaining!==null&&count>s.remaining)throw fail('Hết lượt Muse của đêm này. Chuyển cảnh còn lại sang manual.','MUSE_NIGHT_LIMIT');}
+ // Called only by the explicit enable confirmation; never by begin/configure/start.
+ resume(){const row=this.current();if(!row?.stopReason)return this.status();
+  this.save({...row,consecutiveErrors:0,stopReason:null,resumptions:[...(row.resumptions??[]),{at:this.now(),stopReason:row.stopReason,consecutiveErrors:row.consecutiveErrors,submitted:row.submissions.length}]});
+  return this.status();
+ }
  async admit(jobId,allowed=()=>true){
   if(!this.current())return;
   const previous=this.tail;let release;this.tail=new Promise(r=>release=r);await previous;

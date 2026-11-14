@@ -1,3 +1,11 @@
+# M-20261114-enable — bật lại Muse, 14/11/2026
+
+Yêu cầu trực tiếp mới nhất: bật Muse và sửa lỗi giới hạn. Công tắc cho xác nhận Bật lại Muse sau khi dừng; lưu lịch sử bật lại và giữ submissions/outcomes/receipt, không chạy lại job cũ. Lỗi dịch vụ mới vẫn tạm dừng, hạn mức Muse/captcha/đăng nhập và chống gửi trùng giữ nguyên.
+
+Cài đặt có Không giới hạn lượt trong Hermes (sessionLimit=null), giãn tối thiểu 60 giây. Người dùng đã yêu cầu bật và bỏ trần nội bộ trong lượt này; không thay hạn mức dịch vụ, không đổi vùng/tài khoản, không gửi lại kết quả chưa rõ. Các chỉ đạo cũ yêu cầu tạm dừng/khóa hết đêm bên dưới là lịch sử. SHA, build, đã kiểm/chưa kiểm ở STATUS văn phòng và ops/office/reports/M-20261114-enable.md.
+
+---
+
 # T-026j — kiểm bổ sung local, 14/11/2026
 
 Đã sửa tràn màn Đăng ở 200%, H1/H2/H3 sau đổi hook và màu theo hệ thống khi tương phản cao. Kiểm local đã khép: đổi hook tới ba MP4 mới giữ thân/lịch sử, tải hash/caption, bàn phím, 28 trạng thái axe và 42 ảnh phóng to/tương phản cao. Full suite 787 đạt/0 skip/0 lỗi; SHA/build/launcher cuối tại STATUS văn phòng và ops/office/reports/T-026j.md. Hai ngưỡng 48 giờ giữ null, không chờ người dùng chốt; Muse thật, dữ liệu người dùng và NVDA vẫn chưa kiểm, không thuộc quyền nghiệm thu local này.

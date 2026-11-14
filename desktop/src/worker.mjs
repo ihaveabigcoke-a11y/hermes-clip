@@ -22,9 +22,15 @@ export class Worker {
   reclaimingMemory = false;
   memoryRecoveryAttempts = new Set();
   constructor(store,root,browser,secret,memory=freemem){this.memory=memory;this.store=store;this.night=new MuseNight(store);this.root=root;this.browser=browser;this.secret=secret;this.contexts=new Map();this.opening=new Map();this.bridges=new Map();this.active=new Map();this.paused=true;this.budget=0;this.approvedIds=[];this.maxConcurrent=1;this.attemptedProfiles=new Map();this.backgroundProfiles=new Set();this.store.recover();this.vpn=new TouchVpn(join(root,'extensions'));this.checking=new Map();this.connectingVpn=new Map();}
-  async setMusePaused({paused}) {
+  async setMusePaused({paused,resumeStopped=false}) {
     if (typeof paused !== 'boolean') throw Error('Chọn trạng thái tạm dừng Muse.');
-    if(!paused&&this.night.current()?.stopReason)this.night.assertRoom();
+    if(typeof resumeStopped!=='boolean')throw Error('Xác nhận bật lại Muse không hợp lệ.');
+    if(!paused&&this.night.current()?.stopReason){
+      if(!resumeStopped)this.night.assertRoom();
+      if(this.active.size||this.chatting.size)throw Object.assign(Error('Chờ tác vụ Muse đang chạy kết thúc rồi bật lại.'),{code:'MUSE_RESUME_BUSY'});
+      // Cancel old approvals before lifting the stop. Receipts and jobs stay intact.
+      this.pause();this.night.resume();
+    }
     this.store.set('muse_paused', paused);
     // Invalidate admissions waiting on I/O, but keep running jobs and their contexts.
     if (paused) this.pause();
