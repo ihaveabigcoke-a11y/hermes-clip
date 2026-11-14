@@ -68,12 +68,12 @@ test('T-033 montage has three independent render slots and preserves every recei
  for(const resolve of gates)resolve();const results=await Promise.all(tasks);assert.equal(new Set(results.map(r=>r.directory)).size,3);assert.equal(service.jobs().filter(j=>j.state==='done').length,3);assert.equal(service.busy,false);
 }));
 
-test('T-033 package chooses three profiles or a labelled bundle and falls back for future packages after mismatch',async()=>{
+test('T-035 package requires verified ordered delivery for auto bundles, keeps three-profile parallel and explicit probing',async()=>{
  const {MusePackage}=await import('../src/muse-package.mjs');const {renderFixture}=await import('../../tests/fixtures/render-plan.mjs');const {sceneGate}=await import('../../lib/lab/production.ts');
- for(const [count,fallback,mode,sends] of [[3,false,'parallel',5],[2,false,'bundle',3],[1,false,'bundle',3],[2,true,'parallel',5]])await fixture(async store=>{
-  store.set('profiles',profiles().slice(0,count));store.set('muse_bundle_unmapped',fallback);const p=renderFixture().production;p.scenes.forEach(s=>s.takes=[]);const records=[{id:'render_project',kind:'production',revision:1,data:p},{id:p.productId,kind:'product',revision:1,data:{}}];let start;
+ for(const [count,verified,fallback,requested,mode,sends] of [[3,true,false,'auto','parallel',5],[2,true,false,'auto','bundle',3],[1,true,false,'auto','bundle',3],[2,true,true,'auto','parallel',5],[2,false,false,'auto','parallel',5],[2,false,true,'bundle','bundle',3]])await fixture(async store=>{
+  store.set('profiles',profiles().slice(0,count));store.set('muse_bundle_unmapped',true);store.set('muse_bundle_order_verified',verified);store.set('muse_bundle_order_failed',fallback);const p=renderFixture().production;p.scenes.forEach(s=>s.takes=[]);const records=[{id:'render_project',kind:'production',revision:1,data:p},{id:p.productId,kind:'product',revision:1,data:{}}];let start;
   const worker={store,night:new MuseNight(store),config:()=>({enabled:true}),profiles:()=>store.get('profiles'),enqueue:async request=>store.enqueue(request,request.sceneId),start:async options=>{start=options;return true;}};
-  const service=new MusePackage({worker,manual:{records:async()=>records},domain:{sceneGate}});const result=await service.start({projectId:'render_project',revision:1});assert.equal(result.mode,mode);assert.equal(result.count,sends);assert.equal(start.maxConcurrent,Math.min(3,count));assert.equal(store.jobs().length,5);
+  const service=new MusePackage({worker,manual:{records:async()=>records},domain:{sceneGate}});const preview=await service.preview({projectId:'render_project',mode:requested});assert.equal(preview.public.sendCount,sends);const result=await service.start({projectId:'render_project',revision:1,mode:requested});assert.equal(result.mode,mode);assert.equal(result.count,sends);assert.equal(start.maxConcurrent,Math.min(3,count));assert.equal(store.jobs().length,5);
   if(mode==='bundle'){const leader=store.jobs().find(j=>j.bundleJobIds);assert.equal(leader.bundleJobIds.length,3);assert.equal(store.jobs().filter(j=>j.bundleParentId===leader.id).length,2);}
  });
 });

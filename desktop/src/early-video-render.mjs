@@ -4,7 +4,7 @@ export const compositionSignature = input => JSON.stringify({ratio:input.ratio,
   clips:input.clips.map(c=>({sha256:c.sha256,duration:c.duration,inSec:c.inSec??0,outSec:c.outSec??c.duration})),overlays:input.overlays});
 
 export class EarlyVideoRender {
-  constructor({records,readAsset,readOutput,compose,onTiming=()=>{}}){Object.assign(this,{records,readAsset,readOutput,compose,onTiming});this.scopes=new Map();this.tasks=new Map();this.preparing=new Map();}
+  constructor({records,readAsset,readOutput,compose,onTiming=()=>{}}){Object.assign(this,{records,readAsset,readOutput,compose,onTiming});this.scopes=new Map();this.tasks=new Map();this.preparing=new Map();this.encoding=0;this.encodeQueue=[];}
   async arm(projectId){
     const records=await this.records(),project=records.find(r=>r.kind==='production'&&r.id===projectId);
     const product=records.find(r=>r.kind==='product'&&r.id===project?.data.productId);
@@ -12,14 +12,15 @@ export class EarlyVideoRender {
     this.scopes.set(projectId,{productRevision:product.revision,scenes:Object.fromEntries(project.data.scenes.map(s=>[s.id,s.revision]))});
     return true;
   }
-  start(job){
+  start(job,readOutput){
     const key=job.request.projectId+'/'+job.request.sceneId;
     if(this.preparing.has(key))return this.preparing.get(key);
-    const pending=this.prepare(job);this.preparing.set(key,pending);
+    const pending=this.prepare(job,readOutput);this.preparing.set(key,pending);
     return pending.finally(()=>this.preparing.delete(key));
   }
   async prepared(input){await this.preparing.get(input.projectId+'/auto_'+input.variantId.split('_v').at(-1));}
-  async prepare(job){
+  discard(projectId){this.scopes.delete(projectId);for(const key of this.tasks.keys())if(key.startsWith(projectId+'/'))this.tasks.delete(key);}
+  async prepare(job,readOutput){
     const scope=this.scopes.get(job.request.projectId),index=Number(/^auto_([0-2])$/.exec(job.request.sceneId)?.[1]);
     if(!scope||!Number.isInteger(index)||job.state!=='ready'||!job.output||job.request.productRevision!==scope.productRevision||job.request.sceneRevision!==scope.scenes[job.request.sceneId])return;
     const records=await this.records(),project=records.find(r=>r.id===job.request.projectId&&r.kind==='production'),p=project?.data;
@@ -33,7 +34,7 @@ export class EarlyVideoRender {
     if(body.some(s=>!s))return;
     const hookDuration=reuse?reuse.segments[0].outSec-reuse.segments[0].inSec:4;
     if(hookDuration>8||hookDuration>job.output.metadata.duration)return;
-    const clips=[{...await this.readOutput(job.id),duration:job.output.metadata.duration,inSec:0,outSec:hookDuration}];
+    const clips=[{...await (readOutput?readOutput():this.readOutput(job.id)),duration:job.output.metadata.duration,inSec:0,outSec:hookDuration}];
     for(const segment of body){
       const scene=p.scenes.find(s=>s.id===segment.sceneId),take=scene?.takes.find(t=>t.id===segment.takeId);
       const asset=records.find(r=>r.id===segment.assetId&&r.kind==='asset');
@@ -44,11 +45,18 @@ export class EarlyVideoRender {
     const input={planVersion:1,projectId:project.id,variantId:project.id+'_v'+index,ratio:'9:16',clips,overlays};
     const signature=compositionSignature(input),key=input.projectId+'/'+input.variantId;
     if(this.tasks.get(key)?.signature===signature)return;
-    this.onTiming(job.id,'earlyRenderStartedAt');
-    const promise=this.compose(input).then(result=>{this.onTiming(job.id,'earlyRenderFinishedAt');return result;});
+    const promise=this.encode(input,job,scope);
     // Handle failure immediately even if the flow never reaches this variant.
     promise.catch(()=>{});this.tasks.set(key,{signature,promise});
     return;
+  }
+  async encode(input,job,scope){
+    if(this.encoding>=3)await new Promise(resolve=>this.encodeQueue.push(resolve));else this.encoding++;
+    try{
+      if(this.scopes.get(job.request.projectId)!==scope)throw Error('Gói đã dừng hoặc phạm vi dựng đã đổi.');
+      this.onTiming(job.id,'earlyRenderStartedAt');
+      const result=await this.compose(input);this.onTiming(job.id,'earlyRenderFinishedAt');return result;
+    }finally{const next=this.encodeQueue.shift();if(next)next();else this.encoding--;}
   }
   get(input){const task=this.tasks.get(input.projectId+'/'+input.variantId);return task?.signature===compositionSignature(input)?task.promise:null;}
 }

@@ -2,7 +2,7 @@ import {z} from 'zod';
 import {museMediaPrompt} from './muse-video-prompt.mjs';
 import {createHash} from 'node:crypto';
 import {assertMuseNewTask} from './muse-pause.mjs';
-import {canBundle} from './muse-bundle.mjs';
+import {useBundle} from './muse-bundle.mjs';
 const input=z.object({projectId:z.string().regex(/^[\w-]{1,120}$/),revision:z.number().int().positive().optional(),mode:z.enum(['auto','separate','bundle']).default('auto')});
 const activeStates=['preflight','prepared','preparing','submitting','submitted','waiting','downloading','validating'];
 const uncertainStates=['needs_attention','unknown'];
@@ -36,7 +36,7 @@ export class MusePackage {
    else retryable.push(latest);
   }
   const ready=this.worker.profiles?.().filter(p=>p.enabled&&p.health==='ready'&&p.quota?.state==='available'&&!this.worker.night.profileStatus(p.id).stopped)??[];
-  const count=scenes.length+queued.length+retryable.length,sendCount=count-(d.mode!=='separate'&&ready.length>0&&(d.mode==='bundle'||ready.length<3)&&!this.worker.store.get('muse_bundle_unmapped',false)&&canBundle(scenes)?2:0);
+  const count=scenes.length+queued.length+retryable.length,sendCount=count-(useBundle(this.worker.store,d.mode,ready.length,scenes)?2:0);
   return {project,product,records,scenes,queued,retryable,public:{projectId:project.id,revision:project.revision,count,sendCount,newCount:scenes.length,queuedCount:queued.length,retryableCount:retryable.length,pending:pending.size,blocked:blocked.size,night:this.worker.night.status()}};
  }
  async start(raw){if(this.busy)throw Error('Đang chuẩn bị gói Muse.');this.busy=true;
@@ -66,9 +66,9 @@ export class MusePackage {
    const fresh=[];
    for(const request of requests){const result=await this.worker.enqueue(request);if(result.job.state==='queued')fresh.push(result.job);}
    let mode='parallel';
-   if(raw.mode!=='separate'&&ready.length>0&&(raw.mode==='bundle'||ready.length<3)&&!this.worker.store.get('muse_bundle_unmapped',false)&&canBundle(requests)&&fresh.length===requests.length){
+   if(useBundle(this.worker.store,raw.mode,ready.length,requests)&&fresh.length===requests.length){
     const group=fresh.splice(0,3),leader=group[0];mode='bundle';
-    this.worker.store.put({...leader,bundleJobIds:group.map(j=>j.id)});
+    this.worker.store.put({...leader,bundleJobIds:group.map(j=>j.id),bundleMapping:'appearance-v1'});
     for(const child of group.slice(1))this.worker.store.put({...child,bundleParentId:leader.id});
     jobIds.push(leader.id);
    }

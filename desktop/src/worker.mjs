@@ -553,6 +553,8 @@ export class Worker {
     let page;
     const timings={preflightStartedAt:Date.now()};let adapter;
     const bundle=resume?[id]:(this.store.job(id).bundleJobIds??[id]);
+    const bundleTasks=new Map();let previewTail=Promise.resolve();
+    const acquirePreview=async()=>{const previous=previewTail;let release;previewTail=new Promise(r=>release=r);await previous;return release;};
     try {
       if(!resume)for(const member of bundle){await this.validateMediaProvider?.(this.store.job(member).request, {admitted:true});if(member!==id)this.store.transition(member,'preflight',{profileId,note:'Chuẩn bị cảnh trong cùng một tin Muse.'});}
       assertMuseAvailable(this.store, {jobId:id, profileId});
@@ -572,7 +574,12 @@ export class Worker {
       adapter = new MuseAdapter(this.config());
       if(this.night.current())adapter.guard=()=>assertMusePage(page);
       const checkpoint = (state, patch = {}) => {
-        const transition=()=>{assertMuseAvailable(this.store, {jobId:id, profileId});const result=state === 'submitting'
+        const transition=()=>{assertMuseAvailable(this.store, {jobId:id, profileId});
+          if(state==='submitted'&&bundleTasks.size){
+            // A card can be downloading while submit still observes later cards.
+            this.store.put({...this.store.job(id),bundleProviderIds:patch.bundleProviderIds});return this.store.job(id);
+          }
+          const result=state === 'submitting'
           ? this.store.beginSubmit(id, profileId, {note: labels[state], ...patch})
           : this.store.transition(id, state, {note: labels[state], ...patch});
           if(state==='submitting'||state==='submitted')for(const [index,member] of bundle.entries())if(member!==id)this.store.transition(member,state,{profileId,submittedViaParent:id,providerUrl:patch.providerUrl??null,providerId:patch.bundleProviderIds?.[index]??null,note:'Cảnh trong một tin Muse; không gửi riêng.'});
@@ -603,7 +610,20 @@ export class Worker {
           }
         }
         const request=this.store.job(id).request;
-        if(bundle.length>1){adapter.expectedScenes=bundle.map(member=>this.store.job(member).request);const prompt=bundlePrompt(adapter.expectedScenes);this.store.put({...this.store.job(id),submittedPrompt:prompt});await adapter.prepare(page,{...request,prompt});}
+        if(bundle.length>1){
+          adapter.expectedScenes=bundle.map(member=>this.store.job(member).request);
+          adapter.bundleAppearance=this.store.job(id).bundleMapping==='appearance-v1';
+          if(adapter.bundleAppearance)adapter.onBundleCard=(index,providerId,providerUrl)=>{
+            const member=bundle[index];if(bundleTasks.has(member))return;
+            this.store.transition(member,'submitted',{providerId,providerUrl,profileId,bundleOrdinal:index+1,note:`Thẻ video ${index+1} theo thứ tự xuất hiện.`});
+            const receiver=new MuseAdapter(this.config());receiver.bundleAppearance=true;receiver.guard=adapter.guard;receiver.acquirePreview=acquirePreview;
+            receiver.timings={...timings,...adapter.timings,resultAt:Date.now()};
+            const task=this.stageBundleOutput(member,page,receiver);
+            // Capture rejection immediately; the whole set is adjudicated below.
+            task.catch(()=>{});bundleTasks.set(member,task);
+          };
+          const prompt=bundlePrompt(adapter.expectedScenes);this.store.put({...this.store.job(id),submittedPrompt:prompt});await adapter.prepare(page,{...request,prompt});
+        }
         else await adapter.prepare(page, request);
         timings.preparedAt=Date.now();
         this.profileHealth(profileId, 'ready');
@@ -612,7 +632,15 @@ export class Worker {
         assertMuseAvailable(this.store, {jobId:id, profileId});
         await adapter.submit(page, checkpoint);
       }
-      for(const member of bundle){
+      if(adapter.bundleAppearance){
+        const results=await Promise.all([...bundleTasks.values()]);
+        if(results.length!==bundle.length)throw Object.assign(Error('Thiếu file trong gói ba video; chưa nhập cảnh nào.'),{code:'MUSE_BUNDLE_UNMAPPED'});
+        for(const key of ['sha256','sourceSha256'])if(new Set(results.map(r=>r[key])).size!==bundle.length)throw Object.assign(Error('Các thẻ Muse trả video trùng hash; từ chối cả gói, chưa nhập cảnh nào.'),{code:'MUSE_BUNDLE_DUPLICATE'});
+        for(const result of results){const {member,output,timings:memberTimings}=result;this.store.transition(member,'ready',{output,failedFilePath:null,timings:{...this.store.job(member).timings,...memberTimings,allCardsAt:adapter.timings.resultAt,observedCardCount:adapter.timings.observedCardCount,observedClipCount:adapter.timings.observedClipCount,bundleAcceptedAt:Date.now()},note:'Đủ ba clip đã kiểm, khác hash; gắn theo thứ tự thẻ 1/2/3.'});}
+        // Production commands share a revision; import serially while encoders run.
+        for(const result of results){await this.importReady(result.member);this.store.put({...this.store.job(result.member),timings:{...this.store.job(result.member).timings,importedAt:Date.now()}});}
+        this.store.set('muse_bundle_order_verified',true);this.store.set('muse_bundle_order_failed',false);
+      }else for(const member of bundle){
       const job = this.store.job(member);
       const directory = join(this.root, 'outputs');
       await mkdir(directory, {recursive: true});
@@ -640,8 +668,10 @@ export class Worker {
       this.night.outcome(id,null,profileId);
       await this.measureQuota(profileId,context);
     } catch (error) {
+      await Promise.allSettled([...bundleTasks.values()]);
+      if(adapter?.bundleAppearance){this.store.set('muse_bundle_order_failed',true);this.onRejectedBundle?.(this.store.job(id).request.projectId);}
       if(error.code==='MUSE_BUNDLE_UNMAPPED')this.store.set('muse_bundle_unmapped',true);
-      this.store.put({...this.store.job(id),timings:{...timings,...adapter?.timings,stoppedAt:Date.now()}});
+      this.store.put({...this.store.job(id),timings:{...this.store.job(id).timings,...timings,...adapter?.timings,stoppedAt:Date.now()}});
       const night=this.night.outcome(id,error,profileId);
       if(this.night.current()){this.store.put({...this.store.job(id),errorKind:museFailureKind(error)});if(night.stopped||error.code==='MUSE_NIGHT_LIMIT'){this.pause();}} // Keep the user's Muse switch unchanged on a service block.
       for(const member of bundle){
@@ -674,6 +704,23 @@ export class Worker {
         this.store.put({...this.store.job(id), diagnosticPath});
       }
     }
+  }
+  async stageBundleOutput(member,page,adapter){
+    const job=this.store.job(member),directory=join(this.root,'outputs');await mkdir(directory,{recursive:true});
+    assertDiskSpace(this.root,64*1024**2,storagePolicy(this.store));
+    const path=await adapter.fetch(page,job,(state,patch={})=>this.store.transition(member,state,{note:labels[state],...patch}),join(directory,`${member}.mp4`));
+    adapter.timings.downloadedAt=Date.now();
+    this.store.transition(member,'validating',{failedFilePath:path,note:'Kiểm clip; chờ đủ ba file khác hash trước khi nhập.'});
+    const report=await this.validateOutput(path,job.request);
+    if(report.metadata.width!==720||report.metadata.height!==1280||Math.abs(report.metadata.duration-job.request.duration)>0.15)throw Object.assign(Error('Clip gói cần 720×1280 và đúng thời lượng đã duyệt (±0,15 giây).'),{code:'MUSE_BUNDLE_INVALID'});
+    adapter.timings.validatedAt=Date.now();
+    const output={path,name:path.split(/[\\/]/).at(-1),...(adapter.compression?{compression:adapter.compression}:{}),...report};
+    this.store.put({...this.store.job(member),timings:{...adapter.timings}});
+    const readVerified=async()=>{const bytes=new Uint8Array(await readFile(path));if(createHash('sha256').update(bytes).digest('hex')!==report.sha256)throw Error('File đã đổi sau kiểm tra.');return {bytes,name:output.name,type:'video/mp4',sha256:report.sha256};};
+    // Speculative encoding cannot publish an asset or mark a scene ready. All
+    // takes remain absent until the bundle cardinality/hash barrier succeeds.
+    await Promise.resolve().then(()=>this.onReadyOutput?.({...this.store.job(member),state:'ready',output},readVerified)).catch(error=>{this.store.put({...this.store.job(member),earlyRenderError:String(error.message).slice(0,600)});});
+    return {member,output,sha256:report.sha256,sourceSha256:adapter.compression?.sourceSha256??report.sha256,timings:adapter.timings};
   }
   async importReady(id) {
     if (!this.receiveOutput || this.store.job(id).state !== 'ready' || this.store.job(id).importedAt) return;

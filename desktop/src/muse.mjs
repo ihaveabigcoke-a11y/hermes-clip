@@ -131,6 +131,7 @@ export class MuseAdapter {
     const deadline = Date.now() + timeout;
     let lastResponse = '';
     let completedAt = null;
+    const observedCards=[];
     while (Date.now() < deadline) {
       await this.guard?.();
       const ids = await cards.evaluateAll(
@@ -141,13 +142,19 @@ export class MuseAdapter {
       if(fresh.length)this.timings.firstResultAt??=Date.now();
       if(this.expectedScenes?.length){
         const generating=await page.getByRole('button',{name:'Stop',exact:true}).isVisible();
-        if(fresh.length&&!generating){
+        if(fresh.length&&(this.bundleAppearance||!generating)){
           const rows=await cards.evaluateAll((elements,attribute)=>elements.map(e=>({id:e.getAttribute(attribute),text:e.innerText||e.textContent||'',clipCount:e.querySelectorAll('video').length})),config.resultIdAttribute);
           this.timings.observedClipCount=rows.filter(r=>fresh.includes(r.id)).reduce((n,r)=>n+(r.clipCount??1),0);
-          const mapped=mapBundleCards(rows.filter(r=>fresh.includes(r.id)),this.expectedScenes);
+          const current=rows.filter(r=>fresh.includes(r.id));
+          for(const row of current)if(!observedCards.some(c=>c.id===row.id))observedCards.push(row);
+          this.timings.observedCardCount=observedCards.length;
+          const invalid=current.some(r=>r.clipCount!==1)||observedCards.length>this.expectedScenes.length;
+          if(invalid)throw Object.assign(Error('Muse trả số thẻ/clip không đúng gói. Giữ kết quả để đối soát.'),{code:'MUSE_BUNDLE_UNMAPPED',providerUrl:page.url(),providerIds:observedCards.map(c=>c.id)});
+          if(this.bundleAppearance)for(const [index,row] of observedCards.entries())this.onBundleCard?.(index,row.id,page.url());
+          const mapped=mapBundleCards(this.bundleAppearance?observedCards:current,this.expectedScenes,{appearance:this.bundleAppearance===true});
           if(mapped){this.timings.resultAt=Date.now();this.bundleProviderIds=mapped;await checkpoint('submitted',{providerId:mapped[0],providerUrl:page.url(),bundleProviderIds:mapped});return mapped[0];}
-          this.bundleSettledAt??=Date.now();
-          if(fresh.length>this.expectedScenes.length||Date.now()-this.bundleSettledAt>=15000)throw Object.assign(Error('Muse trả thiếu clip hoặc chưa xác định được clip nào thuộc cảnh nào. Giữ kết quả để đối soát; gói mới dùng gửi riêng.'),{code:'MUSE_BUNDLE_UNMAPPED',providerUrl:page.url(),providerIds:fresh,providerResponse:rows.map(r=>r.text).join('\n').slice(0,2000)});
+          if(!generating)this.bundleSettledAt??=Date.now();else this.bundleSettledAt=null;
+          if(this.bundleSettledAt&&Date.now()-this.bundleSettledAt>=15000)throw Object.assign(Error('Muse trả thiếu clip hoặc chưa xác định được clip nào thuộc cảnh nào. Giữ kết quả để đối soát; gói mới dùng gửi riêng.'),{code:'MUSE_BUNDLE_UNMAPPED',providerUrl:page.url(),providerIds:fresh,providerResponse:rows.map(r=>r.text).join('\n').slice(0,2000)});
         }else this.bundleSettledAt=null;
       }else if (fresh.length > 1) throw Object.assign(Error('Có nhiều kết quả mới; không xác định được job.'),{code:'MUSE_MULTIPLE_RESULTS',providerUrl:page.url?.(),providerIds:fresh});
       if (!this.expectedScenes?.length&&fresh.length === 1) {
@@ -188,6 +195,7 @@ export class MuseAdapter {
       }
       await page.waitForTimeout(750);
     }
+    if(this.expectedScenes?.length&&observedCards.length)throw Object.assign(Error('Hết thời gian chờ đủ ba thẻ video. Giữ kết quả để đối soát.'),{code:'MUSE_BUNDLE_UNMAPPED',providerUrl:page.url(),providerIds:observedCards.map(c=>c.id)});
     if(lastResponse)throw this.noMedia(page,lastResponse);
     throw Error('Chưa thấy mã kết quả mới. Cần đối soát trước khi gửi tiếp.');
   }
@@ -290,25 +298,45 @@ export class MuseAdapter {
       const source=await media.evaluate(video=>video.currentSrc||video.src||video.querySelector('source')?.src||'');
       let url;try{url=new URL(source);}catch{}
       this.timings.videoSourceScheme=url?.protocol??'empty';
-      if(url?.protocol==='https:'&&!url.username&&!url.password){
+      if((url?.protocol==='https:'&&!url.username&&!url.password)||(this.bundleAppearance&&url?.protocol==='blob:'&&url.origin===new URL(config.startUrl).origin)){
         await checkpoint('downloading');
         downloadStarted=true;
         this.timings.downloadStartedAt=Date.now();
         let response,bytes;
         try{
+          if(url.protocol==='blob:'){
+            // Browser-owned blob URLs are only readable in their creating page.
+            // Fetch the exact card source, bounded in size and time, with no
+            // cookie/storage inspection and no shared preview-modal race.
+            const base64=await media.evaluate(async(video)=>{
+              const src=video.currentSrc||video.src||video.querySelector('source')?.src;
+              const response=await fetch(src,{signal:AbortSignal.timeout(15000)});
+              if(!response.ok)throw Error('Blob unavailable');
+              const blob=await response.blob();if(!blob.size||blob.size>64*1024**2)throw Error('Blob exceeds budget');
+              return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(Error('Blob read failed'));reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.readAsDataURL(blob);});
+            });
+            bytes=Buffer.from(base64,'base64');
+          }else{
           response=await page.request.get(url.href,{timeout:15000});
           if(!response.ok())throw Error('Video URL is not ready');
           if(Number(response.headers()['content-length'])>64*1024**2)throw Error('Video URL exceeds download budget');
           bytes=await response.body();
+          }
           if(!bytes.length||bytes.length>64*1024**2||bytes.subarray(4,8).toString()!=='ftyp')throw Error('Video URL did not return MP4');
         }catch{bytes=null;this.timings.directDownloadFallbackAt=Date.now();}
         finally{await response?.dispose();}
         if(bytes){
-          this.timings.transferFinishedAt=Date.now();this.timings.downloadMethod='video-url';
+          this.timings.transferFinishedAt=Date.now();this.timings.downloadMethod=url.protocol==='blob:'?'video-blob':'video-url';
           return saveDownload({saveAs:p=>writeFile(p,bytes),failure:async()=>null},path,{compress:true,onCompression:c=>{this.compression=c;}});
         }
       }
     }
+    // Concurrent bundle fallbacks serialize only the shared preview UI. File
+    // transfers and normalization still run independently after download starts.
+    let releasePreview;
+    if(this.acquirePreview)releasePreview=await this.acquirePreview();
+    let download;
+    try {
     let downloadButton = exact.getByRole('button', {name: config.downloadButtonName, exact: true});
     if (this.chatMode) {
       const preview = exact.locator('[data-hatch-video-wrapper], button:has(img), [role="button"]:has(img)').first();
@@ -319,10 +347,13 @@ export class MuseAdapter {
     }
     if(!downloadStarted)await checkpoint('downloading');
     this.timings={...this.timings,downloadStartedAt:Date.now(),downloadMethod:'preview-button'};
-    const [download] = await Promise.all([
+    [download] = await Promise.all([
       page.waitForEvent('download', {timeout: 30000}),
       downloadButton.click(),
     ]);
+    } finally {
+      if(releasePreview){await page.keyboard.press('Escape').catch(()=>{});releasePreview();}
+    }
     if (this.chatMode && job.request?.mediaType === 'image') {
       const extension = extname(download.suggestedFilename()).toLowerCase();
       if (!['.png', '.jpg', '.jpeg', '.webp'].includes(extension)) {
@@ -331,7 +362,7 @@ export class MuseAdapter {
       path = path.slice(0, -extname(path).length) + extension;
     }
     path=await saveDownload(download,path,{compress:true,onCompression:compression=>{this.compression=compression;}});
-    if (this.chatMode) await page.keyboard.press('Escape');
+    if (this.chatMode&&!releasePreview) await page.keyboard.press('Escape');
     return path;
   }
 }

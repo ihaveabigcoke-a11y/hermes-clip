@@ -136,16 +136,18 @@ export async function runVideoFlow(o:FlowOptions){
    for(const s of missing())if(s.mediaProvider==='manual')await command('media_provider',{sceneId:s.id,provider:'muse'},'resume_muse_'+s.id+'_'+project!.revision);
   }else if(missing().some((s:any)=>s.mediaProvider==='manual'))return manual();
   if(project!.data.mediaProvider!=='muse')await command('media_provider',{provider:'muse'},'muse_'+project!.revision);
-  const preview=await o.bridge.musePackagePreview({projectId:project!.id,mode:'separate'});
+  const preview=await o.bridge.musePackagePreview({projectId:project!.id,mode:'auto'});
   if(preview.blocked)return stop('Có lượt Muse cần đối soát. Mở Tín hiệu để kiểm tra kết quả cũ; app chưa gửi thêm.','attention');
   if(preview.night?.stopped||(preview.night?.remaining!=null&&(preview.sendCount??preview.count)>preview.night.remaining))return museOnly?stop(preview.night?.stopReason||'Số lượt còn lại chưa đủ. Kiểm tra giới hạn trong Cài đặt; chưa gửi cảnh nào.'):manual();
   await o.bridge.prepareVideoRenders?.({projectId:project!.id});
   progress('Đang tạo');timing('dispatch_start');
-  if(preview.count){try{await o.bridge.musePackageStart({projectId:project!.id,revision:project!.revision,mode:'separate'});}catch(error){status=await o.bridge.status();const night=await o.bridge.museNightStatus();if(status.musePaused||night.stopped)return museOnly?stop(night.stopReason||(error as Error).message):manual();throw error;}}
+  if(preview.count){try{await o.bridge.musePackageStart({projectId:project!.id,revision:project!.revision,mode:'auto'});}catch(error){status=await o.bridge.status();const night=await o.bridge.museNightStatus();if(status.musePaused||night.stopped)return museOnly?stop(night.stopReason||(error as Error).message):manual();throw error;}}
   for(let i=0;missing().length&&i<(o.maxPolls??240);i++){
    await wait(750);await refresh();timing('clips_polled');await launchAvailableRenders();progress('Đã nhận '+(project!.data.scenes.length-missing().length)+'/'+project!.data.scenes.length+' clip');if(!missing().length)break;
    status=await o.bridge.status();const night=await o.bridge.museNightStatus();if(status.musePaused||night.stopped)return museOnly?stop(night.stopReason||'Muse đã dừng. Mở Tín hiệu để xem lý do; các cảnh chưa tự chuyển sang nhập tay.'):manual();
    const jobs=(status.jobs??[]).filter((j:any)=>j.request?.projectId===project!.id);
+   const rejectedBundle=jobs.find((j:any)=>['MUSE_BUNDLE_UNMAPPED','MUSE_BUNDLE_DUPLICATE','MUSE_BUNDLE_INVALID'].includes(j.failureCode));
+   if(rejectedBundle&&!jobs.some((j:any)=>['queued','preflight','prepared','submitting','submitted','waiting','downloading','validating'].includes(j.state)))return stop(rejectedBundle.failureDetail||'Gói Muse thiếu hoặc trùng clip. Chưa nhận bộ video; mở Tín hiệu để đối soát.','attention');
    if(jobs.some((j:any)=>['unknown','needs_attention'].includes(j.state))&&!jobs.some((j:any)=>['queued','preflight','prepared','submitting','submitted','waiting','downloading','validating'].includes(j.state)))return stop('Thiếu '+missing().length+' clip. Hồ sơ bị từ chối đã dừng gửi; các công tắc vẫn bật. Mở Tín hiệu để đối soát, chưa gửi lại.','attention');
   }
   if(missing().length)return stop('Muse vẫn đang xử lý hoặc chưa có clip. Mở Tín hiệu xem tiến độ; bấm Làm video để tiếp tục kiểm kết quả, không tạo dự án mới.','waiting');

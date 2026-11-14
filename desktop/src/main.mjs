@@ -75,7 +75,8 @@ async function startApplication() {
  }
  const integrations=new Integrations(store,root);
  const earlyRenders=manual?new EarlyVideoRender({records:()=>manual.records(),readOutput:id=>worker.output(id),readAsset:async id=>{const response=await manual.request('/api/assets/'+id);if(!response.ok)throw Error('Không đọc được nguồn dựng.');return new Uint8Array(await response.arrayBuffer());},compose:input=>integrations.compose(input),onTiming:(id,stage)=>{const job=store.job(id);store.put({...job,timings:{...job.timings,[stage]:Date.now()}});}}):null;
- worker.onReadyOutput=job=>earlyRenders?.start(job);
+ worker.onReadyOutput=(job,readOutput)=>earlyRenders?.start(job,readOutput);
+ worker.onRejectedBundle=projectId=>earlyRenders?.discard(projectId);
  const reaVideo=new ReaVideoService({store,root,run:integrations.run,domain:reaDomain,secret,config:()=>integrations.config()});
  integrations.rea=reaVideo;
  const museChat = new MuseChat(worker);
