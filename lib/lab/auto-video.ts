@@ -11,7 +11,7 @@ export function museVideoLabel(status:any){
  const blocked=(status.profiles??[]).flatMap((profile:any)=>{
   const latest=(status.jobs??[]).filter((j:any)=>j.profileId===profile.id&&j.request?.mediaType==='video'&&(reasons[j.failureCode]||(j.state==='ready'&&j.output)))
    .sort((a:any,b:any)=>(b.createdAt??0)-(a.createdAt??0))[0];
-  if(!latest||!reasons[latest.failureCode])return [];
+  if(!latest||(latest.state==='ready'&&latest.output)||!reasons[latest.failureCode])return [];
   return [{profile,job:latest,reason:/video_not_available|(?:country|region).{0,50}(?:restrict|unavailable)|unavailable.{0,80}(?:country|region)/i.test(latest.providerResponse??'')?'Muse hạn chế tạo video theo vùng/quyền':reasons[latest.failureCode]}];
  }).sort((a:any,b:any)=>(b.job.createdAt??0)-(a.job.createdAt??0));
  if(blocked.length)return blocked.map((item:any)=>`${item.profile.name}: ${item.reason}`).join(' · ');

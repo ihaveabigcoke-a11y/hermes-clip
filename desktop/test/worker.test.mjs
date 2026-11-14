@@ -1,6 +1,14 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {mkdtemp,rm,readFile,writeFile} from 'node:fs/promises';import {join} from 'node:path';import {tmpdir} from 'node:os';import {execFileSync} from 'node:child_process';
 import {Store} from '../src/store.mjs';import {Worker} from '../src/worker.mjs';import {profileInput,jobInput,jobFingerprint,assertSender,SITE} from '../src/contracts.mjs';import {MuseAdapter} from '../src/muse.mjs';import {validateMedia,renderClips} from '../src/media.mjs';
 
+test('retry clears inherited failure metadata only on the new attempt',()=>fixture(async store=>{
+ const job=store.enqueue({sceneId:'fixture',references:[]},'retry-failure-metadata').job;
+ store.transition(job.id,'preflight');store.transition(job.id,'failed',{failureCode:'MUSE_NO_MEDIA',errorKind:'refused',providerResponse:'PROMPT ONLY'});
+ const original=store.job(job.id),retry=store.retry(job.id);
+ assert.equal(retry.failureCode,null);assert.equal(retry.errorKind,null);assert.equal(retry.providerResponse,null);
+ assert.equal(retry.state,'queued');assert.equal(retry.retryOf,original.id);assert.deepEqual(store.job(original.id),original);
+}));
+
 test('opening a result uses its original profile and locks it without submitting or consuming quota', () => fixture(async (store, dir) => {
   const worker = new Worker(store, dir, {}, {});
   store.set('adapter',{startUrl:'https://muse.ai/'});

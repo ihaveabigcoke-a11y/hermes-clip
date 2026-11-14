@@ -4,6 +4,13 @@ import {runVideoFlow,productVideoLibrary,videoRecovery,resumableVideoProject,mus
 import {newProduction,applyProduction} from '../lib/lab/production.ts';
 import {emptyProduct} from '../lib/lab/domain.ts';
 
+test('T-031: a validated video overrides a stale failure inherited by a historical retry without rewriting its receipt',()=>{
+ const status={musePaused:false,generationReady:true,profiles:[{id:'Cho',name:'Cho',enabled:true,health:'ready',quota:{state:'available'}}],jobs:[{profileId:'Cho',createdAt:1,state:'ready',failureCode:'MUSE_NO_MEDIA',errorKind:'refused',output:{sha256:'a'.repeat(64)},request:{mediaType:'video'}}]};
+ const before=structuredClone(status);
+ assert.equal(museVideoLabel(status),'Muse sẵn sàng');assert.deepEqual(status,before);
+ status.jobs[0].output=null;assert.equal(museVideoLabel(status),'Cho: Muse chưa trả video');
+});
+
 test('T-030: readiness uses the latest video outcome per profile without clearing a restriction with another profile or an image',()=>{
  const profile=(id)=>({id,name:id,enabled:true,health:'ready',quota:{state:'available'}});
  const status={musePaused:false,generationReady:true,profiles:[profile('Chi'),profile('Cho')],jobs:[]};
