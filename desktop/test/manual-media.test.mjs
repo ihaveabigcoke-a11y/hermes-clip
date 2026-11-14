@@ -99,7 +99,15 @@ test('manual pack contains approved scenes, English instructions, compressed pin
   assert.match(await readFile(join(pack.path,'README-VI.txt'),'utf8'),/Flow\/Gemini/);
   assert.equal((await scene('one')).state,'Đã xuất');
   await media.waitForFiles({projectId:'project_fixture'});assert.equal((await scene('one')).state,'Chờ file');
-  await assert.rejects(media.exportPack({projectId:'project_fixture'},new Date(2026,10,12,19,5)),/Đã có gói/);
+  const second=await media.exportPack({projectId:'project_fixture'},new Date(2026,10,12,19,5));
+  assert.notEqual(second.path,pack.path);
+  assert.equal(await readFile(join(pack.path,`${code}.txt`),'utf8'),prompt,'old prompt is immutable');
+  assert.deepEqual(await readFile(join(pack.path,`${code}-ref-1.webp`)),packed,'old reference is immutable');
+  assert.equal(await readFile(join(second.path,`${code}.txt`),'utf8'),prompt);
+  assert.equal((await scene('one')).exportedPath,second.path);
+  const parallel=await Promise.all([1,2].map(()=>media.exportPack({projectId:'project_fixture'},new Date(2026,10,12,19,5))));
+  assert.equal(new Set([pack,second,...parallel].map(p=>p.path)).size,4);
+  for(const exported of parallel)assert.equal(await readFile(join(exported.path,`${code}.txt`),'utf8'),prompt);
   const reopened=new ManualMedia({store:f.store,local:f.local});
   assert.equal((await reopened.status()).scenes.find(row=>row.sceneId==='one').code,code);
   await command('scene',{id:'one',name:'Edited',prompt:'Show a close-up.',referenceIds:[]});

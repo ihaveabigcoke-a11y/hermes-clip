@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {runVideoFlow} from '../lib/lab/auto-video.ts';
+import {runVideoFlow,productVideoLibrary,videoRecovery} from '../lib/lab/auto-video.ts';
 import {newProduction,applyProduction} from '../lib/lab/production.ts';
 import {emptyProduct} from '../lib/lab/domain.ts';
 
 test('T-026f: explicit refusal routes to manual and preserves receipt; unknown submission requires reconciliation',async()=>{
- for(const failureCode of ['MUSE_REFUSED',null]){
+ for(const failureCode of ['MUSE_REFUSED','MUSE_NO_MEDIA',null]){
   const product={id:'p',kind:'product',revision:1,createdAt:1,updatedAt:1,data:{...emptyProduct,name:'Fixture',ctaKeyword:'GLOW'}};
   let project,paused=false;const commands=[],packs=[],job={id:'job_1',request:{projectId:'auto_test',sceneId:'auto_0'},state:'needs_attention',failureCode};
   const request=async(path,body)=>{
@@ -71,4 +71,24 @@ test('Muse unlimited null starts the package; finite zero remains manual; unreso
   const result=await runVideoFlow({productId:'p',projectId:'auto_unlimited',request,upload:()=>assert.fail('No media fixture'),maxPolls:0,bridge:{status:async()=>({musePaused:false,generationReady:true,jobs:[]}),musePackagePreview:async()=>({count:5,blocked,night:{remaining,stopped:false}}),musePackageStart:async()=>{starts++;},manualMediaExport:async()=>{manual++;}},wait:async()=>{}});
   assert.equal(result.state,expected);assert.equal(starts,expected==='waiting'?1:0);assert.equal(manual,expected==='manual'?1:0);
  }
+});
+
+test('Video library preserves every project for the selected product without attaching old takes',()=>{
+ const make=(id,productId,updatedAt)=>({id,kind:'production',updatedAt,data:{productId,scenes:[{id:'same_scene',name:'Clip',mediaType:'video',takes:[{id:'same_take',assetId:id+'_asset',review:'pending'}]},{id:'image',mediaType:'image',takes:[{id:'img',assetId:'img'}]}],exports:[{id:'render',kind:'render',verified:true,assetId:id+'_render'},{id:'prompt',kind:'prompt',verified:true,assetId:'not_video'},{id:'unverified',kind:'render',verified:false,assetId:'not_verified'}]}});
+ const old=make('old','p',1),other=make('other','q',3),current=make('current','p',2);current.data.scenes=[];current.data.exports=[];
+ const records=[old,current,other],before=structuredClone(records),library=productVideoLibrary(records,'p');
+ assert.deepEqual(library.clips.map(r=>r.take.assetId),['old_asset']);assert.deepEqual(library.exports.map(r=>r.output.assetId),['old_render']);
+ assert.equal(library.clips[0].project.id,'old');assert.deepEqual(records,before);assert.deepEqual(productVideoLibrary(records,'missing'),{clips:[],exports:[]});
+});
+test('Video recovery explains no-media, isolates products and revisions, and preserves uncertain receipts',()=>{
+ const project={id:'current',data:{scenes:[{id:'scene',revision:2,mediaProvider:'manual',takes:[]}]}};
+ const job={id:'j',state:'needs_attention',failureCode:'MUSE_NO_MEDIA',request:{projectId:'current',sceneId:'scene',sceneRevision:2}};
+ const state={musePaused:true,jobs:[job]},before=structuredClone(state);
+ assert.match(videoRecovery(project,state).message,/chưa tạo video/);assert.equal(videoRecovery(project,state).manual,true);
+ assert.equal(videoRecovery(project,state).attention,false);assert.deepEqual(state,before);
+ assert.equal(videoRecovery(project,{...state,jobs:[{...job,request:{...job.request,projectId:'other'}}]}).noMedia,false);
+ assert.equal(videoRecovery(project,{...state,jobs:[{...job,request:{...job.request,sceneRevision:1}}]}).noMedia,false);
+ assert.equal(videoRecovery(project,{...state,jobs:[{...job,failureCode:'TIMEOUT'}]}).attention,true);
+ const delivered=structuredClone(project);delivered.data.scenes[0].takes=[{sceneRevision:2,review:'pending'}];
+ assert.equal(videoRecovery(delivered,state).message,'');
 });

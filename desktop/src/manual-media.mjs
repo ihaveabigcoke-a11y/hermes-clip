@@ -139,8 +139,10 @@ export class ManualMedia {
       if(expected.length!==group.length||group[0].scene.fromSec!==unit.fromSec||group.at(-1).scene.toSec!==unit.toSec||unit.toSec-unit.fromSec>8||group.some((r,i)=>r.scene.setting!==group[0].scene.setting||JSON.stringify(r.scene.generationUnit)!==JSON.stringify(unit)||['references','constraints','packaging'].some(key=>JSON.stringify(r.scene[key])!==JSON.stringify(group[0].scene[key]))||(i>0&&r.scene.fromSec!==group[i-1].scene.toSec)))throw Error('Duyệt và chọn đủ shot liên tiếp cùng bối cảnh, tham chiếu, bao bì và giới hạn của nhóm tạo trước khi xuất.');
     }
     const base=join(this.local.root,'exports','prompt-packs'); await mkdir(base,{recursive:true});
-    const destination=join(base,`${rows[0].productCode}-${stamp(date)}`);
-    try {await stat(destination); throw Error('Đã có gói trong phút này. Giữ gói cũ; xuất lại vào phút tiếp theo.');} catch(error) {if(error.code!=='ENOENT')throw error;}
+    let destination=join(base,`${rows[0].productCode}-${stamp(date)}`);
+    // Preserve prior packs, including other projects for the same product.
+    // The instance serializes exports; a collision gets a new immutable path.
+    try {await stat(destination); destination += '-' + randomUUID();} catch(error) {if(error.code!=='ENOENT')throw error;}
     const staging=join(base,`.pending-${randomUUID()}`); await mkdir(staging);
     assertDiskSpace(this.local.root, 100*1024**2, storagePolicy(this.store));
     const exports=this.store.get('manual_exports',{});

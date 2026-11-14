@@ -2,6 +2,24 @@ import {vietnamDay,type LabRecord} from './domain.ts';
 import {getRenderPlan} from './render-plan.ts';
 import {productionSchema,sceneInputSchema} from './production.ts';
 import {suggestProductKey} from './daily-selection.ts';
+/** Read-only library across projects; never attaches old takes to the new timeline. */
+export function productVideoLibrary(records:LabRecord[],productId:string){
+ const projects=records.filter(r=>r.kind==='production'&&r.data.productId===productId).sort((a,b)=>b.updatedAt-a.updatedAt);
+ return {
+  clips:projects.flatMap(project=>(project.data.scenes??[]).filter((s:any)=>s.mediaType==='video').flatMap((scene:any)=>(scene.takes??[]).filter((t:any)=>t.assetId).map((take:any)=>({project,scene,take})))),
+  exports:projects.flatMap(project=>(project.data.exports??[]).filter((e:any)=>e.kind==='render'&&e.verified&&e.assetId).map((output:any)=>({project,output}))),
+ };
+}
+export function videoRecovery(project:LabRecord|undefined,status:any){
+ const missing=(project?.data.scenes??[]).filter((s:any)=>!s.takes.some((t:any)=>t.sceneRevision===s.revision&&t.review!=='rejected'));
+ const jobs=(status?.jobs??[]).filter((j:any)=>j.request?.projectId===project?.id&&missing.some((s:any)=>s.id===j.request.sceneId&&s.revision===j.request.sceneRevision));
+ const unresolved=jobs.filter((j:any)=>['unknown','needs_attention'].includes(j.state));
+ const noMedia=unresolved.some((j:any)=>j.failureCode==='MUSE_NO_MEDIA');
+ const attention=unresolved.some((j:any)=>!['MUSE_NO_MEDIA','MUSE_REFUSED'].includes(j.failureCode));
+ const manual=missing.some((s:any)=>s.mediaProvider==='manual');
+ const message=noMedia?'Muse đã trả lời nhưng chưa tạo video. Lượt cũ được giữ; xem phản hồi trước khi gửi lại.':attention?'Kết quả lượt Muse chưa rõ. Mở Tín hiệu để đối soát trước khi gửi lại.':missing.length&&manual?'Cảnh còn thiếu đang chờ file nhập tay. Xuất gói prompt, tạo clip rồi chép vào Hộp nhận.':missing.length&&status?.musePaused?'Muse đang tạm dừng nên chưa tạo clip mới. Kiểm tra trong Tài khoản hoặc dùng file nhập tay.':'';
+ return {message,manual,attention,noMedia};
+}
 export const hookTechniques=['problem','absurd','curiosity'] as const;
 export function videoName(product:LabRecord,hook:number,technique:string,account='draft',now=Date.now()){
  const clean=(s:string)=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[đĐ]/g,'d').replace(/[^a-zA-Z0-9-]/g,'-').replace(/-+/g,'-').slice(0,48)||'draft';
@@ -40,8 +58,8 @@ export async function runVideoFlow(o:FlowOptions){
   const blocked=new Set(jobs.filter((j:any)=>!refused.includes(j)&&['unknown','needs_attention','submitting','submitted','waiting','downloading'].includes(j.state)).map((j:any)=>j.request.sceneId));
   for(const j of jobs.filter((j:any)=>j.state==='queued'))await o.bridge.cancel({id:j.id});
   const scenes=missing().filter((s:any)=>!blocked.has(s.id));for(const s of scenes)await command('media_provider',{sceneId:s.id,provider:'manual'},'manual_'+s.id);
-  if(scenes.length)await o.bridge.manualMediaExport({projectId:project!.id,sceneIds:scenes.map((s:any)=>s.id)});
-  const state=scenes.length?'manual':blocked.size?'attention':'waiting';progress(state==='manual'?'Chờ file tay':state==='attention'?'Cần đối soát':'Đang tạo');return {state,project};
+  const pack=scenes.length?await o.bridge.manualMediaExport({projectId:project!.id,sceneIds:scenes.map((s:any)=>s.id)}):null;
+  const state=scenes.length?'manual':blocked.size?'attention':'waiting';progress(state==='manual'?'Chờ file tay':state==='attention'?'Cần đối soát':'Đang tạo');return {state,project,pack};
  }
  if(missing().length){
   if(!o.bridge)throw Error('Mở app desktop để tạo video.');
