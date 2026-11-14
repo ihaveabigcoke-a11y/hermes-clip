@@ -79,12 +79,12 @@ try{
  console.log(JSON.stringify({passed:true,menus:screens.length,errors,consoleErrors,defaultSignals:true}));
 }finally{
  // Close only the window launched by this check, using the normal Windows close request.
- const pid=Number(await readFile(join(qa,'electron.pid'),'utf8').catch(()=>'0'));if(pid>0)execFileSync('powershell.exe',['-NoProfile','-Command','(Get-Process -Id '+pid+' -ErrorAction SilentlyContinue).CloseMainWindow() | Out-Null'],{windowsHide:true,stdio:'ignore'});
+ const pid=Number(await readFile(join(qa,'electron.pid'),'utf8').catch(()=>'0'));if(pid>0)execFileSync('powershell.exe',['-NoProfile','-Command','$qaWindow=Get-Process -Id '+pid+' -ErrorAction Stop; $qaWindow.Refresh(); if(-not $qaWindow.CloseMainWindow()){throw \"QA window did not accept close\"}; Wait-Process -Id '+pid+' -Timeout 15 -ErrorAction Stop'],{windowsHide:true,stdio:'ignore'});
  await browser?.close().catch(()=>{});closeSync(log);
 }
 
 // Read only the isolated workspace created above, never the installed user data.
-await delay(1500);
+
 const persisted=new Store(join(qa,'worker','worker.sqlite'));
 try{
  const status=new MuseNight(persisted).status();
