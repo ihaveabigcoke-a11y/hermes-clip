@@ -35,6 +35,7 @@ try{
  let port;for(let i=0;i<300;i++){if(launcher.exitCode!==null)break;try{port=(await readFile(join(qa,'DevToolsActivePort'),'utf8')).split('\n')[0];break;}catch{await delay(200);}}
  assert.ok(port,'Launcher did not expose its QA window; see launcher.log');
  browser=await chromium.connectOverCDP('http://127.0.0.1:'+port);const context=browser.contexts()[0];
+ let initialLoaded=false;for(let i=0;i<200;i++){try{await readFile(join(qa,'loaded'));initialLoaded=true;break;}catch{await delay(100);}}assert.ok(initialLoaded,'Startup must finish before selecting the renderer');
  const page=context.pages().find(p=>p.url().includes('127.0.0.1'))??await context.waitForEvent('page');page.setDefaultTimeout(12000);
  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')consoleErrors.push(m.text());});
  await page.waitForLoadState('load');await page.locator('.sidebar-navigation').waitFor();
@@ -75,7 +76,7 @@ try{
   await page.screenshot({path:join(out,'unlimited-'+width+'.png')});screens.push({view:'unlimited',width});
  }
  assert.deepEqual(errors,[]);assert.deepEqual(consoleErrors,[]);assert.deepEqual(external,[]);
- await writeFile(join(out,'result.json'),JSON.stringify({passed:true,actualLauncher:true,actualElectron:true,installedUserData:false,isolatedWorkspace:true,screens,errors,consoleErrors,external,defaultSignals:true,musePaused:false,explicitResume:true,receiptPreserved:true,unlimited:true,submitted:1},null,2));
+ await writeFile(join(out,'ui-result.json'),JSON.stringify({passed:true,actualLauncher:true,actualElectron:true,installedUserData:false,isolatedWorkspace:true,screens,errors,consoleErrors,external,defaultSignals:true,musePaused:false,explicitResume:true,receiptPreserved:true,unlimited:true,submitted:1},null,2));
  console.log(JSON.stringify({passed:true,menus:screens.length,errors,consoleErrors,defaultSignals:true}));
 }finally{
  // Close only the window launched by this check, using the normal Windows close request.
@@ -90,5 +91,6 @@ try{
  const status=new MuseNight(persisted).status();
  assert.equal(persisted.get('muse_paused'),false);assert.equal(status.limit,null);assert.equal(status.submitted,1);assert.equal(status.errors,1);assert.equal(status.stopped,false);
  assert.equal(new MuseNight(persisted).current().resumptions.length,1);assert.equal(persisted.jobs()[0].providerId,'fixture-receipt');
+ await writeFile(join(out,'result.json'),JSON.stringify({...JSON.parse(await readFile(join(out,'ui-result.json'),'utf8')),persistedAfterElectronClose:true},null,2));
  console.log(JSON.stringify({persistedAfterElectronClose:true,receiptPreserved:true,unlimited:true}));
 }finally{persisted.close();}
