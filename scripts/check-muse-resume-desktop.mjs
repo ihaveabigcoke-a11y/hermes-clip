@@ -79,7 +79,7 @@ try{
  console.log(JSON.stringify({passed:true,menus:screens.length,errors,consoleErrors,defaultSignals:true}));
 }finally{
  // Close only the window launched by this check, using the normal Windows close request.
- const pid=Number(await readFile(join(qa,'electron.pid'),'utf8').catch(()=>'0'));if(pid>0)execFileSync('powershell.exe',['-NoProfile','-Command','$qaWindow=Get-Process -Id '+pid+' -ErrorAction Stop; $qaWindow.Refresh(); if(-not $qaWindow.CloseMainWindow()){throw \"QA window did not accept close\"}; Wait-Process -Id '+pid+' -Timeout 15 -ErrorAction Stop'],{windowsHide:true,stdio:'ignore'});
+ const pid=Number(await readFile(join(qa,'electron.pid'),'utf8').catch(()=>'0'));if(pid>0)execFileSync('pwsh.exe',['-NoProfile','-Command','$qaWindow=Get-Process -Id '+pid+' -ErrorAction Stop; $qaWindow.Refresh(); if(-not $qaWindow.CloseMainWindow()){throw \"QA window did not accept close\"}; if(-not $qaWindow.WaitForExit(15000)){throw \'QA Electron did not exit\'}'],{windowsHide:true,stdio:'ignore'});
  await browser?.close().catch(()=>{});closeSync(log);
 }
 
