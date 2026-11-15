@@ -25,6 +25,7 @@ export class ProductDeployment {
   constructor({worker,local,changed=()=>{},fetchImage=fetchProductImage,pollMs=1000,waitMs=40*60*1000}) {
     Object.assign(this,{worker,store:worker.store,local,changed,fetchImage,pollMs,waitMs});
     this.running=null;this.starting=null;this.stopped=false;
+    worker.profileRunners?.add(this);
   }
   rows(){return this.store.get('product_deployments',[]);}
   status(){return {runs:this.rows(),active:this.running?.id??null};}
@@ -69,7 +70,7 @@ export class ProductDeployment {
   }
   launch(id){if(this.running||this.stopped||museIsPaused(this.store))return;const version=this.worker.dispatchVersion;const promise=this.run(id,version).catch(e=>this.update(id,{state:e.paused?'paused':'needs_attention',error:e.message})).finally(()=>{this.running=null;});this.running={id,promise};}
   boot(){const row=this.rows().find(r=>['queued','running'].includes(r.state));if(row)this.launch(row.id);}
-  resume({id}){assertMuseNewTask(this.store);const row=this.rows().find(r=>r.id===id);if(!row)throw Error('Không tìm thấy đợt triển khai.');if(this.running)throw Error('Chờ đợt hiện tại.');if(row.state==='ready_for_review')return row;this.update(id,{state:'queued',error:''});this.launch(id);return this.rows().find(r=>r.id===id);}
+  resume({id}){assertMuseNewTask(this.store);const row=this.rows().find(r=>r.id===id);if(!row)throw Error('Không tìm thấy đợt triển khai.');if(row.reconciled)throw Error('Đã bỏ qua đợt khi xóa hồ sơ; không gửi lại.');if(this.running)throw Error('Chờ đợt hiện tại.');if(row.state==='ready_for_review')return row;this.update(id,{state:'queued',error:''});this.launch(id);return this.rows().find(r=>r.id===id);}
   pause({id}){const row=this.rows().find(r=>r.id===id);if(!row)throw Error('Không tìm thấy đợt triển khai.');this.update(id,{state:'paused',error:'Đã tạm dừng. Tác vụ đã gửi vẫn lấy kết quả; chưa giao sản phẩm tiếp theo.'});this.worker.pause();return this.status();}
   assertContinue(row,version){
     if(this.stopped||this.worker.dispatchVersion!==version||museIsPaused(this.store)||this.rows().find(r=>r.id===row.id)?.state==='paused')throw Object.assign(Error('Đợt triển khai đã tạm dừng; dữ liệu và tác vụ đã gửi được giữ.'),{paused:true});

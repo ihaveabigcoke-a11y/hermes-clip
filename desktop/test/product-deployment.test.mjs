@@ -119,6 +119,16 @@ test('profile deletion: delayed proxy save cannot resurrect a deleted profile',(
  assert.equal(store.get('profiles').length,0);assert.equal(store.get('deleted_profiles').length,1);
 }));
 
+test('T-039 deployment skip is scoped and cannot resume a removed profile',()=>fixture(async({runner,ids,worker,store})=>{
+ assert.ok(worker.profileRunners.has(runner));
+ worker.run=async(id,profileId)=>{store.transition(id,'prepared');store.beginSubmit(id,profileId);store.transition(id,'needs_attention',{note:'Unknown delivery'});};
+ const run=await runner.start({batchId:'research_test',productIds:ids.slice(0,1)});await runner.running.promise;
+ assert.equal(worker.profiles()[0].deleteCanSkip,true);const jobs=store.jobs();
+ assert.equal((await worker.deleteProfile({id:'chi',confirmName:'Chi',skipUnreconciled:true})).deleted,true);
+ assert.equal(runner.rows()[0].reconciliation,'skipped');assert.throws(()=>runner.resume({id:run.id}),/Đã bỏ qua đợt/);
+ assert.deepEqual(store.jobs().map(j=>j.id),jobs.map(j=>j.id));assert.equal(store.get('muse_paused'),false);
+}));
+
 test('deployment: pause between products and resume keeps the already imported take',()=>fixture(async({runner,ids,worker,store,counts})=>{
  const original=worker.run.bind(worker);worker.run=async(...args)=>{await original(...args);if(counts()===1)runner.pause({id:runner.rows()[0].id});};
  const run=await runner.start({batchId:'research_test',productIds:ids});await runner.running.promise;

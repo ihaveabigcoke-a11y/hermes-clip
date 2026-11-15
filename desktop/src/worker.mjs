@@ -14,13 +14,14 @@ import {MuseAdapter} from './muse.mjs';
 import {TouchVpn,TOUCH_VPN_ID} from './touch-vpn.mjs';
 import {readMuseQuota,museQuotaExhausted} from './muse-quota.mjs';
 import {mediaProviderReceipts} from './provider-routing.mjs';
-import {removeProfile,profileRemovalBlocker} from './profile-removal.mjs';
+import {removeProfile,profileRemovalStatus} from './profile-removal.mjs';
 export class Worker {
   validateOutput = validateMedia;
   readBundleFrame = bundleMidpointFrame;
   checkToolchain = toolchain;
   chatting = new Set();
   deleting = new Set();
+  profileRunners = new Set();
   dispatchVersion = 0;
   closing = new Map();
   reclaimingMemory = false;
@@ -59,7 +60,7 @@ export class Worker {
       open: this.contexts.has(profile.id),
       background: this.backgroundProfiles.has(profile.id),
       dispatch: this.night.profileStatus(profile.id),
-      deleteBlockedReason: profileRemovalBlocker(this, profile.id),
+      ...profileRemovalStatus(this, profile.id),
     }));
   }
   async saveProfile(input) {

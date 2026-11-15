@@ -8,7 +8,7 @@ import {ResearchSources} from './research-sources.mjs';
 const input=z.object({requestId:z.string().regex(/^[a-zA-Z0-9_-]{1,80}$/),profileId:z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/).optional(),maxLandedCostUsd:z.number().finite().positive().max(1e9).nullable().optional(),query:z.string().trim().min(2).max(1500).default('Sản phẩm nguồn Trung Quốc phù hợp video ngắn cho thị trường Mỹ; ưu tiên sản phẩm không thương hiệu, nhẹ, dễ trình diễn.')});
 const activeStates=['queued','running'];
 export class ResearchRunner{
-  constructor({worker,chat,local,integrations,changed=()=>{}}){this.worker=worker;this.store=worker.store;this.chat=chat;this.local=local;this.changed=changed;this.running=null;this.stopped=false;this.sources=integrations?new ResearchSources({integrations,records:()=>this.records(),save:r=>this.save(r),changed}):null;}
+  constructor({worker,chat,local,integrations,changed=()=>{}}){this.worker=worker;this.store=worker.store;this.chat=chat;this.local=local;this.changed=changed;this.running=null;this.stopped=false;worker.profileRunners?.add(this);this.sources=integrations?new ResearchSources({integrations,records:()=>this.records(),save:r=>this.save(r),changed}):null;}
   rows(){return this.store.get('research_runs',[]);}
   status(){return {runs:this.rows(),active:this.running?.id??null};}
   skipReconciliation({id}){
