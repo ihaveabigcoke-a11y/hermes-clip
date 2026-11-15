@@ -687,7 +687,7 @@ export class Worker {
         failedFilePath: null,
         output: {path: output, name: output.split(/[\\/]/).at(-1), ...(adapter.compression?{compression:adapter.compression}:{}), ...report},
         note: 'Đã ghi file và giải mã toàn bộ; vẫn cần người duyệt nội dung.',
-        timings:{...timings,...adapter.timings,validatedAt:Date.now()},
+        timings:{...this.store.job(member).timings,...timings,...adapter.timings,validatedAt:Date.now()},
       });
       // A registered video flow can encode the verified file while its durable
       // library import runs. Rendering failure must not discard the Muse receipt.

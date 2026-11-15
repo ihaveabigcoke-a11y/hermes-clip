@@ -63,7 +63,7 @@ test('T-041 three independent fake Muse profiles download hidden blobs in parall
  const scenes=[0,1,2,3,4].map(i=>({id:'auto_'+i,revision:1,storyboardApproved:true,takes:i<3?[]:[{id:'t'+i,assetId:'a'+i,sha256:source[i].sha256,sceneRevision:1,review:'pending'}]}));
  const records=[{id:'product',kind:'product',revision:1,data:{ctaKeyword:'GLOW'}},{id:'project',kind:'production',data:{productId:'product',productRevision:1,scenes}},...[3,4].map(i=>({id:'a'+i,kind:'asset',data:{sha256:source[i].sha256,metadata:{duration:8}}}))];
  const starts=new Map(),compositions=[],imports=[];
- const early=new EarlyVideoRender({records:async()=>records,readAsset:async id=>source[Number(id.slice(1))].bytes,readOutput:id=>worker.output(id),compose:async input=>{compositions.push(input);return integrations.compose(input);},onTiming:(id,stage)=>{if(stage==='earlyRenderStartedAt')starts.set(id,Date.now());}});await early.arm('project');
+ const early=new EarlyVideoRender({records:async()=>records,readAsset:async id=>source[Number(id.slice(1))].bytes,readOutput:id=>worker.output(id),compose:async input=>{compositions.push(input);return integrations.compose(input);},onTiming:(id,stage)=>{const at=Date.now();if(stage==='earlyRenderStartedAt')starts.set(id,at);const job=store.job(id);store.put({...job,timings:{...job.timings,[stage]:at}});}});await early.arm('project');
  worker.onReadyOutput=(job,read)=>early.start(job,read);
  worker.receiveOutput=async id=>{assert.ok(starts.has(id),'Each render starts before its library import');imports.push(id);};
  const realValidate=worker.validateOutput;
@@ -87,7 +87,7 @@ test('T-041 three independent fake Muse profiles download hidden blobs in parall
  const jobs=[0,1,2].map(i=>{const job=store.enqueue(request(i),'t041_'+i).job;store.transition(job.id,'preflight',{profileId:profiles[i].id});return job;});
  await Promise.all(jobs.map((job,i)=>worker.runAdmitted(job.id,profiles[i].id,false)));
  assert.equal(peakFetches,3);assert.equal(imports.length,3);assert.equal(compositions.length,3);assert.equal(worker.night.status().submitted,3);assert.deepEqual(store.get('profiles').map(p=>[p.id,p.enabled,p.vpnEnabled]),profiles.map(p=>[p.id,p.enabled,p.vpnEnabled]));assert.equal(store.get('muse_paused'),false);assert.equal(worker.night.profileStatus('Chi').stopped,true);
- for(const job of jobs){const current=store.job(job.id);assert.equal(current.state,'ready',current.failureDetail);assert.equal(current.timings.downloadMethod,'video-blob');}
+ for(const job of jobs){const current=store.job(job.id);assert.equal(current.state,'ready',current.failureDetail);assert.equal(current.timings.downloadMethod,'video-blob');assert.equal(current.timings.earlyRenderStartedAt,starts.get(job.id));assert.ok(current.timings.earlyRenderStartedAt<current.timings.validatedAt);}
  const results=await Promise.all(compositions.map(c=>early.get(c)));assert.equal(new Set(results.map(r=>r.output.sha256)).size,3);
  for(const [i,r] of results.entries()){
   assert.equal(r.result.engine,'hermes_ffmpeg_single_pass');assert.equal(r.output.fullDecode,true);assert.equal(r.output.metadata.width,720);assert.equal(r.output.metadata.height,1280);assert.ok(Math.abs(r.output.metadata.duration-15)<.1);assert.ok(r.output.size<=6*1024**2);assert.equal(r.output.compression.mode,'original');assert.ok(Math.abs(r.output.audio.duration-r.output.audio.videoDuration)<=.1);assert.match(await readFile(join(root,'integrations',r.id,'overlays.ass'),'utf8'),/Comment GLOW/);
