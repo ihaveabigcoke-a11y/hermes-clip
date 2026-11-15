@@ -8,6 +8,7 @@ import {Button,Badge,Empty,Modal,RecordForm,Pagination,type FieldDef} from './pr
 import {MuseSwitch, musePauseHelp} from './muse-switch';
 import {resolveProvider} from '@/desktop/src/provider-routing.mjs';
 import WorkerActivity from './worker-activity';
+import MuseHealthCard from './muse-health-card';
 import QueueBoard from './queue-board';
 import {PageSelection,useWorkbenchSelection} from './workbench-controls';
 import {profileInput,adapterInput,museConnectionInput} from '@/desktop/src/shared.mjs';
@@ -73,6 +74,7 @@ export default function DesktopConsole({projectId,production:p,product,assets=[]
    <div><span>Tác vụ đang chạy</span><strong>{status?.active??0}</strong></div>
    <div><span>Hạn mức tuần đã dùng</span><strong>{averageUsed === null ? 'Chưa đo' : averageUsed + '%'}</strong><small>Trung bình lần đo đã lưu · {quotaProfiles.length} hồ sơ</small></div>
  </div>
+ <MuseHealthCard status={status}/>
  <div className="account-controls">
    <span><strong>Không giới hạn lượt trong Hermes</strong><small>{status?.batch ? 'Bắt đầu ' + formatTime(status.batch.startedAt) : 'Đợt bắt đầu khi gửi tác vụ'}</small></span>
    <Button tone="neutral" disabled={busy||!status||status.active>0||status.profiles.some(profile=>profile.busy)} onClick={()=>action('newBatch')}>Bắt đầu kỳ thống kê mới</Button>

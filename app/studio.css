@@ -281,3 +281,10 @@
 .workspace-media-grid .media-cover video, .workspace-media-grid .media-cover img { height: 280px; }
 @media (min-width: 1250px) { .desk-pane { height: max(420px, calc(100dvh - 285px)); } }
 @media (max-width: 800px) { .muse-studio { height: auto; } .workspace-media-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .workspace-media-grid .media-cover, .workspace-media-grid .media-cover video, .workspace-media-grid .media-cover img { height: 210px; } }
+
+.muse-health { display: grid; gap: 12px; padding: 20px; background: var(--lab-surface); border: 1px solid var(--lab-subtle-border); border-radius: 12px; }
+.muse-health h3 { margin: 0; }
+.muse-health dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 0; }
+.muse-health dt { color: var(--lab-muted); font-size: var(--lab-text-meta); }
+.muse-health dd { margin: 4px 0 0; font-weight: 600; }
+.muse-health-warn { margin: 0; color: #ff9292; }
