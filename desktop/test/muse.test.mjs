@@ -353,6 +353,31 @@ test('rechecking validates the stored thread before navigation', async () => {
   }
 });
 
+test('T-037 recheck waits for text hydration without submitting and still matches the saved receipt', async () => {
+  const {adapter, job, state, page} = responseInspection();
+  state.response = 'Loading';
+  let waits = 0;
+  page.waitForTimeout = async ms => { assert.equal(ms, 2500); waits++; state.response = waits === 1 ? 'Partial' : job.providerResponse; };
+  assert.equal((await adapter.inspectResponse(page, job)).response, job.providerResponse);
+  assert.equal(waits, 3);
+  state.response = 'Loading'; waits = 0;
+  page.waitForTimeout = async () => { waits++; state.response = 'Different settled answer'; };
+  await assert.rejects(adapter.inspectResponse(page, job), /Chưa xác nhận/);
+  assert.equal(waits, 2);
+});
+
+test('T-037 recheck bounds changing text and preserves media identity and Stop guards during hydration', async () => {
+  const {adapter, job, state, page} = responseInspection();
+  let waits = 0;
+  adapter.config = {...adapter.config, timeoutSeconds:5};
+  page.waitForTimeout = async () => { state.response = 'Changing ' + ++waits; };
+  await assert.rejects(adapter.inspectResponse(page, job), /đang thay đổi/);
+  assert.equal(waits, 2);
+  state.response = 'Loading';
+  page.waitForTimeout = async () => { state.generating = true; };
+  await assert.rejects(adapter.inspectResponse(page, job), /vẫn đang trả lời/);
+});
+
 test('Muse suggestions with presentation metadata are not media; real DOM refusal preserves receipt without downloading', async t => {
   const {chromium}=await import('playwright');
   const browser=await chromium.launch({headless:true});t.after(()=>browser.close());

@@ -231,12 +231,18 @@ export class MuseAdapter {
         .evaluateAll(elements => elements.map(element => element.innerText?.trim() || element.textContent?.trim() || ''));
       return {providerId: ids[0] ?? null, response: replies.join('\n\n'), legacyResponse: replies.at(-1) ?? ''};
     };
-    const first = await read();
-    await page.waitForTimeout(2500);
-    const latest = await read();
-    if (first.providerId !== latest.providerId || first.response !== latest.response) {
-      throw Error('Kết quả Muse đang thay đổi. Chờ một lúc rồi kiểm tra lại.');
+    let latest = await read(), settled = false;
+    // Reloaded threads hydrate Markdown after the first visible message. Give
+    // text time to settle, but never silently accept changing media identity.
+    const polls = Math.max(1, Math.min(12, Math.floor((this.config.timeoutSeconds ?? 30) * 1000 / 2500)));
+    for (let poll = 0; poll < polls; poll++) {
+      const previous = latest;
+      await page.waitForTimeout(2500);
+      latest = await read();
+      if (previous.providerId !== latest.providerId) break;
+      if (previous.response === latest.response) { settled = true; break; }
     }
+    if (!settled) throw Error('Kết quả Muse đang thay đổi. Chờ một lúc rồi kiểm tra lại.');
     if (latest.providerId) return {providerId:latest.providerId, response:latest.response, providerUrl:url.href};
     // Muse replaces streamed text with Markdown blocks on reload. Compare the
     // same text while ignoring layout whitespace, including truncated receipts.
