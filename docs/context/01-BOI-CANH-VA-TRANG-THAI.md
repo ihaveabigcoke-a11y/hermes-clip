@@ -1,3 +1,11 @@
+# T-043 — hàng đợi và xem trước video, 15/11/2026
+
+Source `1464aff` bổ sung Tất cả/Đang chạy/Lỗi/Xong có đếm theo cảnh; tìm prompt hoặc số việc `#N` bền; lý do lỗi một dòng được che URL/token. Giữ nhóm lịch sử và thao tác tạo lại T-042. Video có dòng 3 hook, số thẻ cần tạo và hồ sơ sẵn sàng từ trạng thái worker; hồ sơ đang dừng không được tính, công tắc giữ nguyên. Ước lượng chỉ từ lượt mới hoàn tất đã đo cùng số thẻ/bộ hồ sơ; chưa có thì ẩn.
+
+903 kiểm khác nhau + typecheck đạt, 6 ảnh UI và 4 ảnh launcher QA ở 1366/1920. Build sạch và launcher Electron với dữ liệu giả đạt, receipt cũ giữ hash. Không gửi Muse thật, không truy cập AppData/profile/DB/cookie/token thật; chưa kiểm phiên/quota/VPN hoặc thời gian thật. SHA/build/push cuối tại STATUS văn phòng, chi tiết [T-043](../../ops/office/reports/T-043.md). Phần lịch sử bên dưới không thay yêu cầu hiện hành.
+
+---
+
 # T-026j — kiểm bổ sung local, 14/11/2026
 
 Đã sửa tràn màn Đăng ở 200%, H1/H2/H3 sau đổi hook và màu theo hệ thống khi tương phản cao. Kiểm local đã khép: đổi hook tới ba MP4 mới giữ thân/lịch sử, tải hash/caption, bàn phím, 28 trạng thái axe và 42 ảnh phóng to/tương phản cao. Full suite 787 đạt/0 skip/0 lỗi; SHA/build/launcher cuối tại STATUS văn phòng và ops/office/reports/T-026j.md. Hai ngưỡng 48 giờ giữ null, không chờ người dùng chốt; Muse thật, dữ liệu người dùng và NVDA vẫn chưa kiểm, không thuộc quyền nghiệm thu local này.
