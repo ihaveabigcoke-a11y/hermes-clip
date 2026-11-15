@@ -1,3 +1,11 @@
+# T-044 — prompt nối khung, chưa đạt nghiệm thu thật, 15/11/2026
+
+Source `4f6d33f` thêm một dòng tiếng Anh cho mỗi hook, dùng mô tả thân đã duyệt và đúng điểm cắt; giữ command cố định, cảnh, worker/đường gửi và công tắc. MusePackage cần thay nội dung prompt để đường ba hồ sơ nhận cùng câu nối với manual/bundle. 907 kiểm khác nhau + typecheck, build và launcher QA 1366/1920 đạt.
+
+Đã gửi đúng ba lượt thật Cho/Duc/Chim với VPN connected, thu ba MP4 15s khác hash/giải mã đạt; 141 record cũ nguyên hash. Tổng 112,423s, chậm hơn T-041 11,888s và T-038 25,291–27,079s, không đạt +3s. Ảnh nối còn khác bố cục/ánh sáng; H1/H2 sai khác pixel tăng, H3 giảm nhẹ so T-041. Không gọi nối mượt đạt. Chi vắng sẵn như T-041, 0 gửi, không tạo lại/đổi công tắc. Công tắc Muse/hồ sơ/VPN giữ nguyên; không gửi thêm. Bằng chứng thật chỉ local tại D:/hermes-wt/artifacts/T-044/progress.md; [báo cáo](../../ops/office/reports/T-044.md), SHA/push cuối ở STATUS văn phòng. Muốn sửa/đo tiếp cần phạm vi và lượt gửi mới.
+
+---
+
 # T-043 — hàng đợi và xem trước video, 15/11/2026
 
 Source `1464aff` bổ sung Tất cả/Đang chạy/Lỗi/Xong có đếm theo cảnh; tìm prompt hoặc số việc `#N` bền; lý do lỗi một dòng được che URL/token. Giữ nhóm lịch sử và thao tác tạo lại T-042. Video có dòng 3 hook, số thẻ cần tạo và hồ sơ sẵn sàng từ trạng thái worker; hồ sơ đang dừng không được tính, công tắc giữ nguyên. Ước lượng chỉ từ lượt mới hoàn tất đã đo cùng số thẻ/bộ hồ sơ; chưa có thì ẩn.
