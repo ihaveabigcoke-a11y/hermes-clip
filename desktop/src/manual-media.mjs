@@ -8,6 +8,8 @@ import {spawn} from 'node:child_process';
 import {sessionCookie} from '../local/server.mjs';
 import {assertDiskSpace, storagePolicy} from './storage-policy.mjs';
 import {confinedFile} from './reference-structure.mjs';
+import {hookEndFrameLine} from './muse-bundle.mjs';
+import {museMediaPrompt,museVideoBody} from './muse-video-prompt.mjs';
 
 const types = {'.mov':'video/quicktime', '.mp4':'video/mp4', '.webm':'video/webm', '.png':'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.webp':'image/webp'};
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -175,11 +177,11 @@ export class ManualMedia {
       }
       const prompt=[`Scene: ${code}`, scene.storyboardVersion===2?`Editing shot: ${scene.duration} seconds. Generate the matching UNIT file, then trim this shot using timeline.json.`:'Create a vertical 9:16 video, exactly 8 seconds. Use English for all dialogue and on-screen text.',
         scene.mediaType==='image'?'First create a vertical 9:16 reference image; use it for the 8-second video if needed.':'',
-        scene.prompt, scene.action&&`Action: ${scene.action}`, scene.camera&&`Camera: ${scene.camera}`, scene.voice&&`Audio: ${scene.voice}`,
+        scene.prompt, scene.action&&`Action: ${scene.action}`, scene.camera&&`Camera: ${scene.camera}`, scene.voice&&`Audio: ${scene.voice}`,hookEndFrameLine(scene,project.data),
         scene.storyboardVersion===2?`Editing overlay (global seconds): ${JSON.stringify(scene.overlay)}\nConstraints:\n${scene.constraints.join('\n')}`:scene.overlayText&&`On-screen text: ${scene.overlayText}`, 'Reference images:', ...references,
         !references.length?'No reference images supplied.':'Preserve the product appearance from the supplied reference images.',
         `Save the downloaded file as ${code}-take1.mp4 (or ${code}-take1.png for an image).`].filter(Boolean).join('\n\n');
-      await writeFile(join(staging,`${code}.txt`),prompt+'\n',{flag:'wx'});
+      await writeFile(join(staging,`${code}.txt`),museMediaPrompt(prompt,scene.mediaType)+'\n',{flag:'wx'});
       exports[code]={provider:'manual',revision:scene.revision,path:destination,waiting:false,at:date.getTime()};
     }
     if(units.size) {
@@ -191,14 +193,14 @@ export class ManualMedia {
           overlay:scene.overlay,ctaOverlay:scene.ctaOverlay,packaging:scene.packaging,metadata:scene.metadata,sourceReference:scene.sourceReference,
           ffmpegArgs:['-n','-i',`${name}.mp4`,'-ss',String(Number((scene.fromSec-unit.fromSec).toFixed(3))),'-t',String(scene.duration),'-map','0:v:0','-an','-c:v','libx264','-pix_fmt','yuv420p',`${code}-take1.mp4`]}));
         timeline.push({file:`${name}.mp4`,unit,shots});
-        await writeFile(join(staging,`${name}.txt`),[
+        await writeFile(join(staging,`${name}.txt`),museMediaPrompt([
           'Create one vertical 9:16 video, exactly 8 seconds. Silent visual sequence with hard cuts at the specified offsets.',
           `Use the reference images listed in ${group[0].code}.txt. Keep the same setting and subjects throughout this unit.`,
           ...group.filter(r=>r.scene.sourceReference).map(({scene,code})=>`Shot ${code} composition references: ${[scene.sourceReference.firstFrame&&code+'-firstFrame.jpg',scene.sourceReference.lastFrame&&code+'-lastFrame.jpg'].filter(Boolean).join(', ')}. Replace source branding with the approved product.`),
-          ...group.map(({scene},i)=>`SHOT ${i+1}: ${shots[i].trimFromSec}–${shots[i].trimToSec}s\n${scene.prompt}`),
+          ...group.map(({scene,project},i)=>`SHOT ${i+1}: ${shots[i].trimFromSec}–${shots[i].trimToSec}s\n${museVideoBody(scene.prompt)}${scene.role==='hook'?'\n'+hookEndFrameLine({...scene,duration:shots[i].trimToSec,fromSec:0,toSec:shots[i].trimToSec},project.data):''}`),
           `Hold the last end frame from ${unit.toSec-unit.fromSec}s to 8s; this tail is discarded in editing.`,
           'Constraints:',...group[0].scene.constraints,`Download as ${name}.mp4. Trim using timeline.json before placing scene clips in the inbox.`,
-        ].join('\n\n')+'\n',{flag:'wx'});
+        ].join('\n\n'),'video')+'\n',{flag:'wx'});
       }
       await writeFile(join(staging,'timeline.json'),JSON.stringify({version:2,overlayStyle:{color:'white',outline:'black',heightPercent:[5,6],position:'top-center',lines:[1,2],transition:'hard-cut'},units:timeline},null,2)+'\n',{flag:'wx'});
     }

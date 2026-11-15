@@ -1,5 +1,20 @@
 import {museMediaPrompt,museVideoBody} from './muse-video-prompt.mjs';
 
+// Prompt-only context: never mutate the approved scene or its edit plan.
+export function hookEndFrameLine(scene,project) {
+  if(scene.role!=='hook'||scene.mediaType!=='video')return '';
+  const variant=project.variants?.find(v=>v.hook?.sceneId===scene.id);
+  const plan=project.reuseBodyPlan??project.renderPlans?.find(p=>p.variantId===variant?.id);
+  const bodyId=plan?.segments[1]?.sceneId??project.bodies?.find(b=>b.id===variant?.bodyId)?.items[0]?.sceneId;
+  const body=bodyId?project.scenes.find(s=>s.id===bodyId):project.scenes.find(s=>s.role==='body'&&s.storyboardApproved&&s.mediaType==='video');
+  const hookSegment=plan?.segments[0];
+  const end=hookSegment?(project.reuseBodyPlan?hookSegment.outSec-hookSegment.inSec:hookSegment.outSec):(scene.toSec>scene.fromSec?scene.toSec-scene.fromSec:scene.duration);
+  const description=body?.storyboardApproved?museVideoBody(body.prompt).replace(/\s+/g,' ').trim():'';
+  const opening=description?`the body shot described as "${description}"`:'the approved body shot';
+  const start=plan?.segments[1]?.inSec;
+  return `End-frame continuity: At ${end} seconds, match the opening frame of ${opening}${start>0?` at its selected start (${start} seconds)`:''}, with the same subject placement, camera framing, lighting and background; hold this composition until the hook ends for a seamless cut.`;
+}
+
 export const sceneToken = sceneId => `SCENE_${sceneId}`;
 export function bundlePrompt(requests) {
   return museMediaPrompt('Make 3 separate videos, one per scene below.\n'

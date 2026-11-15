@@ -2,7 +2,7 @@ import {z} from 'zod';
 import {museMediaPrompt} from './muse-video-prompt.mjs';
 import {createHash} from 'node:crypto';
 import {assertMuseNewTask} from './muse-pause.mjs';
-import {useBundle} from './muse-bundle.mjs';
+import {useBundle,hookEndFrameLine} from './muse-bundle.mjs';
 const input=z.object({projectId:z.string().regex(/^[\w-]{1,120}$/),revision:z.number().int().positive().optional(),mode:z.enum(['auto','separate','bundle']).default('auto')});
 const activeStates=['preflight','prepared','preparing','submitting','submitted','waiting','downloading','validating'];
 const uncertainStates=['needs_attention','unknown'];
@@ -53,7 +53,7 @@ export class MusePackage {
    for(const scene of plan.scenes){const references=[];
     for(const pin of scene.references){const ref=plan.project.data.references.find(r=>r.id===pin.id&&r.version===pin.version),asset=plan.records.find(r=>r.kind==='asset'&&r.id===ref?.assetId);if(!asset?.data.type.startsWith('image/')||!asset.data.sha256)throw Error('Tham chiếu phải là ảnh đã kiểm.');
      const response=await this.manual.request('/api/assets/'+asset.id);if(!response.ok)throw Error('Không đọc được ảnh tham chiếu.');const bytes=new Uint8Array(await response.arrayBuffer());if(createHash('sha256').update(bytes).digest('hex')!==asset.data.sha256)throw Error('Ảnh tham chiếu sai hash.');references.push({id:ref.id,version:ref.version,role:ref.role,type:asset.data.type,sha256:asset.data.sha256,bytes});}
-    requests.push({projectId:plan.project.id,productId:plan.product.id,productRevision:plan.product.revision,sceneId:scene.id,sceneRevision:scene.revision,name:scene.name,mediaType:scene.mediaType,ratio:scene.ratio,duration:scene.duration,prompt:museMediaPrompt([`Create a vertical 9:16 video, exactly ${scene.duration} seconds.`,scene.prompt,scene.action&&'Action: '+scene.action,scene.camera&&'Camera: '+scene.camera,scene.voice&&'Audio: '+scene.voice,'Do not add text overlays; text is added during editing. Preserve the reference product.'].filter(Boolean).join('\n'),scene.mediaType),references});
+    requests.push({projectId:plan.project.id,productId:plan.product.id,productRevision:plan.product.revision,sceneId:scene.id,sceneRevision:scene.revision,name:scene.name,mediaType:scene.mediaType,ratio:scene.ratio,duration:scene.duration,prompt:museMediaPrompt([`Create a vertical 9:16 video, exactly ${scene.duration} seconds.`,scene.prompt,scene.action&&'Action: '+scene.action,scene.camera&&'Camera: '+scene.camera,scene.voice&&'Audio: '+scene.voice,hookEndFrameLine(scene,plan.project.data),'Do not add text overlays; text is added during editing. Preserve the reference product.'].filter(Boolean).join('\n'),scene.mediaType),references});
    }
    // Revalidate source and receipts after I/O, before enqueue/retry/start.
    const current=await this.preview(raw);

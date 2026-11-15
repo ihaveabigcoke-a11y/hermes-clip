@@ -9,6 +9,7 @@ import {Store} from '../src/store.mjs';
 import {ManualMedia, probeManualMedia} from '../src/manual-media.mjs';
 import {runMediaTool,probeMedia} from '../src/compress.mjs';
 import {startLocalServer, importModule} from './helpers/local-server.mjs';
+import {MUSE_VIDEO_COMMAND} from '../src/muse-video-prompt.mjs';
 
 const {emptyProduct}=await importModule('lib/lab/domain.ts');
 test('T-007: manual export groups approved v2 shots and maps exact cuts; missing packaging or partial group blocks export',async t=>{
@@ -26,6 +27,8 @@ test('T-007: manual export groups approved v2 shots and maps exact cuts; missing
   assert.equal(timeline.units.length,4);assert.equal(timeline.units.flatMap(u=>u.shots).length,12);
   for(const group of timeline.units) {
     const prompt=await readFile(join(pack.path,group.file.replace('.mp4','.txt')),'utf8');
+    assert.ok(prompt.startsWith(MUSE_VIDEO_COMMAND+'\n'));assert.equal(prompt.split(MUSE_VIDEO_COMMAND).length-1,1);
+    assert.equal(prompt.split('\n').filter(l=>l.startsWith('End-frame continuity:')).length,group.shots.filter(shot=>project.data.scenes.find(s=>s.id===shot.sceneId).role==='hook').length);
     assert.match(prompt,/exactly 8 seconds/);assert.match(prompt,/Constraints:/);assert.doesNotMatch(prompt,/narration|neutral handling|AI label|AI-generated/i);
     assert.equal(group.shots[0].trimFromSec,0);
     for(const shot of group.shots) {
@@ -47,6 +50,20 @@ test('T-007: manual export groups approved v2 shots and maps exact cuts; missing
   delete damaged.find(r=>r.id===project.id).data.scenes.find(s=>s.id===ids[0]).packaging;
   f.media.records=async()=>damaged;
   await assert.rejects(f.media.exportPack({projectId:project.id,sceneIds:ids},new Date(2026,10,12,23,3)),/Chưa đặt tên bao bì/);
+});
+test('T-044: manual hooks export one end-frame line and one locked command; approved scenes stay intact',async t=>{
+  const f=await fixture(t);
+  await f.command('scene',{id:'one',name:'Hook',role:'hook',prompt:'Approved hook.\nKeep the scene.',mediaType:'video',ratio:'9:16',duration:8,fromSec:0,toSec:4,referenceIds:[]});
+  await f.command('storyboard',{sceneId:'one'});await f.command('storyboard',{sceneId:'two'});
+  const before=(await f.media.records()).find(r=>r.id==='project_fixture');
+  const pack=await f.media.exportPack({projectId:'project_fixture'});
+  for(const sceneId of ['one','two']){
+    const code=(await f.scene(sceneId)).code,prompt=await readFile(join(pack.path,code+'.txt'),'utf8');
+    assert.ok(prompt.startsWith(MUSE_VIDEO_COMMAND+'\n'));assert.equal(prompt.split(MUSE_VIDEO_COMMAND).length-1,1);
+    assert.equal(prompt.split('\n').filter(l=>l.startsWith('End-frame continuity:')).length,sceneId==='one'?1:0);
+    if(sceneId==='one'){assert.match(prompt,/Approved hook\.\nKeep the scene\./);assert.match(prompt,/At 4 seconds/);assert.match(prompt,/Show the product in a softly lit studio/);}
+  }
+  assert.deepEqual((await f.media.records()).find(r=>r.id===before.id),before);
 });
 async function fixture(t) {
   const root=await mkdtemp(join(tmpdir(),'hermes-t002-'));
