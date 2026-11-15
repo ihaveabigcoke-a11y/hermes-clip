@@ -3,6 +3,7 @@ import {extname} from 'node:path';
 import {readFile,writeFile} from 'node:fs/promises';
 import {museMediaPrompt,museVideoBody} from './muse-video-prompt.mjs';
 import {mapBundleCards} from './muse-bundle.mjs';
+import {readCompleteVideoSource} from './video-download.mjs';
 
 export const explicitMediaRefusal = text => /(?:could not|cannot|can't|unable to)\s+(?:create|generate|make)\b.{0,60}\b(?:video|image|file)\b|\b(?:video|image)\s+generation\s+(?:(?:isn't|is not|is currently not|is not currently)\s+available|is\s+(?:currently\s+)?unavailable)\b|\bvideo_not_available\b|\bPROMPT ONLY\b.{0,80}\bno video was generated\b/i.test(text);
 
@@ -320,40 +321,22 @@ export class MuseAdapter {
         await checkpoint('downloading');
         downloadStarted=true;
         this.timings.downloadStartedAt=Date.now();
-        let response,bytes;
+        let bytes;
         try{
-          if(url.protocol==='blob:'){
-            // Browser-owned blob URLs are only readable in their creating page.
-            // Fetch the exact card source, bounded in size and time, with no
-            // cookie/storage inspection and no shared preview-modal race.
-            const base64=await media.evaluate(async(video)=>{
-              const src=video.currentSrc||video.src||video.querySelector('source')?.src;
-              const response=await fetch(src,{signal:AbortSignal.timeout(15000)});
-              if(!response.ok)throw Error('Blob unavailable');
-              const blob=await response.blob();if(!blob.size||blob.size>64*1024**2)throw Error('Blob exceeds budget');
-              return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(Error('Blob read failed'));reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.readAsDataURL(blob);});
-            });
-            bytes=Buffer.from(base64,'base64');
-          }else{
-          response=await page.request.get(url.href,{timeout:15000});
-          if(!response.ok())throw Object.assign(Error('Video URL is not ready'),{downloadReason:'http_not_ready'});
-          if(Number(response.headers()['content-length'])>64*1024**2)throw Object.assign(Error('Video URL exceeds download budget'),{downloadReason:'size_limit'});
-          bytes=await response.body();
-          }
-          if(!bytes.length||bytes.length>64*1024**2||bytes.subarray(4,8).toString()!=='ftyp')throw Object.assign(Error('Video URL did not return MP4'),{downloadReason:'invalid_mp4_or_size'});
+          const complete=await readCompleteVideoSource(media,page,config.startUrl);
+          bytes=complete.bytes;this.timings.videoSourceScheme=complete.scheme;
         }catch(error){
           // Persist only a bounded category, never the exception text (which
           // Playwright may populate with signed URLs, headers or tokens).
-          const reason=['http_not_ready','size_limit','invalid_mp4_or_size'].includes(error.downloadReason)?error.downloadReason
+          const reason=['http_not_ready','size_limit','invalid_mp4_or_size','incomplete_video'].includes(error.downloadReason)?error.downloadReason
             : /timeout|timed out/i.test(error.name+' '+error.message)?'timeout'
             : url.protocol==='blob:'?'blob_read_failed':'network_or_read_failed';
           bytes=null;this.timings.directDownloadFallbackAt=Date.now();this.timings.directDownloadFallbackReason=reason;
           if(this.onDiagnostic)this.onDiagnostic(`Tải trực tiếp chuyển sang nút tải: ${reason}.`);
           else console.warn(`[Muse] direct download fallback: ${reason}`);
         }
-        finally{await response?.dispose();}
         if(bytes){
-          this.timings.transferFinishedAt=Date.now();this.timings.downloadMethod=url.protocol==='blob:'?'video-blob':'video-url';
+          this.timings.transferFinishedAt=Date.now();this.timings.downloadMethod=this.timings.videoSourceScheme==='blob:'?'video-blob':'video-url';
           return saveDownload({saveAs:p=>writeFile(p,bytes),failure:async()=>null},path,{compress:true,onCompression:(c,metadata)=>{this.compression=c;this.downloadMetadata=metadata;}});
         }
       }

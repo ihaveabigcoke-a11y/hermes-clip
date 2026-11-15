@@ -10,7 +10,7 @@ import {validateMedia,toolchain} from './media.mjs';
 import {renderPlanAss} from './render-plan.mjs';
 import {compressMedia,captureMediaTool} from './compress.mjs';
 import {copyFile} from 'node:fs/promises';
-import {mediaSlots} from './media-capacity.mjs';
+import {mediaSlots,composeSlots} from './media-capacity.mjs';
 import {analyzeLocalStructure,checkedBytes,verifyJpeg} from './reference-structure.mjs';
 import {shortsUrl,youtubeCapability,downloadYoutubeReference} from './reference-youtube.mjs';
 import {runReferenceCommand} from './reference-process.mjs';
@@ -70,7 +70,7 @@ export class Integrations {
  async montage(operation,extra={}) {
   const c=this.config();
   if(!c)throw Error('Cài và cấu hình hai công cụ trước.');
-  const response=await mediaSlots.run(()=>this.run(c.python,[join(here,'montage_bridge.py')],{input:{checkout:c.montage,expectedCommit:lock.openMontage.commit,operation,...extra},timeout:operation==='compose'?300000:120000}));
+  const response=await (operation==='compose'?composeSlots:mediaSlots).run(()=>this.run(c.python,[join(here,'montage_bridge.py')],{input:{checkout:c.montage,expectedCommit:lock.openMontage.commit,operation,...extra},timeout:operation==='compose'?300000:120000}),operation);
   const positiveDimension=z.number().int().positive();
   const schemas={
    doctor:z.object({ffmpeg:z.boolean(),ffprobe:z.boolean()}),
@@ -171,8 +171,10 @@ export class Integrations {
  async compose(input){
   const d=composeInput.parse(input);
   const pending=this.task('compose',d.projectId,{variantId:d.variantId,ratio:d.ratio,sources:d.clips.map(({bytes,...c})=>c),overlays:d.overlays,audio:'keep'},async dir=>{
-   await toolchain();const clips=[];
-   for(const [i,c] of d.clips.entries()){const path=join(dir,`${i}.mp4`);await this.writeSource(c,path);await this.validateSource(path,c,d.ratio);clips.push({path,duration:c.duration,inSec:c.inSec,outSec:c.outSec??c.duration});}
+   await toolchain();
+   // Queue independent source checks together; shared body hashes still share
+   // their validation promise, and validationSlots bounds all full decodes.
+   const clips=await Promise.all(d.clips.map(async(c,i)=>{const path=join(dir,`${i}.mp4`);await this.writeSource(c,path);await this.validateSource(path,c,d.ratio);return {path,duration:c.duration,inSec:c.inSec,outSec:c.outSec??c.duration};}));
    const [rw,rh]=d.ratio.split(':').map(Number),width=d.ratio==='9:16'?720:d.ratio==='16:9'?1280:960,height=Math.round(width*rh/rw/2)*2;
    let subtitlePath=null;if(d.overlays.length){subtitlePath=join(dir,'overlays.ass');await writeFile(subtitlePath,renderPlanAss(d.overlays),{flag:'wx'});}
    const r=await this.montage('compose',{outputDir:dir,size:[width,height],clips,subtitlePath,audio:'keep',singlePass:d.planVersion===1});

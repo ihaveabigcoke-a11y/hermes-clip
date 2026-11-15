@@ -93,7 +93,7 @@ test('T-035 streaming worker downloads concurrently, renders per verified clip, 
 test('T-035 exact blob video downloads without touching the shared preview',async t=>{
  const root=await mkdtemp(join(tmpdir(),'hermes-t035-blob-'));t.after(()=>rm(root,{recursive:true,force:true}));
  const source=join(root,'source.mp4');await runMediaTool('ffmpeg',['-v','error','-f','lavfi','-i','color=c=red:s=90x160:r=30:d=1','-c:v','libx264','-pix_fmt','yuv420p',source]);const bytes=await readFile(source);
- const media={isVisible:async()=>true,evaluate:async fn=>String(fn).includes('FileReader')?bytes.toString('base64'):'blob:https://muse.ai/exact-card'};
+ const media={isVisible:async()=>true,evaluate:async(fn,args)=>{if(!String(fn).includes('FileReader'))return 'blob:https://muse.ai/exact-card';assert.equal(args.source,'blob:https://muse.ai/exact-card');return {base64:bytes.toString('base64'),length:bytes.length};}};
  const exact={evaluate:async()=>{},locator:()=>({first:()=>media})};
  const page={url:()=>config.startUrl,locator:s=>s==='textarea'?{waitFor:async()=>{},isVisible:async()=>true}:exact,request:{get:()=>assert.fail('A blob is browser-owned')},getByRole:()=>assert.fail('No preview race')};
  const a=new MuseAdapter(config);a.bundleAppearance=true;const file=await a.fetch(page,{providerId:'only-this-card',providerUrl:config.startUrl,request:{mediaType:'video'}},async()=>{},join(root,'out.mp4'));

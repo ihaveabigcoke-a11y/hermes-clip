@@ -6,7 +6,7 @@ import {createHash} from 'node:crypto';
 import {gzip, gunzip} from 'node:zlib';
 import {promisify} from 'node:util';
 import {openSync,closeSync} from 'node:fs';
-import {mediaSlots} from './media-capacity.mjs';
+import {mediaSlots,probeSlots,validationSlots} from './media-capacity.mjs';
 
 export const VIDEO_MAX_BYTES = 6 * 1024 * 1024;
 export const VIDEO_FLOOR_BPS = 2_100_000;
@@ -17,15 +17,17 @@ const mime = {'.mp4':'video/mp4','.mov':'video/quicktime','.webm':'video/webm','
 // No shell or inherited pipes. ffprobe writes a bounded private report, which
 // also works on Windows installations that disallow child stdout pipes.
 export async function runMediaTool(command, args, timeout = 300000) {
-  await mediaSlots.run(()=>new Promise((resolve, reject) => {
+  await slotsFor(command,args).run(()=>new Promise((resolve, reject) => {
     const child = spawn(command, args, {shell:false, windowsHide:true, stdio:'ignore', timeout});
     child.once('error', reject);
     child.once('close', (code, signal) => code === 0 ? resolve() : reject(Error(`${command}: ${signal ? 'quá thời gian xử lý' : 'không xử lý được file'}; giữ nguyên file gốc.`)));
-  }));
+  }), mediaOperation(command,args));
 }
 export async function captureMediaTool(command,args,{timeout=300000,maxBuffer=1024**2,cwd}={}) {
-  return mediaSlots.run(()=>capture(command,args,{timeout,maxBuffer,cwd}));
+  return slotsFor(command,args).run(()=>capture(command,args,{timeout,maxBuffer,cwd}),mediaOperation(command,args));
 }
+function mediaOperation(command,args){return args.includes('-version')?'toolchain':/ffprobe(?:\.exe)?$/i.test(command)?'ffprobe':args.includes('null')?'decode':args.includes('copy')?'remux':'encode';}
+function slotsFor(command,args){const operation=mediaOperation(command,args);return ['ffprobe','toolchain'].includes(operation)?probeSlots:operation==='decode'?validationSlots:mediaSlots;}
 async function capture(command,args,{timeout,maxBuffer,cwd}) {
   const dir=await mkdtemp(join(tmpdir(),'hermes-media-log-'));
   const out=join(dir,'stdout'),err=join(dir,'stderr'),fds=[openSync(out,'w'),openSync(err,'w')];

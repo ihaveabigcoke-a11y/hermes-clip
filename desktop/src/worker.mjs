@@ -570,7 +570,7 @@ export class Worker {
     return runMuseTask(this.store, {jobId:id, profileId}, () => this.runAdmitted(id, profileId, resume));
   }
   async runAdmitted(id, profileId, resume) {
-    let page;
+    let page,adoptedWarmPage,dispatchFailed=false;
     const timings={preflightStartedAt:Date.now()};let adapter;
     const bundle=resume?[id]:(this.store.job(id).bundleJobIds??[id]);
     const bundleTasks=new Map();let previewTail=Promise.resolve();
@@ -585,11 +585,15 @@ export class Worker {
       if (alreadyOpen&&!this.isWarm(profileId)) await this.connectVpn(profileId,context);
       timings.vpnReadyAt=Date.now();
       const startUrl = new URL(this.config().startUrl);
-      const warmPage=this.isWarm(profileId)?this.warmPages.get(profileId):null;
-      this.warmPages.delete(profileId);
+      const trackedWarmPage=this.warmPages.get(profileId);
+      const warmPage=this.isWarm(profileId)?trackedWarmPage:null;
       page = warmPage&&!warmPage.isClosed()?warmPage:context.pages().find(tab => {
         try { return new URL(tab.url()).origin === startUrl.origin; } catch { return false; }
       }) ?? await context.newPage();
+      if(page===trackedWarmPage)adoptedWarmPage=page;
+      // Keep ownership until a page has actually been selected. On a dispatch
+      // error the adopted warm tab is closed below, never left orphaned.
+      if(this.warmPages.get(profileId)===page||trackedWarmPage?.isClosed())this.warmPages.delete(profileId);
       await this.setProfileVisibility(profileId, false);
       this.note(id, 'Browser Muse đang chạy nền.');
       if (this.store.get('profiles',[]).find(profile => profile.id === profileId)?.vpnEnabled) this.note(id,'Touch VPN đã kết nối trong profile.');
@@ -682,7 +686,7 @@ export class Worker {
       if(job.request.mediaType==='video'&&adapter.downloadMetadata&&adapter.compression){
         const candidate={path:output,name:output.split(/[\\/]/).at(-1),sha256:adapter.compression.sha256,metadata:adapter.downloadMetadata};
         const readVerified=async()=>{const bytes=new Uint8Array(await readFile(output));if(createHash('sha256').update(bytes).digest('hex')!==candidate.sha256)throw Error('File đã đổi sau kiểm tra.');return {bytes,name:candidate.name,type:'video/mp4',sha256:candidate.sha256};};
-        early=Promise.resolve().then(()=>this.onReadyOutput?.({...this.store.job(member),state:'ready',output:candidate},readVerified)).catch(error=>{const latest=this.store.job(member);this.store.put({...latest,earlyRenderError:String(error.message).slice(0,600)});});
+        early=Promise.resolve().then(()=>this.onReadyOutput?.({...this.store.job(member),state:'ready',output:candidate},readVerified)).catch(error=>this.store.recordEarlyRenderError(member,error));
       }
       const report = await this.validateOutput(output, job.request);
       this.store.transition(member, 'ready', {
@@ -694,7 +698,7 @@ export class Worker {
       // A registered video flow can encode the verified file while its durable
       // library import runs. Rendering failure must not discard the Muse receipt.
       if(!early)Promise.resolve().then(()=>this.onReadyOutput?.(this.store.job(member))).catch(error=>{
-        const latest=this.store.job(member);this.store.put({...latest,earlyRenderError:String(error.message).slice(0,600)});
+        this.store.recordEarlyRenderError(member,error);
       });
       await this.importReady(member);
       timings.importedAt=Date.now();this.store.put({...this.store.job(member),timings:{...this.store.job(member).timings,...timings,...adapter.timings}});
@@ -702,6 +706,7 @@ export class Worker {
       this.night.outcome(id,null,profileId);
       await this.measureQuota(profileId,context);
     } catch (error) {
+      dispatchFailed=true;
       await Promise.allSettled([...bundleTasks.values()]);
       if(adapter?.bundleAppearance){
         if(['MUSE_BUNDLE_UNMAPPED','MUSE_BUNDLE_DUPLICATE','MUSE_BUNDLE_SIMILAR'].includes(error.code))this.store.set('muse_bundle_order_failed',true);
@@ -740,6 +745,13 @@ export class Worker {
         await page.screenshot({path: diagnosticPath, fullPage: false}).catch(() => {});
         this.store.put({...this.store.job(id), diagnosticPath});
       }
+    } finally {
+      if(dispatchFailed&&adoptedWarmPage){
+        // Also runs on preflight early returns. If close fails retain ownership
+        // for the next warm-up/closeProfile, but do not advertise a warm composer.
+        try{await adoptedWarmPage.close();}catch{this.warmPages.set(profileId,adoptedWarmPage);}
+        this.warmed.delete(profileId);
+      }
     }
   }
   async stageBundleOutput(member,page,adapter){
@@ -756,7 +768,7 @@ export class Worker {
     const readVerified=async()=>{const bytes=new Uint8Array(await readFile(path));if(createHash('sha256').update(bytes).digest('hex')!==report.sha256)throw Error('File đã đổi sau kiểm tra.');return {bytes,name:output.name,type:'video/mp4',sha256:report.sha256};};
     // Speculative encoding cannot publish an asset or mark a scene ready. All
     // takes remain absent until the bundle cardinality/hash barrier succeeds.
-    await Promise.resolve().then(()=>this.onReadyOutput?.({...this.store.job(member),state:'ready',output},readVerified)).catch(error=>{this.store.put({...this.store.job(member),earlyRenderError:String(error.message).slice(0,600)});});
+    await Promise.resolve().then(()=>this.onReadyOutput?.({...this.store.job(member),state:'ready',output},readVerified)).catch(error=>this.store.recordEarlyRenderError(member,error));
     return {member,output,sha256:report.sha256,sourceSha256:adapter.compression?.sourceSha256??report.sha256,timings:adapter.timings};
   }
   async importReady(id) {

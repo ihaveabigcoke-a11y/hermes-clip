@@ -7,9 +7,11 @@ import contextlib
 import io
 import json
 import math
+import os
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 
@@ -18,10 +20,18 @@ def single_pass(cuts, width, height, subtitle, out):
     args = ["ffmpeg", "-y", "-v", "error", "-xerror", "-filter_complex_threads", "1"]
     filters, inputs = [], []
     duration = sum(c["out_seconds"] - c["in_seconds"] for c in cuts)
+    # Local calibration only; production defaults to a bounded encoder. Never
+    # change preset/CRF/size, audio or validation to meet a timing target.
+    threads = os.environ.get("HERMES_COMPOSE_THREADS", "3" if (os.cpu_count() or 1) >= 6 else "2")
+    if threads not in ("0", "2", "3"):
+        raise ValueError("Expected compose threads 0, 2 or 3")
+    trace = []
     for i, cut in enumerate(cuts):
         length = cut["out_seconds"] - cut["in_seconds"]
         args += ["-threads", "2", "-ss", str(cut["in_seconds"]), "-t", str(length), "-i", cut["source"]]
+        started = time.perf_counter()
         probe = json.loads(subprocess.check_output(["ffprobe", "-v", "error", "-show_streams", "-of", "json", cut["source"]], text=True))
+        trace.append({"stage": "ffprobe", "elapsedMs": (time.perf_counter() - started) * 1000})
         filters.append(f"[{i}:v]setpts=PTS-STARTPTS,scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30,trim=duration={length},format=yuv420p[v{i}]")
         audio = f"[{i}:a]asetpts=PTS-STARTPTS,aresample=48000,aformat=channel_layouts=stereo,apad" if any(s["codec_type"] == "audio" for s in probe["streams"]) else "anullsrc=r=48000:cl=stereo"
         filters.append(f"{audio},atrim=duration={length},asetpts=PTS-STARTPTS[a{i}]")
@@ -30,9 +40,12 @@ def single_pass(cuts, width, height, subtitle, out):
     filters.append("[base]ass=overlays.ass[video]" if subtitle else "[base]null[video]")
     rate = max(32000, int(.88 * 6 * 1024 * 1024 * 8 / duration - 96000))
     args += ["-filter_complex", ";".join(filters), "-map", "[video]", "-map", "[audio]", "-t", str(duration),
-             "-c:v", "libx264", "-preset", "veryfast", "-crf", "26", "-threads", "2", "-maxrate", str(rate), "-bufsize", str(rate),
+             "-c:v", "libx264", "-preset", "veryfast", "-crf", "26", "-threads", threads, "-maxrate", str(rate), "-bufsize", str(rate),
              "-c:a", "aac", "-b:a", "96k", "-map_metadata", "-1", "-movflags", "+faststart", str(out / "output.mp4")]
+    started = time.perf_counter()
     subprocess.run(args, cwd=out, check=True, capture_output=True, timeout=240)
+    trace.append({"stage": "ffmpeg_compose", "elapsedMs": (time.perf_counter() - started) * 1000})
+    return trace
 
 
 def execute(request):
@@ -95,8 +108,8 @@ def execute(request):
                 raise ValueError("Subtitle must be inside this job.")
             options.update({"subtitle_path": str(subtitle), "subtitle_style": {"font": "Arial", "font_size": 70, "alignment": 8, "margin_v": 90, "outline_width": 3}})
         if request.get("singlePass"):
-            single_pass(cuts, width, height, subtitle, out)
-            return {"output": str(out / "output.mp4"), "engine": "hermes_ffmpeg_single_pass", "commit": head, "cutCount": len(cuts), "usageUsd": 0, "creativeReview": "pending"}
+            trace = single_pass(cuts, width, height, subtitle, out)
+            return {"output": str(out / "output.mp4"), "engine": "hermes_ffmpeg_single_pass", "commit": head, "cutCount": len(cuts), "usageUsd": 0, "creativeReview": "pending", "timings": trace}
         # No audio_path: upstream keeps each source's audio instead of replacing it.
         result = VideoCompose().execute(options)
         if not result.success:

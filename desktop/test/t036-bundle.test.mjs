@@ -152,14 +152,15 @@ test('T-036 direct URL fallback logs only safe reason categories, with no signed
   const root=await mkdtemp(join(tmpdir(),'hermes-t036-log-'));t.after(()=>rm(root,{recursive:true,force:true}));const source=await createClip(root,'blue','blue'),bytes=await readFile(source);
   const secret='fixture-private-token',sourceUrl='https://cdn.invalid/clip.mp4?sig='+secret;
   for(const reason of ['http_not_ready','timeout','network_or_read_failed','invalid_mp4_or_size','size_limit']){
-    const logs=[],adapter=new MuseAdapter(config);adapter.onDiagnostic=message=>logs.push(message);
+    const logs=[],adapter=new MuseAdapter(config);adapter.onDiagnostic=message=>logs.push(message);let retries=0;
     const media={isVisible:async()=>true,evaluate:async()=>sourceUrl},exact={evaluate:async()=>{},locator:s=>({first:()=>s==='video'?media:{click:async()=>{}}}),getByRole:()=>({})};
-    const page={url:()=>config.startUrl,locator:s=>s==='textarea'?{waitFor:async()=>{},isVisible:async()=>true}:exact,keyboard:{press:async()=>{}},getByRole:()=>({waitFor:async()=>{},click:async()=>{}}),waitForEvent:async()=>({saveAs:p=>writeFile(p,bytes),failure:async()=>null}),request:{get:async()=>{
+    const page={url:()=>config.startUrl,waitForTimeout:async ms=>{assert.equal(ms,250);retries++;},locator:s=>s==='textarea'?{waitFor:async()=>{},isVisible:async()=>true}:exact,keyboard:{press:async()=>{}},getByRole:()=>({waitFor:async()=>{},click:async()=>{}}),waitForEvent:async()=>({saveAs:p=>writeFile(p,bytes),failure:async()=>null}),request:{get:async()=>{
       if(reason==='timeout'||reason==='network_or_read_failed')throw Object.assign(Error(sourceUrl+' Authorization: Bearer '+secret),{name:reason==='timeout'?'TimeoutError':'Error'});
       return {ok:()=>reason!=='http_not_ready',headers:()=>({'content-length':reason==='size_limit'?String(65*1024**2):'123'}),body:async()=>Buffer.from('not a video '+sourceUrl),dispose:async()=>{}};
     }}};
     await adapter.fetch(page,{providerId:'r0',providerUrl:config.startUrl,request:request(0)},async()=>{},join(root,reason+'.mp4'));
     assert.equal(logs.length,1);assert.ok(logs[0].includes(reason));assert.equal(adapter.timings.directDownloadFallbackReason,reason);assert.equal(adapter.timings.downloadMethod,'preview-button');assert.ok(adapter.timings.directDownloadFallbackAt);
     assert.doesNotMatch(JSON.stringify({logs,timings:adapter.timings}),/fixture-private-token|cdn\.invalid|Authorization|Bearer|sig=/);
+    assert.equal(retries,['size_limit','invalid_mp4_or_size'].includes(reason)?0:2);
   }
 });
