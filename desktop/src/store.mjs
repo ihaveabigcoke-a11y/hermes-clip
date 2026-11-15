@@ -3,8 +3,13 @@ import {randomUUID, createHash} from 'node:crypto';
 import {transitions, jobFingerprint} from './contracts.mjs';
 import {retryBlockedReason} from './job-retry.mjs';
 import {museMediaPrompt, museVideoBody} from './muse-video-prompt.mjs';
+import {migrateMuseClips,seedMuseClips,claimMuseClips,duplicateMuseClip,recordMuseClip} from './muse-clip-ledger.mjs';
 export class Store {
-  constructor(path){this.db=new DatabaseSync(path);this.db.exec("PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA busy_timeout=5000; CREATE TABLE IF NOT EXISTS kv(k TEXT PRIMARY KEY,v TEXT NOT NULL); CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY,fingerprint TEXT NOT NULL,body TEXT NOT NULL); CREATE INDEX IF NOT EXISTS fingerprint_idx ON jobs(fingerprint);");}
+  constructor(path){this.db=new DatabaseSync(path);this.db.exec("PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA busy_timeout=5000; CREATE TABLE IF NOT EXISTS kv(k TEXT PRIMARY KEY,v TEXT NOT NULL); CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY,fingerprint TEXT NOT NULL,body TEXT NOT NULL); CREATE INDEX IF NOT EXISTS fingerprint_idx ON jobs(fingerprint);");migrateMuseClips(this.db);}
+  seedMuseClips(records){seedMuseClips(this.db,records);}
+  claimMuseClips(entries){claimMuseClips(this.db,entries);}
+  duplicateMuseClip(job,output){return duplicateMuseClip(this.db,job,output);}
+  recordMuseClip(job){recordMuseClip(this.db,job);}
   get(k,fallback=null){const r=this.db.prepare('SELECT v FROM kv WHERE k=?').get(k);return r?JSON.parse(r.v):fallback;}
   set(k,v){this.db.prepare('INSERT INTO kv VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v').run(k,JSON.stringify(v));return v;}
   batch() { const batch=this.get('generation_batch', null); return batch ? {...batch, perProfileLimit:null} : null; }

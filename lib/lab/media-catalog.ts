@@ -4,6 +4,18 @@ import {sceneKey, type MediaOrganization} from './media-organization.ts';
 
 export type MediaEntry = {key: string; project: LabRecord; product?: LabRecord; production: Production; scene: Scene; take: Take};
 
+/** Two alternatives from one Muse request are one idea; retain every take. */
+export function mediaIdeas(entries: MediaEntry[]) {
+  const groups = new Map<string, MediaEntry[]>();
+  for (const entry of entries) {
+    const attempt = entry.scene.attempts?.find(item => item.id === entry.take.attemptId);
+    const muse = entry.take.provider !== 'manual' && (entry.take.provider === 'muse' || attempt?.provider === 'muse' || attempt?.status === 'local_complete');
+    const key = muse && attempt ? JSON.stringify([entry.project.id, entry.scene.id, attempt.requestId]) : entry.key;
+    groups.set(key, [...(groups.get(key) ?? []), entry]);
+  }
+  return [...groups.values()];
+}
+
 export function mediaCatalog(records: LabRecord[]): MediaEntry[] {
   return records.filter(record => record.kind === 'production').flatMap(project => {
     const parsed = productionSchema.safeParse(project.data);

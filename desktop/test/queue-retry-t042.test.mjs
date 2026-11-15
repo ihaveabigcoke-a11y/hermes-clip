@@ -80,12 +80,15 @@ test('T-042 fake Muse dispatch respects 60s, excludes enabled Chi and stopped/di
   const created=await worker.retryMany({requestId:'dispatch',items:sources.map(j=>({id:j.id}))});
   const sends=[],page={url:()=>'',screenshot:async()=>{}};
   worker.context=async()=>({pages:()=>[],newPage:async()=>page});worker.setProfileVisibility=async()=>{};worker.measureQuota=async()=>{};worker.checkToolchain=async()=>{};
-  worker.validateOutput=async()=>({sha256:'b'.repeat(64),metadata:{duration:8}});
+  // Each successful fake request represents fresh bytes, not one clip reused
+  // across jobs. T-049 separately exercises that refusal.
+  worker.validateOutput=async path=>({sha256:hash(path),metadata:{duration:8}});
   t.mock.method(MuseAdapter.prototype,'prepare',async(_,r)=>{assert.ok(r.prompt.startsWith(MUSE_VIDEO_COMMAND+'\n'));assert.equal(r.prompt.split(MUSE_VIDEO_COMMAND).length,2);});
   t.mock.method(MuseAdapter.prototype,'submit',async(_,checkpoint)=>{await checkpoint('submitting');const receipt=worker.night.current().submissions.at(-1);sends.push({...receipt});await checkpoint('submitted',{providerId:'result_'+sends.length,providerUrl:'https://muse.invalid/thread/result'});});
   t.mock.method(MuseAdapter.prototype,'fetch',async(_,j,checkpoint,path)=>{await checkpoint('waiting');await checkpoint('downloading');return path;});
   await worker.start({count:created.length,maxConcurrent:1,jobIds:created.map(j=>j.id)});
-  for(let i=0;i<500&&(worker.active.size||worker.approvedIds.length);i++)await new Promise(r=>setImmediate(r));
+  const deadline=Date.now()+15000;
+  while((worker.active.size||worker.approvedIds.length)&&Date.now()<deadline)await new Promise(r=>setTimeout(r,5));
   assert.equal(worker.active.size,0);assert.equal(sends.length,3);assert.ok(sends.every(s=>s.profileId==='profile_1'));
   assert.ok(sends[1].at-sends[0].at>=60000);assert.ok(sends[2].at-sends[1].at>=60000);
   assert.ok(created.slice(0,3).every(j=>store.job(j.id).state==='ready'));assert.ok(created.slice(3).every(j=>store.job(j.id).state==='queued'));

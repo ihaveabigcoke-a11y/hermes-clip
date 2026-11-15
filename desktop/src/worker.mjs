@@ -1,6 +1,7 @@
 import {museIsPaused,assertMuseAvailable,assertMuseNewTask,runMuseTask} from './muse-pause.mjs';
 import {MuseNight,assertMusePage,museFailureKind} from './muse-night.mjs';
 import {museVideoLimitReceipt} from './muse-error-receipt.mjs';
+import {duplicateClipError} from './muse-clip-ledger.mjs';
 import {assertDiskSpace,diskStatus,storagePolicy,browserCacheArgs,trimProfileCaches} from './storage-policy.mjs';
 import {randomUUID,createHash} from 'node:crypto';
 import {mkdir,writeFile,readFile,stat,rename,unlink} from 'node:fs/promises';
@@ -673,9 +674,11 @@ export class Worker {
       if(adapter.bundleAppearance){
         const results=await Promise.all(bundle.map(member=>bundleTasks.get(member)));
         if(results.some(result=>!result))throw Object.assign(Error('Thiếu file trong gói ba video; chưa nhập cảnh nào.'),{code:'MUSE_BUNDLE_UNMAPPED'});
+        for(const {member,output} of results)await this.checkMuseOutput(this.store.job(member),output);
         for(const key of ['sha256','sourceSha256'])if(new Set(results.map(r=>r[key])).size!==bundle.length)throw Object.assign(Error('Các thẻ Muse trả video trùng hash; từ chối cả gói, chưa nhập cảnh nào.'),{code:'MUSE_BUNDLE_DUPLICATE'});
         const visualCheck=assertDistinctBundleFrames(await Promise.all(results.map(r=>this.readBundleFrame(r.output.path,r.output.metadata.duration))));
         for(const result of results)result.output.bundleVisualCheck=visualCheck;
+        await this.acceptMuseOutputs(results.map(({member,output})=>({job:this.store.job(member),output})));
         for(const result of results){const {member,output,timings:memberTimings}=result;this.store.transition(member,'ready',{output,failedFilePath:null,timings:{...this.store.job(member).timings,...memberTimings,allCardsAt:adapter.timings.resultAt,observedCardCount:adapter.timings.observedCardCount,observedClipCount:adapter.timings.observedClipCount,bundleAcceptedAt:Date.now()},note:'Đủ ba clip đã kiểm, khác hash; gắn theo thứ tự thẻ 1/2/3.'});}
         // Production commands share a revision; import serially while encoders run.
         for(const result of results){await this.importReady(result.member);this.store.put({...this.store.job(result.member),timings:{...this.store.job(result.member).timings,importedAt:Date.now()}});}
@@ -694,11 +697,13 @@ export class Worker {
       // request-specific validation/import proceeds; only a ready take can publish.
       let early;
       if(job.request.mediaType==='video'&&adapter.downloadMetadata&&adapter.compression){
+        await this.checkMuseOutput(job,{sha256:adapter.compression.sha256,compression:adapter.compression});
         const candidate={path:output,name:output.split(/[\\/]/).at(-1),sha256:adapter.compression.sha256,metadata:adapter.downloadMetadata};
         const readVerified=async()=>{const bytes=new Uint8Array(await readFile(output));if(createHash('sha256').update(bytes).digest('hex')!==candidate.sha256)throw Error('File đã đổi sau kiểm tra.');return {bytes,name:candidate.name,type:'video/mp4',sha256:candidate.sha256};};
         early=Promise.resolve().then(()=>this.onReadyOutput?.({...this.store.job(member),state:'ready',output:candidate},readVerified)).catch(error=>this.store.recordEarlyRenderError(member,error));
       }
       const report = await this.validateOutput(output, job.request);
+      await this.acceptMuseOutputs([{job:this.store.job(member),output:{...report,compression:adapter.compression}}]);
       this.store.transition(member, 'ready', {
         failedFilePath: null,
         output: {path: output, name: output.split(/[\\/]/).at(-1), ...(adapter.compression?{compression:adapter.compression}:{}), ...report},
@@ -728,6 +733,17 @@ export class Worker {
       if(this.night.current()){this.store.put({...this.store.job(id),errorKind:museFailureKind(error)});if(night.stopped||error.code==='MUSE_NIGHT_LIMIT'){this.pause();}} // Keep the user's Muse switch unchanged on a service block.
       for(const member of bundle){
       let job = this.store.job(member);
+      if(error.code==='MUSE_OLD_CLIP'){
+        if(member===error.jobId||job.state==='validating')this.rejectOldClip(member,error);
+        else if(!job.importedAt){
+          // Legacy sequential bundles may have unread siblings. A duplicate
+          // receipt for one member is not reconciliation of those other sends.
+          const now=Date.now(),note='Gói có clip trùng. Cảnh này chưa đối soát; kiểm tra kết quả cũ trước khi tạo lại.';
+          this.store.put({...job,state:'needs_attention',failureCode:'MUSE_OLD_CLIP_IN_BUNDLE',failureDetail:note,
+            updatedAt:now,history:[...job.history,{at:now,state:'needs_attention',note}].slice(-100)});
+        }
+        continue;
+      }
       if(job.state==='queued')job=this.store.transition(member,'preflight',{profileId,note:'Gói dừng trước khi gửi cảnh này.'});
       if(bundle.length===1&&job.state==='preflight'&&error.code==='STORAGE_LOW'){this.store.transition(id,'queued',{note:error.message});this.paused=true;return;}
       if (!this.night.current() && job.state === 'preflight' && ['MUSE_LOGIN_REQUIRED', 'MUSE_PROFILE_UNAVAILABLE', 'MUSE_VPN_REQUIRED', 'MUSE_QUOTA_EXHAUSTED', 'MUSE_QUOTA_UNCONFIRMED'].includes(error.code)) {
@@ -788,12 +804,15 @@ export class Worker {
     if (this.imports.has(id)) return this.imports.get(id);
     const pending = (async () => {
       try {
+        await this.acceptMuseOutputs([{job:this.store.job(id),output:this.store.job(id).output}]);
         await this.receiveOutput(id);
         const job = this.store.job(id);
         const now = Date.now();
         this.store.put({...job, importedAt: now, importError: null,
           history: [...job.history, {at: now, state: 'ready', profileId: job.profileId, note: 'Đã tự nhập file vào đúng cảnh trong Thư viện.'}].slice(-100)});
+        this.store.recordMuseClip(this.store.job(id));
       } catch (error) {
+        if(error.code==='MUSE_OLD_CLIP'){this.rejectOldClip(id,error);return;}
         const job = this.store.job(id);
         this.store.put({...job, importError: error.message,
           history: [...job.history, {at: Date.now(), state: 'ready', note: `Nhập file cần xử lý. ${error.message}`}].slice(-100)});
@@ -801,6 +820,27 @@ export class Worker {
     })();
     this.imports.set(id, pending);
     try { await pending; } finally { this.imports.delete(id); }
+  }
+  async ensureMuseClips() {
+    if(!this.clipSeed)this.clipSeed=(async()=>this.store.seedMuseClips(await this.readMediaRecords?.()??[]))()
+      .catch(error=>{this.clipSeed=null;throw error;});
+    await this.clipSeed;
+  }
+  async checkMuseOutput(job,output) {
+    await this.ensureMuseClips();
+    const source=this.store.duplicateMuseClip(job,output);
+    if(source)throw duplicateClipError(job,source);
+  }
+  async acceptMuseOutputs(entries) {
+    await this.ensureMuseClips();
+    this.store.claimMuseClips(entries);
+  }
+  rejectOldClip(id,error) {
+    const job=this.store.job(id),now=Date.now();
+    if(job.importedAt)return;
+    this.store.put({...job,state:'failed',failureCode:'MUSE_OLD_CLIP',failureDetail:error.message,
+      duplicateOf:error.duplicateOf,reconciled:true,reconciledAt:now,updatedAt:now,
+      history:[...job.history,{at:now,state:'failed',note:error.message}].slice(-100)});
   }
   assertJobNotSkipped(id) {
     let job;
@@ -856,8 +896,15 @@ export class Worker {
   linkResult({id,providerId,url}){const j=this.store.job(id);if(j.state!=='needs_attention'||!j.profileId)throw Error('Chỉ đối soát job đã bị gián đoạn.');if(!/^[a-zA-Z0-9_-]{1,200}$/.test(providerId)||(!this.config()||new URL(url).origin!==new URL(this.config().startUrl).origin||new URL(url).username||new URL(url).password))throw Error('Cần mã kết quả và URL Muse hợp lệ.');this.store.put({...j,providerId,providerUrl:url,history:[...j.history,{at:Date.now(),state:'needs_attention',note:'Người dùng chỉ định kết quả cũ để đối soát; chưa xác nhận file.'}]});return true;}
   cancel(id){const j=this.store.job(id),parent=j.bundleParentId?this.store.job(j.bundleParentId):j,ids=parent.bundleJobIds??[id];if(ids.some(member=>this.store.job(member).state!=='queued'))throw Error('Chỉ hủy job chưa gửi. Chưa có xác nhận hủy từ Muse.');for(const member of ids)this.store.transition(member,'cancelled',{note:'Hủy nháp local, chưa có lượt gửi.'});return true;}
   diskStatus(){return diskStatus(this.root,storagePolicy(this.store));}
-  status(){return {museNight:this.night.status(),storage:this.diskStatus(),version:'0.2.0',profiles:this.profiles(),jobs:this.store.jobs({withQueueNumber:true}).map(j=>({...j,profileName:(this.store.get('profiles',[]).find(p=>p.id===j.profileId)??this.store.get('deleted_profiles',[]).find(p=>p.id===j.profileId))?.name,provider:j.provider??'muse',request:{...j.request,references:j.request.references.map(({path,...r})=>r)},label:j.importedAt?'Đã vào Thư viện':j.importError?'File đã tải · lỗi nhập':labels[j.state]})),paused:this.paused,active:this.active.size,budget:this.budget,batch:this.store.batch(),freeRamGb:Math.round(this.memory()/1024**3*10)/10,adapter:this.config(),connection:this.connection(),musePaused:museIsPaused(this.store),generationReady:!museIsPaused(this.store)&&!!this.config()?.enabled};}
-  async output(id){const j=this.store.job(id);if(j.state!=='ready'||!j.output)throw Error('Chưa có file đã kiểm tra.');const bytes=new Uint8Array(await readFile(j.output.path));if(createHash('sha256').update(bytes).digest('hex')!==j.output.sha256)throw Error('File đã thay đổi sau kiểm tra.');return {bytes,name:j.output.name,type:j.request.mediaType==='video'?'video/mp4':({'.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.png':'image/png'}[extname(j.output.path)]||'image/png'),sha256:j.output.sha256};}
-  acknowledge(id,assetId){if(!/^[a-zA-Z0-9_-]{1,120}$/.test(assetId))throw Error('Asset ID không hợp lệ.');this.store.put({...this.store.job(id),uploadedAssetId:assetId});return true;}
+  status(){return {museNight:this.night.status(),storage:this.diskStatus(),version:'0.2.0',profiles:this.profiles(),jobs:this.store.jobs({withQueueNumber:true}).map(j=>({...j,profileName:(this.store.get('profiles',[]).find(p=>p.id===j.profileId)??this.store.get('deleted_profiles',[]).find(p=>p.id===j.profileId))?.name,provider:j.provider??'muse',request:{...j.request,references:j.request.references.map(({path,...r})=>r)},label:j.duplicateOf?'Trùng clip cũ #'+j.duplicateOf.number:j.importedAt?'Đã vào Thư viện':j.importError?'File đã tải · lỗi nhập':labels[j.state]})),paused:this.paused,active:this.active.size,budget:this.budget,batch:this.store.batch(),freeRamGb:Math.round(this.memory()/1024**3*10)/10,adapter:this.config(),connection:this.connection(),musePaused:museIsPaused(this.store),generationReady:!museIsPaused(this.store)&&!!this.config()?.enabled};}
+  async output(id){
+    const j=this.store.job(id);if(j.state!=='ready'||!j.output)throw Error('Chưa có file đã kiểm tra.');
+    const bytes=new Uint8Array(await readFile(j.output.path));
+    if(createHash('sha256').update(bytes).digest('hex')!==j.output.sha256)throw Error('File đã thay đổi sau kiểm tra.');
+    try{await this.acceptMuseOutputs([{job:j,output:j.output}]);}
+    catch(error){if(error.code==='MUSE_OLD_CLIP')this.rejectOldClip(id,error);throw error;}
+    return {bytes,name:j.output.name,type:j.request.mediaType==='video'?'video/mp4':({'.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.png':'image/png'}[extname(j.output.path)]||'image/png'),sha256:j.output.sha256};
+  }
+  acknowledge(id,assetId){if(!/^[a-zA-Z0-9_-]{1,120}$/.test(assetId))throw Error('Asset ID không hợp lệ.');const job=this.store.put({...this.store.job(id),uploadedAssetId:assetId});this.store.recordMuseClip(job);return true;}
   async render(payload,ass=null){assertDiskSpace(this.root,256*1024**2,storagePolicy(this.store));const {z}=await import('zod');const d=z.object({ratio:z.enum(['9:16','16:9','1:1','4:3','3:4']),clips:z.array(z.object({bytes:z.instanceof(Uint8Array),sha256:z.string().regex(/^[a-f0-9]{64}$/),duration:z.number().positive().max(120)})).min(1).max(30)}).parse(payload);if(d.clips.reduce((n,c)=>n+c.bytes.length,0)>60*1024*1024)throw Error('Tổng nguồn tối đa 60 MB.');await toolchain();const id=randomUUID(),dir=join(this.root,'renders',id);await mkdir(dir,{recursive:true});const clips=[];for(const [i,c] of d.clips.entries()){if(createHash('sha256').update(c.bytes).digest('hex')!==c.sha256)throw Error('Nguồn dựng sai checksum.');const path=join(dir,`${i}.mp4`);await writeFile(path,c.bytes);await validateMedia(path,{mediaType:'video',ratio:d.ratio,duration:c.duration});clips.push({path,duration:c.duration,audio:await hasAudio(path)});}const path=join(dir,'output.mp4'),report=await renderClips(clips,d.ratio,path,{ass});for(const clip of clips)await unlink(clip.path);return {bytes:new Uint8Array(await readFile(path)),name:`render_${id}.mp4`,type:'video/mp4',path,...report};}
 }

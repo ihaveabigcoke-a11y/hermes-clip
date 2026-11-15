@@ -72,6 +72,7 @@ async function startApplication() {
  }
  const manual=local?new ManualMedia({store,local,trashItem:path=>shell.trashItem(path),changed:()=>{if(!win.isDestroyed())win.webContents.send('product-lab:workspace-changed');}}):null;
  if(manual){
+  worker.readMediaRecords=()=>manual.records();
   worker.validateMediaProvider=(request,options)=>manual.assertMuseScene(request,options);
   worker.readProductionRecord=async id=>(await manual.records()).find(row=>row.kind==='production'&&row.id===id);
   worker.readProductionForProfileRemoval=id=>local.readProductionForProfileRemoval(id);

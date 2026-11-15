@@ -33,6 +33,8 @@ export async function importWorkerOutput(local, worker, id) {
   };
   let state = await projectState();
   if (state.received) {await local.reuseWorkerOutput?.(job,job.uploadedAssetId);return state.project;}
+  try { await worker.acceptMuseOutputs([{job,output:job.output}]); }
+  catch(error){if(error.code==='MUSE_OLD_CLIP')worker.rejectOldClip(id,error);throw error;}
   let assetId = job.uploadedAssetId;
   if (!assetId) {
     const output = await worker.output(id);

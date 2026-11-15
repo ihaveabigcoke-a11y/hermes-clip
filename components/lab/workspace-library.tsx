@@ -7,7 +7,7 @@ import {mediaTypeCounts} from '@/lib/lab/form-check';
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {Copy, Download, Images} from 'lucide-react';
 import {type LabRecord, formatTime} from '@/lib/lab/domain';
-import {mediaCatalog, mediaCaption, mediaReview, mediaInstructions, preferredMedia} from '@/lib/lab/media-catalog';
+import {mediaCatalog, mediaCaption, mediaReview, mediaInstructions, preferredMedia, mediaIdeas} from '@/lib/lab/media-catalog';
 import {sceneKey, sceneCategory, matchesMediaPeriod, type MediaOrganization, type MediaPeriod} from '@/lib/lab/media-organization';
 import {desktopBridge} from '@/lib/lab/desktop-client';
 import {useDesktopStatus} from '@/lib/lab/use-desktop-status';
@@ -38,8 +38,9 @@ export default function WorkspaceLibrary({records, demo}: {records: LabRecord[];
     (!batch || status?.jobs.some(job => job.submitBatchId === status.batch?.id && job.uploadedAssetId === entry.take.assetId)) &&
     `${entry.product?.data.name} ${entry.scene.name} ${entry.take.name}`.toLocaleLowerCase('vi').includes(query.toLocaleLowerCase('vi')));
   const matching = baseMatching.filter(entry => type === 'all' || entry.take.type.startsWith(type + '/'));
-  const typeCounts = mediaTypeCounts(versions ? baseMatching : preferredMedia(baseMatching, organization.value));
-  const entries = versions ? matching : preferredMedia(matching, organization.value);
+  const typeCounts = mediaTypeCounts(versions ? mediaIdeas(baseMatching).map(group=>group[0]) : preferredMedia(baseMatching, organization.value));
+  const ideas = mediaIdeas(matching);
+  const entries = versions ? ideas.map(group=>group[0]) : preferredMedia(matching, organization.value);
   const currentPage = Math.min(page, Math.max(1, Math.ceil(entries.length / 12)));
   const entry = catalog.find(item => item.key === selected);
   const sceneVersions = entry ? catalog.filter(item => item.project.id === entry.project.id && item.scene.id === entry.scene.id) : [];
@@ -131,6 +132,7 @@ export default function WorkspaceLibrary({records, demo}: {records: LabRecord[];
   }
   return <section className="workspace-library">
     <header className="production-heading"><div><h1><Images size={22}/>Thư viện</h1><span className="library-count">{entries.length}</span></div></header>
+    {versions&&ideas.some(group=>group.length>1)&&<p className="field-help">{ideas.length} ý tưởng · {matching.length} biến thể</p>}
     <div className="library-filter-chips" role="group" aria-label="Loại media">{[['all','Tất cả'],['video','Video'],['image','Ảnh']].map(([key,label])=><button type="button" key={key} aria-pressed={type===key} onClick={()=>filter('lib_type',key)}>{label} <span className="chip-count">{typeCounts[key as 'all'|'image'|'video']}</span></button>)}<Hint label="Phiên bản trong thư viện">Mỗi cảnh hiện bản chính, bản đã duyệt hoặc bản mới nhất. Mở cảnh để xem lịch sử.</Hint></div><details className="catalog-filter-panel"><summary><SlidersHorizontal size={17}/>Lọc chi tiết</summary><fieldset className="catalog-toolbar" disabled={!filters.ready || !organization.ready} aria-label="Lọc thư viện">
       <label className="field">Sản phẩm<select aria-label="Sản phẩm" value={productId} onChange={event => filter('lib_product', event.target.value)}><option value="all">Tất cả sản phẩm</option>{records.filter(record => record.kind === 'product').map(product => <option key={product.id} value={product.id}>{product.data.name}</option>)}</select></label>
       <label className="field">Loại nội dung<select aria-label="Loại nội dung" value={type} onChange={event => filter('lib_type', event.target.value)}><option value="all">Ảnh và video</option><option value="video">Video</option><option value="image">Ảnh</option></select></label>

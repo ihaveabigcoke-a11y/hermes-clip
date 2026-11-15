@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
 import {mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
@@ -54,7 +55,7 @@ test('T-033 bundle mapping rejects missing, duplicate or unlabelled clips and ke
 test('T-033 fake bundled delivery imports three identified clips but records only one send',async t=>fixture(async(store,root)=>{
  const w=new Worker(store,root,{},{});w.night.begin();w.paused=false;const jobs=[0,1,2].map(i=>store.enqueue(request(i),'bundle_'+i).job),leader=jobs[0];
  store.put({...leader,bundleJobIds:jobs.map(j=>j.id)});for(const child of jobs.slice(1))store.put({...child,bundleParentId:leader.id});store.transition(leader.id,'preflight',{profileId:'a'});
- const page={url:()=>'',screenshot:async()=>{}};w.context=async()=>({pages:()=>[],newPage:async()=>page});w.setProfileVisibility=async()=>{};w.measureQuota=async()=>{};w.validateOutput=async()=>({sha256:'b'.repeat(64),metadata:{duration:8}});const imported=[];w.receiveOutput=async id=>imported.push(id);
+ const page={url:()=>'',screenshot:async()=>{}};w.context=async()=>({pages:()=>[],newPage:async()=>page});w.setProfileVisibility=async()=>{};w.measureQuota=async()=>{};w.validateOutput=async path=>({sha256:createHash('sha256').update(path).digest('hex'),metadata:{duration:8}});const imported=[];w.receiveOutput=async id=>imported.push(id);
  const prepare=t.mock.method(MuseAdapter.prototype,'prepare',async function(_,r){assert.ok(r.prompt.startsWith(MUSE_VIDEO_COMMAND+'\nMake 3 separate videos'));assert.equal(this.expectedScenes.length,3);}),submit=t.mock.method(MuseAdapter.prototype,'submit',async function(_,checkpoint){await checkpoint('submitting');await checkpoint('submitted',{providerId:'result_0',providerUrl:'https://muse.invalid/thread/group',bundleProviderIds:['result_0','result_1','result_2']});}),fetch=t.mock.method(MuseAdapter.prototype,'fetch',async(_,j,checkpoint,path)=>{assert.equal(j.providerId,'result_'+jobs.findIndex(x=>x.id===j.id));await checkpoint('waiting');await checkpoint('downloading');return path;});
  try{await w.run(leader.id,'a');assert.equal(submit.mock.callCount(),1);assert.deepEqual(imported,jobs.map(j=>j.id));assert.ok(jobs.every(j=>store.job(j.id).state==='ready'));assert.equal(w.night.status().submitted,1);assert.equal(store.batch().submittedByProfile.a,1);assert.ok(jobs.slice(1).every(j=>store.job(j.id).submittedViaParent===leader.id));}
  finally{prepare.mock.restore();submit.mock.restore();fetch.mock.restore();}

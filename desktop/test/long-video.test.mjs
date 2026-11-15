@@ -67,13 +67,14 @@ async function fixture(t,{count=3,failure=null,oneProfile=false,compose=true,use
   const submit=t.mock.method(MuseAdapter.prototype,'submit',async function(_page,checkpoint){
     assert.equal(worker.active.size,1);await checkpoint('submitting');
     const job=store.jobs().find(j=>j.state==='submitting');sent.push(job.id);events.push('send:'+job.request.longVideo.index);
-    if(failure&&job.request.longVideo.index===1)throw Object.assign(Error('fixture refused or failed'),{code:failure});
+    if(failure&&failure!=='MUSE_OLD_CLIP'&&job.request.longVideo.index===1)throw Object.assign(Error('fixture refused or failed'),{code:failure});
     await checkpoint('submitted',{providerId:'fixture_'+sent.length,providerUrl:'https://muse.invalid/result'});
   });
   const fetch=t.mock.method(MuseAdapter.prototype,'fetch',async function(_page,job,checkpoint,path){
     await checkpoint('waiting');await checkpoint('downloading');
     const index=job.request.longVideo.index,frame=job.request.references.find(r=>r.role==='first_frame');
     if(index){assert.ok(frame);const previous=service.find(job.request.longVideo.runId).outputs[index-1];assert.ok(previous.assetId);assert.equal(frame.sha256,service.find(job.request.longVideo.runId).frames[index-1].sha256);assert.equal(hash(await readFile(frame.path)),frame.sha256);}
+    if(failure==='MUSE_OLD_CLIP'&&index===1){await copyFile(service.find(job.request.longVideo.runId).outputs[0].path,path);events.push('file:'+index);return path;}
     ff([...(frame?['-loop','1','-framerate','24','-i',frame.path]:['-f','lavfi','-i','color=c=red:s=90x160:r=24:d=8']),'-f','lavfi','-i','anullsrc=r=48000:cl=stereo','-vf',`drawbox=x=0:y=0:w=45:h=80:color=${['blue','green','yellow','white','purple'][index]}:t=fill:enable='gte(t,7.9)'`,'-t','8','-c:v','libx264','-threads','2','-preset','ultrafast','-pix_fmt','yuv420p','-c:a','aac','-b:a','64k','-shortest',path]);
     events.push('file:'+index);return path;
   });
@@ -110,9 +111,10 @@ for(const count of [2,3,4,5])test(`T-046 fake Muse + real ffmpeg/bridge: ${count
   await assert.rejects(lastVideoFrame({...run.outputs[0],path:changed},join(f.root,'bad-frame'),0),/checksum/);
 }));
 
-for(const failure of ['MUSE_NO_MEDIA','MUSE_CAPTCHA','TIMEOUT'])test(`T-046 ${failure}: stop after scene 2, preserve scene 1, no retry or failover, switches unchanged`,{timeout:60000},t=>fixture(t,{failure},async f=>{
+for(const failure of ['MUSE_NO_MEDIA','MUSE_CAPTCHA','TIMEOUT','MUSE_OLD_CLIP'])test(`T-046 ${failure}: stop after scene 2, preserve scene 1, no retry or failover, switches unchanged`,{timeout:60000},t=>fixture(t,{failure},async f=>{
   await f.service.start({projectId:'project',revision:1,requestId:'failure'});await Promise.all([...f.service.tasks.values()]);
   const run=f.service.find('failure');assert.equal(run.state,'stopped');assert.equal(run.outputs.length,1);assert.equal(run.jobIds.length,2);assert.equal(f.sent.length,2);assert.equal(f.uploads.length,1);assert.equal(f.worker.paused,true);
+  if(failure==='MUSE_OLD_CLIP'){assert.match(run.reason,/Trùng clip cũ #1/);assert.equal(f.store.job(run.jobIds[1]).duplicateOf.jobId,run.jobIds[0]);assert.equal(run.output,undefined);}
   assert.equal(hash(await readFile(run.outputs[0].path)),run.outputs[0].sha256);assert.deepEqual(f.store.get('profiles').map(p=>({id:p.id,enabled:p.enabled,vpnEnabled:p.vpnEnabled})),f.originalProfiles.map(p=>({id:p.id,enabled:p.enabled,vpnEnabled:p.vpnEnabled})));
   assert.equal(f.store.get('muse_paused'),false);await assert.rejects(f.service.start({projectId:'project',revision:1,requestId:'retry_run'}),/đã dừng/);assert.equal(f.sent.length,2);
 }));

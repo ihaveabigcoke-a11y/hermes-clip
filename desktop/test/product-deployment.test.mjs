@@ -31,14 +31,17 @@ async function fixture(work){
    await runner.request('/api/lab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,kind:'product',revision:0,data:product})});
   }
   const video=join(root,'video.mp4');execFileSync(process.env.HERMES_TEST_FFMPEG||'ffmpeg',['-hide_banner','-loglevel','error','-f','lavfi','-i','color=c=blue:s=90x160:r=12','-t','10','-c:v','libx264','-pix_fmt','yuv420p','-y',video],{windowsHide:true});
-  const videoBytes=await readFile(video),sha256=createHash('sha256').update(videoBytes).digest('hex');let submissions=0;
+  const videoBytes=await readFile(video);let submissions=0;
   await mkdir(join(root,'outputs'),{recursive:true});
   worker.receiveOutput=id=>importWorkerOutput(local,worker,id);
   worker.run=async(id,profileId)=>{
    store.transition(id,'prepared');store.beginSubmit(id,profileId);submissions++;
    store.transition(id,'submitted',{providerId:'result-'+id,providerUrl:'https://muse.example.test/result/'+id});store.transition(id,'waiting');store.transition(id,'downloading');store.transition(id,'validating');
-   const output=join(root,'outputs',id+'.mp4');await copyFile(video,output);
-   store.transition(id,'ready',{output:{path:output,name:'video.mp4',sha256,size:videoBytes.length}});await worker.importReady(id);
+   // A distinct free atom represents a fresh fixture delivery without changing
+   // the decoded video. Old-byte deliveries are rejected by the T-049 suite.
+   const marker=Buffer.from(id),atom=Buffer.alloc(8+marker.length);atom.writeUInt32BE(atom.length);atom.write('free',4);marker.copy(atom,8);
+   const content=Buffer.concat([videoBytes,atom]),output=join(root,'outputs',id+'.mp4');await writeFile(output,content);
+   store.transition(id,'ready',{output:{path:output,name:'video.mp4',sha256:createHash('sha256').update(content).digest('hex'),size:content.length}});await worker.importReady(id);
   };
   await work({runner,worker,store,local,root,ids,batch,counts:()=>submissions});
   await runner.running?.promise;

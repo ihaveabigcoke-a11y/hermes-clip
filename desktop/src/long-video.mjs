@@ -101,6 +101,8 @@ export class LongVideo {
   async importJob(jobId){
     const job=this.worker.store.job(jobId),run=this.find(job.request.longVideo.runId);
     if(!run.jobIds.includes(jobId))throw Error('Clip không thuộc chuỗi đã duyệt.');
+    try{await this.worker.acceptMuseOutputs([{job,output:job.output}]);}
+    catch(error){if(error.code==='MUSE_OLD_CLIP')this.worker.rejectOldClip(jobId,error);throw error;}
     const assetId=job.uploadedAssetId??await this.upload({...job.output,...await this.worker.output(jobId)},'desktop_'+jobId);
     this.worker.acknowledge(jobId,assetId);
     const index=job.request.longVideo.index,latest=this.find(run.id);

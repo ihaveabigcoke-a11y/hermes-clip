@@ -284,6 +284,10 @@ function QueueDetails({job, label, tone, profileName, busy, musePaused, primary,
     {['failed','cancelled','needs_attention','unknown'].includes(job.state)&&retryReason&&<p className="info-panel" role="status">{retryReason}</p>}
     {musePaused&&<p className="field-help">Muse đang tạm dừng, bật lại ở Tài khoản Muse</p>}
     <Badge tone={tone}>{label}</Badge>
+    {job.duplicateOf&&<p role="status"><a href={job.duplicateOf.assetId
+      ? '?view=library&lib_asset='+encodeURIComponent(job.duplicateOf.assetId)
+      : '?view=production&production='+encodeURIComponent(job.duplicateOf.projectId)+'&stage=scenes&desk_scene='+encodeURIComponent(job.duplicateOf.sceneId)}>
+      Trùng clip cũ #{job.duplicateOf.number}</a> · Chọn tạo lại hoặc <a href={projectUrl}>nhập tay</a>.</p>}
     {assetUrl && job.state === 'ready' && <div className="queue-result">
       {mediaError ? <p role="alert">Chưa đọc được file. Mở vị trí file để kiểm tra bản lưu trên máy.</p>
         : job.request.mediaType === 'video'

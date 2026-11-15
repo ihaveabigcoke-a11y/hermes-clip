@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
 import {mkdtemp,rm,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
@@ -19,7 +20,7 @@ test('Muse defaults paused: profile, VPN, media, chat, recovery and research mak
   const worker=new Worker(store,root,{launchPersistentContext:async()=>{counts.browser++;throw Error('Must never open');}},{});
   worker.vpn.ensure=async()=>{counts.vpn++;throw Error('Must never connect');};
   store.set('profiles',[{id:'one',name:'Fixture',enabled:true,proxy:{server:''}}]);store.set('adapter',{enabled:true,startUrl:'https://muse.invalid'});
-  const job=store.enqueue({sceneId:'one',references:[]},'old');store.put({...job.job,state:'ready',providerId:'old_receipt',output:{path:'preserved.mp4'}});
+  const job=store.enqueue({projectId:'fixture_project',sceneId:'one',references:[]},'old');store.put({...job.job,state:'ready',providerId:'old_receipt',output:{path:'preserved.mp4'}});
   const chat=new MuseChat(worker);chat.save({requestId:'old_chat',projectId:'fixture',state:'done',response:'Preserve old response'});
   const actions=[()=>worker.context('one'),()=>worker.openProfile('one'),()=>worker.openVpn('one'),()=>worker.connectVpn('one',{}),()=>worker.measureQuota('one',{}),()=>worker.checkProfile('one'),()=>worker.checkAllProfiles(),()=>worker.openResult({id:job.job.id}),()=>worker.recheckResult({id:job.job.id}),()=>worker.enqueue({}),()=>worker.enqueueAndRun({}),()=>worker.start({count:1}),()=>worker.run(job.job.id,'one'),()=>worker.resume(job.job.id),()=>chat.send({}),()=>chat.open({requestId:'old_chat'}),()=>chat.recover({requestId:'old_chat'})];
   for(const action of actions)await assert.rejects(action,{code:'MUSE_PAUSED'});
@@ -44,14 +45,14 @@ async function dispatchFixture(t) {
   const page={url:()=> 'https://muse.invalid',screenshot:async()=>{}};
   worker.contexts.set('one',{pages:()=>[page]});
   worker.checkToolchain=async()=>true;worker.connectVpn=async()=>{};worker.setProfileVisibility=async()=>{};worker.measureQuota=async()=>null;
-  worker.validateOutput=async()=>({sha256:'a'.repeat(64),size:3,metadata:{width:90,height:160,duration:8}});
+  worker.validateOutput=async path=>({sha256:createHash('sha256').update(path).digest('hex'),size:3,metadata:{width:90,height:160,duration:8}});
   worker.receiveOutput=async()=>counts.import++;
   const run=worker.run.bind(worker);worker.run=(...args)=>{const result=run(...args);runs.push(result);return result;};
   const submitted=Promise.withResolvers(),finish=Promise.withResolvers();
   t.mock.method(MuseAdapter.prototype,'prepare',async()=>counts.prepare++);
   t.mock.method(MuseAdapter.prototype,'submit',async(_page,checkpoint)=>{counts.submit++;checkpoint('submitting');checkpoint('submitted',{providerId:'fixture-result'});submitted.resolve();});
-  t.mock.method(MuseAdapter.prototype,'fetch',async(_page,_job,checkpoint,path)=>{counts.fetch++;await finish.promise;checkpoint('waiting');checkpoint('downloading');await writeFile(path,'abc');return path;});
-  const enqueue=sceneId=>store.enqueue({sceneId,mediaType:'video',references:[]},sceneId).job;
+  t.mock.method(MuseAdapter.prototype,'fetch',async(_page,_job,checkpoint,path)=>{counts.fetch++;await finish.promise;checkpoint('waiting');checkpoint('downloading');await writeFile(path,path);return path;});
+  const enqueue=sceneId=>store.enqueue({projectId:'fixture_project',sceneId,mediaType:'video',references:[]},sceneId).job;
   return {worker,store,counts,runs,submitted,finish,enqueue};
 }
 
@@ -156,19 +157,19 @@ for(const pauseAt of ['prepare','submitted','fetch'])test('running Muse job comp
   const page={url:()=> 'https://muse.invalid',screenshot:async()=>{}};
   const context={pages:()=>[page],close:async()=>counts.close++};worker.contexts.set('one',context);
   worker.connectVpn=async()=>{};worker.setProfileVisibility=async()=>{};worker.measureQuota=async()=>null;
-  worker.validateOutput=async()=>({sha256:'a'.repeat(64),size:3,metadata:{width:90,height:160,duration:8}});
+  worker.validateOutput=async path=>({sha256:createHash('sha256').update(path).digest('hex'),size:3,metadata:{width:90,height:160,duration:8}});
   let pausedOnce=false;
   async function maybePause(stage){if(stage===pauseAt&&!pausedOnce){pausedOnce=true;await worker.setMusePaused({paused:true});
     await assert.rejects(worker.enqueue({}),{code:'MUSE_PAUSED'});await assert.rejects(worker.start({count:1}),{code:'MUSE_PAUSED'});
     await assert.rejects(new MuseChat(worker).send({}),{code:'MUSE_PAUSED'});}}
   t.mock.method(MuseAdapter.prototype,'prepare',async()=>{counts.prepare++;await maybePause('prepare');});
   t.mock.method(MuseAdapter.prototype,'submit',async(_page,checkpoint)=>{counts.submit++;checkpoint('submitting');checkpoint('submitted',{providerId:'fixture-result'});await maybePause('submitted');});
-  t.mock.method(MuseAdapter.prototype,'fetch',async(_page,_job,checkpoint,path)=>{counts.fetch++;await maybePause('fetch');checkpoint('waiting');checkpoint('downloading');await writeFile(path,'abc');return path;});
+  t.mock.method(MuseAdapter.prototype,'fetch',async(_page,_job,checkpoint,path)=>{counts.fetch++;await maybePause('fetch');checkpoint('waiting');checkpoint('downloading');await writeFile(path,path);return path;});
   worker.receiveOutput=async id=>{counts.import++;assert.equal(store.job(id).state,'ready');};
   await assert.rejects(worker.run('unused','one'),{code:'MUSE_PAUSED'});assert.equal(counts.submit,0);
   await worker.setMusePaused({paused:false});
-  const first=store.enqueue({sceneId:'first',mediaType:'video',references:[]},'first').job;store.transition(first.id,'preflight',{profileId:'one'});
-  const pending=store.enqueue({sceneId:'pending',references:[]},'pending').job;
+  const first=store.enqueue({projectId:'fixture_project',sceneId:'first',mediaType:'video',references:[]},'first').job;store.transition(first.id,'preflight',{profileId:'one'});
+  const pending=store.enqueue({projectId:'fixture_project',sceneId:'pending',references:[]},'pending').job;
   worker.approvedIds=[pending.id];worker.paused=false;worker.active.set('one',first.id);
   await worker.run(first.id,'one');worker.active.clear();worker.tick();
   assert.equal(store.job(first.id).state,'ready');assert.ok(store.job(first.id).importedAt);assert.equal(store.job(pending.id).state,'queued');
