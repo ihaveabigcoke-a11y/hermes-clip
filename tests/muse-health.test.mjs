@@ -13,4 +13,5 @@ test('T-054: unknown stays null, not 0',()=>{
  const h=museHealth(null,now);
  assert.deepEqual([h.enabled,h.goodSession,h.running,h.errors24h],[null,null,null,null]);
  assert.equal(museHealth({profiles:[prof('A')]},now).errors24h,null);
+assert.equal(museHealth({profiles:[prof('A')],jobs:[]},now).errors24h,null);
 });

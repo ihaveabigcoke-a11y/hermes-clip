@@ -9,7 +9,7 @@ export default function MuseHealthCard({status}:{status:DesktopStatus|null|undef
    <div><dt>Hồ sơ đang bật</dt><dd>{show(h.enabled)}</dd></div>
    <div><dt>Hồ sơ phiên tốt, sẵn sàng</dt><dd>{show(h.goodSession)}</dd></div>
    <div><dt>Việc đang chạy</dt><dd>{show(h.running)}</dd></div>
-   <div><dt>Lỗi trong 24 giờ qua</dt><dd>{show(h.errors24h)}</dd></div>
+   <div><dt>Lỗi 24 giờ (trong danh sách việc hiện có)</dt><dd>{show(h.errors24h)}</dd></div>
   </dl>
   {h.expired.map(name=><p key={name} role="status" className="muse-health-warn">{museExpiredMessage(name)}</p>)}
  </section>;
