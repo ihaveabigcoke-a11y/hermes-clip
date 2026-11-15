@@ -4,7 +4,8 @@ import {useEffect, useRef, useState} from 'react';
 import {Pause, Play, FileVideo, Image as ImageIcon} from 'lucide-react';
 import {uiCopy, reviewLabels} from '@/desktop/src/ui-copy.mjs';
 import {formatTime, type LabRecord} from '@/lib/lab/domain';
-import {groupQueueJobs, matchesQueueFilter, resolvedQueueFailures, queueAction, queueFilters, queueTone, queueTakeSelections, type QueueFilter} from '@/lib/lab/queue-view';
+import {groupQueueJobs, matchesQueueFilter, matchesQueueSearch, resolvedQueueFailures, queueAction, queueFilters, queueTone, queueTakeSelections, type QueueFilter} from '@/lib/lab/queue-view';
+import {queueFailureSummary, safeQueueText} from '@/desktop/src/queue-error.mjs';
 import {mediaCatalog, mediaReview} from '@/lib/lab/media-catalog';
 import {sceneKey, sceneCategory, matchesMediaPeriod, type MediaOrganization, type MediaScope, type MediaPeriod} from '@/lib/lab/media-organization';
 import {useDesktopPreference} from '@/lib/lab/use-desktop-preference';
@@ -33,7 +34,7 @@ const actionLabels = {
 
 export default function QueueBoard({status, records, projectId, busy, onAction, onStart, onReconcile, onImport}: Props) {
   const organization = useDesktopPreference<MediaOrganization>('mediaOrganization', {});
-  const [filter, setFilter] = useState<QueueFilter>('pending');
+  const [filter, setFilter] = useState<QueueFilter>('all');
   const [category, setCategory] = useState<MediaScope>('content');
   const [productId, setProductId] = useState('all');
   const [mediaType, setMediaType] = useState('all');
@@ -69,13 +70,12 @@ export default function QueueBoard({status, records, projectId, busy, onAction, 
   const scoped = categoryJobs.filter(job => {
     const profile = status?.profiles.find(profile => profile.id === job.profileId);
     const product = products.find(product => product.id === job.request.productId);
-    const searchable = [job.request.name, product?.data.name, profile?.name, job.id, job.providerId].join(' ').toLocaleLowerCase('vi');
     return (!batchOnly || !!status?.batch && job.submitBatchId === status.batch.id)
       && (productId === 'all' || job.request.productId === productId)
       && (mediaType === 'all' || job.request.mediaType === mediaType)
       && matchesMediaPeriod(job.createdAt, period)
       && (profileId === 'all' || (profileId === 'unassigned' ? !job.profileId : job.profileId === profileId))
-      && searchable.includes(query.trim().toLocaleLowerCase('vi'));
+      && matchesQueueSearch(job, query, [product?.data.name, profile?.name]);
   });
   const filtered = scoped.filter(job => matchesQueueFilter(job, filter, resolvedFailures));
   const groups = groupQueueJobs(filtered);
@@ -172,7 +172,7 @@ export default function QueueBoard({status, records, projectId, busy, onAction, 
     <div className="queue-filters" role="group" aria-label="Phân loại nội dung">
       {([{id:'content', label:uiCopy.content}, {id:'test', label:uiCopy.test}, {id:'all', label:'Tất cả'}] as const).map(item =>
         <button type="button" key={item.id} aria-pressed={category === item.id} disabled={!organization.ready}
-          onClick={() => {setCategory(item.id); resetPage();}}>{item.label}<span>{groupQueueJobs(jobs.filter(job => item.id === 'all' || sceneCategory(organization.value, job.request.projectId, job.request.sceneId) === item.id)).length}</span></button>)}
+          onClick={() => {setCategory(item.id); resetPage();}}>{item.label}<span>{status ? groupQueueJobs(jobs.filter(job => item.id === 'all' || sceneCategory(organization.value, job.request.projectId, job.request.sceneId) === item.id)).length : '—'}</span></button>)}
       <a className="lab-button neutral" href="?view=library">Mở Thư viện</a>
     </div>
     {organization.error && <div role="alert" className="inline-error"><p>{organization.error}</p><Button tone="neutral" disabled={organization.pending} onClick={organization.retry}>Lưu lại phân loại</Button></div>}
@@ -182,7 +182,7 @@ export default function QueueBoard({status, records, projectId, busy, onAction, 
     <div className="queue-controls">
       <div className="queue-dispatch">
         <Badge tone={status?.paused ? 'neutral' : 'success'}>{status?.paused ? 'Đã dừng giao mới' : 'Cho phép giao việc'}</Badge>
-        <span>{status?.active ?? 0} đang chạy · không giới hạn lượt trong Hermes</span>
+        <span>{status ? `${status.active} đang chạy` : 'Đang đọc hàng đợi'} · không giới hạn lượt trong Hermes</span>
         <small>Tác vụ đã gửi vẫn có thể tiếp tục trên Muse.</small>
       </div>
       <div className="button-row">
@@ -193,11 +193,11 @@ export default function QueueBoard({status, records, projectId, busy, onAction, 
     <div className="queue-filters" role="group" aria-label="Lọc trạng thái tác vụ">
       {queueFilters.map(item => <button type="button" key={item.id} aria-pressed={filter === item.id}
         onClick={() => {setFilter(item.id); resetPage();}}>
-        {item.label}<span>{groupQueueJobs(scoped.filter(job => matchesQueueFilter(job, item.id, resolvedFailures))).length}</span>
+        {item.label}<span>{status ? groupQueueJobs(scoped.filter(job => matchesQueueFilter(job, item.id, resolvedFailures))).length : '—'}</span>
       </button>)}
     </div>
     <div className="queue-search">
-      <SearchBox value={query} onChange={value => {setQuery(value); resetPage();}} placeholder="Tìm sản phẩm, cảnh, hồ sơ hoặc mã tác vụ…"/>
+      <SearchBox value={query} onChange={value => {setQuery(value); resetPage();}} placeholder="Tìm prompt, #N, sản phẩm, cảnh hoặc hồ sơ…"/>
       <label className="queue-profile-filter">Sản phẩm<select aria-label="Lọc theo sản phẩm" value={productId} onChange={event => {setProductId(event.target.value); resetPage();}}>
         <option value="all">Tất cả sản phẩm</option>{products.map(product => <option key={product.id} value={product.id}>{product.data.name}</option>)}
       </select></label>
@@ -221,14 +221,14 @@ export default function QueueBoard({status, records, projectId, busy, onAction, 
           {!!checked.length&&<Button tone="ghost" disabled={busy} onClick={()=>setChecked([])}>Bỏ chọn</Button>}
         </div>
         {blockedSelection&&<p role="alert">{retryBlockedReason(blockedSelection)}</p>}
-        <div className="queue-list-heading"><h2>{filter === 'history' ? 'Lịch sử theo cảnh' : 'Cảnh cần xử lý'}</h2><span>{groups.length} cảnh · {filtered.length} lượt tạo</span></div>
+        <div className="queue-list-heading"><h2>{filter === 'history' ? 'Lịch sử theo cảnh' : filter === 'all' ? 'Tất cả cảnh' : filter === 'done' ? 'Cảnh đã xong' : 'Cảnh cần xử lý'}</h2><span>{status ? `${groups.length} cảnh · ${filtered.length} lượt tạo` : 'Đang đọc hàng đợi'}</span></div>
         <div className="queue-column-head" aria-hidden="true"><span>Cảnh</span><span>Hồ sơ</span><span>Trạng thái</span><span>Thao tác</span></div>
         <ul ref={rows} className="queue-rows" aria-label="Danh sách tác vụ">
-          {visible.map(group => {const job = group.latest; return <li className="queue-row" key={group.key} data-selected={selectedGroup?.key === group.key}>
+          {visible.map(group => {const job = group.latest, reason = queueFailureSummary(job); return <li className="queue-row" key={group.key} data-selected={selectedGroup?.key === group.key}>
             <button type="button" className="queue-row-title" aria-pressed={selected?.id === job.id}
               aria-label={'Chi tiết ' + job.request.name} onClick={() => openDetails(job)}>
               {job.request.mediaType === 'video' ? <FileVideo size={19}/> : <ImageIcon size={19}/>}
-              <span><small title={products.find(product => product.id === job.request.productId)?.data.name}>{products.find(product => product.id === job.request.productId)?.data.name ?? 'Sản phẩm đã lưu'}</small><strong title={job.request.name}>{job.request.name}</strong><small>{group.jobs.length} lượt tạo · {formatTime(job.createdAt)}<span className="queue-inline-profile"> · {status?.profiles.find(profile => profile.id === job.profileId)?.name ?? job.profileName ?? 'Chờ phân hồ sơ'}</span></small></span>
+              <span><small title={products.find(product => product.id === job.request.productId)?.data.name}>{job.queueNumber != null && `#${job.queueNumber} · `}{products.find(product => product.id === job.request.productId)?.data.name ?? 'Sản phẩm đã lưu'}</small><strong title={job.request.name}>{job.request.name}</strong><small>{group.jobs.length} lượt tạo · {formatTime(job.createdAt)}<span className="queue-inline-profile"> · {status?.profiles.find(profile => profile.id === job.profileId)?.name ?? job.profileName ?? 'Chờ phân hồ sơ'}</span></small>{reason&&<small className="queue-error-summary" title={reason}>{reason}</small>}</span>
             </button>
             <span className="queue-row-profile">{status?.profiles.find(profile => profile.id === job.profileId)?.name ?? 'Chờ phân hồ sơ'}</span>
             <Badge tone={resultTone(job)}>{reviewLabel(job)}</Badge>
@@ -270,7 +270,7 @@ function QueueDetails({job, label, tone, profileName, busy, musePaused, primary,
     + '&production=' + encodeURIComponent(job.request.projectId) + '&stage=scenes&desk_scene=' + encodeURIComponent(job.request.sceneId);
   const assetUrl = job.uploadedAssetId ? '/api/assets/' + encodeURIComponent(job.uploadedAssetId) : '';
   return <div className="queue-detail-body">
-    <h3>{job.request.name}</h3><p>Nhà cung cấp: {job.provider??'muse'}</p>
+    <h3>{job.queueNumber != null && `#${job.queueNumber} · `}{job.request.name}</h3><p>Nhà cung cấp: {job.provider??'muse'}</p>
     {retryOf&&<Button tone="ghost" onClick={()=>onOriginal(retryOf)}>Việc gốc: {retryOf}</Button>}
     {['failed','cancelled','needs_attention','unknown'].includes(job.state)&&retryReason&&<p className="info-panel" role="status">{retryReason}</p>}
     {musePaused&&<p className="field-help">Muse đang tạm dừng, bật lại ở Tài khoản Muse</p>}
@@ -281,7 +281,7 @@ function QueueDetails({job, label, tone, profileName, busy, musePaused, primary,
           ? <video src={assetUrl} controls playsInline preload="metadata" aria-label={'Kết quả ' + job.request.name} onError={() => setMediaError(true)}/>
           : <img src={assetUrl} alt={job.request.name} onError={() => setMediaError(true)}/>}
     </div>}
-    <p className="queue-latest">{job.importError || job.history.at(-1)?.note || 'Đã lưu tác vụ trên máy.'}</p>
+    <p className="queue-latest">{queueFailureSummary(job) || safeQueueText(job.history.at(-1)?.note) || 'Đã lưu tác vụ trên máy.'}</p>
     {job.providerResponse && <details className="queue-detail-section" open={job.state === 'needs_attention'}>
       <summary>Phản hồi của Muse</summary><p className="queue-prompt">{job.providerResponse}</p>
     </details>}

@@ -3,6 +3,7 @@ import {museMediaPrompt} from '../../desktop/src/muse-video-prompt.mjs';
 import {getRenderPlan} from './render-plan.ts';
 import {productionSchema,sceneInputSchema} from './production.ts';
 import {suggestProductKey} from './daily-selection.ts';
+import {completedVideoMeasurement} from './video-preview.ts';
 /** A healthy login is not evidence that the profile can return a video. */
 export function museVideoLabel(status:any){
  if(!status)return 'Đang kiểm tra Muse';
@@ -125,6 +126,7 @@ export async function runVideoFlow(o:FlowOptions){
   timing('export_saved',vid);})().catch(error=>{renderError??=error;});renders.set(vid,pending);
  }
  }
+ const measuredSceneIds=missing().map((s:any)=>s.id);
  if(missing().length){
   if(!o.bridge)throw Error('Mở app desktop để tạo video.');
   let status=await o.bridge.status();
@@ -153,5 +155,7 @@ export async function runVideoFlow(o:FlowOptions){
   if(missing().length)return stop('Muse vẫn đang xử lý hoặc chưa có clip. Mở Tín hiệu xem tiến độ; bấm Làm video để tiếp tục kiểm kết quả, không tạo dự án mới.','waiting');
  }
  await launchAvailableRenders();await Promise.all(renders.values());if(renderError)throw renderError;timing('done');
- progress('Xong');return {state:'done',project};
+ let measurement=null;
+ if(measuredSceneIds.length){try{const finalStatus=await o.bridge.status();measurement=completedVideoMeasurement(startedAt,now(),measuredSceneIds,finalStatus.jobs.filter((j:any)=>j.request.projectId===o.projectId));}catch{/* An optional estimate must never change a completed render. */}}
+ progress('Xong');return {state:'done',project,measurement};
 }

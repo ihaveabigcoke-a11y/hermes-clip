@@ -14,11 +14,13 @@ export function queueTakeSelections(records:{id:string;kind:string;data:Record<s
 }
 
 export const queueFilters = [
-  {id: 'pending', label: 'Cần xử lý'},
+  {id: 'all', label: 'Tất cả'},
   {id: 'active', label: 'Đang chạy'},
+  {id: 'failed', label: 'Lỗi'},
+  {id: 'done', label: 'Xong'},
+  {id: 'pending', label: 'Cần xử lý'},
   {id: 'queued', label: workerStateLabels.queued},
   {id: 'attention', label: 'Cần kiểm tra'},
-  {id: 'failed', label: workerStateLabels.failed},
   {id: 'retryable', label: 'Lỗi / đã dừng'},
   {id: 'history', label: 'Lịch sử'},
 ] as const;
@@ -26,6 +28,8 @@ export type QueueFilter = typeof queueFilters[number]['id'];
 const activeStates = new Set(['preflight', 'prepared', 'submitting', 'submitted', 'waiting', 'downloading', 'validating']);
 
 export function matchesQueueFilter(job: DesktopJob, filter: QueueFilter, resolvedFailures: ReadonlySet<string> = new Set()) {
+  if (filter === 'all') return true;
+  if (filter === 'done') return job.state === 'ready' && !job.importError;
   const historical = job.state === 'cancelled' || (job.state === 'ready' && !job.importError) || resolvedFailures.has(job.id);
   if (filter === 'pending') return !historical;
   if (filter === 'history') return historical;
@@ -33,6 +37,13 @@ export function matchesQueueFilter(job: DesktopJob, filter: QueueFilter, resolve
   if (filter === 'attention') return job.state === 'needs_attention' || !!job.importError;
   if (filter === 'retryable') return ['failed','cancelled'].includes(job.state);
   return job.state === filter && !resolvedFailures.has(job.id);
+}
+
+/** #N is an exact local job number, independent of filtering and pagination. */
+export function matchesQueueSearch(job: DesktopJob, query: string, extra: (string | undefined)[] = []) {
+  const value = query.trim().toLocaleLowerCase('vi');
+  if (/^#\d+$/.test(value)) return job.queueNumber === Number(value.slice(1));
+  return [job.request.prompt, job.request.name, job.id, job.providerId, ...extra].join(' ').toLocaleLowerCase('vi').includes(value);
 }
 
 export function resolvedQueueFailures(jobs: DesktopJob[]) {

@@ -2,6 +2,7 @@ import {z} from 'zod';
 
 const identifier = z.string().regex(/^[a-zA-Z0-9_-]{0,240}$/);
 const schemas = {
+  videoMeasurement: z.object({measuredAt:z.number().finite().positive(),elapsedMs:z.number().finite().positive(),sceneCount:z.number().int().positive().max(30),hookCount:z.literal(3),profileIds:z.array(identifier).min(1).max(20)}).nullable(),
   productDisplay: z.enum(['cards','table']),
   chatSelection: z.object({profileId: identifier, requestId: identifier.nullable()}),
   chatDrafts: z.record(z.string().max(500), z.string().max(16000)),

@@ -35,7 +35,7 @@ export class Store {
       throw error;
     }
   }
-  jobs(){return this.db.prepare('SELECT body FROM jobs ORDER BY rowid DESC LIMIT 500').all().map(r=>JSON.parse(r.body));}
+  jobs({withQueueNumber=false}={}){return this.db.prepare('SELECT rowid,body FROM jobs ORDER BY rowid DESC LIMIT 500').all().map(r=>({...JSON.parse(r.body),...(withQueueNumber?{queueNumber:Number(r.rowid)}:{})}));}
   job(id){const r=this.db.prepare('SELECT body FROM jobs WHERE id=?').get(id);if(!r)throw Error('Không tìm thấy job.');return JSON.parse(r.body);}
   put(j){this.db.prepare('INSERT INTO jobs VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET body=excluded.body').run(j.id,j.fingerprint,JSON.stringify(j));return j;}
   recordEarlyRenderError(id,error){

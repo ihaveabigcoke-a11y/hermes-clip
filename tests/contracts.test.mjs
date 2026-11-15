@@ -1,4 +1,5 @@
 import test from 'node:test';
+import './queue-preview.test.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {matchesQueueFilter, resolvedQueueFailures, queueAction, queueTone, groupQueueJobs} from '../lib/lab/queue-view.ts';
