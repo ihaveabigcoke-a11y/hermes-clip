@@ -1,4 +1,5 @@
 import {workerStateLabels} from '../../desktop/src/ui-copy.mjs';
+import {isRunningJob, isLostJob} from '../../desktop/src/job-status.mjs';
 import type {DesktopJob} from './desktop-client';
 import {sceneKey} from './media-organization.ts';
 import {productionSchema,pendingTakeSelection} from './production.ts';
@@ -25,7 +26,6 @@ export const queueFilters = [
   {id: 'history', label: 'Lịch sử'},
 ] as const;
 export type QueueFilter = typeof queueFilters[number]['id'];
-const activeStates = new Set(['preflight', 'prepared', 'submitting', 'submitted', 'waiting', 'downloading', 'validating']);
 
 export function matchesQueueFilter(job: DesktopJob, filter: QueueFilter, resolvedFailures: ReadonlySet<string> = new Set()) {
   if (filter === 'all') return true;
@@ -33,7 +33,8 @@ export function matchesQueueFilter(job: DesktopJob, filter: QueueFilter, resolve
   const historical = job.state === 'cancelled' || (job.state === 'ready' && !job.importError) || resolvedFailures.has(job.id);
   if (filter === 'pending') return !historical;
   if (filter === 'history') return historical;
-  if (filter === 'active') return activeStates.has(job.state);
+  if (filter === 'active') return isRunningJob(job);
+  if (filter === 'failed' && isLostJob(job)) return true;
   if (filter === 'attention') return job.state === 'needs_attention' || !!job.importError;
   if (filter === 'retryable') return ['failed','cancelled'].includes(job.state);
   return job.state === filter && !resolvedFailures.has(job.id);
@@ -61,7 +62,7 @@ export function resolvedQueueFailures(jobs: DesktopJob[]) {
 }
 
 export function queueTone(job: DesktopJob) {
-  if (job.importError || job.state === 'failed') return 'danger';
+  if (job.importError || job.state === 'failed' || isLostJob(job)) return 'danger';
   if (job.state === 'needs_attention') return 'warning';
   if (job.state === 'ready') return 'success';
   return 'neutral';

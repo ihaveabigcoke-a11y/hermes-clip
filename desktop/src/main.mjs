@@ -157,6 +157,8 @@ async function startApplication() {
  await win.loadURL(appOrigin+'/?view=signals');
  if(!museOnly){manual?.start();research?.boot();deployments?.boot();bootInstagram(instagram);}
  const maintenance=setInterval(()=>{if(!museOnly)void maintainStorage(root,store).catch(error=>console.warn('Storage maintenance:',error.message));},60*60*1000);maintenance.unref();
+ const queueWatchdog=setInterval(()=>store.recover({restart:false}),5000);queueWatchdog.unref();
+ app.once('before-quit',()=>clearInterval(queueWatchdog));
  app.once('before-quit',()=>clearInterval(maintenance));
  if(local&&!museOnly)for(const job of store.jobs().filter(job=>job.state==='ready'&&!job.importedAt))void worker.importReady(job.id);
 }

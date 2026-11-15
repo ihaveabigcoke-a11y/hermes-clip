@@ -2,6 +2,8 @@ import {DatabaseSync} from 'node:sqlite';
 import {randomUUID, createHash} from 'node:crypto';
 import {transitions, jobFingerprint} from './contracts.mjs';
 import {retryBlockedReason} from './job-retry.mjs';
+import {isRunningJob, isLostJob, jobHeartbeatTimeout, runningJobStates} from './job-status.mjs';
+import {openSync, readSync, fstatSync, closeSync} from 'node:fs';
 import {museMediaPrompt, museVideoBody} from './muse-video-prompt.mjs';
 import {migrateMuseClips,seedMuseClips,claimMuseClips,duplicateMuseClip,recordMuseClip} from './muse-clip-ledger.mjs';
 export class Store {
@@ -50,8 +52,85 @@ export class Store {
     if(!result.changes)throw Error('Không tìm thấy job.');
   }
   enqueue(body,fingerprint,legacyFingerprint=fingerprint){const old=this.db.prepare('SELECT body FROM jobs WHERE fingerprint IN (?,?) ORDER BY rowid DESC LIMIT 1').get(fingerprint,legacyFingerprint);if(old)return {job:JSON.parse(old.body),deduplicated:true};if(this.jobs().length>=500)throw Error('Đã chạm 500 job local; sao lưu trước khi mở rộng.');const now=Date.now();return {job:this.put({id:randomUUID(),fingerprint,request:body,provider:'muse',state:'queued',profileId:null,providerId:null,providerUrl:null,output:null,uploadedAssetId:null,createdAt:now,updatedAt:now,history:[{at:now,state:'queued',note:'Lưu nháp local; chưa gửi Muse.'}],usage:null}),deduplicated:false};}
-  transition(id,next,patch={}){const j=this.job(id);if(!transitions[j.state]?.includes(next))throw Error(`Không thể chuyển ${j.state} → ${next}.`);const {note,...rest}=patch,now=Date.now();return this.put({...j,...rest,state:next,updatedAt:now,history:[...j.history,{at:now,state:next,profileId:rest.profileId??j.profileId,note:note||next}].slice(-100)});}
-  recover(){for(const j of this.jobs()){if(['preflight','prepared'].includes(j.state))this.transition(j.id,'needs_attention',{note:'Gián đoạn trước gửi. Kiểm tra trang; không tự gửi lại.'});else if(['submitting','submitted','waiting','downloading','validating'].includes(j.state))this.transition(j.id,'needs_attention',{note:j.providerId?'Có mã kết quả cũ. Chọn Tiếp tục lấy kết quả; không gửi mới.':'Chưa rõ Muse đã nhận chưa. Kiểm tra thủ công trước; không retry mù.'});}}
+  transition(id,next,patch={}){const j=this.job(id);if(!transitions[j.state]?.includes(next))throw Error(`Không thể chuyển ${j.state} → ${next}.`);const {note,...rest}=patch,now=Date.now();return this.put({...j,...rest,state:next,updatedAt:now,...(runningJobStates.has(next)?{heartbeatAt:now}:{}),history:[...j.history,{at:now,state:next,profileId:rest.profileId??j.profileId,note:note||next}].slice(-100)});}
+  heartbeat(ids, now=Date.now()) {
+    // Evaluate state in the same UPDATE, including across SQLite connections.
+    const states=[...runningJobStates],statement=this.db.prepare("UPDATE jobs SET body=json_set(body,'$.heartbeatAt',?) WHERE id=? AND json_extract(body,'$.state') IN ("+states.map(()=>'?').join(',')+")");
+    for(const id of ids)statement.run(now,id,...states);
+  }
+  completeOutputs(entries) {
+    // All validated bundle outputs and their terminal states commit together.
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      for(const {id,patch} of entries)this.transition(id,'ready',patch);
+      this.db.exec('COMMIT');
+    } catch(error) {this.db.exec('ROLLBACK');throw error;}
+  }
+  recover({restart=true,now=Date.now(),timeoutMs=jobHeartbeatTimeout(this.get('adapter'))}={}) {
+    const jobs=this.jobs(), handled=new Set();
+    for(const job of jobs) {
+      const interrupted=job.state==='needs_attention'&&job.failureCode==='WORKER_INTERRUPTED';
+      if(job.reconciliation==='skipped'||handled.has(job.id)||(!isRunningJob(job)&&!interrupted&&!(isLostJob(job)&&job.output)))continue;
+      const last=job.heartbeatAt??job.updatedAt??job.createdAt;
+      const overdue=!Number.isFinite(last)||now-last>=timeoutMs;
+      if(!restart&&!overdue)continue;
+      const parent=job.bundleParentId?jobs.find(j=>j.id===job.bundleParentId):job;
+      const bundle=parent?.bundleMapping==='appearance-v1';
+      const members=bundle?(parent.bundleJobIds??[]).map(id=>jobs.find(j=>j.id===id)):[job];
+      // A partial appearance bundle must never bypass cardinality/visual checks.
+      const verified=members.length>0&&(!bundle||(members.length===3&&new Set(parent.bundleJobIds).size===3))&&members.every(j=>j&&j.reconciliation!=='skipped'&&['ready','needs_attention',...runningJobStates].includes(j.state)
+        &&(!bundle||j.output?.bundleVisualCheck)&&this.verifiedSavedOutput(j));
+      if(verified) {
+        let claimed=false;
+        try {this.seedMuseClips();this.claimMuseClips(members.map(j=>({job:j,output:j.output})));claimed=true;}
+        catch { /* Keep the original receipt and require reconciliation. */ }
+        // A ledger conflict must not turn an old clip into a successful result.
+        if(claimed) {
+          this.db.exec('BEGIN IMMEDIATE');
+          try {
+            const currentMembers=members.map(member=>this.job(member.id));
+            if(currentMembers.some((j,i)=>j.reconciliation==='skipped'||!['ready','needs_attention',...runningJobStates].includes(j.state)||JSON.stringify(j.output)!==JSON.stringify(members[i].output))){
+              this.db.exec('ROLLBACK');continue;
+            }
+            for(const member of members) {
+              handled.add(member.id);
+              const current=this.job(member.id);
+              if(current.state==='ready')continue;
+              this.put({...current,state:'ready',updatedAt:now,failedFilePath:null,
+                history:[...current.history,{at:now,state:'ready',profileId:current.profileId,note:'Đã đối chiếu SHA-256 với file đã kiểm trên máy; hoàn tất, không gửi lại Muse.'}].slice(-100)});
+            }
+            this.db.exec('COMMIT');continue;
+          } catch(error) {this.db.exec('ROLLBACK');throw error;}
+        }
+      }
+      if(!isRunningJob(job)&&!(interrupted&&overdue))continue;
+      const note=overdue?'Lỗi: mất dấu. Quá thời gian chờ không có nhịp báo; kiểm tra kết quả cũ trước khi tạo lại.'
+        :'Tác vụ gián đoạn khi đóng app. Kiểm tra kết quả cũ; không tự gửi lại.';
+      this.db.exec('BEGIN IMMEDIATE');
+      try {
+        const current=this.job(job.id);
+        // Do not overwrite progress/ready committed through another connection
+        // while hashing a saved file. The next sweep will read the new snapshot.
+        if(JSON.stringify(current)===JSON.stringify(job))this.put({...current,state:'needs_attention',updatedAt:now,heartbeatAt:last,reconciled:false,
+          failureCode:overdue?'WORKER_LOST':'WORKER_INTERRUPTED',failureDetail:note,
+          history:[...current.history,{at:now,state:'needs_attention',profileId:current.profileId,note}].slice(-100)});
+        this.db.exec('COMMIT');
+      } catch(error) {this.db.exec('ROLLBACK');throw error;}
+    }
+  }
+  verifiedSavedOutput(job) {
+    const output=job.output;
+    if(!output?.path||!/^[a-f0-9]{64}$/i.test(output.sha256??'')||output.fullDecode!==true||output.metadata?.verifiedBy!=='container')return false;
+    let fd;
+    try {
+      fd=openSync(output.path,'r');const before=fstatSync(fd);
+      if(!before.isFile()||before.size<=0||before.size>64*1024**2||(output.size!=null&&output.size!==before.size))return false;
+      const hash=createHash('sha256'),buffer=Buffer.alloc(1024*1024);let size=0,n;
+      while((n=readSync(fd,buffer,0,buffer.length,null))>0){size+=n;if(size>64*1024**2)return false;hash.update(buffer.subarray(0,n));}
+      const after=fstatSync(fd);
+      return size===before.size&&after.size===before.size&&after.mtimeMs===before.mtimeMs&&hash.digest('hex')===output.sha256.toLowerCase();
+    } catch {return false;} finally {if(fd!==undefined)closeSync(fd);}
+  }
   retry(id){return this.retryMany([{id}])[0];}
   retryMany(items, requestId = randomUUID()) {
     const hash=createHash('sha256').update(JSON.stringify(items)).digest('hex');

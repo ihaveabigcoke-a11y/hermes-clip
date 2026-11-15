@@ -12,6 +12,7 @@ import {useDesktopPreference} from '@/lib/lab/use-desktop-preference';
 import type {DesktopJob, DesktopStatus} from '@/lib/lab/desktop-client';
 import {Badge, Button, Empty, Modal, Pagination, SearchBox} from './primitives';
 import {retryBlockedReason} from '@/desktop/src/job-retry.mjs';
+import {isLostJob, runningJobCount} from '@/desktop/src/job-status.mjs';
 import {museVideoBody} from '@/desktop/src/muse-video-prompt.mjs';
 import {MuseVideoCommand} from './muse-video-command';
 import {copyWorkbenchText} from './workbench-controls';
@@ -184,7 +185,7 @@ export default function QueueBoard({status, records, projectId, busy, onAction, 
     <div className="queue-controls">
       <div className="queue-dispatch">
         <Badge tone={status?.paused ? 'neutral' : 'success'}>{status?.paused ? 'Đã dừng giao mới' : 'Cho phép giao việc'}</Badge>
-        <span>{status ? `${status.active} đang chạy` : 'Đang đọc hàng đợi'} · không giới hạn lượt trong Hermes</span>
+        <span>{status ? `${runningJobCount(status.jobs)} đang chạy` : 'Đang đọc hàng đợi'} · không giới hạn lượt trong Hermes</span>
         <small>Tác vụ đã gửi vẫn có thể tiếp tục trên Muse.</small>
       </div>
       <div className="button-row">
@@ -305,6 +306,7 @@ function QueueDetails({job, label, tone, profileName, busy, musePaused, primary,
     {job.output?.warning && <p className="queue-latest">{job.output.warning}</p>}
     <div className="button-row">
       {primary}
+      {isLostJob(job)&&<Button tone="neutral" disabled title={retryReason}>Tạo lại</Button>}
       {['failed','cancelled'].includes(job.state)&&<Button tone="neutral" disabled={busy||!!retryReason} onClick={()=>setEditing(true)}>Sửa & chạy lại</Button>}
       <a className="lab-button neutral" href={projectUrl}>Mở dự án</a>
       {job.uploadedAssetId && <a className="lab-button neutral" href={'?view=library&lib_asset=' + encodeURIComponent(job.uploadedAssetId)}>Xem trong Thư viện</a>}

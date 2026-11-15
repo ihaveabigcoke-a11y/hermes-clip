@@ -1,5 +1,6 @@
 // Shared by the queue and the store. A failed label alone is not a delivery receipt.
 export function retryBlockedReason(job) {
+  if (job.failureCode === 'WORKER_LOST' && job.reconciled !== true) return 'Tác vụ mất dấu chưa đối soát. Kiểm tra kết quả cũ trước khi tạo lại.';
   if (job.reconciliation === 'skipped') return 'Đã bỏ qua đối soát; không gửi lại lượt này.';
   if (!['failed', 'cancelled'].includes(job.state)) return 'Chỉ tạo lại việc lỗi hoặc đã dừng. Lượt chưa rõ kết quả phải đối soát trước.';
   const sent = job.providerId || job.providerUrl || job.providerResponse || job.submitBatchId || job.submittedViaParent

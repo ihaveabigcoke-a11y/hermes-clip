@@ -9,6 +9,7 @@ import {join,extname} from 'node:path';
 import {freemem} from 'node:os';
 import {profileInput,adapterInput,museConnectionInput,jobInput,jobFingerprint,retryBatchInput,labels,safeMessage} from './contracts.mjs';
 import {retryProfileAllowed} from './job-retry.mjs';
+import {isLostJob, runningJobCount, jobHeartbeatTimeout} from './job-status.mjs';
 import {museMediaPrompt} from './muse-video-prompt.mjs';
 import {bundlePrompt} from './muse-bundle.mjs';
 import {bundleMidpointFrame,assertDistinctBundleFrames} from './muse-bundle-visual.mjs';
@@ -584,6 +585,11 @@ export class Worker {
     let page,adoptedWarmPage,dispatchFailed=false;
     const timings={preflightStartedAt:Date.now()};let adapter;
     const bundle=resume?[id]:(this.store.job(id).bundleJobIds??[id]);
+    // The admitted local runner owns these heartbeats until it exits. They do
+    // not extend Muse's own deadline or authorize any send/retry.
+    this.store.heartbeat(bundle);
+    const heartbeat=setInterval(()=>this.store.heartbeat(bundle),Math.max(10,Math.min(10000,jobHeartbeatTimeout(this.config())/3)));
+    heartbeat.unref();
     const bundleTasks=new Map();let previewTail=Promise.resolve();
     const acquirePreview=async()=>{const previous=previewTail;let release;previewTail=new Promise(r=>release=r);await previous;return release;};
     try {
@@ -679,7 +685,7 @@ export class Worker {
         const visualCheck=assertDistinctBundleFrames(await Promise.all(results.map(r=>this.readBundleFrame(r.output.path,r.output.metadata.duration))));
         for(const result of results)result.output.bundleVisualCheck=visualCheck;
         await this.acceptMuseOutputs(results.map(({member,output})=>({job:this.store.job(member),output})));
-        for(const result of results){const {member,output,timings:memberTimings}=result;this.store.transition(member,'ready',{output,failedFilePath:null,timings:{...this.store.job(member).timings,...memberTimings,allCardsAt:adapter.timings.resultAt,observedCardCount:adapter.timings.observedCardCount,observedClipCount:adapter.timings.observedClipCount,bundleAcceptedAt:Date.now()},note:'Đủ ba clip đã kiểm, khác hash; gắn theo thứ tự thẻ 1/2/3.'});}
+        this.store.completeOutputs(results.map(({member,output,timings:memberTimings})=>({id:member,patch:{output,failedFilePath:null,timings:{...this.store.job(member).timings,...memberTimings,allCardsAt:adapter.timings.resultAt,observedCardCount:adapter.timings.observedCardCount,observedClipCount:adapter.timings.observedClipCount,bundleAcceptedAt:Date.now()},note:'Đủ ba clip đã kiểm, khác hash; gắn theo thứ tự thẻ 1/2/3.'}})));
         // Production commands share a revision; import serially while encoders run.
         for(const result of results){await this.importReady(result.member);this.store.put({...this.store.job(result.member),timings:{...this.store.job(result.member).timings,importedAt:Date.now()}});}
         this.store.set('muse_bundle_order_verified',true);this.store.set('muse_bundle_order_failed',false);
@@ -704,12 +710,12 @@ export class Worker {
       }
       const report = await this.validateOutput(output, job.request);
       await this.acceptMuseOutputs([{job:this.store.job(member),output:{...report,compression:adapter.compression}}]);
-      this.store.transition(member, 'ready', {
+      this.store.completeOutputs([{id:member,patch:{
         failedFilePath: null,
         output: {path: output, name: output.split(/[\\/]/).at(-1), ...(adapter.compression?{compression:adapter.compression}:{}), ...report},
         note: 'Đã ghi file và giải mã toàn bộ; vẫn cần người duyệt nội dung.',
         timings:{...this.store.job(member).timings,...timings,...adapter.timings,validatedAt:Date.now()},
-      });
+      }}]);
       // A registered video flow can encode the verified file while its durable
       // library import runs. Rendering failure must not discard the Muse receipt.
       if(!early)Promise.resolve().then(()=>this.onReadyOutput?.(this.store.job(member))).catch(error=>{
@@ -773,6 +779,7 @@ export class Worker {
         this.store.put({...this.store.job(id), diagnosticPath});
       }
     } finally {
+      clearInterval(heartbeat);
       if(dispatchFailed&&adoptedWarmPage){
         // Also runs on preflight early returns. If close fails retain ownership
         // for the next warm-up/closeProfile, but do not advertise a warm composer.
@@ -896,7 +903,11 @@ export class Worker {
   linkResult({id,providerId,url}){const j=this.store.job(id);if(j.state!=='needs_attention'||!j.profileId)throw Error('Chỉ đối soát job đã bị gián đoạn.');if(!/^[a-zA-Z0-9_-]{1,200}$/.test(providerId)||(!this.config()||new URL(url).origin!==new URL(this.config().startUrl).origin||new URL(url).username||new URL(url).password))throw Error('Cần mã kết quả và URL Muse hợp lệ.');this.store.put({...j,providerId,providerUrl:url,history:[...j.history,{at:Date.now(),state:'needs_attention',note:'Người dùng chỉ định kết quả cũ để đối soát; chưa xác nhận file.'}]});return true;}
   cancel(id){const j=this.store.job(id),parent=j.bundleParentId?this.store.job(j.bundleParentId):j,ids=parent.bundleJobIds??[id];if(ids.some(member=>this.store.job(member).state!=='queued'))throw Error('Chỉ hủy job chưa gửi. Chưa có xác nhận hủy từ Muse.');for(const member of ids)this.store.transition(member,'cancelled',{note:'Hủy nháp local, chưa có lượt gửi.'});return true;}
   diskStatus(){return diskStatus(this.root,storagePolicy(this.store));}
-  status(){return {museNight:this.night.status(),storage:this.diskStatus(),version:'0.2.0',profiles:this.profiles(),jobs:this.store.jobs({withQueueNumber:true}).map(j=>({...j,profileName:(this.store.get('profiles',[]).find(p=>p.id===j.profileId)??this.store.get('deleted_profiles',[]).find(p=>p.id===j.profileId))?.name,provider:j.provider??'muse',request:{...j.request,references:j.request.references.map(({path,...r})=>r)},label:j.duplicateOf?'Trùng clip cũ #'+j.duplicateOf.number:j.importedAt?'Đã vào Thư viện':j.importError?'File đã tải · lỗi nhập':labels[j.state]})),paused:this.paused,active:this.active.size,budget:this.budget,batch:this.store.batch(),freeRamGb:Math.round(this.memory()/1024**3*10)/10,adapter:this.config(),connection:this.connection(),musePaused:museIsPaused(this.store),generationReady:!museIsPaused(this.store)&&!!this.config()?.enabled};}
+  status(){
+    this.store.recover({restart:false});
+    const jobs=this.store.jobs({withQueueNumber:true});
+    return {museNight:this.night.status(),storage:this.diskStatus(),version:'0.2.0',profiles:this.profiles(),jobs:jobs.map(j=>({...j,profileName:(this.store.get('profiles',[]).find(p=>p.id===j.profileId)??this.store.get('deleted_profiles',[]).find(p=>p.id===j.profileId))?.name,provider:j.provider??'muse',request:{...j.request,references:j.request.references.map(({path,...r})=>r)},label:isLostJob(j)?'Lỗi: mất dấu':j.duplicateOf?'Trùng clip cũ #'+j.duplicateOf.number:j.importedAt?'Đã vào Thư viện':j.importError?'File đã tải · lỗi nhập':labels[j.state]})),paused:this.paused,active:runningJobCount(jobs),budget:this.budget,batch:this.store.batch(),freeRamGb:Math.round(this.memory()/1024**3*10)/10,adapter:this.config(),connection:this.connection(),musePaused:museIsPaused(this.store),generationReady:!museIsPaused(this.store)&&!!this.config()?.enabled};
+  }
   async output(id){
     const j=this.store.job(id);if(j.state!=='ready'||!j.output)throw Error('Chưa có file đã kiểm tra.');
     const bytes=new Uint8Array(await readFile(j.output.path));
