@@ -17,3 +17,14 @@ export function dailyGuideLinks(productId='',projectId='') {
   {title:'Ghi quyết định cho vòng tiếp theo',text:'Đọc số mới nhất, chi phí và phản hồi thực tế. Đặt ngưỡng tín hiệu trong Cài đặt khi đã chốt; lưu quyết định mới để giữ lịch sử.',href:link('experiments'),action:'Mở Quyết định'},
  ];
 }
+
+export type GuideStepPart={text:string;highlight?:boolean};
+export const threeVideoGuideTitle='3 video cho 1 sản phẩm';
+export const threeVideoGuideSteps:GuideStepPart[][]=[
+ [{text:'Chọn một sản phẩm trong ô '},{text:'Sản phẩm dùng trong hướng dẫn',highlight:true},{text:' hoặc mở hồ sơ sản phẩm cần làm.'}],
+ [{text:'Bấm nút '},{text:'Làm video',highlight:true},{text:' trên hồ sơ sản phẩm.'}],
+ [{text:'App tự gửi Muse qua các hồ sơ gửi được (Cho, Duc, Chim). Bạn không cần chọn tay từng hồ sơ.'}],
+ [{text:'Chờ Muse tạo: thường khoảng 1–1,5 phút, phụ thuộc Muse. Giữ app mở trong lúc chờ.'}],
+ [{text:'App tải về và ghép thành 3 MP4 với 3 hook khác nhau.'}],
+ [{text:'Mở '},{text:'Thư viện',highlight:true},{text:' rồi vào '},{text:'Video',highlight:true},{text:' để xem 3 video của sản phẩm.'}],
+];
