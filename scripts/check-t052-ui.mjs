@@ -22,7 +22,7 @@ const oldJobs=JSON.stringify(store.jobs()),original=store.job('job0');
 const png=join(root,'fresh.png');await runMediaTool('ffmpeg',['-y','-v','error','-f','lavfi','-i','color=yellow:s=90x160','-frames:v','1',png]);
 const originalFetch=MuseAdapter.prototype.fetch;
 MuseAdapter.prototype.fetch=async(_page,_job,checkpoint,path)=>{await checkpoint('waiting');await checkpoint('downloading');await copyFile(png,path);return path;};
-try {await officeUI('T-052',f.records,async({page,origin,local,screenshot})=>{
+try {await officeUI(process.env.HERMES_UI_TASK||'T-052',f.records,async({page,origin,local,screenshot})=>{
   // Seeded assets via local server, no installation data.
   await mkdir(join(local.root,'media/local-owner'),{recursive:true});
   worker.root=dirname(local.root);
@@ -42,7 +42,16 @@ try {await officeUI('T-052',f.records,async({page,origin,local,screenshot})=>{
   await page.locator('.queue-detail').getByRole('button',{name:'Tiếp tục hội thoại này',exact:true}).click();
   await dialog.getByLabel('Muốn Muse làm tiếp gì?').fill('Tạo ảnh sản phẩm trên bàn, ánh sáng ấm.');await dialog.getByRole('button',{name:'Ảnh',exact:true}).click();
   await dialog.getByLabel('Ảnh tham chiếu (tối đa 4)').setInputFiles([{name:'reference.png',mimeType:'image/png',buffer:await readFile(png)}]);
-  for(const width of [1366,1920]){await page.setViewportSize({width,height:width===1366?900:1080});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await screenshot('continue-form-'+width);}
+  const hint=dialog.locator('#muse-continuation-language-hint');
+  assert.equal(await hint.innerText(),'Nên gõ tiếng Anh để Muse hiểu chính xác (tiếng Việt vẫn được, Muse tự chuyển ý).');
+  assert.equal(await dialog.getByLabel('Muốn Muse làm tiếp gì?').getAttribute('aria-describedby'),'muse-continuation-language-hint');
+  for(const width of [1366,1920]){
+    await page.setViewportSize({width,height:width===1366?900:1080});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    const textBox=await dialog.getByLabel('Muốn Muse làm tiếp gì?').boundingBox(),hintBox=await hint.boundingBox();
+    assert.ok(hintBox&&textBox&&hintBox.y>=textBox.y+textBox.height&&hintBox.x>=0&&hintBox.x+hintBox.width<=width);
+    assert.equal(await hint.isVisible(),true);await dialog.getByRole('button',{name:'Gửi tiếp',exact:true}).click({trial:true});
+    await screenshot('continue-form-'+width);
+  }
   await dialog.getByRole('button',{name:'Gửi tiếp',exact:true}).click();await dialog.waitFor({state:'hidden'});
   await page.waitForFunction(()=>document.querySelector('.queue-rows')?.textContent.includes('Tiếp tục · Clip dọc có tiếng'));
   const deadline=Date.now()+20000;while(worker.active.size||worker.pendingTicks.size){assert.ok(Date.now()<deadline);await new Promise(r=>setTimeout(r,20));}

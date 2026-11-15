@@ -60,7 +60,10 @@ test('T-057 repeated status/watchdog hash failures are cached; job, size, mtime 
   const before=await stat(path);await utimes(path,before.atime,new Date(before.mtimeMs+2000));worker.status();assert.ok(reads>previous);previous=reads;
   job=store.put({...job,output:{...output,size:10,sha256:hash('new bytes!')}});await writeFile(path,'bad bytes!');worker.status();assert.ok(reads>previous);previous=reads;
   // Repair at the same size without changing updatedAt: file metadata must invalidate the miss.
+  const beforeRepair=await stat(path);
   await writeFile(path,'new bytes!');
+  // Windows can timestamp both same-size writes in the same millisecond.
+  await utimes(path,beforeRepair.atime,new Date(beforeRepair.mtimeMs+2000));
   worker.status();assert.ok(reads>previous);assert.equal(store.job(job.id).state,'ready');
   // Receipt-only edits with the same timestamp cannot reuse a stale failure.
   job={...job,id:'receipt',output:{...job.output,sha256:hash('wrong')}};

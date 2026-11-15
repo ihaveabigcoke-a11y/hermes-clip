@@ -11,7 +11,7 @@ import {Store} from '../desktop/src/store.mjs';
 import {startLocalServer} from '../desktop/local/server.mjs';
 import {libraryFixture,digest} from '../desktop/test/fixtures/t051-library.mjs';
 import {MUSE_VIDEO_COMMAND} from '../desktop/src/muse-video-prompt.mjs';
-const source=resolve(process.env.HERMES_T052_LAUNCH_ROOT||'outputs/T-052-package/runtime'),out=resolve('outputs/T-052-launcher');await mkdir(out,{recursive:true});
+const source=resolve(process.env.HERMES_T052_LAUNCH_ROOT||'outputs/T-052-package/runtime'),out=resolve('outputs/'+(process.env.HERMES_UI_TASK||'T-052')+'-launcher');await mkdir(out,{recursive:true});
 const qa=await mkdtemp(join(out,'isolated-')),f=await libraryFixture(join(qa,'fixtures'));await mkdir(join(qa,'worker'));
 const local=await startLocalServer({root:join(qa,'worker/workspace'),seedPath:f.seedPath,uiDir:join(source,'desktop/local-dist/ui'),routesPath:join(source,'desktop/local-dist/server/routes.mjs')});await local.close();
 const config={enabled:true,startUrl:'https://muse.ai/thread/new',loggedIn:'#logged',prompt:'textarea',submitName:'Send',resultCards:'.result',resultIdAttribute:'data-message-id',readyWithinCard:'video',downloadButtonName:'Download',upload:'input',timeoutSeconds:900,reviewed:true};
@@ -40,6 +40,7 @@ try{
  await page.getByRole('button',{name:'Chi tiết Clip dọc có tiếng',exact:true}).click();
  await page.locator('.queue-detail').getByRole('button',{name:'Tiếp tục hội thoại này',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Tiếp tục hội thoại này'});
  await dialog.getByLabel('Muốn Muse làm tiếp gì?').fill('Giữ sản phẩm, đổi góc nhìn gần hơn.');
+ assert.equal(await dialog.locator('#muse-continuation-language-hint').innerText(),'Nên gõ tiếng Anh để Muse hiểu chính xác (tiếng Việt vẫn được, Muse tự chuyển ý).');
  for(const width of [1366,1920]){await page.setViewportSize({width,height:width===1366?900:1080});const name='continue-'+width+'.png';await page.screenshot({path:join(out,name),fullPage:true});shots.push(name);}
  await dialog.getByRole('button',{name:'Hủy',exact:true}).click();await page.reload();
  const after=await page.evaluate(()=>window.productLabDesktop.status());assert.equal(after.musePaused,false);assert.equal(after.jobs.length,3);assert.equal(after.active,0);assert.equal(after.budget,0);assert.deepEqual(errors,[]);
