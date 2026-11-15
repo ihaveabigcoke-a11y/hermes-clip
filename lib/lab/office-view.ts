@@ -2,6 +2,7 @@ import {z} from 'zod';
 import {VIETNAM_TIME_ZONE,vietnamDay,type LabRecord} from './domain.ts';
 import {selectionEntries} from './daily-selection.ts';
 import {renderPlanSchema,renderDuration} from './render-plan.ts';
+import {museVideoLimitLabel} from './muse-limit.ts';
 
 export const officeGroups={queued:'Hàng chờ',sending:'Đang gửi',generating:'Đang tạo',checking:'Kiểm / nhập',library:'Đã vào Thư viện',manual:'Chờ file tay',attention:'Cần đối soát',failed:'Lỗi',stopped:'Đã dừng',refused:'Muse từ chối/giới hạn',unmapped:'Chưa phân loại'} as const;
 export type OfficeGroup=keyof typeof officeGroups;
@@ -41,7 +42,7 @@ export function buildOfficeView(records:LabRecord[],workerStore:any=[],manual:an
     const lastEvent={at:updatedAt,note:group==='refused'?'Muse từ chối/giới hạn':raw.importError?'File đã tạo nhưng chưa nhập được. Mở lượt gốc để đối soát.':note(state,output)};
     if(!history.length||history.at(-1)?.state!==state||history.at(-1)?.at!==updatedAt)history.push({at:updatedAt,state,note:lastEvent.note});
     const project=projectOf(projectId);
-    runs.push({id,kind,productId:identifier(project?.data.productId??raw.request?.productId),productionId:identifier(projectId),sceneId:identifier(sceneId),variantId:identifier(variantId),provider:provider(source),state,group,createdAt:iso(raw.createdAt),updatedAt,lastEvent,history:history.slice(-20),needsAction:['attention','failed','manual','unmapped','refused'].includes(group)?{reason:group==='refused'?'Muse đã từ chối/giới hạn; dừng đêm này và dùng manual.':group==='attention'?(raw.importError?'File đã có nhưng chưa nhập được vào Thư viện.':state==='unmatched'?'File chưa khớp cảnh; cần gắn trong Hộp nhận media.':'Kết quả chưa rõ; đối soát trước khi tạo lại.'):group==='manual'?'Đang chờ file tải về được gắn vào cảnh.':group==='failed'?'Lượt kết thúc lỗi; mở tác vụ gốc để xem chi tiết.':'Trạng thái chưa có quy tắc phân loại.'}:null,outputs:{assetId:output,takeId:identifier(takeId)}});
+    runs.push({id,kind,productId:identifier(project?.data.productId??raw.request?.productId),productionId:identifier(projectId),sceneId:identifier(sceneId),variantId:identifier(variantId),provider:provider(source),state,group,createdAt:iso(raw.createdAt),updatedAt,lastEvent,history:history.slice(-20),needsAction:['attention','failed','manual','unmapped','refused'].includes(group)?{reason:group==='refused'?(museVideoLimitLabel(raw.errorMessage??raw.error??raw.lastError,raw.failedAt??raw.updatedAt,raw.retryAt)??'Muse đã từ chối/giới hạn; dừng đêm này và dùng manual.'):group==='attention'?(raw.importError?'File đã có nhưng chưa nhập được vào Thư viện.':state==='unmatched'?'File chưa khớp cảnh; cần gắn trong Hộp nhận media.':'Kết quả chưa rõ; đối soát trước khi tạo lại.'):group==='manual'?'Đang chờ file tải về được gắn vào cảnh.':group==='failed'?'Lượt kết thúc lỗi; mở tác vụ gốc để xem chi tiết.':'Trạng thái chưa có quy tắc phân loại.'}:null,outputs:{assetId:output,takeId:identifier(takeId)}});
   }
   for(const job of jobs) {
     const p=projectOf(job.request?.projectId),scene=p?.data.scenes?.find((s:any)=>s.id===job.request?.sceneId);
