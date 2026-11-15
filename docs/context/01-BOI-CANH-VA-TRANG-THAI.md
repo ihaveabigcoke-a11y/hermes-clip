@@ -1,3 +1,11 @@
+# T-045 — thư viện nhân vật, đạt QA local, 15/11/2026
+
+Source `a8c9426` + `0b07146`: menu Nhân vật, CRUD 1–3 ảnh, tên Unicode duy nhất và xoá có xác nhận. Công tắc Giữ nguyên nhân vật mặc định tắt; bật + @tên đính ảnh qua worker hiện có, tối đa 4 ảnh tổng; tên lạ bị chặn trước enqueue. Migration thêm bảng riêng, giữ dữ liệu cũ, media và receipt. Chip có ảnh/@tên trong form video.
+
+922 kiểm khác nhau + typecheck đạt, 6 ảnh UI và 2 ảnh launcher QA 1366/1920. Build riêng trong outputs lúc 18:53:53 +07; IPC thật trên fixture đính 2 ảnh, không gửi Muse, giữ công tắc. **Chưa áp build vào app thật đang mở** để giữ phiên/luồng hiện có. Không AppData/DB/profile/cookie thật, không kiểm Muse/VPN/Chi thật. Áp sau khi app đóng bằng local:build mặc định rồi launcher, không chép dữ liệu QA. Chi tiết [T-045](../../ops/office/reports/T-045.md); SHA/push cuối ở STATUS văn phòng.
+
+---
+
 # T-044 — prompt nối khung, chưa đạt nghiệm thu thật, 15/11/2026
 
 Source `4f6d33f` thêm một dòng tiếng Anh cho mỗi hook, dùng mô tả thân đã duyệt và đúng điểm cắt; giữ command cố định, cảnh, worker/đường gửi và công tắc. MusePackage cần thay nội dung prompt để đường ba hồ sơ nhận cùng câu nối với manual/bundle. 907 kiểm khác nhau + typecheck, build và launcher QA 1366/1920 đạt.
