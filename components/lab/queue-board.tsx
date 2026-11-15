@@ -14,6 +14,8 @@ import {Badge, Button, Empty, Modal, Pagination, SearchBox} from './primitives';
 import {retryBlockedReason} from '@/desktop/src/job-retry.mjs';
 import {museVideoBody} from '@/desktop/src/muse-video-prompt.mjs';
 import {MuseVideoCommand} from './muse-video-command';
+import {copyWorkbenchText} from './workbench-controls';
+import {museThreadUrl} from '@/desktop/src/muse-thread-url.mjs';
 
 type Props = {
   status: DesktopStatus | null;
@@ -262,6 +264,13 @@ function QueueDetails({job, label, tone, profileName, busy, musePaused, primary,
 }) {
   const [mediaError, setMediaError] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [copyNotice, setCopyNotice] = useState('');
+  const threadUrl = museThreadUrl(job.providerUrl);
+  async function copyThread() {
+    if (!threadUrl) return;
+    try { await copyWorkbenchText(threadUrl); setCopyNotice('Đã sao chép link hội thoại'); }
+    catch { setCopyNotice('Không sao chép được link hội thoại. Vui lòng thử lại.'); }
+  }
   const [body, setBody] = useState(job.request.mediaType==='video'?museVideoBody(job.request.prompt):job.request.prompt);
   const retryReason=retryBlockedReason(job);
   const retryOf=(job as DesktopJob & {retryOf?: string}).retryOf;
@@ -296,10 +305,12 @@ function QueueDetails({job, label, tone, profileName, busy, musePaused, primary,
       <a className="lab-button neutral" href={projectUrl}>Mở dự án</a>
       {job.uploadedAssetId && <a className="lab-button neutral" href={'?view=library&lib_asset=' + encodeURIComponent(job.uploadedAssetId)}>Xem trong Thư viện</a>}
       {job.providerUrl && <Button tone="neutral" disabled={busy||musePaused} onClick={() => onAction('openResult', {id: job.id})}>{musePaused?'Muse đang tạm dừng':uiCopy.openMuseResult}</Button>}
+      {threadUrl && <Button tone="neutral" onClick={() => void copyThread()}>Sao chép link</Button>}
       {job.state === 'queued' && <Button tone="ghost" disabled={busy} onClick={() => onAction('cancel', {id: job.id})}>Hủy bản nháp</Button>}
       {(job.output || job.failedFilePath || job.diagnosticPath) && <Button tone="ghost" disabled={busy} onClick={() => onAction('reveal', {id: job.id})}>Mở vị trí file</Button>}
       {job.state === 'ready' && onImport && <Button disabled={busy} onClick={() => onImport(job)}>Nhập file vào dự án</Button>}
     </div>
+    {copyNotice && <p role="status">{copyNotice}</p>}
     {editing&&<form className="queue-detail-section" onSubmit={event=>{event.preventDefault();void onRetry([{id:job.id,body}],true);}}>
       {job.request.mediaType==='video'&&<MuseVideoCommand/>}
       <label className="field">Mô tả cảnh<textarea aria-label="Mô tả cảnh" rows={7} maxLength={9900} value={body} disabled={busy} onChange={event=>setBody(job.request.mediaType==='video'?museVideoBody(event.target.value):event.target.value)}/></label>

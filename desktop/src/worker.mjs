@@ -1,5 +1,6 @@
 import {museIsPaused,assertMuseAvailable,assertMuseNewTask,runMuseTask} from './muse-pause.mjs';
 import {MuseNight,assertMusePage,museFailureKind} from './muse-night.mjs';
+import {museVideoLimitReceipt} from './muse-error-receipt.mjs';
 import {assertDiskSpace,diskStatus,storagePolicy,browserCacheArgs,trimProfileCaches} from './storage-policy.mjs';
 import {randomUUID,createHash} from 'node:crypto';
 import {mkdir,writeFile,readFile,stat,rename,unlink} from 'node:fs/promises';
@@ -742,6 +743,7 @@ export class Worker {
           failureCode:typeof error.code==='string'?error.code:null,
           failureDetail:String(error.message??'').replace(/https?:\/\/\S+/g,'[URL]').slice(0,1200),
           ...(['MUSE_NO_MEDIA','MUSE_BUNDLE_UNMAPPED','MUSE_BUNDLE_TIMEOUT','MUSE_MULTIPLE_RESULTS'].includes(error.code) ? {providerUrl:error.providerUrl,providerResponse:error.providerResponse,unmappedProviderIds:error.providerIds} : {}),
+          ...museVideoLimitReceipt(error),
           note: job.state === 'validating'
             ? 'File không đạt tỷ lệ/thời lượng hoặc không giải mã được. Giữ file trên máy để xem lại.'
             : safeMessage(error),

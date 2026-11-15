@@ -11,7 +11,7 @@ import WorkerActivity from './worker-activity';
 import MuseHealthCard from './muse-health-card';
 import QueueBoard from './queue-board';
 import {PageSelection,useWorkbenchSelection} from './workbench-controls';
-import {profileInput,adapterInput,museConnectionInput} from '@/desktop/src/shared.mjs';
+import {profileInput,adapterInput,museConnectionInput,museTimeoutSeconds} from '@/desktop/src/shared.mjs';
 import {desktopBridge,fetchAssetBytes,uploadDesktopOutput,type DesktopJob,type DesktopProfile} from '@/lib/lab/desktop-client';
 import {sceneGate,type Production} from '@/lib/lab/production';
 import {formatTime,type LabRecord} from '@/lib/lab/domain';
@@ -90,7 +90,10 @@ export default function DesktopConsole({projectId,production:p,product,assets=[]
    <div className="account-actions"><Button tone="neutral" title={musePaused?musePauseHelp:undefined} disabled={musePaused||busy||profile.busy||!profile.enabled} onClick={()=>action('checkProfile',{id:profile.id})}>Đo hạn mức</Button><Button title={musePaused?musePauseHelp:undefined} disabled={musePaused||busy||profile.busy||!profile.enabled||!status.connection} onClick={()=>action('openProfile',{id:profile.id})}>{profile.session==='signed_in'?'Mở Chrome':'Đăng nhập'}</Button><Button tone="ghost" disabled={busy||profile.busy||profile.open} onClick={()=>profileForm(profile)}>Sửa / proxy</Button><Button tone="ghost" disabled={busy||!!profile.deleteBlockedReason} title={profile.deleteBlockedReason||'Xóa hồ sơ; giữ video và lịch sử'} onClick={()=>deleteProfileForm(profile)}>Xóa hồ sơ</Button>{profile.deleteCanSkip&&<Button tone="ghost" disabled={busy} onClick={()=>deleteProfileForm(profile,true)}>Bỏ qua và xóa</Button>}{profile.open&&<Button tone="ghost" disabled={busy||profile.busy} onClick={()=>action('closeProfile',{id:profile.id})}>Đóng trình duyệt</Button>}{profile.vpnEnabled&&<Button tone="ghost" title={musePaused?musePauseHelp:undefined} disabled={musePaused||busy||profile.busy||!profile.enabled} onClick={()=>action('openVpn',{id:profile.id})}>Mở VPN</Button>}{profile.deleteBlockedReason&&<small role="status">{profile.deleteBlockedReason}</small>}</div>
  </article>)}</div>
  {!status?.profiles.length&&<Empty title="Thêm tài khoản Muse đầu tiên" text="Tạo hồ sơ rồi đăng nhập trong trình duyệt mở ra."/>}
- <details className="account-advanced"><summary>Cấu hình Muse và dữ liệu</summary><div className="button-row"><Button tone="neutral" disabled={busy} onClick={connectionForm}>Trang Muse</Button><Button tone="neutral" disabled={busy||!status?.connection} onClick={flowForm}>Luồng Muse</Button><Button tone="neutral" disabled={busy} onClick={()=>action('revealWorkspace')}>Thư mục dữ liệu</Button><Badge tone={status?.generationReady?'success':'warning'}>{status?.generationReady?'Luồng Muse đã bật':'Chờ cấu hình Muse'}</Badge></div></details>
+ <details className="account-advanced"><summary>Cấu hình Muse và dữ liệu</summary>
+ <MuseTimeoutForm adapter={status?.adapter} busy={busy} onSave={value=>execute('saveAdapter',value)}/>
+ <div className="field"><span>Thư mục xuất</span><p style={{overflowWrap:'anywhere'}}>{status?.exportDirectory || 'Chưa có đường dẫn thư mục xuất.'}</p></div>
+ <div className="button-row"><Button tone="neutral" disabled={busy||!status?.exportDirectory} onClick={()=>action('revealExports')}>Mở thư mục xuất</Button><Button tone="neutral" disabled={busy} onClick={connectionForm}>Trang Muse</Button><Button tone="neutral" disabled={busy||!status?.connection} onClick={flowForm}>Luồng Muse</Button><Button tone="neutral" disabled={busy} onClick={()=>action('revealWorkspace')}>Thư mục dữ liệu</Button><Badge tone={status?.generationReady?'success':'warning'}>{status?.generationReady?'Luồng Muse đã bật':'Chờ cấu hình Muse'}</Badge></div></details>
  </>}
  {(mode === 'queue' || !!p) && <>
  {p&&<div className="worker-scene-picker"><h3>Giao cảnh cho tác vụ nền</h3><p>Thêm vào tác vụ nền chỉ lưu nháp trên máy. Sau đó duyệt số lượt trước khi gửi Muse.</p><div className="desk-bulk"><PageSelection ids={visible.map(s=>s.id)} selected={selected.keys} onToggle={()=>selected.togglePage(visible.map(s=>s.id))}/><span>{selected.keys.length} cảnh đã chọn</span></div>{visible.map(s=><label key={s.id} className="worker-scene"><input type="checkbox" checked={selected.keys.includes(s.id)} onChange={()=>selected.toggle(s.id)}/><span><strong>{s.name}</strong> · v{s.revision} · {s.ratio} · {s.duration}s<small>{s.storyboardApproved?"Khung content đã duyệt":"Cần duyệt khung content"} · {s.references.length} tham chiếu</small>{promptWarnings(s,p).map(w=><small key={w}>{w}</small>)}</span></label>)}<Pagination page={sp} total={scenes.length} onPage={setScenePage}/><Button disabled={musePaused||busy||demo||paused||p.paused||!selected.keys.length} busy={busy} onClick={()=>void enqueue()}>Thêm {selected.keys.length} cảnh nháp vào tác vụ nền</Button></div>}
@@ -99,6 +102,28 @@ export default function DesktopConsole({projectId,production:p,product,assets=[]
    onImport={onImport && !demo ? job => void receive(job) : undefined}/></>}<WorkerActivity status={status} projectId={projectId} error={statusError} showMuseStatus={mode!=='accounts'}/></>}
  <Modal open={!!form} title={form?.title??''} description={form?.description} onClose={()=>{setForm(null);setDirty(false);}} dirty={dirty} locked={busy}>{form&&<RecordForm key={form.title+String(form.initial.id??'')} kind="settings" initial={form.initial} fields={form.fields} validation={form.validation} submitLabel={form.submitLabel} onDirty={setDirty} onCancel={()=>setForm(null)} onSave={async v=>{await form.save(v);setDirty(false);setForm(null);}}/>}</Modal>
  </section>;
+}
+
+function MuseTimeoutForm({adapter,busy,onSave}:{adapter:any;busy:boolean;onSave:(value:any)=>Promise<unknown>}) {
+ const [seconds,setSeconds]=useState(String(adapter?.timeoutSeconds??900));
+ const [notice,setNotice]=useState(''),[error,setError]=useState('');
+ useEffect(()=>{setSeconds(String(adapter?.timeoutSeconds??900));},[adapter?.timeoutSeconds]);
+ async function save(event:React.FormEvent) {
+  event.preventDefault();setNotice('');setError('');
+  const parsed=museTimeoutSeconds.safeParse(Number(seconds));
+  if(!parsed.success){setError(parsed.error.issues[0].message);return;}
+  if(!adapter){setError('Cấu hình luồng Muse trước khi lưu thời gian chờ.');return;}
+  try {await onSave({...adapter,timeoutSeconds:parsed.data});setNotice('Đã lưu thời gian chờ tối đa mỗi lượt.');}
+  catch(e){setError((e as Error).message);}
+ }
+ return <form onSubmit={event=>void save(event)} noValidate>
+  <label className="field" htmlFor="muse-timeout">Thời gian chờ tối đa mỗi lượt (giây)
+   <input id="muse-timeout" type="number" min={60} max={1800} step={1} required value={seconds} disabled={busy} aria-describedby="muse-timeout-help" aria-invalid={!!error} onChange={event=>{setSeconds(event.target.value);setNotice('');setError('');}}/>
+  </label>
+  <p id="muse-timeout-help" className="field-help">60–1800 giây, mặc định 900. Đóng hồ sơ Muse trước khi lưu.</p>
+  <Button type="submit" tone="neutral" disabled={busy||!adapter}>Lưu thời gian chờ</Button>
+  {error&&<p role="alert">{error}</p>}{notice&&<p role="status">{notice}</p>}
+ </form>;
 }
 
 const vpnLabels:Record<string,string>={closed:'đã đóng',installing:'đang cài',connecting:'đang kết nối',connected:'đã kết nối',error:'cần kiểm tra',off:'tắt'};
