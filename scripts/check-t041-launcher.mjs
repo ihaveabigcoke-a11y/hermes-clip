@@ -21,7 +21,7 @@ await writeFile(hook,`if(process.versions.electron&&process.type==='browser')set
  app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest((d,done)=>{const u=new URL(d.url);done({cancel:!['127.0.0.1','localhost'].includes(u.hostname)&&!['devtools:','file:','data:','blob:'].includes(u.protocol)});}));
 });`);
 const fixture=new Store(join(qa,'worker','worker.sqlite')),night=new MuseNight(fixture);
-const profiles=['Cho','Duc','Chim','Chi'].map(name=>({id:name,name,enabled:true,proxy:{server:'',username:''},vpnEnabled:true,session:'unknown',health:'unknown'}));
+const profiles=['Cho','Duc','Chim','Chi'].map(name=>({id:name,name,enabled:true,proxy:{server:'',username:''},vpnEnabled:true,session:'unknown',health:'unknown',checkedAt:null}));
 fixture.set('profiles',profiles);fixture.set('muse_paused',false);fixture.set('hermes_vpn_migrated',true);night.begin();
 for(const p of profiles)night.outcome('synthetic-'+p.id,{code:'MUSE_REFUSED'},p.id);fixture.close();
 const log=openSync(join(out,'launcher.log'),'w');
