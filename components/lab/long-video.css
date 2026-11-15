@@ -1,0 +1,7 @@
+.long-video-form { display: grid; gap: 18px; padding: 22px; }
+.long-video-form .field { display: grid; gap: 8px; min-width: 0; }
+.long-video-form p { margin: 0; font-weight: 400; }
+.long-video-form small { font-weight: 400; }
+.long-video-form textarea, .long-video-form select { width: 100%; }
+.long-video-panel .info-panel, .long-video-panel .production-card { margin-block: 12px; }
+.long-video-panel .button-row { gap: 14px; flex-wrap: wrap; }

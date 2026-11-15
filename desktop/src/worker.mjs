@@ -457,7 +457,8 @@ export class Worker {
     }
     return {...result, job: this.store.job(result.job.id)};
   }
-  async start({count, maxConcurrent, jobIds}) {
+  async start({count, maxConcurrent, jobIds, sequenceId}) {
+    if(this.longVideoOwner&&sequenceId!==this.longVideoOwner)throw Error('Video dài đang chạy tuần tự. Chờ chuỗi kết thúc trước khi gửi thêm.');
     assertMuseNewTask(this.store);
     if(this.night.current())this.night.assertRoom(count);
     const dispatchVersion = this.dispatchVersion;
@@ -470,11 +471,13 @@ export class Worker {
     const queued = this.store.jobs().reverse().filter(job => job.state === 'queued');
     const pending = jobIds ? queued.filter(job => jobIds.includes(job.id)) : queued.slice(0, count);
     if (pending.length !== count) throw Error('Số lượt vượt số job nháp hiện có.');
+    if(pending.some(j=>j.request.longVideo&&(j.request.longVideo.runId!==sequenceId||sequenceId!==this.longVideoOwner)))throw Error('Cảnh thuộc chuỗi Video dài; không gửi lẻ hoặc chạy lại.');
     if(pending.some(job=>job.retryOf)){this.night.begin();this.night.assertRoom(count);}
     if(pending.some(j=>j.bundleParentId))throw Error('Cảnh thuộc một tin Muse chung. Kiểm tra lượt gốc trước khi gửi.');
     if (!this.store.get('profiles', []).some(profile => profile.enabled)) throw Error('Thêm profile và đăng nhập Muse trong Tài khoản.');
     for (const job of pending) await this.validateMediaProvider?.(job.request);
     if (dispatchVersion !== this.dispatchVersion) return false;
+    if(this.longVideoOwner&&sequenceId!==this.longVideoOwner)throw Error('Video dài đang chạy tuần tự. Chờ chuỗi kết thúc trước khi gửi thêm.');
     assertMuseNewTask(this.store);
     for (const job of pending) {
       this.attemptedProfiles.set(job.id, new Set());
@@ -617,7 +620,7 @@ export class Worker {
           : this.store.transition(id, state, {note: labels[state], ...patch});
           if(state==='submitting'||state==='submitted')for(const [index,member] of bundle.entries())if(member!==id)this.store.transition(member,state,{profileId,submittedViaParent:id,providerUrl:patch.providerUrl??null,providerId:patch.bundleProviderIds?.[index]??null,note:'Cảnh trong một tin Muse; không gửi riêng.'});
           return result;};
-        if(state==='submitting'&&this.night.current())return this.night.admit(id,()=>!museIsPaused(this.store)&&!this.paused&&this.store.get('profiles',[]).some(profile=>profile.id===profileId&&profile.enabled&&retryProfileAllowed(this.store.job(id),profile)),profileId).then(transition);
+        if(state==='submitting'&&this.night.current())return this.night.admit(id,()=>!museIsPaused(this.store)&&!this.paused&&this.store.get('profiles',[]).some(profile=>profile.id===profileId&&profile.enabled&&retryProfileAllowed(this.store.job(id),profile)),profileId).then(async()=>{if(this.store.job(id).request.longVideo)await this.validateMediaProvider?.(this.store.job(id).request,{admitted:true});return transition();});
         return transition();
       };
       if (!resume) {
@@ -814,11 +817,13 @@ export class Worker {
     })();
   }
   async retry(id) {
+    if(this.store.job(id).request.longVideo)throw Error('Video dài không thử lại. Giữ cảnh và đối soát lượt đã gửi.');
     await this.assertJobNotSkipped(id);
     return this.store.retry(id);
   }
   async retryMany(payload) {
     const {items,requestId}=retryBatchInput.parse(payload);
+    if(items.some(item=>this.store.job(item.id).request.longVideo))throw Error('Video dài không thử lại. Giữ cảnh và đối soát lượt đã gửi.');
     for(const item of items)await this.assertJobNotSkipped(item.id);
     return this.store.retryMany(items,requestId);
   }

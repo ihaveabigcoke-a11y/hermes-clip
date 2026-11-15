@@ -14,6 +14,7 @@ const {registerNewRender}=await import('./asset-compression.mjs');
 const {ProductDeployment}=await import('./product-deployment.mjs');
 const {ManualMedia}=await import('./manual-media.mjs');
 const {MusePackage}=await import('./muse-package.mjs');
+const {LongVideo}=await import('./long-video.mjs');
 const {ResearchRunner}=await import('./research-runner.mjs');
 const {maintainStorage,STORAGE_DEFAULTS}=await import('./storage-policy.mjs');
 const {Store}=await import('./store.mjs');
@@ -76,6 +77,13 @@ async function startApplication() {
   worker.readProductionForProfileRemoval=id=>local.readProductionForProfileRemoval(id);
  }
  const integrations=new Integrations(store,root);
+ const longVideo=manual?new LongVideo({worker,manual,integrations,local,domain:await import('../local-dist/server/lib/lab/long-video.mjs'),changed:()=>{if(!win.isDestroyed())win.webContents.send('product-lab:workspace-changed');}}):null;
+ if(longVideo){
+  const validate=worker.validateMediaProvider,receive=worker.receiveOutput;
+  worker.validateMediaProvider=(request,options)=>request.longVideo?longVideo.assertRequest(request):validate(request,options);
+  worker.receiveOutput=id=>store.job(id).request.longVideo?longVideo.importJob(id):receive(id);
+  app.on('before-quit',()=>longVideo.shutdown());
+ }
  const earlyRenders=manual?new EarlyVideoRender({records:()=>manual.records(),readOutput:id=>worker.output(id),readAsset:async id=>{const response=await manual.request('/api/assets/'+id);if(!response.ok)throw Error('Không đọc được nguồn dựng.');return new Uint8Array(await response.arrayBuffer());},compose:input=>integrations.compose(input),onTiming:(id,stage)=>{const job=store.job(id);store.put({...job,timings:{...job.timings,[stage]:Date.now()}});}}):null;
  worker.onReadyOutput=(job,readOutput)=>earlyRenders?.start(job,readOutput);
  worker.onRejectedBundle=projectId=>earlyRenders?.discard(projectId);
@@ -91,6 +99,7 @@ async function startApplication() {
  try{integrations.loadInstalledConfig(JSON.parse((await readFile(join(here,'../.integrations/config.json'),'utf8')).replace(/^\uFEFF/,'')));}catch{}
  const calls={assistantSettings:()=>assistantSettings.status(),saveAssistantSettings:p=>assistantSettings.save(p),integrationStatus:()=>integrations.status(),saveIntegrations:p=>integrations.saveConfig(p),checkIntegrations:()=>integrations.doctor(),integrationResearch:p=>integrations.research(p),integrationAnalyze:p=>integrations.analyze(p),integrationFrames:p=>integrations.frames(p.id),integrationAnalyzeStructure:p=>integrations.analyzeStructure(p),integrationStructure:p=>integrations.structure(p),integrationYoutubeStatus:()=>integrations.youtubeStatus(),integrationAnalyzeYoutube:p=>integrations.analyzeYoutube(p),renderOpenMontage:async p=>{const job=await integrations.compose(p),result={...await integrations.output(job.id),jobId:job.id};if(local)result.preparedToken=local.registerPreparedMedia(result);return result;},status:()=>({...worker.status(),compression:local?.compressionStatus(),storageMode:local?'local':'hosted'}),revealWorkspace:async()=>{if(!local)throw Error('Bản này đang dùng dữ liệu hosted.');await shell.openPath(local.root);return true;},saveProfile:p=>worker.saveProfile(p),openProfile:p=>worker.openProfile(p.id),openVpn:p=>worker.openVpn(p.id),closeProfile:p=>worker.closeProfile(p.id),checkProfile:p=>worker.checkProfile(p.id),checkAllProfiles:()=>worker.checkAllProfiles(),saveAdapter:p=>worker.saveAdapter(p),saveMuseConnection:p=>worker.saveMuseConnection(p),enqueue:p=>worker.enqueue(p),enqueueAndRun:p=>worker.enqueueAndRun(p),start:p=>worker.start(p),newBatch:()=>worker.newBatch(),pause:()=>worker.pause(),cancel:p=>worker.cancel(p.id),resume:p=>worker.resume(p.id,{recoverExisting:p.recoverExisting===true}),linkResult:p=>worker.linkResult(p),retry:p=>worker.retry(p.id),output:async p=>{const result=await worker.output(p.id);if(local)result.preparedToken=local.registerPreparedMedia({...store.job(p.id).output,type:result.type});return result;},acknowledge:p=>worker.acknowledge(p.id,p.assetId),render:async p=>{const ass=p.referenceOverlay?await integrations.reaAss(p.referenceOverlay,p.clips.reduce((n,c)=>n+c.duration,0)):null;const result=await worker.render(p,ass);if(local)result.preparedToken=registerNewRender(local,result);return result;},reveal:p=>{const j=store.job(p.id),path=j.output?.path||j.failedFilePath||j.diagnosticPath;if(!path)throw Error('Chưa có file để mở.');shell.showItemInFolder(path);return true;}};
  calls.enqueue=p=>enqueueMuseJob(worker,p);
+ Object.assign(calls,{longVideoStart:p=>{if(!longVideo)throw Error('Video dài cần workspace local.');return longVideo.start(p);},longVideoStatus:p=>longVideo?.status(p)??[],longVideoStop:p=>{if(!longVideo)throw Error('Video dài cần workspace local.');return longVideo.stop(z.object({id:z.string().regex(/^[\w-]{1,120}$/)}).parse(p).id);}});
  Object.assign(calls,{renderPlannedVideo:async input=>{
   const {getRenderPlan,assertRenderRevision}=await import('../local-dist/server/lib/lab/render-plan.mjs');
   const d=z.object({projectId:z.string(),variantId:z.string(),revision:z.number().int().positive(),planSignature:z.string().max(50000).optional(),filename:z.string().regex(/^[a-zA-Z0-9_-]{1,170}\.mp4$/).optional()}).parse(input);

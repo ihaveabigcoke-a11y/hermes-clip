@@ -1,4 +1,5 @@
 import { z } from "zod";
+import {longVideoSettingsSchema} from './long-video.ts';
 import {museMediaPrompt,museVideoBody} from '../../desktop/src/muse-video-prompt.mjs';
 import {renderPlanSchema,validateRenderPlan,getRenderPlan} from "./render-plan.ts";
 
@@ -157,6 +158,7 @@ export const formulaDraftInputSchema = z.object({
 });
 export const measurementSchema = z.object({variantId:id,views:z.number().int().nonnegative().max(1e12),clicks:z.number().int().nonnegative().max(1e12),sessions:z.number().int().nonnegative().max(1e10),orders:z.number().int().nonnegative().max(1e10),delivered:z.number().int().nonnegative().max(1e10),returned:z.number().int().nonnegative().max(1e10),netRevenue:z.number().nonnegative().max(1e9),totalCosts:z.number().nonnegative().max(1e9),source:z.string().trim().min(3,"Ghi nguồn số liệu.").max(500),notes:text(2000)}).superRefine((v,c)=>{for(const [a,b] of [["orders","sessions"],["delivered","orders"],["returned","delivered"]] as const)if(v[a]>v[b])c.addIssue({code:"custom",path:[a],message:`${a} không được lớn hơn ${b}.`});});
 export const productionSchema = z.object({
+  longVideo: longVideoSettingsSchema.optional(),
   mediaProvider: mediaProviderSchema.optional(),
   schemaVersion: z.literal(1), name: z.string().trim().min(1).max(150), productId: id,
   productRevision: z.number().int().positive(), creativeId: text(120),
@@ -259,6 +261,7 @@ export function pendingTakeSelection(p: Pick<Production,'bodies'|'variants'>) {
   return bodyIds.length||variantIds.length?{state:'waiting_take' as const,label:'Chờ chọn take',bodyIds,variantIds}:null;
 }
 const commandSchemas: Record<string, z.ZodTypeAny> = {
+  long_video_settings:longVideoSettingsSchema,
   reference: referenceSchema.omit({version:true,createdAt:true}),
   scene: sceneInputSchema.extend({ id }),
   import: z.object({rows:z.array(sceneInputSchema.extend({id})).min(1).max(30)}),
@@ -305,7 +308,9 @@ export function applyProduction(p0: Production, action: string, input: unknown, 
     }
     else p.scenes.push({...values,revision:1,references:refs,storyboardApproved:false,attempts:[],takes:[]});
   };
-  if(action==="reference") {
+  if(action==='long_video_settings') {
+    p.longVideo=d;
+  } else if(action==="reference") {
     const previous=p.references.filter(r=>r.id===d.id);
     p.references.push({...d,version:Math.max(0,...previous.map(r=>r.version))+1,createdAt:now});
     p.scenes.filter(s=>s.references.some(r=>r.id===d.id)).forEach(s=>{s.storyboardApproved=false;});

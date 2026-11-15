@@ -1,4 +1,5 @@
 "use client";
+import {LongVideoPanel} from './long-video';
 import {CharacterPromptOptions} from "./characters";
 import {museMediaPrompt,museVideoBody} from '@/desktop/src/muse-video-prompt.mjs';
 import {MuseVideoCommand} from './muse-video-command';
@@ -198,6 +199,7 @@ export default function ProductionStudio({records,demo,offline,paused,onRecord,r
   const logRows=p?filterRows([...p.events].reverse()):[];
   return <section className="production-workbench" aria-label="Xưởng sản xuất video">
     <header className="production-projectbar"><div className="projectbar-title"><span className="header-brand">Hermes<span> Clip</span><i>/</i></span><h1>{surface==="images"?"Tạo ảnh":surface==="library"?"Thư viện":"Tạo video"}</h1></div><label htmlFor="production-project" className="sr-only">Dự án đang làm</label><select id="production-project" value={record?.id??""} disabled={busy} onChange={e=>route(e.target.value,stage,"")}>{!projects.length&&<option value="">Chọn hoặc tạo dự án</option>}{projects.map(r=><option key={r.id} value={r.id}>{r.data.name}</option>)}</select><div className="projectbar-actions"><Button tone="neutral" disabled={disabled||!products.length} onClick={()=>createProject()}><Plus size={15}/>Dự án</Button>{p&&<Button tone="neutral" disabled={disabled} onClick={()=>act("pause",{paused:!p.paused})}>{p.paused?"Mở giao việc":"Tạm dừng"}</Button>}<Button tone="ghost" disabled={busy} onClick={reload} aria-label="Tải lại dữ liệu dự án"><RefreshCw size={15}/></Button><Button tone="ghost" disabled={busy} onClick={onSwitchMode}>{demo?"Dùng dữ liệu của bạn":"Xem bản mẫu"}</Button></div></header>
+    {record&&surface==='production'&&<LongVideoPanel key={record.id} project={record} disabled={disabled||demo} onRecord={onRecord}/>}
     {error&&<div className="inline-error" role="alert"><p>{error}</p>{uncertain?<Button tone="neutral" busy={busy} onClick={()=>void reconcile()}>Đối soát cùng mã yêu cầu</Button>:<Button tone="ghost" onClick={reload}>Tải lại dữ liệu</Button>}</div>}
     {productChanged&&<div className="info-panel"><p>Hồ sơ sản phẩm đã đổi từ v{p?.productRevision} sang v{product?.revision}. Đồng bộ sẽ yêu cầu duyệt lại; phiên bản cũ được giữ.</p><Button tone="neutral" disabled={disabled} onClick={()=>act("sync_product",{})}>Đồng bộ phiên bản sản phẩm</Button></div>}
     {progress&&<div className="info-panel" role="status">{progress}<Button tone="ghost" onClick={()=>controller.current?.abort()}>Hủy xuất</Button></div>}
