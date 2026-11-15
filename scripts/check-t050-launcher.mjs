@@ -14,10 +14,10 @@ import {validateMedia} from '../desktop/src/media.mjs';
 import {createHash} from 'node:crypto';
 import {MUSE_VIDEO_COMMAND} from '../desktop/src/muse-video-prompt.mjs';
 
-const source=resolve('.'),out=resolve('outputs/T-050-launcher');await mkdir(out,{recursive:true});
+const source=resolve(process.env.HERMES_T050_LAUNCH_ROOT||'.'),out=resolve('outputs/T-050-launcher');await mkdir(out,{recursive:true});
 const qa=await mkdtemp(join(out,'isolated-'));await mkdir(join(qa,'worker'));
 const seed=join(qa,'seed.json');await writeFile(seed,JSON.stringify({records:[]}));
-const local=await startLocalServer({root:join(qa,'worker/workspace'),seedPath:seed});await local.close();
+const local=await startLocalServer({root:join(qa,'worker/workspace'),seedPath:seed,uiDir:join(source,'desktop/local-dist/ui'),routesPath:join(source,'desktop/local-dist/server/routes.mjs')});await local.close();
 const config={enabled:true,startUrl:'https://muse.ai/thread/new',loggedIn:'#logged',prompt:'textarea',submitName:'Send',resultCards:'.result',resultIdAttribute:'data-message-id',readyWithinCard:'video',downloadButtonName:'Download',upload:'input',timeoutSeconds:900,reviewed:true};
 const profiles=['Duc','Cho','Chi'].map(name=>({id:name,name,enabled:true,proxy:{server:'',username:''},vpnEnabled:true,session:'signed_in',health:'ready',quota:{state:'available',weeklyRemainingPercent:80},checkedAt:1}));
 const fixture=new Store(join(qa,'worker/worker.sqlite')),now=Date.now();
