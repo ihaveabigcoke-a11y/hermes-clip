@@ -1,3 +1,8 @@
+# T-046 — Video dài mặc định tắt, đạt kỹ thuật và đo thật, 15/11/2026
+Source `ca12345`, kiểm launcher `7f0f1fc`: cấu hình theo dự án mặc định tắt, viết 2–5 cảnh hoặc dùng gói đã duyệt. Chuỗi tuần tự qua worker hiện có; FFmpeg trích khung cuối clip đã kiểm để đính làm ảnh đầu cảnh sau, ghép một MP4 qua montage_bridge. Lỗi dừng chuỗi/dispatch, giữ cảnh cũ và công tắc; không retry/đổi hồ sơ để lách. Luồng ba hook giữ nguyên.
+934 kiểm khác nhau, typecheck, build chính 19:20:30 +07 và launcher QA đạt; ảnh UI/launcher 1366/1920. Đo thật đúng ba lượt Duc → Chim → Cho, VPN connected, mỗi clip 8s → MP4 24s, 720×1280, 1.667.245 byte; giải mã/phát lại đạt. Tổng 306,281s: đây là tính năng riêng, không thay mục tiêu 3 video/60s. Hai điểm nối RGB 32×32 lệch 0,89%/0,92% dưới ngưỡng 12%; ảnh đính khớp khung cuối giải mã độc lập.
+148 record và request/kết quả/lịch sử 90 job cũ nguyên hash; Muse/hồ sơ/VPN giữ bật, active=0/budget=0. Chi vắng sẵn, 0 gửi, không tạo lại/đổi công tắc. Chưa đo thật 2/4/5 cảnh/gói có sẵn hay duyệt toàn clip/SKU/âm thanh. Không gửi thêm: đủ ba lượt đã duyệt. Bằng chứng thật chỉ local `D:/hermes-wt/artifacts/T-046/progress.md`; [báo cáo T-046](../../ops/office/reports/T-046.md), SHA/push cuối ở STATUS văn phòng. Build này đã gồm source T-045; nghiệm thu nhân vật thật vẫn chưa làm.
+---
 # T-045 — thư viện nhân vật, đạt QA local, 15/11/2026
 
 Source `a8c9426` + `0b07146`: menu Nhân vật, CRUD 1–3 ảnh, tên Unicode duy nhất và xoá có xác nhận. Công tắc Giữ nguyên nhân vật mặc định tắt; bật + @tên đính ảnh qua worker hiện có, tối đa 4 ảnh tổng; tên lạ bị chặn trước enqueue. Migration thêm bảng riêng, giữ dữ liệu cũ, media và receipt. Chip có ảnh/@tên trong form video.
