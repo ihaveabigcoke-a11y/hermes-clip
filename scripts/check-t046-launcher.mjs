@@ -44,7 +44,7 @@ try{
    return {before:{musePaused:before.musePaused,profiles:before.profiles.map(p=>({id:p.id,enabled:p.enabled}))},after:{musePaused:after.musePaused,profiles:after.profiles.map(p=>({id:p.id,enabled:p.enabled})),active:after.active,budget:after.budget,jobs:after.jobs.length},stopped,runs};
  });
  assert.equal(result.stopped,true);assert.deepEqual(result.runs,[]);assert.equal(result.after.active,0);assert.equal(result.after.jobs,0);assert.equal(result.after.budget,0);assert.equal(result.before.musePaused,result.after.musePaused);assert.deepEqual(result.before.profiles,result.after.profiles);
- const origin=new URL(page.url()).origin;await page.goto(origin+'/?view=production&product=product');await page.getByRole('button',{name:'Cài đặt dự án',exact:true}).click();
+ const origin=new URL(page.url()).origin;await page.goto(origin+'/?view=production&stage=scenes&production=project');await page.getByRole('button',{name:'Cài đặt dự án',exact:true}).click();
  assert.equal(await page.getByRole('checkbox',{name:'Video dài',exact:true}).isChecked(),false);
  for(const width of [1366,1920]){await page.setViewportSize({width,height:900});await page.screenshot({path:join(out,'default-off-'+width+'.png')});}
  await page.getByRole('button',{name:'Đóng',exact:true}).click();await page.reload();assert.equal((await page.evaluate(()=>window.productLabDesktop.longVideoStatus({projectId:'project'}))).length,0);assert.deepEqual(errors,[]);
