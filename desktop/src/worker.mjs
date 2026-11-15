@@ -27,6 +27,7 @@ export class Worker {
   reclaimingMemory = false;
   memoryRecoveryAttempts = new Set();
   warmed = new Map();
+  warmPages = new Map();
   constructor(store,root,browser,secret,memory=freemem){this.memory=memory;this.store=store;this.night=new MuseNight(store);this.root=root;this.browser=browser;this.secret=secret;this.contexts=new Map();this.opening=new Map();this.bridges=new Map();this.active=new Map();this.paused=true;this.budget=0;this.approvedIds=[];this.maxConcurrent=1;this.attemptedProfiles=new Map();this.backgroundProfiles=new Set();this.store.recover();this.vpn=new TouchVpn(join(root,'extensions'));this.checking=new Map();this.connectingVpn=new Map();
     // Mapping failures disable auto bundles only for this app session. Keep
     // all receipts, pacing, profile stops and the user's switches intact.
@@ -150,6 +151,8 @@ export class Worker {
         });
         context.on('close', () => {
           this.contexts.delete(id);
+          this.warmed.delete(id);
+          this.warmPages.delete(id);
           this.backgroundProfiles.delete(id);
           this.bridges.delete(id);
           if (profile.vpnEnabled) this.updateProfile(id,{vpn:{state:'closed',checkedAt:Date.now()}});
@@ -348,7 +351,7 @@ export class Worker {
 
   async warmProfiles() {
     assertMuseNewTask(this.store);
-    const profiles=this.profiles().filter(p=>p.enabled&&!p.busy&&p.health!=='banned');
+    const profiles=this.profiles().filter(p=>p.enabled&&!p.busy&&p.health!=='banned'&&!p.dispatch.stopped&&!this.deleting.has(p.id));
     return Promise.all(profiles.map(async p=>{
       if(this.isWarm(p.id))return {id:p.id,ready:true,cached:true};
       if(!p.open&&this.memory()/1024**3<1.5)return {id:p.id,ready:false,reason:'RAM trống chưa đủ để mở thêm hồ sơ.'};
@@ -385,7 +388,15 @@ export class Worker {
         const session = config ? await new MuseAdapter(config).session(page) : null;
         this.updateProfile(id,{health:session === true ? 'ready' : session === false ? 'login_required' : 'flow_required',
           session:session === true ? 'signed_in' : session === false ? 'expired' : 'unknown',ip,checkedAt:Date.now()});
-        if (session) {await this.measureQuota(id,context);if(keepWarm)this.warmed.set(id,Date.now());}
+        if (session) {
+          await this.measureQuota(id,context);
+          if(keepWarm){
+            await new MuseAdapter(config).prepareComposer(page);
+            const previous=this.warmPages.get(id);
+            if(previous&&previous!==page&&new URL(previous.url()).pathname==='/thread/new'&&!(await previous.locator(config.prompt).inputValue()).trim())await previous.close().catch(()=>{});
+            this.warmPages.set(id,page);this.warmed.set(id,Date.now());
+          }
+        }
         else this.updateProfile(id,{quota:{state:'login_required',checkedAt:Date.now(),message:'Đăng nhập Muse để đọc hạn mức.'}});
         if (!wasOpen) await this.setProfileVisibility(id,false);
         return true;
@@ -393,7 +404,7 @@ export class Worker {
         this.updateProfile(id,{health:'connection_error',checkedAt:Date.now()});
         throw error;
       } finally {
-        if(!keepWarm)await page?.close().catch(() => {});
+        if(this.warmPages.get(id)!==page)await page?.close().catch(() => {});
       }
     })();
     this.checking.set(id,pending);
@@ -572,7 +583,9 @@ export class Worker {
       if (alreadyOpen&&!this.isWarm(profileId)) await this.connectVpn(profileId,context);
       timings.vpnReadyAt=Date.now();
       const startUrl = new URL(this.config().startUrl);
-      page = context.pages().find(tab => {
+      const warmPage=this.isWarm(profileId)?this.warmPages.get(profileId):null;
+      this.warmPages.delete(profileId);
+      page = warmPage&&!warmPage.isClosed()?warmPage:context.pages().find(tab => {
         try { return new URL(tab.url()).origin === startUrl.origin; } catch { return false; }
       }) ?? await context.newPage();
       await this.setProfileVisibility(profileId, false);
@@ -661,6 +674,14 @@ export class Worker {
       const output = await adapter.fetch(page, job,(state,patch={})=>this.store.transition(member,state,{note:labels[state],...patch}), requestedOutput);
       timings.downloadedAt=Date.now();
       this.store.transition(member, 'validating', {failedFilePath: output, note: 'Đang kiểm tra định dạng, tỷ lệ, thời lượng và giải mã file.'});
+      // Download normalization has already decoded these bytes. Speculate while
+      // request-specific validation/import proceeds; only a ready take can publish.
+      let early;
+      if(job.request.mediaType==='video'&&adapter.downloadMetadata&&adapter.compression){
+        const candidate={path:output,name:output.split(/[\\/]/).at(-1),sha256:adapter.compression.sha256,metadata:adapter.downloadMetadata};
+        const readVerified=async()=>{const bytes=new Uint8Array(await readFile(output));if(createHash('sha256').update(bytes).digest('hex')!==candidate.sha256)throw Error('File đã đổi sau kiểm tra.');return {bytes,name:candidate.name,type:'video/mp4',sha256:candidate.sha256};};
+        early=Promise.resolve().then(()=>this.onReadyOutput?.({...this.store.job(member),state:'ready',output:candidate},readVerified)).catch(error=>{const latest=this.store.job(member);this.store.put({...latest,earlyRenderError:String(error.message).slice(0,600)});});
+      }
       const report = await this.validateOutput(output, job.request);
       this.store.transition(member, 'ready', {
         failedFilePath: null,
@@ -670,7 +691,7 @@ export class Worker {
       });
       // A registered video flow can encode the verified file while its durable
       // library import runs. Rendering failure must not discard the Muse receipt.
-      Promise.resolve().then(()=>this.onReadyOutput?.(this.store.job(member))).catch(error=>{
+      if(!early)Promise.resolve().then(()=>this.onReadyOutput?.(this.store.job(member))).catch(error=>{
         const latest=this.store.job(member);this.store.put({...latest,earlyRenderError:String(error.message).slice(0,600)});
       });
       await this.importReady(member);

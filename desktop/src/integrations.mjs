@@ -10,6 +10,7 @@ import {validateMedia,toolchain} from './media.mjs';
 import {renderPlanAss} from './render-plan.mjs';
 import {compressMedia,captureMediaTool} from './compress.mjs';
 import {copyFile} from 'node:fs/promises';
+import {mediaSlots} from './media-capacity.mjs';
 import {analyzeLocalStructure,checkedBytes,verifyJpeg} from './reference-structure.mjs';
 import {shortsUrl,youtubeCapability,downloadYoutubeReference} from './reference-youtube.mjs';
 import {runReferenceCommand} from './reference-process.mjs';
@@ -51,6 +52,7 @@ export function runJson(command,args,{input,timeout=60000,cwd,format='json',maxB
 export class Integrations {
  rendering=0;
  renderTasks=new Set();
+ sourceChecks=new Map();
  constructor(store,root,run=runJson,referenceRun=runReferenceCommand){this.store=store;this.root=root;this.run=run;this.referenceRun=referenceRun;this.busy=false;this.pending=[];this.current=null;this.stopped=false;const jobs=this.jobs();if(jobs.some(j=>['queued','running'].includes(j.state)))this.store.set('integration-jobs',jobs.map(j=>['queued','running'].includes(j.state)?{...j,state:'interrupted',finishedAt:Date.now(),error:'Ứng dụng đã dừng giữa tác vụ. Không tự chạy lại; file cũ được giữ.'}:j));}
  config(){return this.store.get('integrations',null);}
  jobs(){return this.store.get('integration-jobs',[]);}
@@ -68,7 +70,7 @@ export class Integrations {
  async montage(operation,extra={}) {
   const c=this.config();
   if(!c)throw Error('Cài và cấu hình hai công cụ trước.');
-  const response=await this.run(c.python,[join(here,'montage_bridge.py')],{input:{checkout:c.montage,expectedCommit:lock.openMontage.commit,operation,...extra},timeout:operation==='compose'?300000:120000});
+  const response=await mediaSlots.run(()=>this.run(c.python,[join(here,'montage_bridge.py')],{input:{checkout:c.montage,expectedCommit:lock.openMontage.commit,operation,...extra},timeout:operation==='compose'?300000:120000}));
   const positiveDimension=z.number().int().positive();
   const schemas={
    doctor:z.object({ffmpeg:z.boolean(),ffprobe:z.boolean()}),
@@ -153,11 +155,24 @@ export class Integrations {
  if(frameBytes.length<3||frameBytes[0]!==0xff||frameBytes[1]!==0xd8||frameBytes[2]!==0xff)throw Error('Khung hình không phải JPEG hợp lệ.');
  await validateMedia(framePath,{mediaType:'image',ratio:`${r.result.source.width}:${r.result.source.height}`});
  return {...frame,path:framePath};}));await writeArchive(join(dir,'reference-analysis.json.gz'),JSON.stringify(r.result,null,2));return {path:join(dir,'reference-analysis.json.gz'),result:{...r.result,frames:undefined},frames};});}
+ async validateSource(path,clip,ratio){
+  // writeSource verifies the actual bytes first. Reuse full decode only for the
+  // same hash AND expected duration/ratio; failures are never cached.
+  const key=JSON.stringify([clip.sha256,clip.duration,ratio]);
+  let pending=this.sourceChecks.get(key);
+  if(!pending){
+   pending=validateMedia(path,{mediaType:'video',ratio,duration:clip.duration});
+   this.sourceChecks.set(key,pending);
+   pending.catch(()=>{if(this.sourceChecks.get(key)===pending)this.sourceChecks.delete(key);});
+   if(this.sourceChecks.size>24)this.sourceChecks.delete(this.sourceChecks.keys().next().value);
+  }
+  return pending;
+ }
  async compose(input){
   const d=composeInput.parse(input);
   const pending=this.task('compose',d.projectId,{variantId:d.variantId,ratio:d.ratio,sources:d.clips.map(({bytes,...c})=>c),overlays:d.overlays,audio:'keep'},async dir=>{
    await toolchain();const clips=[];
-   for(const [i,c] of d.clips.entries()){const path=join(dir,`${i}.mp4`);await this.writeSource(c,path);await validateMedia(path,{mediaType:'video',ratio:d.ratio,duration:c.duration});clips.push({path,duration:c.duration,inSec:c.inSec,outSec:c.outSec??c.duration});}
+   for(const [i,c] of d.clips.entries()){const path=join(dir,`${i}.mp4`);await this.writeSource(c,path);await this.validateSource(path,c,d.ratio);clips.push({path,duration:c.duration,inSec:c.inSec,outSec:c.outSec??c.duration});}
    const [rw,rh]=d.ratio.split(':').map(Number),width=d.ratio==='9:16'?720:d.ratio==='16:9'?1280:960,height=Math.round(width*rh/rw/2)*2;
    let subtitlePath=null;if(d.overlays.length){subtitlePath=join(dir,'overlays.ass');await writeFile(subtitlePath,renderPlanAss(d.overlays),{flag:'wx'});}
    const r=await this.montage('compose',{outputDir:dir,size:[width,height],clips,subtitlePath,audio:'keep',singlePass:d.planVersion===1});

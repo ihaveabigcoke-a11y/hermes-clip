@@ -20,7 +20,7 @@ def single_pass(cuts, width, height, subtitle, out):
     duration = sum(c["out_seconds"] - c["in_seconds"] for c in cuts)
     for i, cut in enumerate(cuts):
         length = cut["out_seconds"] - cut["in_seconds"]
-        args += ["-ss", str(cut["in_seconds"]), "-t", str(length), "-i", cut["source"]]
+        args += ["-threads", "2", "-ss", str(cut["in_seconds"]), "-t", str(length), "-i", cut["source"]]
         probe = json.loads(subprocess.check_output(["ffprobe", "-v", "error", "-show_streams", "-of", "json", cut["source"]], text=True))
         filters.append(f"[{i}:v]setpts=PTS-STARTPTS,scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30,trim=duration={length},format=yuv420p[v{i}]")
         audio = f"[{i}:a]asetpts=PTS-STARTPTS,aresample=48000,aformat=channel_layouts=stereo,apad" if any(s["codec_type"] == "audio" for s in probe["streams"]) else "anullsrc=r=48000:cl=stereo"

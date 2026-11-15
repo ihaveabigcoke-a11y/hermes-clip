@@ -32,6 +32,19 @@ export class MuseAdapter {
     return loggedIn.isVisible();
   }
 
+  async prepareComposer(page) {
+    if (!this.chatMode) return;
+    const config = this.config;
+    await page.getByRole('button', {name: 'Stop', exact: true}).waitFor({state: 'hidden', timeout: config.timeoutSeconds * 1000});
+    if ((await page.locator(config.prompt).inputValue()).trim()) {
+      throw Object.assign(Error('Browser Muse đang có bản nháp. Gửi hoặc lưu bản nháp trước khi chạy job.'), {code:'MUSE_DRAFT_PRESENT'});
+    }
+    if (new URL(page.url()).pathname !== '/thread/new') {
+      await page.goto(new URL('/thread/new', config.startUrl).href, {waitUntil:'domcontentloaded', timeout:30000});
+    }
+    await page.locator(config.prompt).waitFor({state:'visible', timeout:15000});
+  }
+
   async prepare(page, job) {
     this.mediaType = job.mediaType;
     await this.guard?.();
@@ -41,16 +54,7 @@ export class MuseAdapter {
       throw error;
     }
     const config = this.config;
-    if (this.chatMode) {
-      await page.getByRole('button', {name: 'Stop', exact: true}).waitFor({state: 'hidden', timeout: config.timeoutSeconds * 1000});
-      if ((await page.locator(config.prompt).inputValue()).trim()) {
-        const error = new Error('Browser Muse đang có bản nháp. Gửi hoặc lưu bản nháp trước khi chạy job.');
-        error.code = 'MUSE_DRAFT_PRESENT';
-        throw error;
-      }
-      await page.goto(new URL('/thread/new', config.startUrl).href, {waitUntil: 'domcontentloaded', timeout: 30000});
-      await page.locator(config.prompt).waitFor({state: 'visible', timeout: 15000});
-    }
+    await this.prepareComposer(page);
     if (job.references.length) {
       if (!config.upload) throw Error('Luồng này chưa khai báo upload reference.');
       if (this.chatMode) await page.locator(config.prompt).fill('');
@@ -272,7 +276,7 @@ export class MuseAdapter {
     } catch {throw Object.assign(Error('Phiên Muse cần đăng nhập.'),{code:'MUSE_LOGIN_REQUIRED'});}
     const exact = page.locator(`${config.resultCards}[${config.resultIdAttribute}=${JSON.stringify(job.providerId)}]`);
     await checkpoint('waiting');
-    if (this.chatMode) {
+    if (this.chatMode && job.request?.mediaType !== 'video') {
       // Chat cards animate while the assistant is still writing. Native scroll
       // does not wait for that unrelated animation to become stable.
       if(exact.evaluate)await exact.evaluate(element=>element.scrollIntoView({block:'nearest',behavior:'instant'}));
@@ -284,6 +288,11 @@ export class MuseAdapter {
       let settledAt = null, lastResponse = '';
       while (true) {
         await this.guard?.();
+        // Hidden/animating cards can already own a complete video URL.
+        if (job.request?.mediaType === 'video' && media.evaluate && await media.count?.()) {
+          const source = await media.evaluate(video=>video.currentSrc||video.src||video.querySelector('source')?.src||'');
+          if (source) break;
+        }
         if (await media.isVisible()) break;
         if (Date.now() >= deadline) throw Error('Chưa thấy file của mã kết quả cũ. Cần đối soát trước khi gửi tiếp.');
         const response = (await exact.innerText()).trim();
@@ -307,7 +316,7 @@ export class MuseAdapter {
       const source=await media.evaluate(video=>video.currentSrc||video.src||video.querySelector('source')?.src||'');
       let url;try{url=new URL(source);}catch{}
       this.timings.videoSourceScheme=url?.protocol??'empty';
-      if((url?.protocol==='https:'&&!url.username&&!url.password)||(this.bundleAppearance&&url?.protocol==='blob:'&&url.origin===new URL(config.startUrl).origin)){
+      if((url?.protocol==='https:'&&!url.username&&!url.password)||(url?.protocol==='blob:'&&url.origin===new URL(config.startUrl).origin)){
         await checkpoint('downloading');
         downloadStarted=true;
         this.timings.downloadStartedAt=Date.now();
@@ -345,7 +354,7 @@ export class MuseAdapter {
         finally{await response?.dispose();}
         if(bytes){
           this.timings.transferFinishedAt=Date.now();this.timings.downloadMethod=url.protocol==='blob:'?'video-blob':'video-url';
-          return saveDownload({saveAs:p=>writeFile(p,bytes),failure:async()=>null},path,{compress:true,onCompression:c=>{this.compression=c;}});
+          return saveDownload({saveAs:p=>writeFile(p,bytes),failure:async()=>null},path,{compress:true,onCompression:(c,metadata)=>{this.compression=c;this.downloadMetadata=metadata;}});
         }
       }
     }
@@ -379,7 +388,7 @@ export class MuseAdapter {
       }
       path = path.slice(0, -extname(path).length) + extension;
     }
-    path=await saveDownload(download,path,{compress:true,onCompression:compression=>{this.compression=compression;}});
+    path=await saveDownload(download,path,{compress:true,onCompression:(compression,metadata)=>{this.compression=compression;this.downloadMetadata=metadata;}});
     if (this.chatMode&&!releasePreview) await page.keyboard.press('Escape');
     return path;
   }

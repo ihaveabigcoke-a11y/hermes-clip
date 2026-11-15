@@ -13,7 +13,7 @@ test('reference roles reach Muse in attachment order and legacy jobs deduplicate
   const fills=[];
   const adapter=new MuseAdapter({...config,prompt:'textarea',upload:'input[type="file"]'});
   adapter.session=async()=>true;
-  const page={locator:()=>({inputValue:async()=>'',fill:async value=>fills.push(value),setInputFiles:async()=>{},waitFor:async()=>{}}),getByRole:()=>({waitFor:async()=>{}}),goto:async()=>{}};
+  const page={url:()=>config.startUrl,locator:()=>({inputValue:async()=>'',fill:async value=>fills.push(value),setInputFiles:async()=>{},waitFor:async()=>{}}),getByRole:()=>({waitFor:async()=>{}}),goto:async()=>{}};
   const reference={id:'r1',version:1,sha256:'a'.repeat(64),type:'image/png',bytes:new Uint8Array([1])};
   const legacy=jobInput.parse({projectId:'project',productId:'product',productRevision:1,sceneId:'scene',sceneRevision:1,name:'Scene',mediaType:'video',ratio:'9:16',duration:10,prompt:'Keep camera fixed',references:[reference]});
   const updated=jobInput.parse({...legacy,references:[{...reference,role:'product'}]});
@@ -47,7 +47,7 @@ test('Muse waits for attachment readiness with an empty prompt before filling te
   const events=[];
   const adapter=new MuseAdapter({...config,prompt:'textarea',upload:'input[type="file"]'});
   adapter.session=async()=>true;
-  const page={locator:selector=>({
+  const page={url:()=>config.startUrl,locator:selector=>({
     inputValue:async()=>'',
     fill:async value=>events.push(['fill',value]),
     setInputFiles:async paths=>events.push(['files',paths]),
@@ -61,7 +61,7 @@ test('failed attachment preparation reports its stage without filling the prompt
   const fills=[];
   const adapter=new MuseAdapter({...config,prompt:'textarea',upload:'input[type="file"]'});
   adapter.session=async()=>true;
-  const page={locator:selector=>({
+  const page={url:()=>config.startUrl,locator:selector=>({
     inputValue:async()=>'',
     fill:async value=>fills.push(value),
     setInputFiles:async()=>{},
@@ -82,7 +82,7 @@ test('identical first and last image bytes upload under distinct filenames witho
   let files;
   const adapter = new MuseAdapter({...config, prompt:'textarea', upload:'input[type="file"]'});
   adapter.session = async () => true;
-  const page = {locator:() => ({inputValue:async() => '', fill:async() => {}, waitFor:async() => {},
+  const page = {url:()=>config.startUrl,locator:() => ({inputValue:async() => '', fill:async() => {}, waitFor:async() => {},
     setInputFiles:async value => {files = value;}}), getByRole:() => ({waitFor:async() => {}}), goto:async() => {}};
   await adapter.prepare(page, {mediaType:'video', prompt:'Keep the entire leash visible', references});
   assert.deepEqual(files.map(file => file.name), ['1-first_frame.png','2-last_frame.png']);
@@ -94,7 +94,7 @@ test('media tasks lift earlier writing-only scope while keeping the brief and at
   const fills=[];
   const adapter=new MuseAdapter({...config,prompt:'textarea',upload:'input[type="file"]'});
   adapter.session=async()=>true;
-  const page={locator:()=>({inputValue:async()=>'',fill:async value=>fills.push(value),setInputFiles:async()=>{},waitFor:async()=>{}}),getByRole:()=>({waitFor:async()=>{}}),goto:async()=>{}};
+  const page={url:()=>config.startUrl,locator:()=>({inputValue:async()=>'',fill:async value=>fills.push(value),setInputFiles:async()=>{},waitFor:async()=>{}}),getByRole:()=>({waitFor:async()=>{}}),goto:async()=>{}};
   const brief='Create one video of the exact referenced product';
   await adapter.prepare(page,{mediaType:'video',prompt:brief,references:[{path:'product.png',role:'product'}]});
   assert.ok(fills.at(-1).startsWith(MUSE_VIDEO_COMMAND+'\n'+brief));
@@ -258,6 +258,7 @@ test('new generation uses a separate Muse conversation after preserving drafts',
   const adapter=new MuseAdapter({...config,prompt:'textarea'});
   adapter.session=async()=>true;
   const page={
+    url:()=>config.startUrl,
     getByRole:()=>({waitFor:async()=>{}}),
     goto:async(url,options)=>{assert.equal(options.waitUntil,'domcontentloaded');events.push(url);},
     locator:()=>({inputValue:async()=>'',waitFor:async()=>{},fill:async value=>events.push(value)}),

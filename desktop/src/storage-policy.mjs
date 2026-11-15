@@ -70,7 +70,7 @@ export async function saveDownload(download,path,{compress=false,onCompression=(
       const extension=compressed.type==='video/mp4'?'.mp4':compressed.type==='image/webp'?'.webp':extname(path);
       const target=path.slice(0,-extname(path).length)+extension;
       await putImmutableMedia({root:dirname(target),path:target,bytes:await readFile(compressed.path)});
-      onCompression(compressed.compression);return target;
+      onCompression(compressed.compression,compressed.metadata);return target;
     }else await rename(temporary,path);
     if(!await verifiedFile(path,hash,info.size))throw Error('File đích chưa khớp bản tải.');
     return path;
