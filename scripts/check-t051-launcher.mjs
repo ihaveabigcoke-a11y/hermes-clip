@@ -17,7 +17,7 @@ const local=await startLocalServer({root:join(qa,'worker/workspace'),seedPath:f.
 const config={enabled:true,startUrl:'https://muse.ai/thread/new',loggedIn:'#logged',prompt:'textarea',submitName:'Send',resultCards:'.result',resultIdAttribute:'data-message-id',readyWithinCard:'video',downloadButtonName:'Download',upload:'input',timeoutSeconds:900,reviewed:true};
 const profiles=['Duc','Cho','Chi'].map(name=>({id:name,name,enabled:true,proxy:{server:'',username:''},vpnEnabled:true,session:'signed_in',health:'ready',quota:{state:'available',weeklyRemainingPercent:80},checkedAt:1}));
 const fixture=new Store(join(qa,'worker/worker.sqlite'));fixture.set('adapter',config);fixture.set('profiles',profiles);fixture.set('muse_paused',false);fixture.set('hermes_vpn_migrated',true);
-for(const job of f.jobs)fixture.put({...job,providerResponse:'Preserved fixture receipt',request:{...job.request,prompt:MUSE_VIDEO_COMMAND+'\nSynthetic fixture.',references:[]}});
+for(const job of f.jobs)fixture.put({...job,fingerprint:digest(Buffer.from(JSON.stringify(job.request))),providerResponse:'Preserved fixture receipt',request:{...job.request,prompt:MUSE_VIDEO_COMMAND+'\nSynthetic fixture.',references:[]}});
 const before=fixture.jobs();fixture.close();
 const hook=join(qa,'debug.cjs');
 await writeFile(hook,`if(process.versions.electron&&process.type==='browser')setImmediate(()=>{
