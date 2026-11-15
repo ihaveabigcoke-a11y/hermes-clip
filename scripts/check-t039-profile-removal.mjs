@@ -22,7 +22,7 @@ await writeFile(hook,`if(process.versions.electron&&process.type==='browser')set
  app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest((d,done)=>{const u=new URL(d.url);done({cancel:!['127.0.0.1','localhost'].includes(u.hostname)&&!['devtools:','file:','data:','blob:'].includes(u.protocol)});}));
 });`);
 const store=new Store(join(root,'worker.sqlite'));
-const profiles=[['idle','Rảnh'],['keep','Giữ nguyên'],['pending','Chưa đối soát'],['queued','Còn hàng chờ']].map(([id,name])=>({id,name,enabled:true,proxy:{server:'',username:''},vpnEnabled:false,session:'unknown',health:'unknown'}));
+const profiles=[['idle','Rảnh'],['keep','Giữ nguyên'],['pending','Chưa đối soát'],['queued','Còn hàng chờ']].map(([id,name])=>({id,name,enabled:true,proxy:{server:'',username:''},vpnEnabled:false,session:'unknown',health:'unknown',checkedAt:null}));
 store.set('profiles',profiles);store.set('muse_paused',false);store.set('hermes_vpn_migrated',true);
 const old=store.enqueue({projectId:'fixture',sceneId:'scene',references:[]},'pending').job;
 store.put({...old,state:'needs_attention',profileId:'pending',providerResponse:'Retained synthetic receipt'});
@@ -54,6 +54,7 @@ try{
  assert.equal(await rows('Chưa đối soát').getByRole('button',{name:'Bỏ qua và xóa',exact:true}).isEnabled(),true);
  for(const width of [1366,1920]){await page.setViewportSize({width,height:1080});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:join(out,'accounts-'+width+'.png'),fullPage:true});screens.push('accounts-'+width);}
  await rows('Chưa đối soát').getByRole('button',{name:'Bỏ qua và xóa',exact:true}).click();await dialog.waitFor();
+ assert.equal(await dialog.getByRole('heading').innerText(),'Bỏ qua và xóa hồ sơ Muse');
  assert.match(await dialog.innerText(),/Kết quả chưa tải có thể không lấy lại được/);
  await dialog.getByRole('textbox').fill('wrong');await dialog.getByRole('button',{name:'Bỏ qua và xóa',exact:true}).click();await dialog.getByText('Nhập đúng tên hồ sơ: Chưa đối soát',{exact:true}).waitFor();assert.equal((await status()).profiles.length,4);
  for(const width of [1366,1920]){await page.setViewportSize({width,height:1080});await page.screenshot({path:join(out,'confirmation-'+width+'.png')});screens.push('confirmation-'+width);}
