@@ -8,19 +8,23 @@ import {promisify} from 'node:util';
 import {setTimeout as delay} from 'node:timers/promises';
 import {chromium} from '../desktop/node_modules/playwright/index.mjs';
 import {Store} from '../desktop/src/store.mjs';
+import {buildLocalServer} from './build-local-server.mjs';
 
 const source=resolve('.'),pack=resolve('outputs/T-045-package'),out=resolve('outputs/T-045-launcher');
 assert.ok(pack.startsWith(join(source,'outputs')+sep));await mkdir(out,{recursive:true});
 await lstat(join(pack,'desktop/local-dist/ui/index.html')); // Must be built from source first.
 for(const path of ['desktop/src','desktop/local','desktop/setup-local.mjs','desktop/package.json','desktop/integrations-lock.json','START-HERMES-CLIP.cmd'])await cp(join(source,path),join(pack,path),{recursive:true});
+// Compile against this package's AsyncLocalStorage runtime; source and package
+// runtimes must not become two different authentication contexts.
+await buildLocalServer(join(pack,'desktop/local-dist'),{runtime:join(pack,'desktop/local/runtime.mjs')});
 for(const path of ['desktop/node_modules','node_modules','desktop/tools'])if(!await lstat(join(pack,path)).catch(()=>null))await symlink(join(source,path),join(pack,path),'junction');
 const qa=await mkdtemp(join(out,'isolated-'));await mkdir(join(qa,'worker'));
 const uiResult=JSON.parse(await readFile('outputs/T-045-ui/result.json','utf8'));
 assert.ok(resolve(uiResult.workspaceFixture).startsWith(resolve('outputs/T-045-ui')+sep));
 await cp(uiResult.workspaceFixture,join(qa,'worker/workspace'),{recursive:true});
 const fixture=new Store(join(qa,'worker/worker.sqlite'));
-const profiles=['Cho','Duc','Chim','Chi'].map(name=>({id:name,name,enabled:true,proxy:{server:'',username:''},vpnEnabled:true,session:'unknown',health:'unknown',checkedAt:null}));
-fixture.set('profiles',profiles);fixture.set('muse_paused',false);fixture.set('hermes_vpn_migrated',true);fixture.close();
+const profiles=['Cho','Duc','Chim','Chi'].map(name=>({id:name,name,enabled:true,proxy:{server:'',username:''},vpnEnabled:true,session:'signed_in',health:'ready',quota:{state:'available',weeklyRemainingPercent:80},checkedAt:1}));
+fixture.set('adapter',{enabled:true,startUrl:'https://fixture.invalid'});fixture.set('profiles',profiles);fixture.set('muse_paused',false);fixture.set('hermes_vpn_migrated',true);fixture.close();
 const hook=join(qa,'debug.cjs');
 await writeFile(hook,`if(process.versions.electron&&process.type==='browser')setImmediate(()=>{
  const {app,session}=require('electron'),fs=require('fs'),path=require('path');
@@ -54,6 +58,9 @@ try{
  assert.equal(queued.job.state,'queued');assert.equal(queued.job.request.references.length,2);assert.equal(queued.blocked,true);
  await page.reload();await page.getByRole('heading',{name:'@Bông',exact:true}).waitFor();
  const after=await page.evaluate(()=>window.productLabDesktop.status());assert.equal(after.active,0);assert.equal(after.budget,0);assert.equal(after.jobs.length,1);assert.equal(after.jobs[0].state,'queued');assert.equal(after.musePaused,before.musePaused);assert.deepEqual(after.profiles,before.profiles);assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
+}catch(error){
+ if(browser){const page=browser.contexts()[0]?.pages().find(p=>p.url().includes('127.0.0.1'));if(page){await page.screenshot({path:join(out,'failure.png'),fullPage:true});await writeFile(join(out,'failure.txt'),await page.locator('body').innerText());}}
+ throw error;
 }finally{
  await browser?.close().catch(()=>{});closeSync(log);
  const pid=Number(await readFile(join(qa,'electron.pid'),'utf8').catch(()=>'0'));
