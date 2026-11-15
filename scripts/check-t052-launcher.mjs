@@ -41,7 +41,7 @@ try{
  await page.locator('.queue-detail').getByRole('button',{name:'Tiếp tục hội thoại này',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Tiếp tục hội thoại này'});
  await dialog.getByLabel('Muốn Muse làm tiếp gì?').fill('Giữ sản phẩm, đổi góc nhìn gần hơn.');
  assert.equal(await dialog.locator('#muse-continuation-language-hint').innerText(),'Nên gõ tiếng Anh để Muse hiểu chính xác (tiếng Việt vẫn được, Muse tự chuyển ý).');
- for(const width of [1366,1920]){await page.setViewportSize({width,height:width===1366?900:1080});const name='continue-'+width+'.png';await page.screenshot({path:join(out,name),fullPage:true});shots.push(name);}
+ for(const width of [1366,1920]){await page.setViewportSize({width,height:width===1366?900:1080});await page.evaluate(()=>document.fonts.ready);await dialog.getByRole('button',{name:'Gửi tiếp',exact:true}).click({trial:true});const name='continue-'+width+'.png';await page.screenshot({path:join(out,name),fullPage:true,animations:'disabled'});shots.push(name);}
  await dialog.getByRole('button',{name:'Hủy',exact:true}).click();await page.reload();
  const after=await page.evaluate(()=>window.productLabDesktop.status());assert.equal(after.musePaused,false);assert.equal(after.jobs.length,3);assert.equal(after.active,0);assert.equal(after.budget,0);assert.deepEqual(errors,[]);
  result={wrongProfileBlocked:true,cancelSendsNothing:true};
