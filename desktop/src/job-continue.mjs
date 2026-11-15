@@ -13,7 +13,12 @@ export function continueBlockedReason(source, profile, mediaType, jobs = [], exc
   if (jobs.some(job => job.id !== excludeId && job.id !== source.id
     && (!job.profileId || job.profileId === source.profileId)
     && (museThreadUrl(job.continueThreadUrl ?? job.providerUrl)?.replace(/\/$/, '') === thread || source.bundleJobIds?.includes(job.id))
-    && job.state !== 'ready' && !(job.reconciled === true && ['failed', 'cancelled'].includes(job.state)))) {
+    && job.state !== 'ready' && (!(job.reconciled === true && ['failed', 'cancelled'].includes(job.state))
+      // A legacy continuation may have downloaded a late-loading old card
+      // while its new reply was still running. Its duplicate receipt cannot
+      // establish the outcome of the new turn, even if it says reconciled.
+      || job.continueOf && job.failureCode === 'MUSE_OLD_CLIP'
+        && job.continuationBaseline?.assistantIds?.includes(job.providerId)))) {
     return 'Hội thoại còn việc đang chờ hoặc chưa đối soát. Kiểm tra kết quả cũ trước khi gửi tiếp.';
   }
   return '';

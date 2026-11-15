@@ -171,7 +171,11 @@ export class MuseAdapter {
         (elements, attribute) => elements.map(element => element.getAttribute(attribute)).filter(Boolean),
         config.resultIdAttribute,
       );
-      const fresh = ids.filter(id => !oldIds.has(id));
+      // An old message can hydrate its video only after the next send. In a
+      // continuation its message ID is still old, even when no media existed
+      // in the baseline. Never treat that late video as this turn's result.
+      const fresh = ids.filter(id => !oldIds.has(id)
+        && !(this.continueThreadUrl && oldAssistantIds.has(id)));
       if(fresh.length)this.timings.firstResultAt??=Date.now();
       if(this.expectedScenes?.length){
         const generating=await page.getByRole('button',{name:'Stop',exact:true}).isVisible();
@@ -259,7 +263,8 @@ export class MuseAdapter {
       }
       const allIds = await this.mediaCards(page, job.request?.mediaType).evaluateAll((elements, attribute) =>
         elements.map(element => element.getAttribute(attribute)).filter(Boolean), this.config.resultIdAttribute);
-      const ids=job.continuationBaseline?allIds.filter(id=>!job.continuationBaseline.mediaIds.includes(id)):allIds;
+      const ids=job.continuationBaseline?allIds.filter(id=>!job.continuationBaseline.mediaIds.includes(id)
+        && !job.continuationBaseline.assistantIds.includes(id)):allIds;
       if (ids.length > 1) throw Error('Có nhiều kết quả. Mở nguồn Muse để chọn đúng file.');
       const replies = await page.locator('[data-message-id][data-message-role="assistant"]')
         .evaluateAll((elements,oldIds) => elements.filter(element=>!oldIds.includes(element.getAttribute('data-message-id'))).map(element => element.innerText?.trim() || element.textContent?.trim() || ''),job.continuationBaseline?.assistantIds??[]);

@@ -119,3 +119,27 @@ test('T-052 the last allowed session slot submits once and an exhausted session 
   const job=await worker.continueConversation(input);await drain(worker);assert.equal(store.job(job.id).state,'ready');assert.equal(pages[0].sent,1);
   await assert.rejects(worker.continueConversation({...input,requestId:'another'}),{code:'MUSE_NIGHT_LIMIT'});assert.equal(store.jobs().length,2);
 });
+
+test('T-052 ignores old message media that hydrates after sending, including during reconciliation',async()=>{
+  const page=fakePage({lazyOldMedia:true}),adapter=new MuseAdapter(config);let baseline;
+  await adapter.prepare(page,request,{threadUrl:thread});
+  const providerId=await adapter.submit(page,async(state,patch)=>{if(state==='submitting')baseline=patch.continuationBaseline;});
+  assert.deepEqual(baseline.mediaIds,[]);
+  assert.ok(baseline.assistantIds.includes('old-result'));
+  assert.equal(providerId,'new-result');
+  assert.equal(page.sent,1);
+  const result=await adapter.inspectResponse(page,{request,continueOf:'original',providerUrl:thread,continuationBaseline:baseline});
+  assert.equal(result.providerId,'new-result');
+  assert.equal(page.sent,1);
+});
+
+test('T-052 an old-card duplicate receipt cannot unlock another continuation of the unresolved turn',async t=>{
+  const {worker,store,source,input,pages}=await fixture(t);
+  const old=store.enqueue({...request,sceneId:'continued'},'late-card').job;
+  store.put({...old,state:'failed',profileId:source.profileId,continueOf:source.id,providerUrl:thread,
+    providerId:'old-result',failureCode:'MUSE_OLD_CLIP',reconciled:true,
+    continuationBaseline:{mediaIds:[],userIds:['old-user'],assistantIds:['old-result']}});
+  await assert.rejects(worker.continueConversation(input),/đối soát/);
+  assert.equal(pages.length,0);
+  assert.equal(store.jobs().length,2);
+});

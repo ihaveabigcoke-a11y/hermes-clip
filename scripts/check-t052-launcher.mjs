@@ -29,11 +29,11 @@ await writeFile(hook,`if(process.versions.electron&&process.type==='browser')set
 });`);
 const log=openSync(join(out,'launcher.log'),'w');
 const launcher=spawn('powershell.exe',['-NoProfile','-Command',"& '"+join(source,'START-HERMES-CLIP.cmd').replaceAll("'","''")+"'"],{cwd:source,windowsHide:true,stdio:['ignore',log,log],env:{...process.env,PRODUCT_LAB_QA_USER_DATA:qa,NODE_OPTIONS:'--require='+hook.replaceAll('\\','/'),PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD:'1',ELECTRON_SKIP_BINARY_DOWNLOAD:'1',HERMES_INSTAGRAM_API_ENABLED:'0',HERMES_MUSE_ONLY:'1'}});
-let browser,result;const errors=[],shots=[];
+let browser,result,page;const errors=[],shots=[];
 try{
  let port;for(let i=0;i<250;i++){if(launcher.exitCode!==null)break;try{await readFile(join(qa,'loaded'));port=(await readFile(join(qa,'DevToolsActivePort'),'utf8')).split('\n')[0];break;}catch{await delay(200);}}
  assert.ok(port,'QA launcher did not load');browser=await chromium.connectOverCDP('http://127.0.0.1:'+port);
- const page=browser.contexts()[0].pages().find(p=>p.url().includes('127.0.0.1'));assert.ok(page);page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+ page=browser.contexts()[0].pages().find(p=>p.url().includes('127.0.0.1'));assert.ok(page);page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
  const origin=new URL(page.url()).origin;await page.goto(origin+'/?view=queue');
  const rejected=await page.evaluate(async()=>{try{await window.productLabDesktop.continueConversation({id:'job0',requestId:'qa-invalid',profileId:'Cho',mediaType:'video',description:'A closer shot.',references:[]});return null;}catch(e){return e.message;}});
  assert.match(rejected,/hồ sơ/);assert.equal((await page.evaluate(()=>window.productLabDesktop.status())).jobs.length,3);
@@ -44,6 +44,9 @@ try{
  await dialog.getByRole('button',{name:'Hủy',exact:true}).click();await page.reload();
  const after=await page.evaluate(()=>window.productLabDesktop.status());assert.equal(after.musePaused,false);assert.equal(after.jobs.length,3);assert.equal(after.active,0);assert.equal(after.budget,0);assert.deepEqual(errors,[]);
  result={wrongProfileBlocked:true,cancelSendsNothing:true};
+}catch(error){
+ await writeFile(join(out,'failure.txt'),JSON.stringify({error:error.message,errors,text:await page?.locator('body').innerText().catch(()=>'' )},null,2));
+ await page?.screenshot({path:join(out,'failure.png'),fullPage:true}).catch(()=>{});throw error;
 }finally{
  await browser?.close().catch(()=>{});closeSync(log);const pid=Number(await readFile(join(qa,'electron.pid'),'utf8').catch(()=>'0'));
  if(pid)await promisify(execFile)('powershell.exe',['-NoProfile','-Command',`$taskProcess=Get-Process -Id ${pid} -ErrorAction Stop; if(-not $taskProcess.CloseMainWindow()){throw 'Close rejected'}; if(-not $taskProcess.WaitForExit(1000)){$taskProcess.Refresh();$null=$taskProcess.CloseMainWindow();if(-not $taskProcess.WaitForExit(15000)){throw 'QA still running'}}`],{windowsHide:true});launcher.unref();
