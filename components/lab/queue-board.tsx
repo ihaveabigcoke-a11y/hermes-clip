@@ -17,13 +17,14 @@ import {museVideoBody} from '@/desktop/src/muse-video-prompt.mjs';
 import {MuseVideoCommand} from './muse-video-command';
 import {copyWorkbenchText} from './workbench-controls';
 import {museThreadUrl} from '@/desktop/src/muse-thread-url.mjs';
+import {MuseContinuationForm, type ContinuePayload} from './muse-continuation-form';
 
 type Props = {
   status: DesktopStatus | null;
   records: LabRecord[];
   projectId?: string;
   busy: boolean;
-  onAction: (method: string, value?: {id: string} | {requestId: string; items: {id: string; body?: string}[]}) => Promise<unknown>;
+  onAction: (method: string, value?: {id: string} | {requestId: string; items: {id: string; body?: string}[]} | ContinuePayload) => Promise<unknown>;
   onStart: (jobs: DesktopJob[]) => void;
   onReconcile: (job: DesktopJob) => void;
   onImport?: (job: DesktopJob) => void;
@@ -45,6 +46,7 @@ export default function QueueBoard({status, records, projectId, busy, onAction, 
   const [attemptId, setAttemptId] = useState('');
   const [message, setMessage] = useState('');
   const [checked, setChecked] = useState<string[]>([]);
+  const [continueId,setContinueId]=useState('');
   const retryOperation = useRef<{key: string; requestId: string} | null>(null);
   const retryBusy = useRef(false);
   const [query, setQuery] = useState('');
@@ -108,6 +110,12 @@ export default function QueueBoard({status, records, projectId, busy, onAction, 
     setDetailOpen(true);
     if (!compact) requestAnimationFrame(() => detailHeading.current?.focus({preventScroll: true}));
   }
+  function jumpToJob(id:string) {
+    const original=jobs.find(j=>j.id===id);if(!original)return;
+    setFilter('all');setCategory('all');setProductId('all');setMediaType('all');setPeriod('all');setProfileId('all');setBatchOnly(false);setQuery('');
+    const index=groupQueueJobs(jobs).findIndex(group=>group.key===sceneKey(original.request.projectId,original.request.sceneId));
+    setPage(Math.floor(Math.max(0,index)/8)+1);openDetails(original);
+  }
   async function primaryAction(job: DesktopJob) {
     const action = queueAction(job);
     if (action === 'start') onStart([job]);
@@ -168,7 +176,7 @@ export default function QueueBoard({status, records, projectId, busy, onAction, 
     <QueueDetails key={selected.id} job={selected} label={reviewLabel(selected)} tone={resultTone(selected)}
     profileName={status?.profiles.find(profile => profile.id === selected.profileId)?.name ?? selected.profileName ?? 'Chờ phân hồ sơ'}
     busy={busy} musePaused={status?.musePaused!==false} onAction={onAction} onImport={onImport}
-    onRetry={recreate} onOriginal={id=>{const original=jobs.find(j=>j.id===id);if(original)openDetails(original);}}
+    onRetry={recreate} onOriginal={jumpToJob} onContinue={()=>setContinueId(selected.id)} originalNumber={jobs.find(j=>j.id===selected.continueOf)?.queueNumber}
     primary={queueAction(selected) !== 'result' && queueAction(selected) !== 'details' ? actionButton(selected) : null}/></>;
 
   return <section className="queue-board" aria-label="Tác vụ Muse">
@@ -236,6 +244,8 @@ export default function QueueBoard({status, records, projectId, busy, onAction, 
             <span className="queue-row-profile">{status?.profiles.find(profile => profile.id === job.profileId)?.name ?? 'Chờ phân hồ sơ'}</span>
             <Badge tone={resultTone(job)}>{reviewLabel(job)}</Badge>
             <div className="queue-row-action">
+              {job.continueOf&&<Button tone="ghost" title="Về việc gốc" onClick={()=>jumpToJob(job.continueOf!)}>↳ #{jobs.find(j=>j.id===job.continueOf)?.queueNumber??'—'}</Button>}
+              {job.state==='ready'&&museThreadUrl(job.providerUrl)&&(!job.provider||job.provider==='muse')&&<Button tone="neutral" disabled={busy} onClick={()=>setContinueId(job.id)}>Tiếp tục hội thoại này</Button>}
               {['failed','cancelled','needs_attention','unknown'].includes(job.state)&&<label><input type="checkbox" aria-label={'Chọn việc '+job.request.name} title={retryBlockedReason(job)||undefined} disabled={busy||!!retryBlockedReason(job)} checked={checked.includes(job.id)} onChange={event=>setChecked(ids=>event.target.checked?[...ids,job.id]:ids.filter(id=>id!==job.id))}/> Chọn</label>}
               {actionButton(job)}
             </div>
@@ -254,14 +264,20 @@ export default function QueueBoard({status, records, projectId, busy, onAction, 
     </div>
     {compact && <Modal open={detailOpen && !!selected} title="Chi tiết tác vụ" description={selected?.request.name}
       locked={busy} onClose={() => setDetailOpen(false)}>{detail}</Modal>}
+    {continueId&&jobs.find(j=>j.id===continueId)&&<MuseContinuationForm key={continueId} job={jobs.find(j=>j.id===continueId)!} status={status} busy={busy} onClose={()=>setContinueId('')} onSend={async payload=>{
+      const created=await onAction('continueConversation',payload) as DesktopJob|undefined;
+      if(created){setMessage('Đã lưu lượt gửi tiếp vào đúng hội thoại gốc.');setFilter('all');setCategory('all');setQuery('');setProfileId('all');setBatchOnly(false);setPage(1);openDetails(created);}
+      return created;
+    }}/>}
   </section>;
 }
 
-function QueueDetails({job, label, tone, profileName, busy, musePaused, primary, onAction, onImport, onRetry, onOriginal}: {
+function QueueDetails({job, label, tone, profileName, busy, musePaused, primary, onAction, onImport, onRetry, onOriginal,onContinue,originalNumber}: {
   job: DesktopJob; label: string; tone: 'neutral' | 'success' | 'danger' | 'warning'; profileName: string; busy: boolean; musePaused:boolean; primary: React.ReactNode;
   onAction: Props['onAction']; onImport: Props['onImport'];
   onRetry: (items: {id: string; body?: string}[], run?: boolean) => Promise<DesktopJob[] | undefined>;
   onOriginal: (id: string) => void;
+  onContinue:()=>void;originalNumber?:number;
 }) {
   const [mediaError, setMediaError] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -282,6 +298,7 @@ function QueueDetails({job, label, tone, profileName, busy, musePaused, primary,
   return <div className="queue-detail-body">
     <h3>{job.queueNumber != null && `#${job.queueNumber} · `}{job.request.name}</h3><p>Nhà cung cấp: {job.provider??'muse'}</p>
     {retryOf&&<Button tone="ghost" onClick={()=>onOriginal(retryOf)}>Việc gốc: {retryOf}</Button>}
+    {job.continueOf&&<Button tone="ghost" title="Về việc gốc" onClick={()=>onOriginal(job.continueOf!)}>↳ #{originalNumber??'—'}</Button>}
     {['failed','cancelled','needs_attention','unknown'].includes(job.state)&&retryReason&&<p className="info-panel" role="status">{retryReason}</p>}
     {musePaused&&<p className="field-help">Muse đang tạm dừng, bật lại ở Tài khoản Muse</p>}
     <Badge tone={tone}>{label}</Badge>
@@ -312,6 +329,7 @@ function QueueDetails({job, label, tone, profileName, busy, musePaused, primary,
       {job.uploadedAssetId && <a className="lab-button neutral" href={'?view=library&lib_asset=' + encodeURIComponent(job.uploadedAssetId)}>Xem trong Thư viện</a>}
       {job.providerUrl && <Button tone="neutral" disabled={busy||musePaused} onClick={() => onAction('openResult', {id: job.id})}>{musePaused?'Muse đang tạm dừng':uiCopy.openMuseResult}</Button>}
       {threadUrl && <Button tone="neutral" onClick={() => void copyThread()}>Sao chép link</Button>}
+      {threadUrl&&job.state==='ready'&&(!job.provider||job.provider==='muse')&&<Button tone="neutral" disabled={busy} onClick={onContinue}>Tiếp tục hội thoại này</Button>}
       {job.state === 'queued' && <Button tone="ghost" disabled={busy} onClick={() => onAction('cancel', {id: job.id})}>Hủy bản nháp</Button>}
       {(job.output || job.failedFilePath || job.diagnosticPath) && <Button tone="ghost" disabled={busy} onClick={() => onAction('reveal', {id: job.id})}>Mở vị trí file</Button>}
       {job.state === 'ready' && onImport && <Button disabled={busy} onClick={() => onImport(job)}>Nhập file vào dự án</Button>}

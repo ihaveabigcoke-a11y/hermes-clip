@@ -9,6 +9,9 @@ import {join,extname} from 'node:path';
 import {freemem} from 'node:os';
 import {profileInput,adapterInput,museConnectionInput,jobInput,jobFingerprint,retryBatchInput,labels,safeMessage} from './contracts.mjs';
 import {retryProfileAllowed} from './job-retry.mjs';
+import {continueBlockedReason, continuationPrompt} from './job-continue.mjs';
+import {continueInput} from './muse-continuation.mjs';
+import {museThreadUrl} from './muse-thread-url.mjs';
 import {isLostJob, runningJobCount, jobHeartbeatTimeout} from './job-status.mjs';
 import {museMediaPrompt} from './muse-video-prompt.mjs';
 import {bundlePrompt} from './muse-bundle.mjs';
@@ -417,6 +420,54 @@ export class Worker {
     this.checking.set(id,pending);
     try { return await pending; } finally { this.checking.delete(id); this.tick(); }
   }
+  assertContinuation(sourceId, mediaType, {profileId, threadUrl, excludeId, admitted=false} = {}) {
+    const source = this.store.job(sourceId);
+    const profile = this.store.get('profiles', []).find(p => p.id === source?.profileId && !this.deleting.has(p.id));
+    const reason = continueBlockedReason(source, profile && {...profile, dispatch:this.night.profileStatus(profile.id)}, mediaType, this.store.jobs(), excludeId);
+    if (reason) throw Error(reason);
+    if (profileId && profileId !== source.profileId) throw Error('Phải dùng đúng hồ sơ đã tạo việc gốc.');
+    if (threadUrl && museThreadUrl(threadUrl)?.replace(/\/$/, '') !== museThreadUrl(source.providerUrl)?.replace(/\/$/, '')) throw Error('Hội thoại không khớp việc gốc. Chưa gửi Muse.');
+    this.night.assertRoom(admitted?0:1, source.profileId);
+    return source;
+  }
+  async continueConversation(payload) {
+    const input = continueInput.parse(payload);
+    assertMuseNewTask(this.store);
+    const signature = createHash('sha256').update(JSON.stringify({...input,references:input.references.map(({bytes,...r})=>r)})).digest('hex');
+    // A repeated IPC request only returns the receipt; it never starts again.
+    const prior = this.store.get('muse_continuations', {})[input.requestId];
+    if (prior) {if (prior.signature !== signature) throw Error('Mã gửi tiếp đã dùng cho nội dung khác.');return this.store.job(prior.id);}
+    if (this.continuationPending) throw Error('Đang chuẩn bị lượt gửi tiếp. Chờ thao tác hoàn tất.');
+    this.continuationPending = true;
+    const dispatchVersion = this.dispatchVersion;
+    try {
+      const source = this.assertContinuation(input.id, input.mediaType, input);
+      if (!this.config()?.enabled) throw Error('Luồng Muse chưa được bật.');
+      if (this.longVideoOwner) throw Error('Chờ Video dài kết thúc trước khi gửi tiếp.');
+      if (this.store.jobs().length >= 500) throw Error('Đã chạm giới hạn 500 job local.');
+      const {longVideo, ...oldRequest} = source.request;
+      let request = jobInput.parse({...oldRequest, mediaType:input.mediaType, references:input.references,
+        name:('Tiếp tục · ' + source.request.name).slice(0,150),
+        prompt:continuationPrompt(input.description, input.mediaType, source.request.ratio, source.request.duration)});
+      for (const r of request.references) if (createHash('sha256').update(r.bytes).digest('hex') !== r.sha256) throw Error('Ảnh tham chiếu sai checksum.');
+      assertDiskSpace(this.root, 64*1024**2, storagePolicy(this.store));
+      if (this.prepareContinuationRequest) request = await this.prepareContinuationRequest(source, request, input.requestId);
+      await this.validateMediaProvider?.(request);
+      const refDir = join(this.root, 'references'); await mkdir(refDir, {recursive:true});
+      const references = [];
+      for (const {bytes,...r} of request.references) {
+        const path = join(refDir, r.sha256 + ({'image/jpeg':'.jpg','image/png':'.png','image/webp':'.webp'}[r.type]));
+        await writeFile(path,bytes); references.push({...r,path});
+      }
+      assertMuseNewTask(this.store);
+      if (dispatchVersion !== this.dispatchVersion) throw Error('Đã dừng giao mới. Chưa gửi tiếp.');
+      this.assertContinuation(input.id, input.mediaType, input);
+      this.night.begin(); this.night.assertRoom(1,source.profileId);
+      const job = this.store.continueJob(source, {...request,references}, input.requestId, signature);
+      await this.start({count:1,jobIds:[job.id],maxConcurrent:this.maxConcurrent});
+      return this.store.job(job.id);
+    } finally { this.continuationPending = false; }
+  }
   async enqueue(payload,{profileId,batchId}={}){
     assertMuseNewTask(this.store);
     await this.validateMediaProvider?.(payload);
@@ -478,7 +529,8 @@ export class Worker {
     const pending = jobIds ? queued.filter(job => jobIds.includes(job.id)) : queued.slice(0, count);
     if (pending.length !== count) throw Error('Số lượt vượt số job nháp hiện có.');
     if(pending.some(j=>j.request.longVideo&&(j.request.longVideo.runId!==sequenceId||sequenceId!==this.longVideoOwner)))throw Error('Cảnh thuộc chuỗi Video dài; không gửi lẻ hoặc chạy lại.');
-    if(pending.some(job=>job.retryOf)){this.night.begin();this.night.assertRoom(count);}
+    if(pending.some(job=>job.retryOf||job.continueOf)){this.night.begin();this.night.assertRoom(count);}
+    for(const job of pending)if(job.continueOf)this.assertContinuation(job.continueOf,job.request.mediaType,{profileId:job.preferredProfileId,threadUrl:job.continueThreadUrl,excludeId:job.id});
     if(pending.some(j=>j.bundleParentId))throw Error('Cảnh thuộc một tin Muse chung. Kiểm tra lượt gốc trước khi gửi.');
     if (!this.store.get('profiles', []).some(profile => profile.enabled)) throw Error('Thêm profile và đăng nhập Muse trong Tài khoản.');
     for (const job of pending) await this.validateMediaProvider?.(job.request);
@@ -612,6 +664,8 @@ export class Worker {
     const bundleTasks=new Map();let previewTail=Promise.resolve();
     const acquirePreview=async()=>{const previous=previewTail;let release;previewTail=new Promise(r=>release=r);await previous;return release;};
     try {
+      const continuing = this.store.job(id);
+      if (!resume && continuing.continueOf) this.assertContinuation(continuing.continueOf,continuing.request.mediaType,{profileId,threadUrl:continuing.continueThreadUrl,excludeId:id});
       if(!resume)for(const member of bundle){await this.validateMediaProvider?.(this.store.job(member).request, {admitted:true});if(member!==id)this.store.transition(member,'preflight',{profileId,note:'Chuẩn bị cảnh trong cùng một tin Muse.'});}
       assertMuseAvailable(this.store, {jobId:id, profileId});
       assertDiskSpace(this.root,64*1024**2,storagePolicy(this.store));
@@ -623,7 +677,7 @@ export class Worker {
       const startUrl = new URL(this.config().startUrl);
       const trackedWarmPage=this.warmPages.get(profileId);
       const warmPage=this.isWarm(profileId)?trackedWarmPage:null;
-      page = warmPage&&!warmPage.isClosed()?warmPage:context.pages().find(tab => {
+      page = continuing.continueOf ? await context.newPage() : warmPage&&!warmPage.isClosed()?warmPage:context.pages().find(tab => {
         try { return new URL(tab.url()).origin === startUrl.origin; } catch { return false; }
       }) ?? await context.newPage();
       if(page===trackedWarmPage)adoptedWarmPage=page;
@@ -638,6 +692,8 @@ export class Worker {
       if(this.night.current())adapter.guard=()=>assertMusePage(page);
       const checkpoint = (state, patch = {}) => {
         const transition=()=>{assertMuseAvailable(this.store, {jobId:id, profileId});
+          const current=this.store.job(id);
+          if(state==='submitting'&&current.continueOf)this.assertContinuation(current.continueOf,current.request.mediaType,{profileId,threadUrl:current.continueThreadUrl,excludeId:id,admitted:true});
           if(state==='submitted'&&bundleTasks.size){
             // A card can be downloading while submit still observes later cards.
             this.store.put({...this.store.job(id),bundleProviderIds:patch.bundleProviderIds});return this.store.job(id);
@@ -688,7 +744,7 @@ export class Worker {
           };
           const prompt=bundlePrompt(adapter.expectedScenes);this.store.put({...this.store.job(id),submittedPrompt:prompt});await adapter.prepare(page,{...request,prompt});
         }
-        else await adapter.prepare(page, request);
+        else await adapter.prepare(page, request, {threadUrl:this.store.job(id).continueThreadUrl});
         timings.preparedAt=Date.now();
         this.profileHealth(profileId, 'ready');
         this.store.transition(id, 'prepared', {note: 'Đã đính kèm reference và điền prompt.'});

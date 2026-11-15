@@ -4,6 +4,7 @@ import {readFile,writeFile} from 'node:fs/promises';
 import {museMediaPrompt,museVideoBody} from './muse-video-prompt.mjs';
 import {mapBundleCards} from './muse-bundle.mjs';
 import {readCompleteVideoSource} from './video-download.mjs';
+import {museThreadUrl} from './muse-thread-url.mjs';
 
 export const explicitMediaRefusal = text => /(?:could not|cannot|can't|unable to)\s+(?:create|generate|make)\b.{0,60}\b(?:video|image|file)\b|\b(?:video|image)\s+generation\s+(?:(?:isn't|is not|is currently not|is not currently)\s+available|is\s+(?:currently\s+)?unavailable)\b|\bvideo_not_available\b|\bPROMPT ONLY\b.{0,80}\bno video was generated\b/i.test(text);
 
@@ -33,29 +34,45 @@ export class MuseAdapter {
     return loggedIn.isVisible();
   }
 
-  async prepareComposer(page) {
+  assertContinuationPage(page) {
+    if (this.continueThreadUrl && museThreadUrl(page.url())?.replace(/\/$/, '') !== this.continueThreadUrl.replace(/\/$/, '')) {
+      throw Error('Muse mở khác hội thoại gốc. Chưa gửi tiếp.');
+    }
+  }
+  async prepareComposer(page, threadUrl) {
+    this.continueThreadUrl = null;
+    if (threadUrl !== undefined) {
+      if (!this.chatMode || !museThreadUrl(threadUrl)) throw Error('Link hội thoại Muse không hợp lệ. Chưa gửi tiếp.');
+      this.continueThreadUrl = museThreadUrl(threadUrl);
+      await page.goto(this.continueThreadUrl, {waitUntil:'domcontentloaded', timeout:30000});
+      this.assertContinuationPage(page);
+      if (!await this.session(page)) throw Object.assign(Error('Phiên Muse cần đăng nhập.'),{code:'MUSE_LOGIN_REQUIRED'});
+      await this.guard?.();
+      await page.locator('[data-message-id][data-message-role="user"]').first().waitFor({state:'visible',timeout:30000});
+      await page.locator('[data-message-id][data-message-role="assistant"]').first().waitFor({state:'visible',timeout:30000});
+    }
     if (!this.chatMode) return;
     const config = this.config;
     await page.getByRole('button', {name: 'Stop', exact: true}).waitFor({state: 'hidden', timeout: config.timeoutSeconds * 1000});
     if ((await page.locator(config.prompt).inputValue()).trim()) {
       throw Object.assign(Error('Browser Muse đang có bản nháp. Gửi hoặc lưu bản nháp trước khi chạy job.'), {code:'MUSE_DRAFT_PRESENT'});
     }
-    if (new URL(page.url()).pathname !== '/thread/new') {
+    if (!this.continueThreadUrl && new URL(page.url()).pathname !== '/thread/new') {
       await page.goto(new URL('/thread/new', config.startUrl).href, {waitUntil:'domcontentloaded', timeout:30000});
     }
     await page.locator(config.prompt).waitFor({state:'visible', timeout:15000});
   }
 
-  async prepare(page, job) {
+  async prepare(page, job, {threadUrl} = {}) {
     this.mediaType = job.mediaType;
     await this.guard?.();
-    if (!await this.session(page)) {
+    if (threadUrl === undefined && !await this.session(page)) {
       const error = new Error('Phiên Muse cần đăng nhập.');
       error.code = 'MUSE_LOGIN_REQUIRED';
       throw error;
     }
     const config = this.config;
-    await this.prepareComposer(page);
+    await this.prepareComposer(page, threadUrl);
     if (job.references.length) {
       if (!config.upload) throw Error('Luồng này chưa khai báo upload reference.');
       if (this.chatMode) await page.locator(config.prompt).fill('');
@@ -109,6 +126,7 @@ export class MuseAdapter {
   }
 
   async submit(page, checkpoint) {
+    this.assertContinuationPage(page);
     const config = this.config;
     // Bundle ordinals belong to the first card appearance, even while a card
     // is still an empty media placeholder. Single jobs still require media.
@@ -129,7 +147,15 @@ export class MuseAdapter {
     const oldAssistantIds = new Set(assistantMessages ? await assistantMessages.evaluateAll(
       elements => elements.map(element => element.getAttribute('data-message-id')),
     ) : []);
-    await checkpoint('submitting');
+    await checkpoint('submitting', this.continueThreadUrl ? {providerUrl:this.continueThreadUrl,
+      continuationBaseline:{mediaIds:[...oldIds],userIds:[...oldUserIds],assistantIds:[...oldAssistantIds]}} : {});
+    // Pacing may wait a minute: recheck navigation and service notices at send.
+    this.assertContinuationPage(page);
+    if (this.continueThreadUrl) {
+      await this.guard?.();
+      const currentUsers=await userMessages.evaluateAll(elements=>elements.map(element=>element.getAttribute('data-message-id')));
+      if(currentUsers.length!==oldUserIds.size||currentUsers.some(id=>!oldUserIds.has(id))) throw Error('Hội thoại đã có tin nhắn khác trong lúc chờ. Kiểm tra kết quả trước khi gửi tiếp.');
+    }
     this.timings={sentAt:Date.now()};
     await page.getByRole('button', {name: config.submitName, exact: true}).click({timeout: 30000});
     // Muse creates its media message after generation finishes. Its result ID can
@@ -223,17 +249,20 @@ export class MuseAdapter {
       if (await page.getByRole('button', {name: 'Stop', exact: true}).isVisible()) {
         throw Error('Muse vẫn đang trả lời. Chờ phản hồi kết thúc rồi kiểm tra lại.');
       }
-      const users = await page.locator('[data-message-id][data-message-role="user"]').evaluateAll(elements =>
-        elements.map(element => ({text: element.textContent || '', unconfirmed: !!element.querySelector('[role="alert"]')})));
+      const allUsers = await page.locator('[data-message-id][data-message-role="user"]').evaluateAll(elements =>
+        elements.map(element => ({id:element.getAttribute('data-message-id'),text: element.textContent || '', unconfirmed: !!element.querySelector('[role="alert"]')})));
+      if(job.continueOf&&!job.continuationBaseline)throw Error('Thiếu mốc hội thoại trước khi gửi tiếp. Mở nguồn Muse để đối soát.');
+      const users = job.continuationBaseline ? allUsers.filter(user=>!job.continuationBaseline.userIds.includes(user.id)) : allUsers;
       const requested = job.request.mediaType === 'video' ? museVideoBody(job.request.prompt) : job.request.prompt;
       if (users.length !== 1 || users[0].unconfirmed || !users[0].text.includes(requested)) {
         throw Error('Hội thoại đã thay đổi hoặc chưa xác nhận gửi. Mở nguồn Muse để đối soát.');
       }
-      const ids = await this.mediaCards(page, job.request?.mediaType).evaluateAll((elements, attribute) =>
+      const allIds = await this.mediaCards(page, job.request?.mediaType).evaluateAll((elements, attribute) =>
         elements.map(element => element.getAttribute(attribute)).filter(Boolean), this.config.resultIdAttribute);
+      const ids=job.continuationBaseline?allIds.filter(id=>!job.continuationBaseline.mediaIds.includes(id)):allIds;
       if (ids.length > 1) throw Error('Có nhiều kết quả. Mở nguồn Muse để chọn đúng file.');
       const replies = await page.locator('[data-message-id][data-message-role="assistant"]')
-        .evaluateAll(elements => elements.map(element => element.innerText?.trim() || element.textContent?.trim() || ''));
+        .evaluateAll((elements,oldIds) => elements.filter(element=>!oldIds.includes(element.getAttribute('data-message-id'))).map(element => element.innerText?.trim() || element.textContent?.trim() || ''),job.continuationBaseline?.assistantIds??[]);
       return {providerId: ids[0] ?? null, response: replies.join('\n\n'), legacyResponse: replies.at(-1) ?? ''};
     };
     let latest = await read(), settled = false;

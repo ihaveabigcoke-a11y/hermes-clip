@@ -144,6 +144,19 @@ export class Store {
       return verified;
     } catch {return false;} finally {if(fd!==undefined)closeSync(fd);}
   }
+  continueJob(source, request, requestId, signature) {
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      const operations=this.get('muse_continuations',{}),prior=operations[requestId];
+      if(prior){if(prior.signature!==signature)throw Error('Mã gửi tiếp đã dùng cho nội dung khác.');this.db.exec('COMMIT');return this.job(prior.id);}
+      const {job}=this.enqueue(request,'continue:'+requestId);
+      const linked=this.put({...job,continueOf:source.id,retryRootId:source.retryRootId??source.id,
+        continueThreadUrl:source.providerUrl,preferredProfileId:source.profileId,
+        history:[{at:job.createdAt,state:'queued',note:'Tiếp tục đúng hội thoại và hồ sơ của việc gốc.'}]});
+      this.set('muse_continuations',{...operations,[requestId]:{id:linked.id,signature}});
+      this.db.exec('COMMIT');return linked;
+    } catch(error){this.db.exec('ROLLBACK');throw error;}
+  }
   retry(id){return this.retryMany([{id}])[0];}
   retryMany(items, requestId = randomUUID()) {
     const hash=createHash('sha256').update(JSON.stringify(items)).digest('hex');
