@@ -40,9 +40,13 @@ try{
  const pending=page.waitForResponse(r=>r.url().endsWith('/api/library/merge'));await page.getByRole('button',{name:'Ghép và lưu',exact:true}).click();const response=await pending;assert.equal(response.status(),200);result=await response.json();
  const video=page.locator(`video[src="/api/assets/${result.assetId}"]`);await video.waitFor();await video.evaluate(async v=>{v.muted=true;await v.play();});await page.waitForFunction(id=>document.querySelector(`video[src="/api/assets/${id}"]`)?.currentTime>0,result.assetId);await video.evaluate(v=>v.pause());
  await page.reload();await page.getByText('Bản ghép',{exact:true}).waitFor();
+ await video.evaluate(async v=>{v.muted=true;await v.play();});await page.waitForFunction(id=>document.querySelector(`video[src="/api/assets/${id}"]`)?.currentTime>0,result.assetId);await video.evaluate(v=>v.pause());
  for(const width of [1366,1920]){await page.setViewportSize({width,height:width===1366?900:1080});const name='saved-'+width+'.png';await page.screenshot({path:join(out,name),fullPage:true});shots.push(name);}
  await page.getByRole('button',{name:'Đóng hộp thoại',exact:true}).click();await page.getByRole('button',{name:'Xem Clip vuông im lặng',exact:true}).click();await page.getByRole('button',{name:'Xem gốc–kết quả cạnh nhau',exact:true}).click();
  assert.deepEqual(await page.locator('.library-comparison-players video').evaluateAll(vs=>vs.map(v=>v.getAttribute('src'))),['/api/assets/clip0','/api/assets/clip1']);
+ for(const player of await page.locator('.library-comparison-players video').all())await player.evaluate(async v=>{v.muted=true;await v.play();});
+ await page.waitForFunction(()=>[...document.querySelectorAll('.library-comparison-players video')].every(v=>v.currentTime>0));
+ for(const player of await page.locator('.library-comparison-players video').all())await player.evaluate(v=>v.pause());
  for(const width of [1366,1920]){await page.setViewportSize({width,height:width===1366?900:1080});const name='comparison-'+width+'.png';await page.screenshot({path:join(out,name),fullPage:true});shots.push(name);}
  for(const [i,m] of f.media.entries())assert.equal(digest(await (await page.request.get(origin+'/api/assets/clip'+i)).body()),digest(Buffer.from(m.base64,'base64')));
  const after=await page.evaluate(()=>window.productLabDesktop.status());assert.equal(after.musePaused,false);assert.equal(after.jobs.length,3);assert.equal(after.active,0);assert.equal(after.budget,0);assert.deepEqual(errors,[]);
