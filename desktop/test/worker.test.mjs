@@ -3,7 +3,7 @@ import {Store} from '../src/store.mjs';import {Worker} from '../src/worker.mjs';
 
 test('retry clears inherited failure metadata only on the new attempt',()=>fixture(async store=>{
  const job=store.enqueue({sceneId:'fixture',references:[]},'retry-failure-metadata').job;
- store.transition(job.id,'preflight');store.transition(job.id,'failed',{failureCode:'MUSE_NO_MEDIA',errorKind:'refused',providerResponse:'PROMPT ONLY'});
+ store.transition(job.id,'preflight');store.transition(job.id,'failed',{failureCode:'MUSE_NO_MEDIA',errorKind:'refused',providerResponse:'PROMPT ONLY',reconciled:true});
  const original=store.job(job.id),retry=store.retry(job.id);
  assert.equal(retry.failureCode,null);assert.equal(retry.errorKind,null);assert.equal(retry.providerResponse,null);
  assert.equal(retry.state,'queued');assert.equal(retry.retryOf,original.id);assert.deepEqual(store.job(original.id),original);
@@ -277,6 +277,8 @@ test('failed and repeated checkpoints cannot consume a second slot, retries get 
   store.transition(queued.id, 'downloading');
   store.transition(queued.id, 'validating');
   store.transition(queued.id, 'failed');
+  assert.throws(() => store.retry(queued.id), /đối soát/);
+  store.put({...store.job(queued.id),reconciled:true,reconciledAt:Date.now()});
   const retry = store.retry(queued.id);
   assert.equal(retry.submitBatchId, null);
   store.transition(retry.id, 'preflight');

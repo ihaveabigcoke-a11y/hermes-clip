@@ -111,7 +111,7 @@ async function startApplication() {
  Object.assign(calls,{setMusePaused:p=>worker.setMusePaused(p)});
  Object.assign(calls,{warmMuseProfiles:()=>worker.warmProfiles()});
  const musePackage=manual?new MusePackage({worker,manual,domain:await import('../local-dist/server/lib/lab/production.mjs')}):null;
- Object.assign(calls,{museNightStatus:()=>worker.night.status(),beginMuseNight:()=>worker.night.begin(),saveMusePacing:p=>worker.night.configure(p),musePackagePreview:async p=>{if(!musePackage)throw Error('Cần workspace local.');return (await musePackage.preview(p)).public;},musePackageStart:async p=>{if(!musePackage)throw Error('Cần workspace local.');return musePackage.start(p);}});
+ Object.assign(calls,{retryMany:p=>worker.retryMany(p),museNightStatus:()=>worker.night.status(),beginMuseNight:()=>worker.night.begin(),saveMusePacing:p=>worker.night.configure(p),musePackagePreview:async p=>{if(!musePackage)throw Error('Cần workspace local.');return (await musePackage.preview(p)).public;},musePackageStart:async p=>{if(!musePackage)throw Error('Cần workspace local.');return musePackage.start(p);}});
  Object.assign(calls,{deleteProfile:p=>worker.deleteProfile(p)});
  if(deployments)Object.assign(calls,{deploymentStart:p=>deployments.start(p),deploymentStatus:()=>deployments.status(),deploymentResume:p=>deployments.resume(p),deploymentPause:p=>deployments.pause(p)});
  Object.assign(calls,{museChatSkipReconciliation:p=>museChat.skipReconciliation(p)});

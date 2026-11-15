@@ -19,6 +19,7 @@ export const queueFilters = [
   {id: 'queued', label: workerStateLabels.queued},
   {id: 'attention', label: 'Cần kiểm tra'},
   {id: 'failed', label: workerStateLabels.failed},
+  {id: 'retryable', label: 'Lỗi / đã dừng'},
   {id: 'history', label: 'Lịch sử'},
 ] as const;
 export type QueueFilter = typeof queueFilters[number]['id'];
@@ -30,6 +31,7 @@ export function matchesQueueFilter(job: DesktopJob, filter: QueueFilter, resolve
   if (filter === 'history') return historical;
   if (filter === 'active') return activeStates.has(job.state);
   if (filter === 'attention') return job.state === 'needs_attention' || !!job.importError;
+  if (filter === 'retryable') return ['failed','cancelled'].includes(job.state);
   return job.state === filter && !resolvedFailures.has(job.id);
 }
 

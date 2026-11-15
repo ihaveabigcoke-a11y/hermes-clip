@@ -5,7 +5,8 @@ import {randomUUID,createHash} from 'node:crypto';
 import {mkdir,writeFile,readFile,stat,rename,unlink} from 'node:fs/promises';
 import {join,extname} from 'node:path';
 import {freemem} from 'node:os';
-import {profileInput,adapterInput,museConnectionInput,jobInput,jobFingerprint,labels,safeMessage} from './contracts.mjs';
+import {profileInput,adapterInput,museConnectionInput,jobInput,jobFingerprint,retryBatchInput,labels,safeMessage} from './contracts.mjs';
+import {retryProfileAllowed} from './job-retry.mjs';
 import {museMediaPrompt} from './muse-video-prompt.mjs';
 import {bundlePrompt} from './muse-bundle.mjs';
 import {bundleMidpointFrame,assertDistinctBundleFrames} from './muse-bundle-visual.mjs';
@@ -463,6 +464,7 @@ export class Worker {
     const queued = this.store.jobs().reverse().filter(job => job.state === 'queued');
     const pending = jobIds ? queued.filter(job => jobIds.includes(job.id)) : queued.slice(0, count);
     if (pending.length !== count) throw Error('Số lượt vượt số job nháp hiện có.');
+    if(pending.some(job=>job.retryOf)){this.night.begin();this.night.assertRoom(count);}
     if(pending.some(j=>j.bundleParentId))throw Error('Cảnh thuộc một tin Muse chung. Kiểm tra lượt gốc trước khi gửi.');
     if (!this.store.get('profiles', []).some(profile => profile.enabled)) throw Error('Thêm profile và đăng nhập Muse trong Tài khoản.');
     for (const job of pending) await this.validateMediaProvider?.(job.request);
@@ -511,7 +513,7 @@ export class Worker {
       if(queuedJob.bundleParentId){this.approvedIds=this.approvedIds.filter(candidate=>candidate!==id);continue;}
       if(queuedJob.deploymentBatchId&&queuedJob.deploymentBatchId!==this.store.batch()?.id){this.note(id,'Đợt Muse đã thay đổi; chưa giao tác vụ từ đợt cũ.');this.approvedIds=this.approvedIds.filter(candidate=>candidate!==id);continue;}
       const attempted = this.attemptedProfiles.get(id) ?? new Set();
-      const candidates = profiles.filter(profile => (!queuedJob.preferredProfileId||profile.id===queuedJob.preferredProfileId)&&!this.deleting.has(profile.id)&&!attempted.has(profile.id));
+      const candidates = profiles.filter(profile => retryProfileAllowed(queuedJob,profile)&&(!queuedJob.preferredProfileId||profile.id===queuedJob.preferredProfileId)&&!this.deleting.has(profile.id)&&!attempted.has(profile.id));
       const profile = candidates.find(profile => !this.active.has(profile.id) && !this.checking.has(profile.id) && !this.closing.has(profile.id) && !this.chatting.has(profile.id));
       if (!profile && candidates.length) continue;
       if (!profile) {
@@ -605,7 +607,7 @@ export class Worker {
           : this.store.transition(id, state, {note: labels[state], ...patch});
           if(state==='submitting'||state==='submitted')for(const [index,member] of bundle.entries())if(member!==id)this.store.transition(member,state,{profileId,submittedViaParent:id,providerUrl:patch.providerUrl??null,providerId:patch.bundleProviderIds?.[index]??null,note:'Cảnh trong một tin Muse; không gửi riêng.'});
           return result;};
-        if(state==='submitting'&&this.night.current())return this.night.admit(id,()=>!museIsPaused(this.store)&&!this.paused,profileId).then(transition);
+        if(state==='submitting'&&this.night.current())return this.night.admit(id,()=>!museIsPaused(this.store)&&!this.paused&&this.store.get('profiles',[]).some(profile=>profile.id===profileId&&profile.enabled&&retryProfileAllowed(this.store.job(id),profile)),profileId).then(transition);
         return transition();
       };
       if (!resume) {
@@ -795,8 +797,12 @@ export class Worker {
   }
   async retry(id) {
     await this.assertJobNotSkipped(id);
-    const job=this.store.retry(id);
-    return this.store.put({...job,request:{...job.request,prompt:museMediaPrompt(job.request.prompt,job.request.mediaType)}});
+    return this.store.retry(id);
+  }
+  async retryMany(payload) {
+    const {items,requestId}=retryBatchInput.parse(payload);
+    for(const item of items)await this.assertJobNotSkipped(item.id);
+    return this.store.retryMany(items,requestId);
   }
   async resume(id,{recoverExisting=false}={}) {
     if(!recoverExisting)await this.assertJobNotSkipped(id);

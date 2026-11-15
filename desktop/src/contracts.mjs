@@ -3,6 +3,7 @@ import {createHash} from 'node:crypto';
 import {museVideoBody} from './muse-video-prompt.mjs';
 export const SITE='https://product-lab-chi-duc.ceimiu.chatgpt.site';
 const id=z.string().regex(/^[a-zA-Z0-9_-]{1,120}$/);
+export const retryBatchInput=z.object({requestId:id,items:z.array(z.object({id,body:z.string().max(10000).optional()}).strict()).min(1).max(30)}).strict();
 export {profileInput,adapterInput,museConnectionInput} from './shared.mjs';
 export const jobInput=z.object({projectId:id,productId:id,productRevision:z.number().int().positive(),sceneId:id,sceneRevision:z.number().int().positive(),name:z.string().max(150),mediaType:z.enum(['image','video']),ratio:z.enum(['9:16','16:9','1:1','4:3','3:4']),duration:z.number().min(1).max(120),prompt:z.string().min(1).max(10000),references:z.array(z.object({id,version:z.number().int().positive(),sha256:z.string().regex(/^[a-f0-9]{64}$/),type:z.enum(['image/jpeg','image/png','image/webp']),role:z.enum(['product','person','style','background','logo','voice','first_frame','last_frame']).optional(),bytes:z.instanceof(Uint8Array).refine(x=>x.length>0&&x.length<=8*1024*1024)})).max(12)}).superRefine((job, ctx) => {
   const first = job.references.filter(reference => reference.role === 'first_frame').length;
