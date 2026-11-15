@@ -14,7 +14,10 @@
 .character-form input:not([type="file"]),.character-form textarea,.character-form select{width:100%;min-width:0;border:1px solid var(--lab-border);border-radius:6px;padding:10px;background:var(--lab-bg);color:inherit;font:inherit;font-weight:400}
 .character-edit-images>div{position:relative}
 .character-edit-images img{width:120px;height:120px;object-fit:contain;border-radius:6px}
-.character-edit-images button{position:absolute;right:0;top:0;background:var(--lab-panel);border:1px solid var(--lab-border);border-radius:50%;padding:6px}
+.character-image-label{display:inline-flex;align-items:center;gap:6px}
+.character-form .character-edit-images .lab-button.ghost{position:absolute;right:0;top:0;width:32px;height:32px;min-width:32px;min-height:32px;background:#202524;color:#fff;border:2px solid #fff;outline:1px solid #202524;border-radius:50%;padding:6px}
+.character-form .character-edit-images .lab-button.ghost:hover{background:#353d3a;color:#fff}
+.character-form .character-edit-images .lab-button.ghost:focus-visible{outline:2px solid var(--lab-lime,#d4ff3a);outline-offset:3px}
 .character-prompt{display:grid;gap:8px;margin:8px 0 16px}
 .character-switch{display:flex;align-items:center;gap:8px}
 .character-chips{margin:0}

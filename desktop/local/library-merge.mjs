@@ -1,11 +1,17 @@
 import {randomUUID,createHash} from 'node:crypto';
 import {mkdtemp,readFile,rm,stat,copyFile} from 'node:fs/promises';
+import {createReadStream} from 'node:fs';
 import {join} from 'node:path';
 import {probeMedia} from '../src/compress.mjs';
 import {concatLibraryClips} from '../src/media.mjs';
 
 const id=value=>typeof value==='string'&&/^[a-zA-Z0-9_-]{1,120}$/.test(value);
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
+async function hashFile(path){
+ const digest=createHash('sha256');
+ for await(const chunk of createReadStream(path))digest.update(chunk);
+ return digest.digest('hex');
+}
 export function libraryMerger({db,root,filePath,bucket,productionSchema,render=concatLibraryClips}){
  const active=new Map();
  const get=(key,kind)=>db.prepare('SELECT * FROM lab_records WHERE owner_id=? AND id=? AND kind=?').get('local-owner',key,kind);
@@ -44,7 +50,7 @@ export function libraryMerger({db,root,filePath,bucket,productionSchema,render=c
     if(size!==asset.size||size>256*1024**2)throw Error('Kích thước clip nguồn không hợp lệ.');
     const path=join(temp,'clip-'+index+(asset.type==='video/webm'?'.webm':'.mp4'));
     await copyFile(source,path);
-    if(hash(await readFile(path))!==take.sha256)throw Error('Hash clip nguồn đã thay đổi; giữ bản gốc và dừng ghép.');
+    if(await hashFile(path)!==take.sha256)throw Error('Hash clip nguồn đã thay đổi; giữ bản gốc và dừng ghép.');
     const probe=await probeMedia(path);
     if(!Number.isFinite(probe.duration)||probe.duration<=0)throw Error('Không đọc được thời lượng clip nguồn.');
     clips.push({path,duration:probe.duration,audio:probe.audio.length>0,width:probe.width,height:probe.height});

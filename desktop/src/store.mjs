@@ -7,6 +7,8 @@ import {openSync, readSync, fstatSync, closeSync} from 'node:fs';
 import {museMediaPrompt, museVideoBody} from './muse-video-prompt.mjs';
 import {migrateMuseClips,seedMuseClips,claimMuseClips,duplicateMuseClip,recordMuseClip} from './muse-clip-ledger.mjs';
 export class Store {
+  failedOutputChecks = new Map();
+  get closed(){return !this.db.isOpen;}
   constructor(path){this.db=new DatabaseSync(path);this.db.exec("PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA busy_timeout=5000; CREATE TABLE IF NOT EXISTS kv(k TEXT PRIMARY KEY,v TEXT NOT NULL); CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY,fingerprint TEXT NOT NULL,body TEXT NOT NULL); CREATE INDEX IF NOT EXISTS fingerprint_idx ON jobs(fingerprint);");migrateMuseClips(this.db);}
   seedMuseClips(records){seedMuseClips(this.db,records);}
   claimMuseClips(entries){claimMuseClips(this.db,entries);}
@@ -125,10 +127,21 @@ export class Store {
     try {
       fd=openSync(output.path,'r');const before=fstatSync(fd);
       if(!before.isFile()||before.size<=0||before.size>64*1024**2||(output.size!=null&&output.size!==before.size))return false;
+      const key=JSON.stringify([job.updatedAt,output,before.size,before.mtimeMs,before.ctimeMs,before.dev,before.ino]);
+      if(this.failedOutputChecks.get(job.id)===key)return false;
+      this.failedOutputChecks.delete(job.id);
       const hash=createHash('sha256'),buffer=Buffer.alloc(1024*1024);let size=0,n;
       while((n=readSync(fd,buffer,0,buffer.length,null))>0){size+=n;if(size>64*1024**2)return false;hash.update(buffer.subarray(0,n));}
       const after=fstatSync(fd);
-      return size===before.size&&after.size===before.size&&after.mtimeMs===before.mtimeMs&&hash.digest('hex')===output.sha256.toLowerCase();
+      const stable=size===before.size&&after.size===before.size&&after.mtimeMs===before.mtimeMs&&after.ctimeMs===before.ctimeMs;
+      const verified=stable&&hash.digest('hex')===output.sha256.toLowerCase();
+      // Only memoize a stable failure. Recovery still rehashes every success
+      // before publishing ready; replacing/editing a file invalidates a miss.
+      if(stable&&!verified){
+        if(this.failedOutputChecks.size>=500)this.failedOutputChecks.delete(this.failedOutputChecks.keys().next().value);
+        this.failedOutputChecks.set(job.id,key);
+      }
+      return verified;
     } catch {return false;} finally {if(fd!==undefined)closeSync(fd);}
   }
   retry(id){return this.retryMany([{id}])[0];}
@@ -171,6 +184,6 @@ export class Store {
       this.db.exec('COMMIT');return jobs;
     }catch(error){this.db.exec('ROLLBACK');throw error;}
   }
-  close(){this.db.close();}
+  close(){if(!this.closed)this.db.close();this.failedOutputChecks.clear();}
 }
 

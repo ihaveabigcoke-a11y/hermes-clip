@@ -32,6 +32,9 @@ export class Worker {
   memoryRecoveryAttempts = new Set();
   warmed = new Map();
   warmPages = new Map();
+  closed = false;
+  pendingTicks = new Set();
+  tickErrors = [];
   constructor(store,root,browser,secret,memory=freemem){this.memory=memory;this.store=store;this.night=new MuseNight(store);this.root=root;this.browser=browser;this.secret=secret;this.contexts=new Map();this.opening=new Map();this.bridges=new Map();this.active=new Map();this.paused=true;this.budget=0;this.approvedIds=[];this.maxConcurrent=1;this.attemptedProfiles=new Map();this.backgroundProfiles=new Set();this.store.recover();this.vpn=new TouchVpn(join(root,'extensions'));this.checking=new Map();this.connectingVpn=new Map();
     // Mapping failures disable auto bundles only for this app session. Keep
     // all receipts, pacing, profile stops and the user's switches intact.
@@ -509,7 +512,7 @@ export class Worker {
     return batch;
   }
   tick() {
-    if (museIsPaused(this.store) || this.paused || this.reclaimingMemory || !this.approvedIds.length || this.active.size >= this.maxConcurrent) return;
+    if (this.closed || this.store.closed || this.paused || museIsPaused(this.store) || this.reclaimingMemory || !this.approvedIds.length || this.active.size >= this.maxConcurrent) return;
     const disk=this.diskStatus();
     if(disk.blocked){for(const id of this.approvedIds)this.note(id,disk.message);this.paused=true;return;}
     const profiles = this.store.get('profiles', []).filter(profile => profile.enabled&&!this.night.profileStatus(profile.id).stopped)
@@ -541,7 +544,7 @@ export class Worker {
           this.memoryRecoveryAttempts.add(id);
           this.reclaimingMemory = true;
           this.note(id, 'Đang đóng hồ sơ chạy nền đã rảnh để giải phóng RAM.');
-          void this.reclaimMemory(id, idle);
+          this.trackTick(this.reclaimMemory(id, idle));
           return;
         }
         this.note(id, 'RAM trống chưa đủ để mở thêm browser. Tác vụ được giữ trong hàng chờ.');
@@ -553,12 +556,28 @@ export class Worker {
       this.approvedIds = this.approvedIds.filter(candidate => candidate !== id);
       this.store.transition(id, 'preflight', {profileId: profile.id, note: 'Đang mở profile ' + profile.name + ' và kiểm tra phiên Muse.'});
       this.active.set(profile.id, id);
-      void this.run(id, profile.id).finally(() => {
+      this.trackTick(this.run(id, profile.id).finally(() => {
         this.active.delete(profile.id);
         this.tick();
-      });
+      }));
     }
     this.budget = this.approvedIds.length;
+  }
+  trackTick(task) {
+    this.pendingTicks.add(task);
+    // Observe both outcomes without creating another unhandled rejection.
+    task.then(() => this.pendingTicks.delete(task), error => {this.pendingTicks.delete(task);this.tickErrors.push(error);});
+  }
+  async close() {
+    this.closed = true;
+    this.dispatchVersion++;
+    this.paused = true;
+    this.budget = 0;
+    this.approvedIds = [];
+    // A terminal job state can precede screenshot/receipt cleanup. Callers
+    // must await the runners before closing their Store.
+    await Promise.allSettled([...this.pendingTicks]);
+    if(this.tickErrors.length)throw new AggregateError(this.tickErrors,'Chưa dọn xong tác vụ nền.');
   }
   async reclaimMemory(jobId, profileIds) {
     try {

@@ -79,7 +79,7 @@ async function fixture(t,{count=3,failure=null,oneProfile=false,compose=true,use
     events.push('file:'+index);return path;
   });
   try{await check({root,store,worker,service,project,records,originalProject,originalProfiles,uploads,prompts,attachmentPaths,sent,events});}
-  finally{await Promise.all([...service.tasks.values()]);session.mock.restore();submit.mock.restore();fetch.mock.restore();store.close();await rm(root,{recursive:true,force:true});}
+  finally{await Promise.all([...service.tasks.values()]);await worker.close();session.mock.restore();submit.mock.restore();fetch.mock.restore();store.close();await rm(root,{recursive:true,force:true});}
 }
 
 for(const count of [2,3,4,5])test(`T-046 fake Muse + real ffmpeg/bridge: ${count} sequential scenes, exact last-frame attachment, one MP4`,{timeout:180000},t=>fixture(t,{count,oneProfile:count===2,useProject:count===3},async f=>{
@@ -113,6 +113,9 @@ for(const count of [2,3,4,5])test(`T-046 fake Muse + real ffmpeg/bridge: ${count
 
 for(const failure of ['MUSE_NO_MEDIA','MUSE_CAPTCHA','TIMEOUT','MUSE_OLD_CLIP'])test(`T-046 ${failure}: stop after scene 2, preserve scene 1, no retry or failover, switches unchanged`,{timeout:60000},t=>fixture(t,{failure},async f=>{
   await f.service.start({projectId:'project',revision:1,requestId:'failure'});await Promise.all([...f.service.tasks.values()]);
+  // The service can stop while the runner is still saving its diagnostic.
+  // Wait for that cleanup before testing a fresh start's stopped-night guard.
+  await Promise.all([...f.worker.pendingTicks]);
   const run=f.service.find('failure');assert.equal(run.state,'stopped');assert.equal(run.outputs.length,1);assert.equal(run.jobIds.length,2);assert.equal(f.sent.length,2);assert.equal(f.uploads.length,1);assert.equal(f.worker.paused,true);
   if(failure==='MUSE_OLD_CLIP'){assert.match(run.reason,/Trùng clip cũ #1/);assert.equal(f.store.job(run.jobIds[1]).duplicateOf.jobId,run.jobIds[0]);assert.equal(run.output,undefined);}
   assert.equal(hash(await readFile(run.outputs[0].path)),run.outputs[0].sha256);assert.deepEqual(f.store.get('profiles').map(p=>({id:p.id,enabled:p.enabled,vpnEnabled:p.vpnEnabled})),f.originalProfiles.map(p=>({id:p.id,enabled:p.enabled,vpnEnabled:p.vpnEnabled})));
