@@ -11,6 +11,7 @@ import {uiCopy} from '@/desktop/src/ui-copy.mjs';
 import { useState, useEffect, useRef, useCallback } from "react";
 import DesktopConsole from "./desktop-console";
 import WorkspaceLibrary from "./workspace-library";
+import Characters from "./characters";
 import MuseConnectionStrip from "./muse-connection-strip";
 import {
   BookOpen,
@@ -125,7 +126,7 @@ import Today,{ProductThumbnail} from './today';
 import QuickVideo from './quick-video';
 import MetricsTable from './metrics-table';
 import {compactProductInfo} from '@/lib/lab/today';
-const primaryViews = ["signals","overview","research","products","production","social","results","settings"];
+const primaryViews = ["signals","overview","research","products","production","characters","social","results","settings"];
 const businessViews = new Set(["overview", "studio", "experiments", "results", "social", "landing"]);
 const navigation = [
   {id:"guide",label:"Hướng dẫn",icon:BookOpen},
@@ -134,6 +135,7 @@ const navigation = [
   {id:"office",label:"Phòng sản xuất",icon:LayoutDashboard},
   {id:"signals",label:"Tín hiệu & Phòng chờ",icon:BarChart3},
   { id: "production", label: "Video", icon: Video },
+  { id: "characters", label: "Nhân vật", icon: Images },
   { id: "images", label: "Tạo ảnh", icon: ImageIcon },
   { id: "queue", label: "Hàng đợi", icon: Clapperboard },
   { id: "chat", label: uiCopy.chat, icon: MessageSquare },
@@ -1823,7 +1825,7 @@ export default function LabApp() {
     );
   }
   return (
-    <div data-compact={["signals","overview","research","products","production","social","results"].includes(view)||undefined} style={visualStatusVariables as React.CSSProperties} className={`lab-shell workbench-shell ${["production","images","library","content"].includes(view)?"is-production-route":""}`}>
+    <div data-compact={["signals","overview","research","products","production","characters","social","results"].includes(view)||undefined} style={visualStatusVariables as React.CSSProperties} className={`lab-shell workbench-shell ${["production","images","library","content"].includes(view)?"is-production-route":""}`}>
       <a href="#lab-main" className="skip-link">
         Bỏ qua điều hướng
       </a>
@@ -1904,7 +1906,7 @@ export default function LabApp() {
                             ? "Từ tham chiếu chuẩn đến từng cảnh, phiên bản và biến thể có thể truy vết."
                           : view === "chat" ? "Hội thoại với Muse qua hồ sơ đã đăng nhập."
                           : view === "accounts" ? "Đăng nhập, kiểm tra phiên và hạn mức Muse."
-                          : view === "competitors" ? "Video mẫu, cấu trúc đã đo và nguồn theo từng sản phẩm." : view === "guide" ? "Theo một sản phẩm từ lựa chọn đến quyết định." : "Quản lý công cụ, ngân sách và dữ liệu."}
+                          : view === "characters" ? "Ảnh sản phẩm, linh vật và nhân vật minh hoạ dùng với @tên." : view === "competitors" ? "Video mẫu, cấu trúc đã đo và nguồn theo từng sản phẩm." : view === "guide" ? "Theo một sản phẩm từ lựa chọn đến quyết định." : "Quản lý công cụ, ngân sách và dữ liệu."}
               </Hint></h1>
             </div>
             <div className="page-actions">
@@ -1978,7 +1980,7 @@ export default function LabApp() {
             studioView()
           ) : view === "results" ? (
             <CompactResults records={records} demo={demo} thresholds={(settings as Record<string,any>).resultThresholds??{}} onNavigate={openHref} onRecords={rows=>{if(demo)putMemory(rows);else setReal(prev=>[...rows,...prev.filter(r=>!rows.some(n=>n.id===r.id))]);}} details={<><HookAnalytics records={records} threshold={settings.scaleSignalThreshold??null}/><MetricsTable records={records}/><MetricImport records={records} demo={demo} onRecords={rows=>{if(demo)putMemory(rows);else setReal(prev=>[...rows,...prev.filter(r=>!rows.some(n=>n.id===r.id))]);}}/><details><summary>Số liệu bài test đã lưu</summary>{resultsView()}</details></>}/>
-          ) : view === "production" ? (new URLSearchParams(location.search).has("stage")?<ProductionStudio onSwitchMode={()=>switchMode(!demo)} active={true} records={records} demo={demo} offline={offline} paused={settings.paused} onRecord={r=>{if(demo)putMemory([r]);else setReal(prev=>[r,...prev.filter(x=>x.id!==r.id)]);}} reload={()=>void load()} notify={notify}/>:<CompactVideo records={records} demo={demo} onRecord={r=>{if(demo)putMemory([r]);else setReal(prev=>[r,...prev.filter(x=>x.id!==r.id)]);}} details={<ProductionStudio onSwitchMode={()=>switchMode(!demo)} active={true} records={records} demo={demo} offline={offline} paused={settings.paused} onRecord={r=>{if(demo)putMemory([r]);else setReal(prev=>[r,...prev.filter(x=>x.id!==r.id)]);}} reload={()=>void load()} notify={notify}/>}/>) : view === "library" ? (<WorkspaceLibrary key={demo ? 'demo-library' : 'real-library'} records={records} demo={demo}/>) : view === "queue" ? (<DesktopConsole mode="queue" records={records} demo={demo}/>) : ["production","images","content"].includes(view) ? null : view === "accounts" ? (
+          ) : view === "production" ? (new URLSearchParams(location.search).has("stage")?<ProductionStudio onSwitchMode={()=>switchMode(!demo)} active={true} records={records} demo={demo} offline={offline} paused={settings.paused} onRecord={r=>{if(demo)putMemory([r]);else setReal(prev=>[r,...prev.filter(x=>x.id!==r.id)]);}} reload={()=>void load()} notify={notify}/>:<CompactVideo records={records} demo={demo} onRecord={r=>{if(demo)putMemory([r]);else setReal(prev=>[r,...prev.filter(x=>x.id!==r.id)]);}} details={<ProductionStudio onSwitchMode={()=>switchMode(!demo)} active={true} records={records} demo={demo} offline={offline} paused={settings.paused} onRecord={r=>{if(demo)putMemory([r]);else setReal(prev=>[r,...prev.filter(x=>x.id!==r.id)]);}} reload={()=>void load()} notify={notify}/>}/>) : view === "characters" ? (<Characters demo={demo}/>) : view === "library" ? (<WorkspaceLibrary key={demo ? 'demo-library' : 'real-library'} records={records} demo={demo}/>) : view === "queue" ? (<DesktopConsole mode="queue" records={records} demo={demo}/>) : ["production","images","content"].includes(view) ? null : view === "accounts" ? (
             <section className="accounts-view"><nav className="provider-tabs"><a href="?view=accounts">Tài khoản Muse</a><a href="?view=chat">Chat Muse</a><a href="?view=settings">Cấu hình nhà cung cấp</a></nav><DesktopConsole active={view==="accounts"}/></section>
           ) : (
             settingsView()

@@ -74,6 +74,7 @@ export const sceneInputSchema = z.object({
   action: text(1000), camera: text(1000), voice: text(2000),
   ratio: z.enum(ratios).default("9:16"), duration: z.number().min(1).max(120).default(5),
   referenceIds: z.array(id).max(12).default([]),
+  keepCharacter: z.boolean().optional(),
 });
 export const mediaProviderSchema = z.enum(["manual", "muse", "grok-cli", "fal"]);
 const sceneSchema = sceneInputSchema.omit({ referenceIds: true }).extend({

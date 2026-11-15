@@ -9,6 +9,7 @@ import {resolve, dirname, join, extname, sep} from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 import {Readable} from 'node:stream';
 import {localContext} from './runtime.mjs';
+import {characterLibrary} from './characters.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 export const sessionCookie = 'product_lab_local_session';
@@ -29,6 +30,7 @@ export async function startLocalServer({root, uiDir=join(here,'../local-dist/ui'
     if (!/^[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+\.(png|jpg|webp|mp4|webm)$/.test(key)) throw Error('Invalid local asset key.');
     return join(bucketRoot,...key.split('/'));
   };
+  const characters=characterLibrary(db,filePath);
   const thumbnails=new ThumbnailCache(root,db,filePath,storagePolicy(workerStore));
   const writes=new Map();
   const selectionDomain=await import(pathToFileURL(join(dirname(resolve(routesPath)), 'lib/lab/daily-selection.mjs')).href);
@@ -167,6 +169,19 @@ export async function startLocalServer({root, uiDir=join(here,'../local-dist/ui'
       if(!secretMatches(cookie,session))return send(401,'Open Product Lab Local from its desktop launcher.');
       if(!['GET','HEAD'].includes(incoming.method)&&incoming.headers.origin!==origin)return send(403,'A local origin is required for writes.');
       if(url.pathname==='/api/local-info')return send(200,'Product Lab Local — SQLite and media on this computer.');
+      if(url.pathname==='/api/characters') {
+        const json=(status,value)=>{outgoing.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});outgoing.end(JSON.stringify(value));};
+        if(incoming.method==='GET')return json(200,{characters:characters.list()});
+        if(!['POST','DELETE'].includes(incoming.method))return send(405,'Method not allowed.');
+        const chunks=[];let size=0;
+        for await(const chunk of incoming){size+=chunk.length;if(size>16384)return json(413,{error:'Nội dung nhân vật quá dài.'});chunks.push(chunk);}
+        try {
+          const input=JSON.parse(Buffer.concat(chunks).toString('utf8'));
+          if(!input||typeof input!=='object'||Array.isArray(input))throw Error('Nội dung nhân vật không hợp lệ.');
+          if(incoming.method==='DELETE'){characters.remove(input);return json(200,{ok:true});}
+          return json(200,{character:characters.save(input)});
+        } catch(error){return json(400,{error:error instanceof SyntaxError?'Nội dung nhân vật không hợp lệ.':error.message});}
+      }
       if(incoming.method==='GET'&&url.searchParams.get('thumbnail')==='1'){
         const match=url.pathname.match(/^\/api\/assets\/([a-zA-Z0-9_-]{1,120})$/);
         if(match){try{const bytes=await thumbnails.get(match[1]);outgoing.writeHead(200,{'Content-Type':'image/jpeg','Content-Length':bytes.length,'Cache-Control':'no-store'});outgoing.end(bytes);}catch{send(404,'Ảnh thu nhỏ chưa sẵn sàng. Mở video gốc để xem.');}return;}
@@ -198,6 +213,7 @@ export async function startLocalServer({root, uiDir=join(here,'../local-dist/ui'
   await new Promise((yes,no)=>{app.once('error',no);app.listen(0,'127.0.0.1',yes);});
   host='127.0.0.1:'+app.address().port;origin='http://'+host;
   return {origin,session,root,registerPreparedMedia:(result,onStored)=>compression.register(result,onStored),
+    resolveCharacterReferences:(prompt,references)=>characters.references(prompt,references),
     // Main-process only, fresh and synchronous so profile removal can recheck
     // the scene's explicit skip immediately before its deletion transaction.
     readProductionForProfileRemoval:id=>{

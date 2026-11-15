@@ -58,6 +58,7 @@ async function startApplication() {
  const workArea = screen.getPrimaryDisplay().workAreaSize;
  const worker=new Worker(store,root,chromium,secret),win=new BrowserWindow({width:Math.min(1586,workArea.width),height:Math.min(980,workArea.height),minWidth:390,minHeight:Math.min(600,workArea.height),title:'Hermes Clip Local',backgroundColor:'#0c0d11',webPreferences:{preload:join(here,'preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,webSecurity:true}});
  if(local){
+  worker.resolveCharacterReferences=local.resolveCharacterReferences;
   initializeMuseConnection(worker);
   if (!store.get('hermes_vpn_migrated',false)) {
    store.set('profiles',store.get('profiles',[]).map(profile=>({...profile,vpnEnabled:profile.vpnEnabled ?? !profile.proxy.server})));

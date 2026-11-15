@@ -417,6 +417,12 @@ export class Worker {
     assertMuseAvailable(this.store);
     assertDiskSpace(this.root,32*1024**2,storagePolicy(this.store));
     const d=jobInput.parse(payload);
+    if(payload.keepCharacter===true&&d.mediaType==='video') {
+      if(!this.resolveCharacterReferences)throw Error('Thư viện nhân vật chỉ dùng trong workspace local. Chưa gửi Muse.');
+      d.references=await this.resolveCharacterReferences(d.prompt,d.references);
+      // Validate the resolved snapshot before queueing; retries retain these bytes.
+      jobInput.parse(d);
+    }
     d.prompt=museMediaPrompt(d.prompt,d.mediaType);
     for(const r of d.references)if(createHash('sha256').update(r.bytes).digest('hex')!==r.sha256)throw Error('Reference tải về sai checksum.');
     const fp=jobFingerprint(d),refDir=join(this.root,'references');
