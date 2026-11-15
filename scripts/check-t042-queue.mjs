@@ -42,6 +42,7 @@ try{
  await page.goto(origin+'/?view=queue');await page.getByRole('heading',{name:'Hàng đợi Muse',exact:true}).waitFor();
  const status=()=>page.evaluate(()=>window.productLabDesktop.status());
  const filters=page.getByRole('group',{name:'Lọc trạng thái tác vụ'});
+ const checkDetailButtons=()=>page.locator('.queue-detail-body > .button-row').evaluate(row=>{const bounds=row.getBoundingClientRect();return [...row.children].every(button=>{const r=button.getBoundingClientRect();return r.left>=bounds.left-1&&r.right<=bounds.right+1&&r.height>=32;});});
  await page.getByRole('button',{name:'Chi tiết Lỗi sau khi gửi',exact:true}).click();
  assert.equal(await page.getByRole('checkbox',{name:'Chọn việc Lỗi sau khi gửi',exact:true}).isDisabled(),true);
  assert.equal(await page.getByRole('checkbox',{name:'Chọn việc Cần đối soát',exact:true}).isDisabled(),true);
@@ -51,11 +52,13 @@ try{
  await page.getByRole('checkbox',{name:'Chọn việc Đã dừng trước khi gửi',exact:true}).check();
  for(const width of [1366,1920]){
   await page.setViewportSize({width,height:1080});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-  await page.getByRole('button',{name:'Tạo lại (2)',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(out,'queue-'+width+'.png'),fullPage:true});screens.push('queue-'+width+'.png');
+  assert.equal(await checkDetailButtons(),true,'Detail actions must wrap within the card');
+  await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:join(out,'queue-'+width+'.png'),fullPage:true});screens.push('queue-'+width+'.png');
  }
  await page.getByRole('button',{name:'Tạo lại (2)',exact:true}).click();await page.getByText('Đã tạo 2 việc mới. Duyệt và chạy để gửi Muse.',{exact:true}).waitFor();
  let current=await status();assert.equal(current.jobs.length,7);assert.equal(current.paused,true);assert.equal(current.active,0);
  const first=current.jobs.find(j=>j.retryOf===originals[0].id);assert.ok(first);
+ await page.getByRole('button',{name:'Chi tiết Lỗi trước khi gửi',exact:true}).click();
  await page.getByRole('button',{name:'Việc gốc: '+originals[0].id,exact:true}).click();
  assert.match(await page.getByRole('complementary',{name:'Chi tiết tác vụ'}).innerText(),/Lỗi trước khi gửi/);
  await page.getByRole('button',{name:'Chi tiết Cảnh cần sửa',exact:true}).click();await page.getByRole('button',{name:'Sửa & chạy lại',exact:true}).click();
@@ -63,7 +66,7 @@ try{
  assert.equal(await body.inputValue(),'A close-up of the handle.');
  assert.equal(await page.getByRole('note',{name:'Câu lệnh tạo video cố định'}).getByText(MUSE_VIDEO_COMMAND,{exact:true}).count(),1);
  assert.equal(await page.getByRole('note',{name:'Câu lệnh tạo video cố định'}).locator('input,textarea,[contenteditable=true]').count(),0);
- for(const width of [1366,1920]){await page.setViewportSize({width,height:1080});await body.scrollIntoViewIfNeeded();assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:join(out,'edit-'+width+'.png'),fullPage:true});screens.push('edit-'+width+'.png');}
+ for(const width of [1366,1920]){await page.setViewportSize({width,height:1080});await page.locator('form.queue-detail-section').evaluate(el=>el.scrollIntoView({block:'nearest'}));await page.evaluate(()=>window.scrollTo(0,0));assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.equal(await checkDetailButtons(),true);await page.screenshot({path:join(out,'edit-'+width+'.png'),fullPage:true});screens.push('edit-'+width+'.png');}
  await page.getByRole('button',{name:'Lưu & chạy lại',exact:true}).click();await page.getByRole('dialog').waitFor();
  assert.equal(await page.getByRole('dialog').getByRole('heading').innerText(),'Duyệt lượt gửi Muse');
  current=await status();assert.equal(current.jobs.length,8);assert.equal(current.paused,true);assert.equal(current.active,0);assert.equal(current.budget,0);
