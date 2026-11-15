@@ -304,7 +304,7 @@ function QueueDetails({job, label, tone, profileName, busy, musePaused, primary,
       {job.request.mediaType==='video'&&<MuseVideoCommand/>}
       <label className="field">Mô tả cảnh<textarea aria-label="Mô tả cảnh" rows={7} maxLength={9900} value={body} disabled={busy} onChange={event=>setBody(job.request.mediaType==='video'?museVideoBody(event.target.value):event.target.value)}/></label>
       <p className="field-help">Lưu thành việc mới, rồi duyệt lượt gửi Muse.</p>
-      <div className="button-row"><Button tone="neutral" type="submit" disabled={busy||!!retryReason||!body.trim()}>Lưu & chạy lại</Button><Button tone="ghost" type="button" disabled={busy} onClick={()=>setEditing(false)}>Hủy sửa</Button></div>
+      <div className="button-row"><Button tone="neutral" type="submit" disabled={busy||!!retryReason||!body.trim()}>Lưu việc mới</Button><Button tone="ghost" type="button" disabled={busy} onClick={()=>setEditing(false)}>Hủy sửa</Button></div>
     </form>}
     <details className="queue-detail-section"><summary>Prompt</summary><p className="queue-prompt">{job.request.prompt}</p></details>
     <details className="queue-detail-section"><summary>Lịch sử xử lý · {job.history.length} bước</summary>

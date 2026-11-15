@@ -71,10 +71,10 @@ try{
   await page.locator('.queue-detail').evaluate(el=>{const form=el.querySelector('form.queue-detail-section');el.scrollTop+=form.getBoundingClientRect().top-el.getBoundingClientRect().top-20;});
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.equal(await checkDetailButtons(),true);
   assert.equal(await page.locator('.queue-detail').evaluate(el=>{const form=el.querySelector('form.queue-detail-section'),r=form.getBoundingClientRect(),b=el.getBoundingClientRect();return r.top>=b.top&&r.bottom<=b.bottom;}),true,'Complete editor, fixed command and Save action must be visible together');
-  const saveBounds=await page.getByRole('button',{name:'Lưu & chạy lại',exact:true}).boundingBox();assert.ok(saveBounds.y>=0&&saveBounds.y+saveBounds.height<=1080);
+  const saveBounds=await page.getByRole('button',{name:'Lưu việc mới',exact:true}).boundingBox();assert.ok(saveBounds.y>=0&&saveBounds.y+saveBounds.height<=1080);
   await page.screenshot({path:join(out,'edit-'+width+'.png')});screens.push('edit-'+width+'.png');
  }
- await page.getByRole('button',{name:'Lưu & chạy lại',exact:true}).click();await page.getByRole('dialog').waitFor();
+ await page.getByRole('button',{name:'Lưu việc mới',exact:true}).click();await page.getByRole('dialog').waitFor();
  assert.equal(await page.getByRole('dialog').getByRole('heading').innerText(),'Duyệt lượt gửi Muse');
  current=await status();assert.equal(current.jobs.length,8);assert.equal(current.paused,true);assert.equal(current.active,0);assert.equal(current.budget,0);
  const edited=current.jobs.find(j=>j.retryOf===originals[4].id);assert.equal(edited.request.prompt,MUSE_VIDEO_COMMAND+'\nA close-up of the handle.');
