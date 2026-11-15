@@ -21,4 +21,22 @@ export async function validateMedia(path,expected){
  return {size:file.size,sha256:createHash('sha256').update(bytes).digest('hex'),metadata:{width:video.width,height:video.height,duration,verifiedBy:'container'},fullDecode:true,warning};
 }
 export async function renderClips(clips,ratio,output,{ass=null}={}){if(ass){if(typeof ass!=='string'||Buffer.byteLength(ass)>1024**2)throw Error('ASS v??t gi?i h?n.');await writeFile(dirname(output)+'/overlays.ass',ass,{flag:'wx'});}const [rw,rh]=ratio.split(':').map(Number),width=ratio==='9:16'?720:ratio==='16:9'?1280:960,height=Math.round(width*rh/rw/2)*2;const args=['-y','-v','error'];for(const c of clips)args.push('-i',c.path);let filters='';const inputs=[];for(const [i,c] of clips.entries()){filters+=`[${i}:v]scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=24,format=yuv420p,setpts=PTS-STARTPTS[v${i}];`;filters+=c.audio?`[${i}:a]aresample=48000,aformat=channel_layouts=stereo,apad,atrim=duration=${c.duration},asetpts=PTS-STARTPTS[a${i}];`:`anullsrc=r=48000:cl=stereo,atrim=duration=${c.duration},asetpts=PTS-STARTPTS[a${i}];`;inputs.push(`[v${i}][a${i}]`);}filters+=`${inputs.join('')}concat=n=${clips.length}:v=1:a=1[${ass?'vbase':'v'}][a]`;if(ass)filters+=';[vbase]ass=overlays.ass[v]';await run('ffmpeg',[...args,'-filter_complex',filters,'-map','[v]','-map','[a]','-c:v','libx264','-crf','26','-preset','slow','-threads','2','-maxrate',String(videoBudget(clips.reduce((n,c)=>n+c.duration,0))),'-bufsize',String(2*videoBudget(clips.reduce((n,c)=>n+c.duration,0))),'-c:a','aac','-b:a','96k','-movflags','+faststart',output],{timeout:300000,maxBuffer:1024*1024,windowsHide:true,cwd:dirname(output)});const compressed=await compressMedia(output);try{await copyFile(compressed.path,output);return {...await validateMedia(output,{mediaType:'video',ratio,duration:clips.reduce((n,c)=>n+c.duration,0),maxBytes:2*1024**3}),compression:compressed.compression};}finally{await compressed.cleanup();}}
+// Library concat keeps the first clip's exact frame, independently of the
+// fixed export presets used by the three-hook workflow above.
+export async function concatLibraryClips(clips,output,frame){
+ const {width,height}=frame;
+ if(!Number.isInteger(width)||!Number.isInteger(height)||width<2||height<2||width%2||height%2)throw Error('Khung clip đầu cần kích thước chẵn để ghép MP4.');
+ const duration=clips.reduce((n,c)=>n+c.duration,0),args=['-n','-v','error'],filters=[],inputs=[];
+ for(const [i,c] of clips.entries()){
+  args.push('-i',c.path);
+  filters.push(`[${i}:v:0]scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2,setsar=1,format=yuv420p,settb=AVTB,setpts=PTS-STARTPTS,tpad=stop_mode=clone:stop_duration=${c.duration},trim=duration=${c.duration}[v${i}]`);
+  filters.push(c.audio?`[${i}:a:0]aresample=48000,aformat=channel_layouts=stereo,asetpts=PTS-STARTPTS,apad,atrim=duration=${c.duration}[a${i}]`:`anullsrc=r=48000:cl=stereo,atrim=duration=${c.duration},asetpts=PTS-STARTPTS[a${i}]`);
+  inputs.push(`[v${i}][a${i}]`);
+ }
+ filters.push(`${inputs.join('')}concat=n=${clips.length}:v=1:a=1[v][a]`);
+ await run('ffmpeg',[...args,'-filter_complex_threads','1','-filter_complex',filters.join(';'),'-map','[v]','-map','[a]','-r','30','-t',String(duration),'-c:v','libx264','-crf','23','-preset','fast','-threads','2','-c:a','aac','-b:a','96k','-movflags','+faststart',output],{timeout:300000});
+ const checked=await validateMedia(output,{mediaType:'video',ratio:`${width}:${height}`,duration,maxBytes:2*1024**3});
+ if(checked.metadata.width!==width||checked.metadata.height!==height||Math.abs(checked.metadata.duration-duration)>.1)throw Error('Bản ghép sai khung hoặc lệch thời lượng quá 0,1 giây.');
+ return checked;
+}
 export async function hasAudio(path){const {stdout}=await run('ffprobe',['-v','error','-select_streams','a','-show_entries','stream=index','-of','csv=p=0',path],{timeout:10000,windowsHide:true});return !!stdout.trim();}

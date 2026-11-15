@@ -10,6 +10,7 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 import {Readable} from 'node:stream';
 import {localContext} from './runtime.mjs';
 import {characterLibrary} from './characters.mjs';
+import {libraryMerger} from './library-merge.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 export const sessionCookie = 'product_lab_local_session';
@@ -157,6 +158,8 @@ export async function startLocalServer({root, uiDir=join(here,'../local-dist/ui'
     }
   }
   const {routes}=await import(pathToFileURL(resolve(routesPath)).href);
+  const {productionSchema}=await import(pathToFileURL(join(dirname(resolve(routesPath)),'lib/lab/production.mjs')).href);
+  const library=libraryMerger({db,root,filePath,bucket:localEnv.BUCKET,productionSchema});
   const session=randomBytes(32).toString('hex');
   let origin,host;
   const app=createServer(async(incoming,outgoing)=>{
@@ -169,6 +172,14 @@ export async function startLocalServer({root, uiDir=join(here,'../local-dist/ui'
       if(!secretMatches(cookie,session))return send(401,'Open Product Lab Local from its desktop launcher.');
       if(!['GET','HEAD'].includes(incoming.method)&&incoming.headers.origin!==origin)return send(403,'A local origin is required for writes.');
       if(url.pathname==='/api/local-info')return send(200,'Product Lab Local — SQLite and media on this computer.');
+      if(url.pathname==='/api/library/merge'){
+        const json=(status,value)=>{outgoing.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});outgoing.end(JSON.stringify(value));};
+        if(incoming.method!=='POST')return send(405,'Method not allowed.');
+        const chunks=[];let size=0;
+        for await(const chunk of incoming){size+=chunk.length;if(size>16384)return json(413,{error:'Danh sách ghép quá dài.'});chunks.push(chunk);}
+        try{return json(200,await library.merge(JSON.parse(Buffer.concat(chunks).toString('utf8'))));}
+        catch(error){return json(400,{error:error instanceof SyntaxError?'Yêu cầu ghép không hợp lệ.':error.name==='ZodError'?'Dữ liệu dự án không hợp lệ; giữ nguyên bản gốc.':error.message});}
+      }
       if(url.pathname==='/api/characters') {
         const json=(status,value)=>{outgoing.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});outgoing.end(JSON.stringify(value));};
         if(incoming.method==='GET')return json(200,{characters:characters.list()});

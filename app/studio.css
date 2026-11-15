@@ -218,6 +218,22 @@
 .catalog-detail > div:last-child { display: grid; gap: 14px; align-content: start; }
 .catalog-player { display: flex; align-items: flex-start; justify-content: center; background: var(--lab-background); }
 .catalog-player video, .catalog-player img { width: 100%; max-height: 62vh; object-fit: contain; }
+.library-merge-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0; }
+.library-merge-form .button-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.library-merge-check { padding: 8px 12px; }
+.workspace-library .media-cover { overflow: hidden; }
+.library-merge-form { display: grid; gap: 16px; padding: 20px; }
+.library-merge-form .field input { width: 100%; }
+.library-merge-list { display: grid; gap: 12px; padding: 0; list-style: none; }
+.library-merge-list li { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.library-merge-list li > div:first-child { min-width: 0; overflow-wrap: anywhere; }
+.library-merge-list small { display: block; }
+.library-merge-list .button-row { flex-shrink: 0; }
+.library-comparison, .library-comparison-details { grid-column: 1 / -1; }
+.library-comparison-players { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; }
+.library-comparison-players > div { min-width: 0; overflow-wrap: anywhere; }
+.library-comparison-players video { width: 100%; max-height: 46vh; object-fit: contain; background: var(--lab-background); }
+@media (max-width: 600px) { .library-merge-list li { flex-wrap: wrap; } }
 .catalog-references { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
 .catalog-references img { width: 110px; height: 110px; object-fit: contain; background: var(--lab-background); }
 .research-thumbnail { width: 100%; height: 180px; object-fit: contain; background: var(--lab-background); border-radius: 8px; }

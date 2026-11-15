@@ -57,6 +57,7 @@ const attemptSchema = z.object({
 });
 export const compressionSchema = z.object({version:z.literal(1),sourceSha256:z.string().regex(/^[a-f0-9]{64}$/),sha256:z.string().regex(/^[a-f0-9]{64}$/),sourceSize:z.number().int().positive(),size:z.number().int().positive(),mode:z.enum(['encoded','remux','original']),overLimit:z.boolean(),maxBytes:z.number().int().positive().max(6*1024**2)});
 const takeSchema = z.object({
+  merge: z.object({requestId:id, sources:z.array(z.object({sceneId:id,takeId:id,assetId:id,sha256:z.string().regex(/^[a-f0-9]{64}$/),duration:z.number().positive(),silent:z.boolean()})).min(2).max(30)}).optional(),
   compression: compressionSchema.optional(),
   provider: z.enum(['muse','manual']).optional(),
   id, attemptId: id.nullable(), assetId: id, name: text(150), type: text(80),
@@ -79,12 +80,14 @@ export const sceneInputSchema = z.object({
 });
 export const mediaProviderSchema = z.enum(["manual", "muse", "grok-cli", "fal"]);
 const sceneSchema = sceneInputSchema.omit({ referenceIds: true }).extend({
+  libraryMerge: z.literal(true).optional(),
+  duration: z.number().positive().max(7200).default(5),
   mediaProvider: mediaProviderSchema.optional(),
   // User chose "skip reconciliation": Muse receipts created at or before this time stop blocking manual.
   museReconciledAt: z.number().int().nonnegative().optional(),
   id, revision: z.number().int().positive(), references: z.array(pinSchema).max(12),
   storyboardApproved: z.boolean(), attempts: z.array(attemptSchema).max(50), takes: z.array(takeSchema).max(50),
-});
+}).refine(scene=>scene.libraryMerge || (scene.duration>=1&&scene.duration<=120), 'Cảnh tạo video dài từ 1 đến 120 giây.');
 const approvedItemSchema = z.object({ sceneId: id, takeId: id });
 // A formula draft pins scenes first. Null never resolves to an arbitrary take.
 const itemSchema = approvedItemSchema.extend({takeId: id.nullable()});
